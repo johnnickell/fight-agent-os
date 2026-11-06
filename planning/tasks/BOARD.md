@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -45,7 +45,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 

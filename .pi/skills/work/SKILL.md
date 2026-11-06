@@ -7,7 +7,7 @@ description: Implement or revise an approved TASK on a feature branch, verify it
 
 Read the target's instructions, TASK/parent, Board and [execution standards](../../../docs/engineering/EXECUTION.md).
 Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md); never substitute provider policy for the
-target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md).
+target's own gates. Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md).
 
 1. Verify cwd/origin/branch/base/status and accepted scope. Preserve unrelated work. Ask main checkout versus
    worktree only if not already selected; apply the target's branch/base policy (Agent OS uses

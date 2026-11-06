@@ -70,7 +70,7 @@ test('every render stays inside viewport with Unicode in adjacent panes and afte
   for (const [columns, rows] of [[120, 40], [101, 21], [80, 24], [20, 8], [8, 3], [1, 1]]) {
     const lines = model.render(columns, rows); assert.equal(lines.length, rows);
     for (const line of lines) assert.equal(width(line), columns, line);
-    if (columns >= 80) assert.match(lines[0], /screening: unavailable/);
+    if (columns >= 80) assert.match(lines[0], /native Pi/);
   }
 });
 test('conversation scrolling is clamped and independent of observation focus', () => {

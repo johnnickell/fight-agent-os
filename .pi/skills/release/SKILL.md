@@ -65,7 +65,7 @@ unresolved boundary with a recovery step; complete independent authorized prepar
 
 Keep the resumable ledger, notes, scripts and raw receipts in the target's approved ignored evidence location
 (normally a version-scoped `.runs/` subfolder). Record approvals with their scope and identity, not secrets.
-Under the standing file-screening profile, use `.runs/handoffs/release-<version>/` for the ledger, scripts and
+Use `.runs/handoffs/release-<version>/` for the ledger, scripts and
 receipts and `.runs/notes/release-<version>/` for notes, with the optional `v` prefix removed. Keep the canonical
 acceptance packet and independently owned reports at the base under the same version's handoff directory,
 following [release acceptance](references/acceptance.md). Status may write only owned status evidence there;

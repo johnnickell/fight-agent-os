@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { prepareEngineer, runEngineer } from '../src/build/engineer.mjs';
 import { bindEngineerSession, closeWorkflow, engineerEffects, engineerIdentity, isSdkSession,
   publishWorkflow, sessionWorkflow, stageBinding, selectEngineerRoute, engineerRouteSelected, rememberSdkSession } from '../src/build/authority.mjs';
-import { WorkflowAccess } from '../src/jev/workflow-access.mjs';
+import { WorkflowAccess } from '../src/workflow/access.mjs';
 import { SubagentObserver } from '../src/observation/subagents.mjs';
 
 // Owning Harness contract checks. The engine/session transport here is controlled;
@@ -207,7 +207,7 @@ function engine(f, behavior = 'complete') {
     calls++; assert.equal(type, 'fight-engineer'); assert.equal(options.inheritContext, false);
     assert.equal(options.cwd, f.root); assert.ok(!prompt.includes('Parent transcript'));
     const session = f.child(); observedSignal = options.signal;
-    session.resourceLoader.getExtensions = () => ({ errors: [], extensions: ['jev-extension.ts', 'build-engineer-extension.ts']
+    session.resourceLoader.getExtensions = () => ({ errors: [], extensions: ['workflow-extension.ts', 'build-engineer-extension.ts']
       .map(path => ({ path: fileURLToPath(new URL('../src/' + path, import.meta.url)) })) });
     let settle;
     record = { id: 'record', rootSessionId: 'actual-parent', status: 'running', promise: new Promise(resolve => { settle = resolve; }) };

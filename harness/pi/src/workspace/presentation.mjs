@@ -49,8 +49,8 @@ export function layout(columns, rows, focus = 0, collapsed = false, availableCol
 export class Workspace {
   focus = 0; collapsed = false; theme = 'system'; draft = ''; cursor = 0;
   offsets = [0, 0, 0]; transcript = []; transcriptBytes = 0; omitted = false;
-  live = ''; liveOmitted = false; rejectedInput = ''; status = 'Starting Pi; input held until policy qualification'; ready = false; busy = false;
-  identity = 'Pi starting'; policy = 'unavailable'; commands = new Set(); dialogs = []; history = []; historyIndex = 0;
+  live = ''; liveOmitted = false; rejectedInput = ''; status = 'Starting Pi'; ready = false; busy = false;
+  identity = 'Pi starting'; commands = new Set(); dialogs = []; history = []; historyIndex = 0;
   constructor(cwd) { this.cwd = cwd; }
   append(text) {
     text = clean(text);
@@ -162,7 +162,7 @@ export class Workspace {
     if (rows < 6 || columns < 12) return Array.from({ length: rows }, (_, index) => fit(index === 0 ? 'Resize terminal; ^Q exits' : '', columns));
     const output = Array.from({ length: rows }, () => ' '.repeat(columns));
     const pieces = Array.from({ length: rows }, () => []);
-    output[0] = fit(`FIGHT | screening: ${this.policy} | ${this.busy ? 'running' : 'idle'} | ${this.identity}`, columns);
+    output[0] = fit(`FIGHT | native Pi | ${this.busy ? 'running' : 'idle'} | ${this.identity}`, columns);
     for (const area of areas) {
       const { pane, x, y, w, h } = area, inner = Math.max(1, w - 2);
       let title = ['Conversation', 'Child observation', 'Runtime observation'][pane];

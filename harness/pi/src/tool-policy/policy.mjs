@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { lstatSync, realpathSync, readFileSync, statSync, mkdirSync, mkdtempSync, rmSync, statfsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { supportsRuntime } from './runtime.mjs';
-import { assertRepositoryPath } from '../jev/repository-access.mjs';
 
 /** @type {readonly ['read', 'write', 'edit', 'bash']} */
 export const supportedTools = Object.freeze(['read', 'write', 'edit', 'bash']);
@@ -79,13 +78,12 @@ class PathNames {
     const parts = path.split(sep).filter(Boolean), roots = root.split(sep).filter(Boolean);
     return roots.length <= parts.length && roots.every((part, index) => this.equal(parts[index], part));
   }
-  reserved(path, projectFiles = false) {
-    return path.split(sep).filter(Boolean).some((part, index, parts) => {
+  reserved(path) {
+    return path.split(sep).filter(Boolean).some(part => {
       const dot = part.indexOf('.', 1);
       const envName = dot < 0 ? part : part.slice(0, dot);
       return ['.git', '.ssh', '.aws', '.gnupg', 'auth.json'].some((name) => this.equal(part, name)) ||
-        (this.equal(part, '.pi') && !(projectFiles && parts[index + 1] && this.equal(parts[index + 1], 'skills'))) ||
-        (this.equal(envName, '.env') && !(projectFiles && this.equal(part, '.env.example')));
+        this.equal(part, '.pi') || this.equal(envName, '.env');
     });
   }
   close() { rmSync(this.#path, { recursive: true, force: true }); }
@@ -136,7 +134,7 @@ function repositoryRoot(cwd) {
 }
 
 /** Validate a deliberately small versioned operator contract, never a shell allowlist */
-function loadPolicy(path, cwd, resources, workflowAccess) {
+function loadPolicy(path, cwd, resources) {
   const identity = fileIdentity(path, true);
   let policy;
   try { policy = JSON.parse(readFileSync(path, 'utf8')); } catch { fail('invalid-policy'); }
@@ -149,19 +147,15 @@ function loadPolicy(path, cwd, resources, workflowAccess) {
       !list(policy.roots, (root) => typeof root === 'string' && isAbsolute(root), 16) || !policy.roots.length ||
       !list(policy.protectedPaths, (root) => typeof root === 'string' && isAbsolute(root)) ||
       !Array.isArray(policy.scripts) || policy.scripts.length > 32) fail('invalid-policy');
-  const roots = policy.roots.filter(root => !workflowAccess || root === workflowAccess.root).map((root) => {
+  const roots = policy.roots.map((root) => {
     const canonical = canonicalPath(root);
     if (!statSync(canonical).isDirectory() || canonical === sep) fail('invalid-root');
     return { configured: root, canonical };
   });
   if (within(path, repositoryRoot(cwd)) || roots.some(({ canonical }) => within(path, canonical))) fail('policy-in-workspace');
-  if (workflowAccess && (policy.profile !== 'file-screening' || !roots.some(r => r.canonical === workflowAccess.root) ||
-      !Array.isArray(workflowAccess.editableInstructions) || typeof workflowAccess.authorizeWrite !== 'function')) fail('invalid-workflow-access');
-  // These exact paths were automatically protected by older enrollment writers. The trusted
-  // consumer excludes explicit operator exclusions from this list; runtime resources remain protected.
   const protectedPaths = [path, dirname(path), ...resources,
-    ...policy.protectedPaths.filter(root => !workflowAccess?.editableInstructions.includes(root)),
-    ...roots.flatMap(({ canonical }) => workflowAccess ? [join(canonical, '.git')] : [join(canonical, '.git'), join(canonical, '.pi')])]
+    ...policy.protectedPaths,
+    ...roots.flatMap(({ canonical }) => [join(canonical, '.git'), join(canonical, '.pi')])]
     .map((root) => ({ configured: root, canonical: canonicalPath(root) }));
   const scripts = policy.scripts.map((script) => {
     if (!exactKeys(script, ['path', 'sha256', 'cwd', 'args', 'effects']) || !isAbsolute(script.path) ||
@@ -182,13 +176,12 @@ function loadPolicy(path, cwd, resources, workflowAccess) {
 
 /** Own fresh admission and cancellation; no reusable allow token escapes this module */
 export class ToolPolicy {
-  #path; #cwd; #resources; #sources; #policy; #names; #session; #workflowAccess; #epoch = 0; #pending = new Set(); #reason = 'not-started';
-  /** @param {{policyPath: string, cwd: string, resources?: string[], sources?: string[], workflowAccess?: {root: string, editableInstructions: string[], scope?: () => {roots: string[], excludedPaths: string[]}, revision?: () => number, authorizeWrite: (path: string) => void}}} options */
-  constructor({ policyPath, cwd, resources = [], sources = [], workflowAccess }) {
+  #path; #cwd; #resources; #sources; #policy; #names; #session; #epoch = 0; #pending = new Set(); #reason = 'not-started';
+  /** @param {{policyPath: string, cwd: string, resources?: string[], sources?: string[]}} options */
+  constructor({ policyPath, cwd, resources = [], sources = [] }) {
     this.#path = policyPath;
     this.#cwd = realpathSync.native(cwd);
     this.#resources = resources;
-    this.#workflowAccess = workflowAccess;
     this.#sources = sources.map((path) => ({ path, identity: fileIdentity(path) }));
   }
   start(session, runtime) {
@@ -196,7 +189,7 @@ export class ToolPolicy {
     try {
       if (!supportsRuntime(runtime)) fail('unsupported-runtime-or-hooks');
       if (!isAbsolute(this.#path) || canonicalPath(this.#path) !== this.#path) fail('invalid-policy-location');
-      this.#policy = loadPolicy(this.#path, this.#cwd, this.#resources, this.#workflowAccess);
+      this.#policy = loadPolicy(this.#path, this.#cwd, this.#resources);
       const paths = [...this.#policy.roots, ...this.#policy.protectedPaths]
         .flatMap(({ configured, canonical }) => [resolve(configured), canonical]);
       this.#names = new PathNames(dirname(this.#path), paths);
@@ -240,7 +233,6 @@ export class ToolPolicy {
   }
   #live(operation) {
     if (operation.epoch !== this.#epoch || operation.session !== this.#session || operation.controller.signal.aborted) fail('stale-operation');
-    if (operation.workflowRevision !== this.#workflowAccess?.revision?.()) fail('stale-operation');
     try { this.#fresh(); }
     catch (error) { this.cancel(error instanceof PolicyDenied ? error.code : 'resource-unavailable'); throw error; }
   }
@@ -261,7 +253,6 @@ export class ToolPolicy {
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort();
     const operation = { tool, input: structuredClone(input), session, epoch: this.#epoch, controller,
-      workflowRevision: this.#workflowAccess?.revision?.(),
       close: () => { signal?.removeEventListener('abort', abort); this.#pending.delete(controller); } };
     this.#pending.add(controller);
     try {
@@ -281,16 +272,10 @@ export class ToolPolicy {
     const canonical = canonicalPath(path, this.#cwd);
     const lexical = resolve(this.#cwd, path);
     this.#names.check(canonical);
-    if (this.#names.reserved(lexical, Boolean(this.#workflowAccess)) || this.#names.reserved(canonical, Boolean(this.#workflowAccess))) fail('protected-path');
-    const scope = this.#workflowAccess?.scope?.();
-    const roots = scope?.roots ?? this.#policy.roots.map(root => root.canonical);
-    if (scope) this.#names.register([...roots, ...scope.excludedPaths]);
-    if (!roots.some(root => within(canonical, root))) fail('out-of-root');
-    if (scope) assertRepositoryPath(canonical, roots);
-    if (scope?.excludedPaths.some(root => this.#names.within(canonical, root) || this.#names.within(lexical, root))) fail('protected-path');
+    if (this.#names.reserved(lexical) || this.#names.reserved(canonical)) fail('protected-path');
+    if (!this.#policy.roots.some(root => within(canonical, root.canonical))) fail('out-of-root');
     if (this.#policy.protectedPaths.some((root) => this.#names.within(canonical, root.canonical) ||
         this.#names.within(lexical, resolve(root.configured)))) fail('protected-path');
-    if (effect === 'write') this.#workflowAccess?.authorizeWrite(canonical);
     // Never replace a root/ancestor directory as if it were a normal file.
     try {
       const info = statSync(canonical);

@@ -297,14 +297,13 @@ changing organization or tooling; verify the production shell and catalog throug
 ## Pi and TypeScript module naming
 
 Name Pi modules for the capability they own, using kebab-case filenames. Reserve `-extension.ts` for entry
-points loaded by the Pi package manifest: `header-extension.ts`, `jev-extension.ts` and
-`tool-policy-extension.ts`. Use `-integration.ts` for an internal SDK registration boundary when a suffix
-clarifies its role: `file-screening-integration.ts` is installed by the Jev adapter, not loaded by Pi itself.
-Reusable logic keeps capability names such as `header.mjs`, `file-admission.mjs` and `workflow-access.mjs`.
+points loaded by the Pi package manifest: `header-extension.ts`, `workflow-extension.ts` and
+`tool-policy-extension.ts`. Use `-integration.ts` only for an internal SDK registration boundary when the
+suffix clarifies its role. Reusable logic keeps capability names such as `header.mjs` and `workflow/access.mjs`.
 
 Use camelCase functions, PascalCase exported classes/types, and `install<Capability>` registration functions
-(`installHeader`, `installJev`, `installFileScreening`, `installToolPolicy`). Keep a provider name when the
-module actually adapts that provider, as `jev-extension.ts` does. Avoid generic `extension`, `manager`, `utils`
+(`installHeader`, `installWorkflow`, `installToolPolicy`). Keep a provider name only when the module actually
+adapts that provider. Avoid generic `extension`, `manager`, `utils`
 or `service` names that hide responsibility. Apply capability ownership without importing PHP namespaces or
 class boilerplate; do not add wrappers or directories solely for uniformity.
 

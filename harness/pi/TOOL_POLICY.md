@@ -197,12 +197,8 @@ not a supported external launch API. Separate real CLI PTYs exercise policy insp
 presentation-only package. Native terminal images are unavailable: ANSI transcripts demonstrate interaction and
 file effects, **not visual clipping/font/layout correctness**. Independent Review and QA remain separate.
 
-Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; no semantic command gate remains. TASK-00309's separate
-[enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) provides optional relevance discovery and
-workflow metadata with native reads, writes, edits and shell execution. Discovery exclusions and task
-responsibilities do not intercept native file tools in either profile.
-Shell relevance bypass and same-user access are accepted interim limitations, not containment. This does not change
-this standalone optional policy's exact-script shell restrictions. Current workflow proof/independent acceptance
-remain pending.
-Do not combine its enrollment with `--fight-tool-policy`: that conflict holds activation. This standalone
-profile continues to deny Jev tools. Neither profile establishes TASK-00138 sandbox qualification.
+Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; TASK-00586 retires the remaining
+local evaluator/discovery integration. [Native workflow binding](WORKFLOW.md) is independent of this optional
+policy. No enrollment or provider setup is required. Task responsibilities do not intercept native file tools.
+This policy retains its exact-script shell restrictions and denies unsupported helper/nested/child tools.
+Same-user access is not containment; neither workflow metadata nor this policy establishes TASK-00138 isolation.

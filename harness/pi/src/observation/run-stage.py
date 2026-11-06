@@ -2,7 +2,6 @@
 """Run one Pi role with visible progress and private evidence (Python 3.9+)."""
 
 import argparse
-from datetime import datetime
 import json
 import math
 import os
@@ -21,17 +20,16 @@ try:
 except (AttributeError, OSError):
     OBSERVATION_STARTED = None
 
-# Runtime imports must not create bytecode caches beside provider source.
 sys.dont_write_bytecode = True
 from observation import Observation
 try:
     from automatic_observation import AutomaticObservation
 except Exception:
-    AutomaticObservation = None  # Missing/broken optional observer never disables the monitor.
+    AutomaticObservation = None  # Optional observation never disables execution.
 
 
 def stage_role(value):
-    """Normalize existing workflow aliases from the single provider-owned vocabulary"""
+    """Normalize existing aliases from the single provider-owned vocabulary"""
     roles = json.loads(Path(__file__).resolve().parents[1].joinpath('stage-roles.json').read_text())
     key = '-'.join(value.strip().lower().split())
     for canonical, aliases in roles.items():
@@ -48,7 +46,7 @@ def positive_seconds(value):
 
 
 def display(value, limit=320):
-    """Keep a bounded single terminal line without control sequences."""
+    """Keep a bounded single terminal line without control sequences"""
     value = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", str(value))
     value = "".join(c if not unicodedata.category(c).startswith("C") else " " for c in value)
     value = " ".join(value.split())
@@ -56,8 +54,7 @@ def display(value, limit=320):
 
 
 class Progress:
-    def __init__(self, role, log, safe=False, observation=None):
-        self.safe = safe
+    def __init__(self, role, log, observation=None):
         self.observation = observation
         self.lifecycle = "starting"
         self.exit_code = None
@@ -78,11 +75,8 @@ class Progress:
         self.log.write(line + "\n")
         self.log.flush()
         if self.observation:
-            # Screening-only dispatch must not export child prose through a second channel.
-            text = "Private stage activity (screening-only dispatch)" if self.safe else display(message, 480)
-            self.observation.publish(text, self.lifecycle, self.exit_code)
-        if not self.safe:
-            print(line, flush=True)
+            self.observation.publish(display(message, 480), self.lifecycle, self.exit_code)
+        print(line, flush=True)
 
     def event(self, event):
         kind = event.get("type")
@@ -109,7 +103,6 @@ class Progress:
         elif kind == "tool_execution_start":
             name = display(event.get("toolName", "tool"), 60)
             args = event.get("args", {})
-            # File targets are useful; shell commands and other arguments may contain secrets.
             target = args.get("path", args.get("file_path", "")) if name in ("read", "write", "edit") else ""
             label = f"{name} {display(target, 160)}".strip()
             self.tools[event.get("toolCallId")] = (label, time.monotonic())
@@ -130,102 +123,6 @@ class Progress:
             self.lifecycle = "settled-awaiting-exit"
             self.emit(self.activity)
 
-    def screening(self, line):
-        """Relay only declared safe fields, never arbitrary child stderr or source bodies."""
-        prefix = "Fight screening: "
-        status_prefix = "Fight screening status: "
-        try:
-            if line.startswith(prefix):
-                item = json.loads(line[len(prefix):])
-                kinds = {"screen-start", "screen-complete", "cache-reuse", "receipt-admission", "exception", "blocked-read", "blocked-write", "session-bound", "command-risk-start", "command-risk-complete", "command-held", "command-approved"}
-                if item.get("version") != "fight-file-screen-observation-v1" or item.get("kind") not in kinds:
-                    return
-                session = item.get("session", "")
-                if not re.fullmatch(r"[a-f0-9]{64}", session):
-                    return
-                fields = [f"Screening {item['kind']}", f"session={session[:12]}"]
-                if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
-                    fields.append(f"phase={item['phase']}")
-                if isinstance(item.get("sequence"), int) and not isinstance(item["sequence"], bool) and 0 < item["sequence"] <= 9007199254740991:
-                    fields.append(f"sequence={item['sequence']}")
-                for key in ("reason", "decision"):
-                    value = item.get(key)
-                    if isinstance(value, str) and re.fullmatch(r"[a-z-]{1,80}", value):
-                        fields.append(f"{key}={value}")
-                for key in ("pathId", "needId"):
-                    value = item.get(key)
-                    if isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value):
-                        fields.append(f"{key}={value[:12]}")
-                operation = item.get("operationId")
-                if isinstance(operation, str) and re.fullmatch(r"[a-f0-9-]{36}", operation):
-                    fields.append(f"operation={operation[:12]}")
-                if item["kind"] == "cache-reuse":
-                    fields.append("provider_calls=0")
-                cost = item.get("costUsd")
-                fields.append(f"cost_usd={cost}" if isinstance(cost, (int, float)) and not isinstance(cost, bool) and math.isfinite(cost) and cost >= 0 else "cost_usd=unknown")
-                self.emit(" ".join(fields))
-                if self.safe:
-                    safe = {"version": item["version"], "kind": item["kind"], "session": session}
-                    sequence = item.get("sequence")
-                    if isinstance(sequence, int) and not isinstance(sequence, bool) and 0 < sequence <= 9007199254740991:
-                        safe["sequence"] = sequence
-                    if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
-                        safe["phase"] = item["phase"]
-                    for key in ("reason", "decision"):
-                        if isinstance(item.get(key), str) and re.fullmatch(r"[a-z-]{1,80}", item[key]):
-                            safe[key] = item[key]
-                    for key in ("pathId", "needId"):
-                        if isinstance(item.get(key), str) and re.fullmatch(r"[a-f0-9]{64}", item[key]):
-                            safe[key] = item[key]
-                    if isinstance(operation, str) and re.fullmatch(r"[a-f0-9-]{36}", operation):
-                        safe["operationId"] = operation
-                    for key, maximum in (("elapsedMs", 1800000), ("offset", 1000000000), ("lines", 1000)):
-                        value = item.get(key)
-                        if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= maximum:
-                            safe[key] = value
-                    safe["costUsd"] = cost if isinstance(cost, (int, float)) and not isinstance(cost, bool) and math.isfinite(cost) and cost >= 0 else None
-                    print(prefix + json.dumps(safe), flush=True)
-            elif line.startswith(status_prefix):
-                item = json.loads(line[len(status_prefix):])
-                state, reason = item.get("state"), item.get("reason")
-                if state not in ("active", "degraded", "disabled"):
-                    return
-                fields = [f"Screening status={state}"]
-                if isinstance(item.get("session"), str) and re.fullmatch(r"[a-f0-9]{64}", item["session"]):
-                    fields.append(f"session={item['session'][:12]}")
-                if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
-                    fields.append(f"phase={item['phase']}")
-                if item.get("nextActionCode") in ("enroll-project", "reconcile-legacy", "configure-credentials", "wait-month-reset", "inspect-reload", "screen-then-read"):
-                    fields.append(f"action={item['nextActionCode']}")
-                if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason):
-                    fields.append(f"reason={reason}")
-                budget = item.get("budget") or {}
-                for key in ("availableMicroUsd", "reservedMicroUsd", "settledMicroUsd"):
-                    value = budget.get(key)
-                    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
-                        fields.append(f"{key}={value}")
-                reset = budget.get("resetsAt")
-                if isinstance(reset, str) and re.fullmatch(r"[0-9TZ:.+-]{20,32}", reset):
-                    fields.append(f"reset={reset}")
-                if state == "degraded":
-                    fields.append("next=operator-/file-screening-inspect")
-                self.emit(" ".join(fields))
-                if self.safe:
-                    safe = {"state": state, "reason": reason if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason) else None}
-                    safe["budget"] = {key: budget[key] for key in ("availableMicroUsd", "reservedMicroUsd", "settledMicroUsd") if isinstance(budget.get(key), int) and not isinstance(budget[key], bool) and 0 <= budget[key] <= 9007199254740991}
-                    if isinstance(reset, str) and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", reset):
-                        datetime.strptime(reset, "%Y-%m-%dT%H:%M:%S.%fZ")
-                        safe["budget"]["resetsAt"] = reset
-                    if isinstance(item.get("session"), str) and re.fullmatch(r"[a-f0-9]{64}", item["session"]):
-                        safe["session"] = item["session"]
-                    if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
-                        safe["phase"] = item["phase"]
-                    if item.get("nextActionCode") in ("enroll-project", "reconcile-legacy", "configure-credentials", "wait-month-reset", "inspect-reload", "screen-then-read"):
-                        safe["nextActionCode"] = item["nextActionCode"]
-                    print(status_prefix + json.dumps(safe), flush=True)
-        except (ValueError, TypeError, AttributeError):
-            return
-
     def heartbeat(self):
         if self.tools:
             label, started = next(iter(self.tools.values()))
@@ -236,37 +133,27 @@ class Progress:
 
 def run(args):
     os.umask(0o077)
-    args.role = stage_role(args.role)  # Also covers direct owning run() callers, before any effects.
+    args.role = stage_role(args.role)
     if not re.fullmatch(r'TASK-\d{5}', args.task):
         raise ValueError('invalid TASK identity')
     attempt = Path(args.attempt).resolve(strict=True)
     if not (attempt / "request.md").is_file():
         raise ValueError("attempt must contain request.md")
-    # Claim this attempt before launch; never replay a child into old evidence.
     (attempt / "dispatch.lock").mkdir(mode=0o700)
     names = ("events.jsonl", "progress.log", "stderr.log", "final.txt", "exit-code", "pi-exit-code", "process.json")
     if any((attempt / name).exists() for name in names) or (attempt / "sessions").exists():
         raise ValueError("attempt already contains execution evidence; use a fresh attempt")
-    # The selected package owns both the fixed live monitor identity and screening.
-    # The provider entry resolves an explicit installed choice before exec, never from a route.
+    # One selected package supplies workflow binding and the fixed passive monitor.
+    # No enrollment, evaluator state, credential resolution or provider preflight.
     package = Path(__file__).resolve().parents[2]
     if args.harness_package and Path(args.harness_package).resolve(strict=True) != package:
         raise ValueError("selected package must own this monitor")
-    bootstrap = package / "src/screening-bootstrap.mjs"
-    prepared = subprocess.run(["node", str(bootstrap), "prepare", str(Path.cwd())],
-                              stdin=subprocess.DEVNULL, capture_output=True, timeout=15)
-    if prepared.returncode:
-        print("Screening launcher unavailable: inspect /file-screening and the owning provider package before dispatch", file=sys.stderr)
-        raise ValueError("screening preflight failed")
-    screening = json.loads(prepared.stdout)
-    resource_args = (["-e", screening["extension"], "--fight-screening-required", screening["profileIdentity"]]
-                     if screening.get("enrolled") else [])
-    command = ["pi", *resource_args, "--mode", "json", "--session-dir", str(attempt / "sessions"),
+    command = ["pi", "-e", str(package), "--mode", "json", "--session-dir", str(attempt / "sessions"),
                "--name", f"{args.task} {args.role}", "--provider", args.provider,
                "--model", args.model, "--thinking", args.thinking, "--", f"@{attempt / 'request.md'}"]
     env = dict(os.environ, PI_PROVIDER=args.provider, PI_MODEL=args.model, PI_REASONING_LEVEL=args.thinking,
-               FIGHT_SCREENING_PHASE=args.role,
-               FIGHT_SCREENING_TASK=args.task, FIGHT_SCREENING_CHECKOUT=str(Path.cwd().resolve()))
+               FIGHT_WORKFLOW_PHASE=args.role, FIGHT_WORKFLOW_TASK=args.task,
+               FIGHT_WORKFLOW_CHECKOUT=str(Path.cwd().resolve()))
     cancelled = [0]
     def on_signal(signum, _frame):
         cancelled[0] = 128 + signum
@@ -285,7 +172,7 @@ def run(args):
             if not endpoint.is_absolute() or runtime not in endpoint.resolve().parents:
                 raise ValueError("observation socket must be under this checkout's var directory")
             observation = Observation(str(endpoint), identity, args.heartbeat)
-        progress = Progress(args.role, log, args.screening_dispatch, observation)
+        progress = Progress(args.role, log, observation)
         progress.emit(f"Starting {args.task} — {args.provider}/{args.model}, thinking={args.thinking}")
         child = None
         selector = None
@@ -310,7 +197,6 @@ def run(args):
             selector.register(child.stdout, selectors.EVENT_READ, "events")
             selector.register(child.stderr, selectors.EVENT_READ, "diagnostics")
             buffer = b""
-            diagnostic_buffer = b""
             stop_at = progress.started + args.timeout
             termination_at = None
             while selector.get_map() or child.poll() is None:
@@ -334,13 +220,6 @@ def run(args):
                     if key.data == "diagnostics":
                         errors.write(chunk)
                         errors.flush()
-                        diagnostic_buffer += chunk
-                        while b"\n" in diagnostic_buffer:
-                            line, diagnostic_buffer = diagnostic_buffer.split(b"\n", 1)
-                            if len(line) <= 65536:
-                                progress.screening(line.decode("utf-8", errors="replace"))
-                        if len(diagnostic_buffer) > 65536:
-                            diagnostic_buffer = b""
                         continue
                     raw.write(chunk)
                     buffer += chunk
@@ -366,7 +245,6 @@ def run(args):
                 code = 1
                 progress.emit("Incomplete or failed Pi response; inspect private events and session")
         except Exception as error:
-            # Do not render exception text, provider diagnostics or malformed source to the terminal.
             progress.emit(f"Stage monitor failed ({type(error).__name__}); inspect private logs")
             errors.write((type(error).__name__ + "\n").encode())
             code = forced_code or cancelled[0] or 1
@@ -384,7 +262,6 @@ def run(args):
                             child.wait(timeout=5)
                         except subprocess.TimeoutExpired as error:
                             shutdown_diagnostic(progress, errors, child, "wait", "leader-unreaped", error=error)
-                    # Never signal a numeric group again after reaping its leader.
                 if child.stdout:
                     child.stdout.close()
                 if child.stderr:
@@ -415,8 +292,6 @@ def shutdown_diagnostic(progress, errors, child, operation, reason, signum=None,
 
 
 def stop_group(child, signum, progress, errors):
-    # Popen retains exclusive child identity only until wait/poll reaps it. A late
-    # numeric group may be absent, denied or reused; never use it as authority.
     if child.returncode is not None:
         shutdown_diagnostic(progress, errors, child, "killpg", "leader-exited", signum)
         return
@@ -443,7 +318,6 @@ def main():
     parser.add_argument("--heartbeat", type=positive_seconds, default=30)
     parser.add_argument("--harness-package", help="Explicit trusted Harness package directory; match the installed resource identity to avoid duplicate loading")
     parser.add_argument("--observe-socket", help="Optional absolute owner-only live socket under checkout var/; never a transcript")
-    parser.add_argument("--screening-dispatch", action="store_true", help="Relay safe screening observations only; keep child prose private")
     args = parser.parse_args()
     for value in (args.task, args.role, args.provider, args.model, args.thinking):
         if not value.strip():

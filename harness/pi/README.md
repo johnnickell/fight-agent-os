@@ -1,469 +1,155 @@
 # Fight terminal for Pi
 
-Version 0.1.0 supplies the approved Fight Agent OS welcome mark and compact working header (qualified with Pi
-0.87.1), plus operator-only Jev setup/synthetic readiness and a trusted-consumer typed-judgment capability (Pi 1.2.0 on
-macOS). Mixed typed forms have controlled Pi integration evidence, not live qualification; see
-[bounded typed judgments](JUDGMENTS.md). One authorized live Decisions
-check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
-model accuracy or another installation's account access. This is not the
-managed Runner or an execution sandbox. TASK-00160 adds an explicitly selected
-[deterministic tool policy](TOOL_POLICY.md) for compatible stable Pi 1.x (>=1.2.0) macOS APFS sessions: digest-bound script/argv admission and denial of unsupported helper/nested/child tools. It says **deterministic
-protection only**, not Jev screening or process isolation; installation alone never activates it.
-TASK-00162 adds opt-in, instruction-based single-file
-screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
-is activated by installing/updating this source. TASK-00309's [enrolled-profile implementation candidate](FILE_SCREENING_PROFILE.md)
-adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
-workflow metadata, optional discovery and conservative legacy reconciliation. Project enrollment stands until revocation/
-authority change, with explicit conversion of historical timeboxed profiles. Use ordinary Pi and the owning provider's
-`/skill:build TASK-NNNNN`: shell/Git/checks use ordinary Pi execution without Jev command screening or confirmations.
-Jev is optional: no setup, credentials or enrollment is required for normal native tools. Shell can bypass relevance screening and same-user state is not confined.
-See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-normal-build). Limited live synthetic
-boundary evidence exists; representative investigations, visual proof and independent acceptance remain pending.
-Local checks do not establish production readiness. Both protected profiles share a
-[runtime compatibility contract](TOOL_POLICY.md#runtime-compatibility): compatible 1.x minor/patch upgrades
-need no allowlist update or reenrollment; missing required hooks/APIs still hold activation. Restart Pi after
-updating guard code or the runtime. Enrollment, monthly/session accounting, pending liabilities and finite test
-counters are retained; do not rerun setup or delete state merely to adopt a compatible Pi release.
+The package supplies the Fight welcome/compact header, session-local workflow binding, grouped usage footer,
+passive child observation, a bundled upstream SDK-agent engine and optional Herdr companions. It is not the
+managed Runner or an execution sandbox. Use native Pi file and shell tools; no evaluator enrollment, credentials,
+screening prompts or provider preflight is required.
 
-Routine interactive screening is quiet: startup/turn status and success events do not dump JSON or write around
-the input editor. Use `/file-screening inspect` for details; actionable file-screening warnings remain.
-The installed [shared rule](FILE_SCREENING_RULE.md) supplies portable guidance in every participating project;
-targets do not need a copy. Strongly prefer Jev before unfamiliar discovery; read known targets and core project
-instructions directly with `read` and `path`. Large Boards support ordinary bounded reads and continuation.
-Negative/unavailable relevance results need a concrete reason for direct reading, not an access override.
-Native `read` is not intercepted by either harness profile. Logs, images, links and cross-project
-instructions use Pi and OS permissions without harness receipts, exclusions or enrollment. Optional discovery
-refusals do not prohibit native reads. Writes and edits also use native Pi behavior; evaluator disclosure keeps its separate controls.
-
-Interactive `/skill:work`, `/skill:review`, `/skill:qa` and `/skill:land` select workflow responsibilities;
-`/file-screening role engineer|reviewer|qa|land` is the explicit operator alternative. Engineer/Land edit normal
-project files, including `.env.example`, instructions and `.pi/skills`, in their selected checkout. Repository
-enrollment includes verified linked worktrees without another setup; select an existing checkout choice with
-`/skill:work TASK-NNNNN --checkout /absolute/path`. Reviewer/QA and Build write only their task-owned reports and
-scratch, including canonical base paths from an external worktree. The [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects)
-defines every installed skill and mode. Explicit hidden provider Build/Next instructions and their exact linked
-references work in enrolled consumers without enrolling the provider root or allowing automatic invocation.
-Native file tools are independent of workflow roles, exclusions and integrity holds. Native shell receives no Jev assessment; discovery checks do not provide shell/OS containment. Restart Pi after upgrades
-and reselect the workflow for older sessions. See the [profile](FILE_SCREENING_PROFILE.md) for limits/recovery.
-
-In the native TUI, Codex weekly usage has its own footer row; `File screening: active · Jev: configured` appears
-on the next row. Narrow terminals wrap rather than hide the statuses. `configured` means valid local Jev setup,
-not a successful provider probe. `/jev inspect` shows `state: configured` with a separate optional
-`selfCheck.state: no-retained-result` when the current runtime has no result. That does not prove a check was
-never run; its actual result, if retained, remains in `outcome`. No self-check,
-credential resolution or polling is triggered by drawing the footer or inspecting configuration.
-Ask the Agent to inspect screenshots normally: image `read` calls need only a path, including external Desktop
-files. No special command, path-only message, input selection or approval popup is required. Images go directly
-to the main model, not Jev; optional text relevance screening remains available.
-See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
-native format and output handling.
+[Workflow and Jev retirement](WORKFLOW.md) describes surviving consumers, retained state and safe-boundary
+adoption. The installed [workflow rule](WORKFLOW_RULE.md) applies in every participating project; targets need
+no copy. Inspect `/fight-workflow` or `fight_workflow_status` for skill/effect/subject/checkout, not file permission.
+The independent [deterministic tool policy](TOOL_POLICY.md) is activated only by explicit operator selection.
+It restricts its documented shell routes, not native file access or SDK OS calls.
 
 ## Prerequisites
 
-Install only what the selected path needs; ordinary Pi sessions do not require Worktrunk or Herdr.
-Nothing here installs tools, extensions or global settings automatically.
+Install only what the selected path needs. Nothing here installs tools or changes global settings automatically.
 
-| Path | Prerequisites | Detailed instructions |
-|---|---|---|
-| Baseline Pi + Fight Harness | Supported Pi and its required Node runtime (currently Node 22.19 or newer). Qualify required APIs, not an exact Pi version. | [Pi setup](https://pi.dev), [Harness installation](#install) |
-| Fight workflow Git worktree/local-branch lifecycle | [Worktrunk](https://worktrunk.dev/) (`wt` on PATH) for removal, in addition to the workflow's Git requirements. Not needed for ordinary Pi or independent Docker retirement. | [Local task resources](../../docs/engineering/RESOURCE_LIFECYCLE.md) |
-| Optional native workspace | Herdr and its supported interactive pane/CLI context; the one-command entry also needs Node with `process.execve`. Not needed for ordinary Pi or Build. | [Native Herdr workspace](#native-herdr-workspace), [capability prerequisites](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate), [explicit launcher installation](#install-the-global-workspace-command) |
-| Application runtime / verified Docker logs | Local Docker with Compose for application development; workspace logs inspect existing verified local Docker sources and never provision them. Docker is not required for ordinary Pi. | [Application setup](../../README.md#development), [workspace log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) |
-
-## Native Herdr workspace
-
-After the [explicit executable installation](#install-the-global-workspace-command), run `fight-workspace` in
-the intended project/worktree inside Herdr. It starts native Pi and automatically opens owned child/log
-companions without a log setup form; no follow-up slash command or model turn is needed. Logs discover only
-verified existing local stacks. Idle shows all main-stack services; eligible selected activity follows its own
-stack, with no hidden main fallback. Multiple services need no picker; genuine project ambiguity remains inspected.
-Use **f Follow active**, **m Main** to pin main, and **s Services** for All/an inspected subset. Stack changes clear
-stale output and reset filters. Missing logs or cancelling selection never blocks the workspace. Ordinary `pi` does not auto-open anything. Inside either
-native entry, `/fight-workspace [open|close]` remains available for manual open, recovery and companion-only close.
-The companions are named **AGENTS** and **LOGS**. AGENTS has list/Enter-detail/Esc-back navigation inside its own
-pane. Main stays with the coordinator; a separate below-prompt picker (Ctrl+Shift+A or `/fight-agents`) explicitly
-opens bounded child output in main, with Esc restoring the same coordinator/editor. These are passive readers,
-not execution/session switching controls. Main-only viewing protects its attempt within the same eight-child
-capacity without changing AGENTS/log selection; Esc releases that protection. If the picker reports actual
-session-file loss/replacement, restore the intended source, then run `/fight-workspace close` followed by
-`/fight-workspace open`. Open alone does not recreate an invalid main reader, and restoration does not silently
-restore custody. See [browsing controls and recovery](WORKSPACE.md#separate-main-pane-viewer).
-Pi owns its editor, Tab completion, colors, Markdown, dialogs,
-session and workflow authority; Herdr owns layout, focus, resize and zoom. Source association requires canonical
-checkout/worktree metadata, local Unix endpoint and complete container/service/lifecycle witnesses. Source-root
-mounts anchor each stack; non-source-mounted services additionally require actual reciprocal project-network endpoints.
-Missing mappings/custody remain unavailable, never shared fallback. Missing/incompatible Herdr prerequisites
-leave ordinary Pi usable; outside Herdr, use ordinary Pi
-without companions. No automatic RPC fallback, installation or workflow selection occurs.
-
-The package ships only the native `fight-workspace` executable. The legacy `fight-terminal` executable and
-direct `src/workspace/main.mjs` retirement entry are removed, without a compatibility alias. Existing copied
-installations change only through an explicit owned update/removal; saved sessions are not launcher assets.
-TASK-00512's [RPC retirement checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint)
-is historical evidence, not a promise that this package still ships its migration notice.
-See [native setup and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
-[log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) and
-[actual-file session migration](WORKSPACE.md#native-entry-and-existing-rpc-sessions).
-
-## Bundled subagents
-
-The [supported profile](SUBAGENTS.md) uses the Fight-maintained upstream engine in `vendor/pi-subagents/` and
-ships subordinate Fight agents. One package now supplies the engine and passive Herdr observation; no separate
-companion installation or npm publication is needed. Existing standalone companion declarations must be removed
-from the intended settings scope before an explicitly authorized safe-boundary adoption—never load two engines.
-Apply the supported profile **before launching the updated copy**; package installation does not overwrite settings.
-Fight retains native custody, independent-stage authority and Compose/worktree ownership. The profile disables
-upstream worktrees/workflows/scheduling. `/fight-subagents` reports capabilities and finite refusals; rootless records
-remain refused. Reader closure is passive, but whole-runtime shutdown/reload aborts agents. The bundled setup hook
-and bound-parent association are prerequisites, not a working Build Engineer route; TASK-00560 remains incomplete.
-TASK-00554's standalone-companion Review/QA acceptance is historical, not acceptance of this packaging candidate.
+| Path | Prerequisites |
+|---|---|
+| Native Pi + Fight | Supported installed Pi APIs and its required Node runtime; qualify capabilities, never an exact Pi version |
+| Workflow worktree/ref removal | [Worktrunk](https://worktrunk.dev/) and the target's [resource lifecycle](../../docs/engineering/RESOURCE_LIFECYCLE.md) |
+| Native workspace | Herdr interactive pane/CLI context and Node `process.execve`; see [workspace capabilities](WORKSPACE.md#native-pi-in-herdr) |
+| Application checks/logs | Docker Compose and the target's prepared stack; logs inspect existing verified sources, never provision them |
 
 ## Install
 
-For a source-local installation, prepare runtime dependencies explicitly and follow the [subagent profile and
-standalone-companion migration](SUBAGENTS.md#select-the-supported-profile) before the next session starts.
-From the repository root, install for every Pi session:
+Prepare runtime dependencies explicitly. Follow the [supported bundled-agent profile and standalone-companion
+migration](SUBAGENTS.md#select-the-supported-profile) **before launching** the updated package. Never load two engines.
+From the repository root:
 
 ```sh
 npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
 pi install ./harness/pi
 ```
 
-Pi stores its package declaration in personal settings. Restart Pi to load the package; an already running
-session is unchanged. A local install resolves to this directory, so moving/removing the checkout requires
-removing the old declaration and installing from the new location. Source updates take effect in later sessions.
-No npm registry publication is required. The manifest is private to prevent accidental publication.
+Pi stores a personal package declaration. Use `pi install --local ./harness/pi` for repository-only use.
+A local install loads this directory without copying it; removing/moving the checkout requires explicit removal
+of the stale declaration and selection of the new reviewed path. Running sessions remain unchanged. Installation
+does not select a model/workflow, alter credentials/trust, install skills or authorize publication. Normal Pi
+package/project trust still applies. The package is private; no npm publication is needed.
 
-For repository-only use, use `pi install --local ./harness/pi` instead. To remove the personal installation:
+Remove only the intended declaration with `pi remove /absolute/path/to/harness/pi`. Preserve sessions, transcripts,
+account settings, shared OpenRouter configuration and all historical evaluator receipts/accounting liabilities.
+No evaluator-state migration or deletion runs on startup, reload, installation or removal.
 
-```sh
-pi remove /absolute/path/to/fight-agent-os/harness/pi
-```
+## Native Herdr workspace
 
-A **Pi** install changes only Pi's package declaration; it does **not** put `fight-workspace` on PATH. It does not
-select models, alter credentials, install skills, authorize tools, or overwrite another theme. Pi's normal
-package/project trust rules still apply. The optional one-command workspace entry needs the separate installation below.
+Ordinary `pi` remains usable without Herdr and never auto-opens panes. After the separate executable installation
+below, run `fight-workspace` in the intended checkout inside Herdr. It starts **one native Pi** and opens owned
+human-only **AGENTS** and **LOGS** companions. No model turn, blocking log form or automatic RPC fallback is used.
+Pi retains editor/completion/Markdown/dialogs/session and workflow authority; Herdr owns layout/focus/resize only.
+
+AGENTS supports Enter-detail/Esc-back inside its pane. Main stays with the coordinator; Ctrl+Shift+A or
+`/fight-agents` opens an explicit bounded child-output viewer in main, with Esc restoring the same editor.
+LOGS follows verified existing worktree sources: `f` Follow active, `m` Main pin, `s` Services All/subset, `r` retry.
+Missing mappings/stack/custody stay unavailable, never silently fall back to main. No log selection enters
+conversation context. `/fight-workspace [open|close]` provides manual open/recovery and companion-only close.
+See [workspace ownership, controls and recovery](WORKSPACE.md).
 
 ### Install the global workspace command
 
-Only an explicit operator action installs this command. Use a reviewed local package, Node with `process.execve`
-and native Pi/Herdr on absolute PATH entries. Inspect the actual user-owned prefix first; never use Pi's own
-installation prefix, administrator privileges, `--force` or shell-profile edits. Check **both** command names and
-the package directory: an unrelated file, symlink, dangling link or package is a collision, not replacement authority.
-For a fresh prefix all three destinations below must be absent (including dangling links):
+A Pi package install does **not** put `fight-workspace` on PATH. Only an explicit operator action installs the
+executable. Inspect the actual user-owned prefix, both command names and package directory. An unrelated file,
+symlink, dangling link or package is a collision, not replacement authority. Never use Pi's own prefix, `sudo`,
+`--force` or shell-profile edits.
 
 ```sh
 source="/absolute/reviewed/fight-agent-os/harness/pi"
-prefix="$HOME/.local"  # select and inspect the actual user-owned prefix
+prefix="$HOME/.local" # inspect the actual user-owned prefix
 ls -ld "$prefix/bin/fight-workspace" "$prefix/bin/fight-terminal" "$prefix/lib/node_modules/@fight/agent-os-pi"
-# Continue only after proving absence, or owned prior installation for an update:
+# Continue only with absent destinations or a verified owned prior installation:
 npm install --global --prefix "$prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$source"
-export PATH="$prefix/bin:$PATH"  # current shell only; no automatic profile edits
+export PATH="$prefix/bin:$PATH" # current shell only
 hash -r
-command -v fight-workspace
 fight-workspace --help
-```
-
-`--install-links` creates a copied private package and owned executable links; moving/removing the source later
-cannot redirect its assets. `--legacy-peer-deps` avoids installing Pi's host-provided peers. No registry publication
-is needed. `pi install` and npm installation are separate operations. For this launcher, Pi must discover **one
-complete Harness identity at the installed copy**, not a second source checkout alongside it. Inspect `pi list`;
-explicitly remove the old Harness source declaration only if replacing it, then install this copy in the intended scope:
-
-```sh
 pi install "$prefix/lib/node_modules/@fight/agent-os-pi"
-# Fully exit/restart owned Pi processes after adoption; never reset enrollment/accounting.
-cd "/absolute/intended project or worktree"
-fight-workspace --offline --provider openai-codex --model gpt-6.1-sol --thinking high
 ```
 
-The launcher resolves its assets from its executable, never target-project code. Normal Pi discovery/trust stays
-active. Its separate one-use startup hook checks exact command-resource owners plus native-observer/startup
-capabilities before any pane opening. Missing/filtered/different resources leave **one native Pi running with a
-warning**. Pi may reject duplicate flag/tool registrations before session startup; its conflict paths identify
-what to reconcile. Neither failure launches another Pi or an RPC fallback. Resolve resource ownership in ordinary Pi, fully restart,
-or use `/fight-workspace open` for explicit recovery. This check is not malicious-local-process attestation.
+`--install-links` creates a copied package and owned executable link. Keep **one complete Harness identity** in
+Pi settings, matching this executable; inspect `pi list` and explicitly remove only a replaced source declaration.
+Do not load the copy beside a source checkout. Fully exit/restart only intended owned clients at a safe boundary.
+Active sessions/shared installations are never updated by repository implementation or qualification.
 
-`fight-workspace --help` lists supported native forwarding. Values stay separate argv entries (spaces and literal
-shell punctuation are preserved). Session selectors `--session`, `--continue`, `--resume`, `--no-session` are mutually
-exclusive; exact-file `--session` requires an absolute existing JSONL file whose header belongs to this caller cwd.
-It never guesses an ID or forks a cross-project file. `--session-dir`, `--name`, provider/model/thinking/scope,
-`--use-theme`, `--tui-mode`, `--offline`, `--verbose` and `--fight-header` are supported. No prompts/@files, mode/print,
-export, forks, API-key, trust/resource overrides or unknown extension flags are accepted. Unsupported combinations
-fail before Pi starts. Native Pi validates remaining option values. There is no launcher-selected model/workflow,
-prompt injection, model turn, alternate editor, container provisioning or unverified source inference.
-
-A supported Herdr caller context and interactive TTY are required. Outside Herdr use ordinary `pi`; the launcher
-never installs Herdr/integrations. Startup preserves the primary PID/terminal/cwd with native process replacement.
-A new/resumed/reloaded session does not inherit another automatic open; manual commands remain available. Source
-discovery/selection is human-facing and never enters conversation context. Panes open before discovery; no
-source, denied/missing Docker or cancelling selection leaves Pi and companions usable. LOGS provides `f` Follow
-active, `m` Main, `s` Services (arrows/Space/Enter), and `r` retry; no project IDs, commands or credentials are requested.
-Partial failures use the existing ownership checks, disclose retained IDs/state
-and uncertain splits, and never blindly retry or kill an existing conversation/child/container.
-
-`fight-terminal` is no longer shipped, even as a retirement notice. Historical `bin/terminal` and RPC launcher
-receipts are not current launch instructions.
+The launcher forwards separate argv values, preserving spaces and literal punctuation. `--session`, `--continue`,
+`--resume`, `--no-session` are mutually exclusive. Exact-file `--session` requires an absolute existing JSONL file
+with the caller cwd in its header. It never guesses an ID or forks another project's history. Supported forwarding
+includes provider/model/thinking/scope, session directory/name, theme/TUI mode, offline/verbose and header choices.
+Prompts/@files, mode/print/export, API keys, trust/resource overrides and unknown extension flags are refused before
+Pi starts. The one-use startup hook checks exact command owners and observer/opener capabilities; failures leave
+native Pi running with a warning, not a second process. This is not malicious-local-process attestation.
 
 ### Update, remove and recover the launcher
 
-Repository implementation is not installation delivery. A previously copied npm launcher still runs its old
-code until the operator explicitly adopts or removes it. This change performs neither action. Before either,
-record the actual session file of any owned RPC conversation and stop that client normally. Open the same file
-with native `pi --session /absolute/actual-session.jsonl` from the same checkout; inspect `/session` and
-`/file-screening`. Do not clone/fork it, guess with `--continue`, copy launcher-role flags or inject a workflow.
-Prior default RPC files remain under the conversation checkout's `var/terminal/sessions/`; an explicitly selected
-store stays where it was. Ephemeral `--no-session` history cannot be resumed.
-
-For an **explicitly authorized** update of an existing npm copy, fully exit owned clients, review the trusted
-source and inspect ownership of all three destinations in the actual user-owned prefix (never `sudo`, `--force` or
-Pi's own installation prefix). Do not overwrite an unrelated package/command:
-
-```sh
-source="/absolute/reviewed/fight-agent-os/harness/pi"
-prefix="$HOME/.local"  # use the actual inspected prior prefix
-command -v fight-terminal
-ls -ld "$prefix/bin/fight-workspace" "$prefix/bin/fight-terminal" "$prefix/lib/node_modules/@fight/agent-os-pi"
-# Only after existing destinations are confirmed owned (a newly introduced command must be absent):
-npm install --global --prefix "$prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$source"
-hash -r
-fight-workspace --help
-# Verify the obsolete npm-owned fight-terminal link is absent from this prefix:
-ls -ld "$prefix/bin/fight-terminal"  # expected: no such file
-```
-
-`--install-links` copies the local package and creates its owned bin link; source edits alone do not update that
-copy. Updating an owned prior package removes its old npm-owned `fight-terminal` link and retirement module.
-Do not delete an unrelated same-named command elsewhere on PATH or a manually installed link; inspect and stop
-on uncertain ownership. `command -v fight-terminal` may still find another installation outside this prefix. `--legacy-peer-deps` avoids installing host-provided Pi peers. Node 22.23.1/npm 10.9.8/Pi 1.4.0 were observed
-during earlier installation qualification, not version gates. No registry publication is needed; the package
-remains private. Updating Pi without a target (`pi update`) updates Pi itself, not this copied launcher.
-
-Alternatively, explicitly remove only that inspected npm installation:
+Copied installations keep old code until explicitly updated or removed. Inspect all three destinations above,
+fully exit only owned intended clients, then run the same reviewed npm installation command for an authorized
+update. Verify the obsolete owned `fight-terminal` link is absent. Do not delete an unrelated command elsewhere
+on PATH. To remove just that inspected npm copy:
 
 ```sh
 npm uninstall --global --prefix "$prefix" --ignore-scripts --no-audit --no-fund @fight/agent-os-pi
 hash -r
 ```
 
-Removal preserves saved sessions/history, Pi settings/credentials, enrollment/accounting, unrelated prefix
-commands and the separate Pi source declaration. Do not remove the latter merely to retire RPC: native Pi still
-needs the Harness. Inspect `pi list`, keep one trusted package identity, and fully restart Pi when adopting source
-changes. Do not load the npm copy beside the source package or reinstall Herdr/integrations automatically.
+This preserves saved history, account/provider settings and the separate Pi declaration. Remove a stale declaration
+explicitly only when appropriate. `pi update` without a target updates Pi, not this copied package.
 
 | Failure | Recovery |
 |---|---|
-| `fight-terminal` absent | Expected after fresh installation or owned update. Use ordinary `pi` or the explicitly installed `fight-workspace`; no replacement alias is installed. |
-| `fight-terminal` still resolves or prints a retirement notice | Inspect its exact prefix/ownership; this is an older or separate installation. Update/remove only the inspected owned package, never a guessed path. |
-| `fight-workspace` missing or resolves to another prefix | Inspect PATH and destination ownership; select the actual isolated user prefix, never force-overwrite another command. |
-| Old RPC still starts | Inspect `command -v fight-terminal` and its owned npm prefix. Stop the owned client normally and use the actual-file migration above; do not delete history. Explicit adoption/removal is separate. |
-| Missing/incompatible Herdr | Keep ordinary native Pi usable; companions remain unavailable, never RPC fallback. |
-| Unexpected package/bin ownership, npm `EEXIST` or dangling manual link | Stop; reconcile only the owned prior installation with its owner. Never force replacement or remove a guessed path. |
-| Source moved, filtered, duplicate or unavailable Harness | Inspect `pi list` and exact resource paths in normal Pi. Explicitly replace a stale source declaration with the reviewed location, keep one package identity, and fully restart. Do not reset enrollment/accounting or copy credentials. |
-| Unknown actual session file | Inspect the prior selected store privately. Stop if identity is uncertain; do not guess the newest session or manufacture a replacement file. |
+| Missing/filtered/duplicate Harness | Inspect `pi list`, exact resource paths and filters; select one reviewed complete package, then fully restart |
+| Missing/incompatible Herdr | Use ordinary Pi; no automatic RPC fallback or installation |
+| Unexpected prefix ownership or npm collision | Stop for the owner; never force-overwrite |
+| Unknown actual session file | Inspect its prior selected store privately; do not guess newest/continue/fork |
+| `fight-terminal` still resolves | It is an older/separate installation; inspect exact prefix and ownership |
 
 ## Module path migration
 
-Module names follow the repository's [Pi/TypeScript convention](../../docs/engineering/STANDARDS.md#pi-and-typescript-module-naming).
-The manifest loads `header-extension.ts`, `jev-extension.ts`, `tool-policy-extension.ts` and
-`native-observation-extension.ts` and `herdr-workspace-extension.ts` exactly once.
-`file-screening-integration.ts` is internal to the Jev adapter; do not load it as an extension.
-
-| Old path under `harness/pi/src/` | Current path | Compatibility |
-|---|---|---|
-| `extension.ts` | `header-extension.ts` | Old file removed; update explicit paths |
-| `file-screening-extension.ts` | `file-screening-integration.ts` | Internal import moved; `installFileScreening` export unchanged |
-| `jev-extension.ts` | Unchanged | Default registration and named `installJev` export retained |
-| `tool-policy-extension.ts` | Unchanged | Independent policy selection unchanged |
-| — | `native-observation-extension.ts` | New native fixed-monitor association; ordinary tools and selected executors retain their restrictions |
-| — | `herdr-workspace-extension.ts` | Native Herdr layout and human-only child/log companions; no RPC fallback |
-
-The consumer inventory found no supported caller requiring an old-path shim. Package-root installations
-(`pi install ./harness/pi` or `pi --extension ./harness/pi`) follow the manifest and need no path change.
-For header-only loading, use `pi --extension ./harness/pi/src/header-extension.ts` instead of the removed
-`src/extension.ts`. Update any operator-owned explicit extension path or package resource filter in the
-appropriate settings scope yourself; this migration does not edit settings or global installation paths.
-Do not combine package loading with a second copy of its entry points or use a broad `src/*.ts` glob.
-
-If Pi reports a missing old file, stop that process, replace the old path with the corresponding current path
-(or select the package root), and start Pi again. An absent header after a package update can also mean an old
-resource filter no longer matches; select the new entry in `pi config` in the intended scope. After authorized
-adoption, **fully exit and restart the Pi process**; `/reload` alone is not the adoption qualification for
-renamed guard modules. Do not rerun Jev setup, reenroll projects, reset accounting/ledgers, change models or
-restart sessions automatically. Existing commands, tool IDs, permissions and deterministic-policy decisions
-are unchanged.
+The manifest loads capability-named `*-extension.ts` entries exactly once, including `workflow-extension.ts`.
+The retired `jev-extension.ts`, `file-screening-integration.ts`, `screening-bootstrap.mjs`, enrollment UI and
+`src/jev/` have no compatibility shim. Replace any explicit retired entry/filter with the complete package or
+`workflow-extension.ts` in the intended scope only. A broad `src/*.ts` glob is unsupported. Header-only loading
+uses `src/header-extension.ts`, not the old `src/extension.ts`. See [safe-boundary adoption](WORKFLOW.md#safe-boundary-adoption).
 
 ## Appearance
 
-The default `auto` mode shows the refined F welcome and switches to a one-line identity at the first Agent run.
-Resumed conversations start compact. Choose another mode for the current session with `/fight-header`, or use
-`/fight-header port`, `wordmark`, `compact`, `ascii`, `auto`, or `off`. `off` restores Pi's own header.
+Default `auto` shows the approved F welcome, then one compact identity at first Agent activity. Resumed sessions
+start compact. `/fight-header auto|port|wordmark|compact|ascii|off` changes this session only; `off` restores Pi's
+header. `--fight-header` wins over `FIGHT_PI_HEADER`. Unknown choices warn; invalid startup choices use `auto`.
+Narrow/dumb/NO_COLOR terminals use ASCII. Active theme colors remain authoritative. No header renders in JSON,
+print or RPC. Native image reads need only a path and preserve Pi's format/truncation behavior.
 
-Use `pi --fight-header compact` for a quiet startup, or set `FIGHT_PI_HEADER=compact` in the launching environment.
-The CLI flag takes precedence over the environment. Preferences are not silently written to personal files.
-Unknown options produce a warning; an invalid startup option falls back to `auto`.
-
-Narrow terminals use a short ASCII identity. `TERM=dumb` or `NO_COLOR` also uses unstyled ASCII. Pi's built-in
-light/dark themes use the approved orange accent; custom themes keep their own accent. Other colors follow the
-active theme. JSON/print/RPC output receives no header. The header extension leaves Pi's editor and error messages
-alone. The separate Jev extension uses Pi's supported custom-footer API for grouped status rows, with current
-session usage, context, selected model, directory/branch and other extension statuses from read-only public APIs.
-This changes presentation only, not accounting or Codex polling. Its footer is TUI-only and is removed at shutdown;
-like other custom footers, the last installed footer wins. Native-only decorations not exposed by these APIs,
-such as virtual-route annotations, are not reproduced.
-
-The mark is an approved terminal adaptation of this repository's `docs/assets/fight-agent-os-dark.svg`, with
-symmetric light squares above/below the orange entry point. It uses terminal block characters, not an image
-protocol. The separate prototype is not a runtime dependency.
+The workflow extension installs the TUI-only grouped footer through public Pi APIs: session usage/context,
+model/thinking, directory/branch and extension statuses. It changes presentation, not accounting or Codex polling;
+last installed footer wins and shutdown restores Pi's footer. API-unavailable native decorations are not recreated.
 
 ## Verification and packaging
 
-`./bin/harness-check` (from the repository root) runs owned presentation, Jev and deterministic-policy behavior tests in the pinned Node container. The
-full `./bin/build` includes this check. If the check image is missing, explicitly fetch it first:
-
-```sh
-docker pull node@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94
-```
-
-For direct development with supported Node, `npm test` in this directory runs the same Fight behavior tests.
-The full gate additionally runs the bundled engine's lint/typecheck/full suite. Prepare its locked development
-installation explicitly, on the OS where checks execute (native optional modules are platform-specific):
+Run owning Harness behavior checks with `npm --prefix harness/pi test` or the network-none
+`./bin/harness-check`, which reuses this checkout's explicitly prepared tooling image (`./bin/up --build-only`).
+Git and Python are required by the surviving custody/Build checks; no tools are installed by acceptance. The canonical `./bin/build` additionally checks the bundled engine and application gates.
+No product tests assert tooling/configuration behavior. Prepare the engine's locked development tools explicitly
+on the OS where checks execute (native optional modules are platform-specific):
 
 ```sh
 npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-# For the Docker gate, from a prepared worktree use its writable maintenance service instead:
-./bin/runtime docker compose run --rm --no-deps \
-  -e HOME=/app/.runs/setup/subagents -e npm_config_cache=/app/.runs/cache/npm-subagents \
-  -e npm_config_update_notifier=false composer \
-  npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
 ```
 
-Pi supplies declared host peers when loading extensions; never bundle another SDK. The Harness declares the
-engine's `croner` and `nanoid` runtime dependencies; source-local installs need the explicit runtime setup above.
-Use `npm pack --ignore-scripts --pack-destination <output-directory>` to create a distributable tarball; package
-contents include the manifest, package-owned bin, Fight/engine runtime source and declared runbooks/licenses,
-not component tests, node_modules or development configuration. Keep local build artifacts under `.runs/`.
+For Docker, use the selected checkout's writable maintenance service and task-owned scratch/cache locations.
+Never replace dependencies beneath a running gate. Pi supplies host peers; do not bundle another SDK.
+`croner` and `nanoid` remain actual bundled-engine dependencies. `npm pack --ignore-scripts --pack-destination PATH`
+creates a private distributable containing runtime source, bin, agents/profile, runbooks/licenses, not tests or
+node_modules. Keep artifacts under ignored task scratch.
 
-Controlled behavior tests are separate from Pi integration qualification. For installed-SDK loading and
-public behavior checks, set `PI_SDK_MODULES` to the reviewed Pi installation's `node_modules` directory and run
-from the repository root, using a fresh task-owned evidence directory:
-
-```sh
-node harness/pi/tests/native/module-loading.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/loading
-node harness/pi/tests/native/optional-jev.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/optional-jev
-node harness/pi/tests/native/read-policy.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/read-policy
-node harness/pi/tests/native/worktree-access.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/worktree-access
-```
-
-For the opt-in Build Engineer bootstrap, prepare a private **copied** package and run the real SDK/engine/Fight
-initialization probe with its installed root as the final argument:
-
-```sh
-node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$task_evidence" "$installed_harness"
-```
-
-Its scripted provider qualifies initialized authority, actual bound-root association, exact model/thinking,
-passive early/final text/tool names, duplicates, provider error, timeout and shutdown/reload uncertainty. It is
-not a real permitted Engineer assignment, native Herdr capture or independent acceptance. Use the
-[opt-in Build runbook](SUBAGENTS.md#opt-in-build-engineer) for the genuine next assignment, not a faux demonstration.
-
-These probes use disposable operator/session fixtures and controlled provider boundaries, not live Jev calls.
-The loading probe exercises the manifest, explicit entries, deduplication, header-only loading, JSON mode,
-header commands and obsolete-path recovery. Its header callbacks are not terminal screenshots. Record the
-actual SDK version and required API/hook availability; a tested version is evidence, not an equality gate or
-a promise about untested runtimes. Real terminal/font rendering still varies; a browser design mockup must not
-be presented as a native terminal screenshot.
-
-## Jev setup and readiness (operator only)
-
-Load the trusted package through the installation above, or explicitly for one invocation with
-`pi --extension ./harness/pi`. Nothing resolves Jev credentials or sends a Decisions request on load/reload.
-Setup commands are TUI-only; no generic Agent-callable judgment or credential tool is registered.
-`jev_read_file` is exposed only with its shared rule and a separately configured operator/session file policy. Never pass a key in a command,
-prompt, environment, argv, transcript or receipt. Keep the main Agent provider/model unchanged.
-
-1. If OpenRouter is already configured in Pi, reuse it; no separate Jev key or Keychain helper is needed.
-   Otherwise the human operator can use Pi's `/login openrouter` privately. Account enrollment, key creation,
-   billing capacity and source access are the operator's responsibility, not automatic Harness setup.
-2. Review the [Decisions contract](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request)
-   and [Jev endpoint/prices](https://openrouter.ai/api/v1/models/typesafe/jev-1.13/endpoints).
-   The qualified public contract is `POST https://openrouter.ai/api/alpha/decisions`, model
-   `typesafe/jev-1.13`, provider TypeSafe, expected response build `typesafe/jev-1.13-20260917`.
-   A different returned build is rejected, never silently adopted. The fixed synthetic path returned that build
-   in the October 14 live check; other question types and live refusal behavior are not qualified here.
-3. Use `/jev setup`. Confirm that exact connection, enter explicit positive integer request/session ceilings in
-   micro-USD (1 USD = 1,000,000), choose `fixed-synthetic-only` for readiness alone (or explicitly enable
-   `authorized-supplied-state` for [trusted consumers](JUDGMENTS.md)), then confirm disclosure and current price.
-   No credential is read and no provider request is sent by setup. No monetary ceiling is selected for you.
-   Setup is one-time for the pinned connection and approved limits: there is no daily or periodic renewal.
-   Existing settings, including older confirmations, remain valid without migration or timestamp refresh.
-   Use setup again only to change your choices or approve changed connection/price pins; missing, corrupt or
-   removed settings need repair. Setup is not project permission: [TASK-00309](../../planning/tasks/00309-TASK.md)
-   separately owns standing project enrollment until revocation or authority changes, not periodic renewal.
-4. Use `/jev inspect` for redacted effective settings and configuration-bound readiness. Inspection does not
-   resolve authentication. Use `/jev check` only when you authorize one billed synthetic request and Pi's
-   credential resolution, whose configured source may itself prompt for access. Cancel the confirmation to send nothing.
-
-The October 14 public endpoint lists $0.042 per million input tokens, free output, 64,000 context tokens and a
-32,000 prompt-token maximum. We conservatively reserve the entire 64,000 context: **$0.002688 (2,688 micro-USD)**
-per attempt, not an estimated kettle-token count. Both explicit ceilings must accommodate the reservation;
-request must not exceed session. Confirm pricing at setup, not before each use. Elapsed time never increases
-approved prices or budgets; changed pins or a reported price breach need explicit action. Provider routing preferences request no fallback,
-TypeSafe only and the published token-price maxima; they are not proof of server-side billing enforcement.
-An unknown or uncertain billed outcome retains the reservation; reported actual cost settles it once, rounded
-up to micro-USD. Missing cost is unknown, never zero. There are no automatic retries. A price-bound breach is a
-failure that halts further admission in the persisted session ledger: reconcile and requalify pricing, rather than retrying. Do not delete a ledger to regain budget.
-
-Settings and session charges live outside the repository under
-`~/Library/Application Support/Fight Agent OS/jev/` (directory `0700`, files `0600`). Settings contain **no key**
-or duplicate credential-store reference. Session-ID-bound reservations survive reload/process resume; a stale
-lock, corrupted ledger or unresolved charge fails closed and needs human reconciliation, not automatic reset.
-Changing settings invalidates readiness and cancels pending work. Shutdown/reload rejects stale completions.
-Two concurrent operations, a 15-second deadline, 64 KiB input and response limits, eight questions and sixteen
-choices are shared ceilings across readiness and typed consumers. `/jev check` still submits exactly one fixed
-yes/no question and no choices or private source. Trusted consumers separately require current disclosure
-permission and explicit request/session allocations; see [their contract and qualification limits](JUDGMENTS.md).
-A complete finite Yes probability of at least 0.70 passes this synthetic check, not a measured accuracy claim.
-
-### Authentication boundary and failures
-
-The injected adapter calls only `ctx.modelRegistry.getApiKeyForProvider('openrouter')`. Pi chooses its configured
-source (runtime override, stored authentication, provider configuration or its own environment/ambient rules);
-Jev does not inspect/copy auth files, choose an independent fallback or resolve another provider. A key reusable
-by Pi is **not** proof of Decisions access. Regional/proxy-specific keys may be rejected at the fixed official
-Decisions endpoint; there is no automatic redirect or endpoint substitution.
-
-Pi 1.2.0 returns undefined both for absent authentication and resolution errors. Jev reports the honest opaque
-`credential-unavailable`, not fabricated missing/locked/denied categories. `provider-denied` (HTTP 401/403),
-`billing` (402), `provider-rejected` (400/413/422), `timeout`, `provider-unavailable`, `refusal`, `invalid-result`,
-`synthetic-negative`, budget and setup failures remain distinct. HTTP 422 alone is not proof of refusal.
-The controlled explicit refusal fixture is not a qualified live refusal schema. Raw upstream bodies/errors
-are discarded; never use their content to construct operator diagnostics.
-
-Credential resolution has no supported abort parameter. A timed-out resolution cannot dispatch later, and holds
-its concurrency slot until it settles; an unresolved Pi source may require human intervention/restart.
-The transient buffer is cleared after transfer, but Pi's immutable/cached key string and fetch's header string
-cannot be zeroized here. The key exists in the trusted Pi process; same-user tools/extensions can access that
-process's resources. Nonsecret settings permissions do not isolate them from same-user Agents. Only macOS local
-settings/runtime are directly qualified in this slice; other hosts report unsupported. There is no Keychain-only
-isolation claim. Managed infrastructure-owned credentials and TASK-00138 isolation remain separate future work.
-
-### Qualify your installation
-
-The [TASK-00184 qualification record](../../planning/tasks/00184-TASK.md#authorized-live-evidence-recovery--2026-10-14)
-reports one real Pi-managed OpenRouter check: Yes probability 0.99, 438 ms, 290 input/23 output tokens and
-provider-reported cost $0.00001218. The conservative ledger settled 13 micro-USD, with no pending reservation.
-Its $0.002688 request / $0.005376 session ceilings authorized **one request only**, not a repeat. Reload returned
-to unchecked without another dispatch; the main Agent remained openai-codex/gpt-6.1-sol/high. Exact-key scans of
-actual captured presentation/evidence found no occurrences. Native terminal images, a persisted JSONL transcript
-(no model messages were sent), real pending-network cancellation and independent invoice verification were not
-obtained; pending cancellation/stale completion use separately labeled controlled tests. Independent Review/QA
-remain separate. This receipt neither enrolls another account nor authorizes another billed check.
-
-For your own qualification, explicitly authorize ceilings, credential resolution and one paid fixed synthetic
-check. With the trusted package loaded, use `/jev setup`, `/jev inspect`, then `/jev check` and confirm once.
-Retain only redacted configuration/evaluator/schema, elapsed time, outcome and available measured usage/cost.
-Inspect actual terminal/session/log presentation for disclosure without printing credentials; record absent files
-rather than claiming they were scanned. Exercise reload/shutdown and verify an unchanged main model. Do not invoke
-Pi credential-print commands or inspect private auth files. Keep controlled injected credentials/transport separate
-from live evidence. Preserve uncertain charges and obtain new permission before any additional live request.
+Use explicit isolated native/SDK probes in [qualification](WORKFLOW.md#direct-qualification). Tested Pi versions
+are evidence, not equality gates or future compatibility promises. Controlled scripted model responses are not
+live provider qualification, a genuine Build assignment, native visual evidence or independent acceptance.

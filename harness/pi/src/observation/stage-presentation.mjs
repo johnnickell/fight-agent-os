@@ -16,7 +16,6 @@ export function stageInvocation(command) {
   const fields = {};
   while (argv.length) {
     const key = argv.shift();
-    if (key === '--screening-dispatch') continue;
     if (!['--attempt', '--task', '--role', '--provider', '--model', '--thinking', '--timeout', '--heartbeat', '--harness-package', '--observe-socket'].includes(key) || !argv.length || fields[key] !== undefined) return null;
     fields[key] = argv.shift();
   }

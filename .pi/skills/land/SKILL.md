@@ -7,7 +7,7 @@ description: Publish an accepted TASK, obtain required hosted evidence, resume a
 
 Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target rules and
 [landing standards](../../../docs/engineering/LANDING.md). Follow the
-[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md). This is one subject, not a fleet sweep.
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md). This is one subject, not a fleet sweep.
 
 1. **Choose the route.** Explicit `cleanup-only` enters
    [cleanup intake](../../../docs/engineering/LANDING.md#cleanup-only-intake), never publication. An ended PR

@@ -60,12 +60,10 @@ class StageShutdown(unittest.TestCase):
             attempt = Path(directory)
             (attempt / 'request.md').write_text('Finite owning shutdown qualification only\n')
             args = argparse.Namespace(attempt=directory, task='TASK-00585', role='land', provider='fixture', model='controlled',
-                thinking='off', timeout=.05, heartbeat=1, harness_package=None, observe_socket=None, screening_dispatch=False)
+                thinking='off', timeout=.05, heartbeat=1, harness_package=None, observe_socket=None)
             output = io.StringIO()
-            prepared = subprocess.CompletedProcess([], 0, b'{"enrolled":false}', b'')
             try:
-                with patch.object(monitor.subprocess, 'run', return_value=prepared), \
-                     patch.object(monitor.subprocess, 'Popen', side_effect=launch), \
+                with patch.object(monitor.subprocess, 'Popen', side_effect=launch), \
                      patch.object(monitor.os, 'killpg', side_effect=send), \
                      patch.object(monitor, 'AutomaticObservation', Observer), contextlib.redirect_stdout(output):
                     if unresponsive:

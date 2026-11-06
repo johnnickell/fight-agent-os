@@ -5,8 +5,8 @@ description: Explore a bounded architecture question through real use cases and 
 
 # Architecture
 
-For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); native reads need no screening receipt or exception, including mandatory instructions and exact targets.
+Use bounded native discovery and direct file reads under the shared
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md); load mandatory instructions directly.
 
 Start with the question, affected use cases, maintainer's constraints and inspected revision. Read applicable
 [engineering standards](../../../docs/engineering/STANDARDS.md#architecture) as Agent OS's shared normative
