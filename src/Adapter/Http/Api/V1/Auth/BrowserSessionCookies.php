@@ -62,7 +62,7 @@ final readonly class BrowserSessionCookies
      *
      * @return list<string>
      */
-    public function delete(): array
+    public static function delete(): array
     {
         return [
             self::REFRESH_NAME.'='.self::ATTRIBUTES.self::EXPIRED,

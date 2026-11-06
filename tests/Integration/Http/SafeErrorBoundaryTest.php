@@ -6,11 +6,9 @@ namespace Tests\Integration\Http;
 
 use App\Adapter\Http\Api\Failure\PublicFailureProjector;
 use App\Adapter\Http\Api\Failure\RedactedHttpDiagnostics;
-use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Middleware\Api\ApiResponseBoundary;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Invitation\InvitationIssuance;
-use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
 use Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy;
@@ -34,7 +32,6 @@ use RuntimeException;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Factory\StreamFactory;
-use Tests\Support\AccessClock;
 use Throwable;
 
 /**
@@ -333,7 +330,7 @@ final class SafeErrorBoundaryTest extends TestCase
             new JSendResponseFactory($factory, new StreamFactory()),
             new SafeHttpErrorPolicy(),
             new RedactedHttpDiagnostics(new Logger('test'), new SafeHttpErrorPolicy())
-        ), new BrowserSessionCookies(new AccessClock(new DateTimeImmutable())));
+        ));
         try {
             $safe->process($this->request(), $this->throws(new RuntimeException('private original')));
             self::fail('A broken factory cannot produce a response.');
@@ -357,7 +354,7 @@ final class SafeErrorBoundaryTest extends TestCase
             $policy,
             $sink ?? new RedactedHttpDiagnostics(new Logger('test'), $policy),
             $projector ?? new PublicFailureProjector()
-        ), new BrowserSessionCookies(new AccessClock(new DateTimeImmutable())));
+        ));
     }
 
     /**

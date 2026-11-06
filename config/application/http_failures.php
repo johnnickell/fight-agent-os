@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Adapter\Http\Api\Failure\PublicFailureProjector;
 use App\Adapter\Http\Api\Failure\RedactedHttpDiagnostics;
-use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Middleware\Api\ApiResponseBoundary;
 use App\Adapter\Http\Middleware\Api\NativeApiFailures;
 use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
@@ -30,9 +29,6 @@ return static function (Container $container): void {
             $container->get(SafeHttpProjector::class)
         ));
     $container->set(ApiResponseBoundary::class, static fn(Container $container): ApiResponseBoundary =>
-        new ApiResponseBoundary(
-            $container->get(SafeJSendErrorMiddleware::class),
-            $container->get(BrowserSessionCookies::class)
-        ));
+        new ApiResponseBoundary($container->get(SafeJSendErrorMiddleware::class)));
     $container->set(NativeApiFailures::class, static fn(): NativeApiFailures => new NativeApiFailures());
 };

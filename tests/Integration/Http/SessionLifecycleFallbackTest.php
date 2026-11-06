@@ -269,7 +269,7 @@ final class SessionLifecycleFallbackTest extends TestCase
             $policy,
             $sink,
             new PublicFailureProjector()
-        ), $cookies);
+        ));
         try {
             $response = $boundary->process(
                 (new ServerRequestFactory())->createServerRequest('POST', '/api/v1/auth/logout')

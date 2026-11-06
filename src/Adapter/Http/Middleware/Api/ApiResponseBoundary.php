@@ -22,10 +22,8 @@ final readonly class ApiResponseBoundary implements MiddlewareInterface
     /**
      * Constructs ApiResponseBoundary
      */
-    public function __construct(
-        private SafeJSendErrorMiddleware $safeErrors,
-        private BrowserSessionCookies $sessionCookies
-    ) {
+    public function __construct(private SafeJSendErrorMiddleware $safeErrors)
+    {
     }
 
     /**
@@ -68,7 +66,7 @@ final readonly class ApiResponseBoundary implements MiddlewareInterface
         };
         $response = $this->safeErrors->process($request->withAttribute('correlation_id', $correlationId), $guard);
         if ($guard->clearSessionCookies) {
-            foreach ($this->sessionCookies->delete() as $cookie) {
+            foreach (BrowserSessionCookies::delete() as $cookie) {
                 $response = $response->withAddedHeader('Set-Cookie', $cookie);
             }
         }

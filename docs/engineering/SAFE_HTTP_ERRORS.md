@@ -74,8 +74,9 @@ Common policy; unknown faults stay 500, declared availability may be 503. Direct
 one local, non-reporting attempt to render Common's fixed fallback with both deletion cookies. If that also fails,
 `SessionResponseFailure` carries only the fixed sanitized escape and the required deletion meaning, not a private
 cause. The API boundary's invocation-local guard observes this narrow signal before rethrowing it to Common.
-After any successful Common recovery, the boundary adds both exact deletions, regardless of which bounded
-rendering attempt succeeds. No extra retry is added. Reporter failure does not consume local rendering recovery.
+After any successful Common recovery, the boundary adds both exact deletions through the clock-independent
+pure `BrowserSessionCookies::delete()` operation, regardless of which bounded rendering attempt succeeds.
+The boundary does not eagerly resolve the shared clock-backed session-cookie service. No extra retry is added. Reporter failure does not consume local rendering recovery.
 Terminal/logout rendering faults enter the same clearing path. The guard is created for each invocation and is
 not stored in a shared service, static variable or request registry; return and escape cannot leak its flag into
 a subsequent request. If Common cannot create a response within its existing bounds, escape remains sanitized,
