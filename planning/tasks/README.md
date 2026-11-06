@@ -572,7 +572,7 @@
 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | in-progress | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |

@@ -28,6 +28,15 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00570's area-F planning correction](planning/tasks/00570-TASK.md#accepted-implementation-checkpoint--2026-11-06)
+has independent Review version 3 ACCEPT and documentation QA version 2 PASS on
+`226a054cef9812f84b674c1b73b990e5cbf96887` (26 passed / 0 failed / 0 incomplete / 1 visual/HTTPS N/A).
+All 97 unfinished execution/delivery records are accounted for (79 corrected / 18 justified unchanged), with
+six terminal records preserved. Managed execution/review/release implementation, supplier qualification and
+whole-portfolio acceptance remain separate. Publication and eligible cleanup are pending at this checkpoint;
+current outcomes are in canonical ignored `.runs/tasks/TASK-00570/runs/land.md` and the TASK PR. Human merge
+remains separate.
+
 [TASK-00567's area-C planning correction](planning/tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06)
 has independent Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`
 (27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A). All 57 unfinished EPIC-00009/00010 records are accounted
