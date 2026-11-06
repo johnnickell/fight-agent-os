@@ -15,11 +15,11 @@ cross-Team peer delegation, double booking and false progress when no eligible A
 
 ## Solution and boundaries
 
-On a **human-selected** Ready TASK, resolve registered Repository and associated default/alternate Teams,
+On a **human-selected** Ready TASK, resolve registered Project and associated default/alternate Teams,
 current role suitability, each Agent's live credential, direct Permissions, repository/context scope, idle
 capacity, grant, resources, same-Team review independence and actual unmerged prerequisite base inclusion.
 Prefer an eligible idle Team Lead on the default Team; if unavailable, fairly and repeatably recommend an
-eligible alternate **whole-TASK** handoff to another Team explicitly associated with the Repository. Hold
+eligible alternate **whole-TASK** handoff to another Team explicitly associated with the Project. Hold
 with a reason on missing or uncertain eligibility rather than borrowing a cross-Team member. Once a Team
 receives a TASK, its Team Lead may delegate only to currently eligible members **of that Team**, including
 a non-contributing independent reviewer. A role matching a prompt is not evidence of eligibility.
@@ -44,9 +44,15 @@ automatic PR merge and cross-Team peer dispatch are excluded.
 
 ## Validation and permissions
 
-Current Human start authority, Agent direct Permission, Team/Repository scope, verified base/dependencies,
+Each entry adapter admits current human start authority and Project/target scope before configured bus dispatch;
+no blanket Application authentication gate is added. A safe typed eligibility View is owned cross-boundary read
+coordination, not a package alias or durable grant. Registered Workflow-owned handlers coordinate actual start,
+commitments, required audit and justified dispatch intent through one generic transaction and collection repositories.
+Agent direct Permission, Team/Project scope, verified base/dependencies,
 runner capacity, independent reviewer and exclusive claim must all hold at the owning start, not only when
-Triage suggested a route. Current roster/default changes race safely against that start. Triage cannot grant
+Triage suggested a route. Current roster/default and capacity changes race safely against that start because assignment, consent and
+no-double-booking are business invariants. Do not extend those fences to ordinary caller permission revocation;
+already-admitted ordinary work may finish, with fresh denial on the next request. Triage cannot grant
 emergency authority or select an unrelated TASK autonomously; Team Lead cannot borrow another Team's Agent.
 Hotfix retains explicit human scope confirmation and a non-contributing reviewer. A failure to authenticate,
 verify dependencies or determine idle capacity is a hold, not a guess or client-side authorization.
@@ -84,7 +90,7 @@ remain the owners of claim, Kanban, routing and incident operations.
 The maintainer approved five dependency-ordered TASKs:
 
 - [TASK-00261](../tasks/00261-TASK.md): current Agent eligibility for selected work, combining owning TASK/base
-  facts, exact profiles, Team/Repository scope, current authority and actual idle capacity without reservation.
+  facts, exact profiles, Team/Project scope, current authority and actual idle capacity without reservation.
 - [TASK-00262](../tasks/00262-TASK.md): deterministic default-Team preference and fair alternate whole-TASK
   intake, never another TASK selection, claim or cross-Team phase assignment.
 - [TASK-00263](../tasks/00263-TASK.md): current Team/Lead admission through TASK-00139's existing Start, with

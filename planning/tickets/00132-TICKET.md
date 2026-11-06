@@ -90,13 +90,39 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | done |
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
-| [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
+| [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | done |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
 | [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area D, [TASK-00568](../tasks/00568-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
+Review version 3 ACCEPT and complete documentation QA PASS on `fa28fd79eee6b7ce11d13a2d80901177bd16c04c`;
+R1 is resolved, with no open findings. QA: 27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A. All 63
+unfinished EPIC-00014/00017 records are accounted for (53 corrected / 10 justified unchanged, no additions or
+archived descendants). Canonical coverage remains active input to TASK-00571. Credential/restoration/cohort/
+writer safety, human publication and Feature/provider boundaries and actual supplier holds remain. Review/QA
+normal gates reused the original dirty-precommit application receipt; Land's normal gate freshly passed all
+25 phase rows after an automatic cache miss, without force. Warnings, eight skips and coverage gaps remain
+disclosed in the TASK. Publication and eligible cleanup are pending at this checkpoint; current outcomes are
+in canonical ignored `.runs/tasks/TASK-00568/runs/land.md`
+and the TASK PR. This TICKET stays open for unfinished children; no feature or complete-portfolio acceptance.
+
+The following area-D repair paragraph is historical, not the current acceptance handoff.
+
+Area D, [TASK-00568](../tasks/00568-TASK.md), has a Work implementation checkpoint, not independent acceptance.
+All 63 unfinished EPIC-00014/00017 records are accounted for: 53 corrected / 10 justified unchanged, no archived
+descendants. Initial candidate `3f1017ad0ecedef2e0df4a9ba3ddec02660a786a` received Review version 3 REVISE for R1's
+surviving atomic caller-authorization hold. Bounded Work repair reconciles TASK-00256/00300 and related TASK-00259
+handoffs with TASK-00303: adapter caller admission, retained complete-set/reference/template-scope/expected-state
+and required reviewed-source audit holds, including no-ops. Credential/restoration/writer safety, statuses, edges
+and human template authority remain. Canonical ignored `.runs/tasks/TASK-00568/runs/coverage.md` remains needed
+by TASK-00571. Original fresh 25-phase application evidence, fresh repair docs/planning checks and normal gate
+qualification with honest application reuse are recorded in the TASK/Work handoff, alongside retained resources
+and warnings/gaps. Renewed independent Review, then documentation QA, are required; Work does not accept R1.
+No feature/supplier/runtime acceptance or complete-portfolio closure is inferred.
 
 Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,

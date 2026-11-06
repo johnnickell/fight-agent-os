@@ -64,7 +64,7 @@
 | [TICKET-00059](00059-TICKET.md) | Persist and fence current Agent credential operations | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00060](00060-TICKET.md) | Deliver protected Agent credential lifecycle and recovery | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00061](00061-TICKET.md) | Authenticate and authorize current Agent tool use | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
-| [TICKET-00062](00062-TICKET.md) | Administer Repository-linked Teams and Agent rosters | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00062](00062-TICKET.md) | Administer Project-linked Teams and Agent rosters | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00063](00063-TICKET.md) | Administer named managed Agents and safe lifecycle intent | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00064](00064-TICKET.md) | Select eligible Teams and Agents for authorized work | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00065](00065-TICKET.md) | Operate all eight managed Agents in their owned journeys | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
