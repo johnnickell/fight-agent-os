@@ -30,6 +30,9 @@ Unimplemented Jev-specific plans (typed MCP judgments, semantic assessment/ranki
 not live suppliers and are not delivered by native tools. They retain the amendment's explicit supplier-decision
 hold. Historical planning approvals and usage receipts are preserved, not reinterpreted as active integration.
 
+The [source-linked runtime view](../../docs/engineering/native-workflow/README.md) shows the surviving suppliers
+and native-tool independence at the implementation revision.
+
 ## Retained state
 
 Do **not** delete or rewrite `~/Library/Application Support/Fight Agent OS/jev/`. It may contain connection/file
