@@ -30,7 +30,11 @@ function ActivationExample({ scenario = 'ready' }: { scenario?: Scenario }) {
                   422,
                   false
                 )
-              : jsonResponse({ status: 'error', message: 'Too many requests.' }, 429, false)
+              : jsonResponse(
+                  { status: 'fail', data: { message: 'Too many requests.' } },
+                  429,
+                  false
+                )
         ),
       scenario === 'metadata'
         ? () => jsonResponse(null)

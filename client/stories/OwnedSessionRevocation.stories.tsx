@@ -61,10 +61,11 @@ function Example({
               }
               return Promise.resolve(
                 new Response(
-                  JSON.stringify({
-                    status: 'error',
-                    message: scenario === 'conflict' ? 'Conflict.' : 'Internal server error.'
-                  }),
+                  JSON.stringify(
+                    scenario === 'conflict'
+                      ? { status: 'fail', data: { message: 'State conflict.' } }
+                      : { status: 'error', message: 'Internal server error.' }
+                  ),
                   {
                     status: scenario === 'conflict' ? 409 : 500,
                     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }

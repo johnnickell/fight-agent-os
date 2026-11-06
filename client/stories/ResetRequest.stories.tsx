@@ -18,7 +18,11 @@ function ResetExample({ scenario = 'ready' }: { scenario?: Scenario }) {
           ? new Promise<Response>(() => {})
           : Promise.resolve(
               scenario === 'throttle'
-                ? jsonResponse({ status: 'error', message: 'Too many requests.' }, 429, false)
+                ? jsonResponse(
+                    { status: 'fail', data: { message: 'Too many requests.' } },
+                    429,
+                    false
+                  )
                 : scenario === 'outage'
                   ? jsonResponse({ status: 'error', message: 'Internal server error.' }, 500, false)
                   : resetAccepted()

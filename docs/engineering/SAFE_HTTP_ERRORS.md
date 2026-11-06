@@ -34,6 +34,9 @@ explicit owner translations; malformed/unusable values are not automatically bus
 Capability-specific query/result/admission corrections remain with TASK-00574–00581; shared imports do not
 certify those unperformed corrections or supplier guarantees.
 
+The maintained [thrown-failure flow](safe-http-errors/README.md) links the editable diagram, exact source revision,
+source/arrow traces and explicit omissions. It illustrates this composition, not acceptance or browser readiness.
+
 ## Wire contract
 
 | Outcome | Representation |
