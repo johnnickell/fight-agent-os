@@ -15,8 +15,9 @@ separate and securely composable; the existing human grant-delivery worker is no
 
 ## Solution and boundaries
 
-Use the selected package's public provisioning, rotation, revocation, status, delivery, discovery, recovery and
-maintenance contracts with TICKET-00059's current persisted operation/cohort fence. Retain the original scoped
+Use the qualified package's directly owned provisioning, rotation, revocation, status, delivery, discovery,
+recovery and maintenance contracts, dispatching public messages through configured buses and retaining only
+qualified synchronous secret-handling capabilities outside serializable messages, with TICKET-00059's current persisted operation/cohort fence. Retain the original scoped
 operation key and canonical request across retries. Enroll holder and destination through protected operator
 paths; generate separate per-holder credentials and encrypt authentication envelopes separately from delivery
 copies. Use **server-registered** destinations and immutable exact-tuple staging through a fixed protected sink
@@ -41,7 +42,12 @@ protected-sink contract; never send a key to the browser or a Pi child as a work
 
 ## Validation and permissions
 
-Human UI may submit authorized **intent** and read only safe status through TICKET-00063; worker, key,
+Each supported entry adapter authenticates and admits its actual caller and Project/target scope before
+package dispatch; no blanket Application or raw-bus authentication gate is added. Registered package handlers
+own state, required audit and justified durable intent through the generic transaction boundary; repositories
+remain collections. Exact credential correlation/material safety and delivery/maintenance epochs are retained
+because they prevent duplicate secrets and stale acknowledgement, not to serialize ordinary UI revocation.
+Human UI may submit authorized **intent** and read only safe typed status through TICKET-00063; worker, key,
 destination, claim, receipt and recovery operations use separate current trusted scope, actor/target and
 maintenance grants on all paths. Neither a Super Admin label nor model-generated instructions authorize
 privileged material access. Wrong holder, stale request/claim, incompatible cohort, revoked authority, key

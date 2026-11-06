@@ -37,6 +37,14 @@ supplier qualification or whole-portfolio acceptance follows. Publication/final 
 cleanup are pending at this checkpoint; current outcomes are in canonical ignored
 `.runs/tasks/TASK-00569/runs/land.md` and the TASK PR. Human merge remains separate.
 
+[TASK-00568's area-D planning correction](planning/tasks/00568-TASK.md#accepted-implementation-checkpoint--2026-11-06)
+has independent Review version 3 ACCEPT and complete documentation QA PASS on `fa28fd79eee6b7ce11d13a2d80901177bd16c04c`
+(27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A). All 63 unfinished EPIC-00014/00017 records are accounted
+for (53 corrected / 10 justified unchanged); TASK-00571 still consumes canonical coverage. Managed features,
+actual supplier qualification and whole-portfolio acceptance remain separate. Publication and eligible cleanup
+are pending at this checkpoint; current outcomes are in canonical ignored `.runs/tasks/TASK-00568/runs/land.md`
+and the TASK PR. Human merge remains separate.
+
 [TASK-00567's area-C planning correction](planning/tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06)
 has independent Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`
 (27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A). All 57 unfinished EPIC-00009/00010 records are accounted

@@ -17,9 +17,9 @@ replace an existing Agent's configuration or invent eligibility for a Workflow.
 
 Deliver authorized browser browse/detail, editable draft, history/diff and impact journeys over
 [TICKET-00075](00075-TICKET.md)'s database-authoritative Harness templates. Support human-only creation and
-revision of managed starting templates and authorized installation/Workspace-wide or registered-Repository-scoped
+revision of managed starting templates and authorized installation/Workspace-wide or registered-Project-scoped
 custom templates. Show stable template identity, functional role/persona, human-reviewed system prompt, complete
-requested direct-Permission set, applicable resource/model/Repository constraints, managed origin, ancestry,
+requested direct-Permission set, applicable resource/model/Project constraints, managed origin, ancestry,
 revision and provenance. Names and prompts describe behavior; they do not establish authenticated identity.
 
 A human explicitly reviews both prompt and requested Permissions before publication. Validate the complete
@@ -51,15 +51,19 @@ Permission catalogs rather than creating competing definitions.
 ## Validation and permissions
 
 Template management/publication requires its distinct current managed `SUPER_ADMIN_ONLY` management Permission
-through the authoritative managed Super Admin Role on every HTTP and non-HTTP entry. Revalidate actor, target,
-scope, expected revisions and referenced resources; a browser guard, role-name check or model assertion is not
-authorization. Requested Agent Permissions must resolve to current eligible `ADMIN_SAFE` IDs within approved
+through the authoritative managed Super Admin Role on every HTTP and non-HTTP entry. Each supported entry adapter admits actor, target and Project scope before configured bus dispatch; a browser
+guard, role-name check or model assertion is not authorization. No second Application gate or ordinary caller-
+revocation serialization is required. Registered AgentTemplate-owned handlers coordinate complete candidate,
+expected revision/reference consistency, persistence and required audit through the generic transaction boundary
+and collection repositories. Requested Agent Permissions must resolve to current eligible `ADMIN_SAFE` IDs within approved
 grant limits, not names guessed by the editor or a model. Surface missing/ineligible entries for correction;
 do not silently drop them and publish a different desired set. Recheck again at actual assignment.
 
-Enforce registered-Repository applicability and current model/resource constraints. Conflicts require refresh and
-human review; uncertain commits require status reconciliation before another publication attempt. Protect prompt
-and Permission details by scope and keep secrets/private cross-Repository content out of responses, logs and
+Enforce registered-Project applicability and current model/resource constraints. Conflicts require refresh and
+human review; uncertain commits require fresh authorized history/detail inspection before another publication
+attempt. New templates use adapter-generated typed IDs in void commands and uniqueness/fresh-query recovery;
+revision review provenance and expected-state selection do not promise immutable original-response replay. Protect prompt
+and Permission details by scope and keep secrets/private cross-Project content out of responses, logs and
 ordinary history. Use [ADR 0003](../adr/0003-browser-authentication-security-profile.md) and
 [ADR 0004](../adr/0004-client-authority-and-runtime-state.md) for browser transport, current authority and
 memory-only client state. Required revision/audit effects are atomic; no external provider call occurs in that transaction.
@@ -105,9 +109,9 @@ prerequisite. This TICKET retains actual browser publication, history/rollback/a
 The maintainer approved two dependency-ordered vertical features, both unranked:
 
 - [TASK-00300](../tasks/00300-TASK.md): human browse/create/revise/review/publish through a complete browser/API
-  path, with history/diff, authorized Agent impact and original-outcome recovery. Blocked by TASK-00249,
+  path, with history/diff, authorized Agent impact and fresh-query recovery. Blocked by TASK-00249,
   TASK-00259 and TASK-00051; TASK-00299's database authority is upstream. Status `needs-info` until complete
-  unpublished-candidate validation and final reference/current-authority fencing composition are qualified.
+  unpublished-candidate validation and final reference/expected-state/required-audit composition are qualified.
 - [TASK-00301](../tasks/00301-TASK.md): explicit retained-revision restoration and exact old-ancestor/new-ancestor/
   custom review through that same publication boundary. Status `ready-for-agent`, blocked by TASK-00300 and its
   inherited holds. Keeping current mutates nothing; accepting changes never silently updates existing Agents.

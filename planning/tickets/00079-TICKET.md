@@ -17,7 +17,7 @@ manual work without fabricating a Workflow or bypassing existing Agent, Team and
 
 Extend [TICKET-00063](00063-TICKET.md)'s existing named-Agent creation journey to eligible published templates
 from [TICKET-00076](00076-TICKET.md), including newly authored roles. Select an exact published revision, a
-distinct Agent name, one Team and allowed registered-Repository scope. Preview and explicitly confirm the
+distinct Agent name, one Team and allowed registered-Project scope. Preview and explicitly confirm the
 complete current eligible desired Permission set, resource/model constraints and scope. The actual authenticated
 Agent is distinct from the template/persona and is created through the same qualified package operation,
 holder-bound credential, protected sink and recovery path used for managed Agents.
@@ -28,7 +28,7 @@ selected template revision and exact resolved Harness/context snapshot. Later te
 that Agent or live session. Missing provider/tool/resource/host readiness keeps work visibly unavailable.
 
 Once usable, let the human initiate a small real assignment appropriate to the new role through already qualified
-Harness tools and current delegated authority. Record the actual role/template/Agent/Team/Repository/session and
+Harness tools and current delegated authority. Record the actual role/template/Agent/Team/Project/session and
 provider/model context and inspect the outcome to inform a separately reviewed revision. Scope and host/sandbox
 controls remain independent enforcement, not prompt promises. The assignment must be genuine authorized work,
 not a seeded demo, proof-only product or disposable fake Workflow. No mandatory per-template certification ceremony
@@ -45,7 +45,7 @@ managed roles or replace their separately owned product journeys.
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Select an eligible published template | N/A — selection/preview is read-only | Exact published revision, current desired set, Team/Repository scope and resource readiness | N/A — preview creates neither Agent nor grant | Complete human-reviewable creation candidate |
+| Select an eligible published template | N/A — selection/preview is read-only | Exact published revision, current desired set, Team/Project scope and resource readiness | N/A — preview creates neither Agent nor grant | Complete human-reviewable creation candidate |
 | Create a distinct custom-role Agent | Existing confirmed Agent creation intent and package provision operation | Fresh actor/target/template/Permission checks and original operation status | Existing package issuance and attributable creation facts after commit | One Team-assigned Agent with protected holder, pinned revision and truthful lifecycle state |
 | Perform real bounded manual work | Existing authorized Harness/tool operations under explicit human assignment | Current Agent/direct Permissions, delegated scope, snapshots and host/provider readiness | Only the owning operation/session facts on actual effects | Real scoped outcome; no automatic Workflow eligibility or template publication |
 
@@ -53,9 +53,12 @@ managed roles or replace their separately owned product journeys.
 
 Agent creation requires its distinct current managed `SUPER_ADMIN_ONLY` management Permission and separately
 required assignment authority; template publication permission alone is insufficient. Use the authoritative
-managed Super Admin Role's effective Permissions, never a role-name shortcut. Validate every entry path, exact
-published revision, current eligible `ADMIN_SAFE` Permission IDs and complete set, Team membership and Repository
-applicability. Reject drafts, stale previews, protected/missing Permissions and scope expansion rather than
+managed Super Admin Role's effective Permissions, never a role-name shortcut. Each supported entry adapter admits the human, exact target and Project scope before configured bus dispatch;
+no blanket Application gate is added. Registered package/owned creation handlers coordinate exact published
+revision, complete eligible `ADMIN_SAFE` assignment, Team membership and Project applicability with required audit
+through the generic shared transaction boundary and collection repositories. Use adapter-generated typed Agent
+identity; preserve exact credential operation and whole-product intent correlation because issuance/delivery and
+initial binding are not an ordinary database-create replay problem. Reject drafts, stale previews, protected/missing Permissions and scope expansion rather than
 silently downgrading the reviewed candidate. Preserve current expected-state and transaction/reference fences.
 
 After creation, Agent work uses independent live authentication/authorization and delegated grants; the Agent
@@ -67,7 +70,7 @@ provider disclosure controls must be real; do not launch outside approved limits
 ## Acceptance and evidence
 
 - Super Admin can select a newly published eligible template and create a distinct named Agent through the
-  existing journey, with exactly one Team, correct Repository scope and complete confirmed direct Permissions.
+  existing journey, with exactly one Team, correct Project scope and complete confirmed direct Permissions.
 - Draft/stale/ineligible/out-of-scope candidates and unauthorized direct creation are denied. Credential
   uncertainty retains original correlation and never appears as a usable Agent or duplicate creation.
 - A real new role performs a small authorized manual assignment through qualified tools. Record actual identity,
@@ -115,7 +118,7 @@ resolve the same authorized identity/conversation without duplicate work or sile
 primitives cannot be replaced by completed Explorer/browser Planning or invented TASK IDs.
 
 One complete existing-browser creation → separate human assignment → useful actual result owns the delivery and
-evidence. Preview/confirm exact published custom revision, name, one Team, Repository scope, full eligible grants
+evidence. Preview/confirm exact published custom revision, name, one Team, Project scope, full eligible grants
 and resource/model constraints; preserve original intent and truthful lifecycle state through uncertainty. Creation
 alone starts no work. Current independent authority, protected credentials, disclosure and host limits apply to
 manual use; a role title/prompt is never Workflow eligibility. Later publication changes no existing Agent/session.

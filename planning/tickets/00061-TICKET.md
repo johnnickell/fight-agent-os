@@ -11,14 +11,14 @@ status: ready-for-agent
 
 A provisioned, delivered key is not permission to run tools or perform work. No Agent-authenticated request
 path exists today. A static template, signed request or old snapshot could otherwise outlive direct Permission,
-Team, Repository or credential revocation.
+Team, Project or credential revocation.
 
 ## Solution and boundaries
 
 Integrate the actual package HMAC verifier and `AuthenticatedAgentPrincipal` for the holder-bound credential;
 qualify protected broker/first-party MCP transport, replay/nonce controls, destination binding and current
 activation before tool discovery **and each invocation**. Intersect the Agent's currently assigned eligible
-direct Permissions with current initiating-human/Workflow delegation where relevant, Team/Repository/checkout
+direct Permissions with current initiating-human/Workflow delegation where relevant, Team/Project/checkout
 scope, session profile/context revision and supported host/sandbox/provider controls. Give an authenticated
 Agent narrowly authorized safe self-profile read/update Tools, targeting only its own identity; no client-supplied
 Agent ID, stale profile or skill-requested tool widens authority. Expose unavailable tools and revocations
@@ -35,14 +35,17 @@ browser Agent credential is authorized.
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
 | Authenticate a holder | Verify signed request and current active credential/enrollment | Current Agent and operation, destination, holder and replay evidence | Safe authentication/denial observation, not credential disclosure | One request-scoped authenticated Agent principal or fail-closed denial |
-| Discover/invoke a tool | Package availability and owning MCP/Tool use-case command when permitted | Fresh direct Permissions, human/Workflow grant and Team/Repository/host scope | Only the tool's existing authorized event, if any | The actual bounded operation, never a power inferred from a template |
+| Discover/invoke a tool | Package availability and owning MCP/Tool use-case command when permitted | Fresh direct Permissions, human/Workflow grant and Team/Project/host scope | Only the tool's existing authorized event, if any | The actual bounded operation, never a power inferred from a template |
 | Read/update own safe profile | Package-owned self-profile Tool operations | Principal-bound target and safe profile View | Package profile fact only when changed | Limited own profile update without privilege/credential mutation |
 
 ## Validation and permissions
 
-HMAC, timestamp/nonce, holder and active credential are necessary, never sufficient. Authorize each requested
-capability with its exact Permission and current trusted context on every direct, CLI, broker and MCP entry path.
-Permission/credential/session/Team/delegation revocation must deny subsequent use even when Harness snapshots
+HMAC, timestamp/nonce, holder and active credential are necessary, never sufficient. Each actual CLI, broker or MCP entry adapter admits the requested capability with its exact Permission and
+current trusted Project/target context before configured bus dispatch. Direct in-process bus dispatch is trusted
+composition, not another public entry or a reason for duplicate Application admission.
+Permission/credential/session/Team/delegation revocation must deny subsequent requests, not retroactively
+cancel ordinary admitted work. Exact activation/signing and credential acknowledgement fences retain their
+separately justified safety requirements. Revocation denies subsequent use even when Harness snapshots
 are immutable. Missing qualified sandbox/host/provider/origin keeps work unavailable; do not silently launch
 outside approved limits. Never send raw HMAC keys, refresh/provider credentials, internal sink claims or arbitrary
 Tool input to models, child environments, UI or audit.
@@ -50,7 +53,7 @@ Tool input to models, child environments, UI or audit.
 ## Acceptance and evidence
 
 - A real distinct Agent performs permitted source-scoped use via authenticated tools; invalid holder, replay,
-  wrong destination, lost enrollment, disabled/revoked Agent, stale grant and changed Team/Repository deny.
+  wrong destination, lost enrollment, disabled/revoked Agent, stale grant and changed Team/Project deny.
 - Direct Permission changes become effective on the next use without template/session authority shortcuts;
   self-profile Tools are identity-bound and cannot update another Agent or expand grants.
 - Independently qualify actual broker/Harness/MCP origin, allowed tools and host protection with real consumer
