@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useId, useSyncExternalStore } from 'react';
 
 import { PresentationIcon } from '@/components/PresentationIcon';
 
@@ -14,8 +14,12 @@ export function ThemeSelector({
   compact?: boolean;
 }) {
   const { preference, effective } = useSyncExternalStore(theme.subscribe, theme.getSnapshot);
+  const statusId = useId();
   return (
-    <fieldset className={`theme-selector${compact ? ' theme-selector-compact' : ''}`}>
+    <fieldset
+      className={`theme-selector${compact ? ' theme-selector-compact' : ''}`}
+      aria-describedby={statusId}
+    >
       <legend>Appearance</legend>
       <div className="theme-selector-options">
         {choices.map((choice) => (
@@ -40,7 +44,7 @@ export function ThemeSelector({
           </label>
         ))}
       </div>
-      <small>Showing {effective} mode</small>
+      <small id={statusId}>Showing {effective} mode</small>
     </fieldset>
   );
 }

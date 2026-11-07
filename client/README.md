@@ -526,7 +526,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **185** named examples across twenty-one story files, including seven user-detail and fifteen pending-invitation status/recovery examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+`stories/` holds **189** named examples across twenty-two story files, including four shared public/error-shell,
+seven user-detail and fifteen pending-invitation status/recovery examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
 7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples, six confirmed-revocation examples and twelve production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
@@ -543,6 +544,10 @@ an offset 3px outline, and reduced motion removes animation/transitions while re
 No external fonts or imagery are used. Accepted C/round-4 tokens supply a production visual baseline, not
 an acceptance of unbuilt authentication/dashboard journeys.
 TASK-00050 supplies the public local appearance selector; this does not authorize arbitrary themes.
+TASK-00588 gives every shared public/error shell a compact wrapping brand/appearance row, with icon-supported
+44px radio labels, an accessible Appearance legend and described effective mode. Desktop uses the frame's
+approximately 61px scale without a fixed height; narrow/enlarged text wraps. Configuration failures and
+missing optional theme state retain safe recovery. Public pages do not gain authenticated account controls.
 
 Composition's SystemPreview, ThemeLight and ThemeDark render the production selector and components with
 isolated in-memory storage. SystemPreview follows live OS changes and releases listeners on unmount. Stories
@@ -556,7 +561,7 @@ not only its tokens, so held Light/Dark and OS-following System remain coherent 
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 185 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 189 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

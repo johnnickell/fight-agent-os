@@ -1,3 +1,5 @@
+@use 'bootstrap/scss/mixins/visually-hidden';
+
 #app {
   min-height: 100vh;
   min-height: 100dvh;
@@ -11,4 +13,36 @@ main {
 
 .shell-width {
   max-width: 64rem;
+}
+
+.shell-header {
+  padding-block: 0.5rem;
+}
+
+.shell-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.shell-header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.shell-header .theme-selector {
+  min-width: 0;
+
+  legend,
+  small {
+    @include visually-hidden.visually-hidden;
+  }
+
+  .theme-selector-option {
+    flex-direction: row;
+    padding: 0.25rem 0.5rem;
+  }
 }
