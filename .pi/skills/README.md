@@ -49,8 +49,8 @@ to fresh Land. It reuses Build's process dispatch/model/observation and subject 
 Intent-preserving code conflicts alone do not require Review/QA again; defects, new behavior and failed checks
 stop the fast path. Original reports remain unchanged. Actual native Sync selection requires a Harness containing
 Sync admission; skill discovery alone does not update an installed copy or grant coordinator authority.
-The [source-traced role flow](../../docs/engineering/sync/README.md) distinguishes instruction/dispatch ownership
-from still-required native journey qualification.
+The [source-traced role flow](../../docs/engineering/sync/README.md) separates current ownership from prior
+native-journey evidence; independent Review/QA of Sync itself remains required.
 
 [Writing for Agents](writing-for-agents/SKILL.md) supports skill/instruction authoring now.
 [Graphify](graphify/SKILL.md) queries derived source relationships and scopes explicit maintenance; installing this

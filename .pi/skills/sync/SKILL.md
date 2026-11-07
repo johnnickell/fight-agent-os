@@ -15,7 +15,7 @@ Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md).
 ## Admit one accepted subject
 
 `/skill:sync TASK-NNNNN [--checkout /absolute/selected/checkout]` selects exactly one TASK. No TICKET expansion,
-new PR, approval, merge, rebase, force-push, release, deployment or other-TASK sweep. Explicit operator invocation
+new PR, approval, PR merge, rebase, force-push, release, deployment or other-TASK sweep. Explicit operator invocation
 authorizes bounded integration/commit/checks, automatic Land, non-force update of the same PR and ordinary
 eligible cleanup, subject to narrower instructions. Reuse the user's checkout choice; ask main versus worktree
 only when missing. A workflow selection is not installation, project trust or OS isolation.

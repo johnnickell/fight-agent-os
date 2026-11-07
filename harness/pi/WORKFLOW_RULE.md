@@ -7,8 +7,8 @@ evaluator credential or provider preflight is required. Keep credentials and pri
 
 ## Session-local workflow
 
-Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other installed skill invocations select
-responsibilities. Select the operator's intended checkout with `--checkout /absolute/selected/checkout`; this
+Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other installed skill
+invocations select responsibilities. Select the operator's intended checkout with `--checkout /absolute/selected/checkout`; this
 records task ownership, not another approval or file permission. Fresh sessions use their containing checkout.
 A trusted process launcher supplies role, task and checkout. A launcher takes precedence on every startup/reload.
 Otherwise the latest session-wide selection survives tree navigation and restart only with matching session and
@@ -20,8 +20,8 @@ Inspect `fight_workflow_status.workflow` or `/fight-workflow`: `skill`, `effect`
 a QA-worker mismatch. Sync also has phase `qa`, skill `sync` and effect `coordination`: it coordinates one
 previously accepted TASK through fresh Engineer then Land, not routine Review/QA or new implementation.
 Use `/skill:sync TASK-NNNNN [--checkout /absolute/selected/checkout]`; current acceptance and the same existing
-OPEN PR remain required by its owning skill. Only interactive operator input or a trusted host binding changes authority. RPC, model
-prompts, stage labels, fixtures and profiles cannot promote a role. `/fight-workflow role engineer|reviewer|qa|land`
+OPEN PR remain required by its owning skill. Only interactive operator input or a trusted host binding changes
+authority. RPC, model prompts, stage labels, fixtures and profiles cannot promote a role. `/fight-workflow role engineer|reviewer|qa|land`
 is an explicit native-TUI alternative. SDK subordinates remain Reviewer unless the trusted host binds the actual
 fresh Engineer session through the supported Build route. An execution status is never independent acceptance.
 
