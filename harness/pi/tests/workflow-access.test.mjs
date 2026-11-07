@@ -78,3 +78,23 @@ test('workflow checkpoints preserve subject, selected checkout and query/status 
   assert.throws(() => access.input('/skill:work TASK-00586 --checkout relative', 'interactive'), { code: 'workflow-checkout-required' });
   assert.equal(restore().skill, 'release');
 });
+
+test('Sync defaults to isolated checkout resolution and preserves explicit checkout selection', () => {
+  const sessionId = randomUUID();
+  const checkout = '/project/main';
+  const access = new WorkflowAccess('local', { checkout });
+  const restore = (cwd = checkout) => WorkflowAccess.restore({ sessionId, checkout: cwd, entries: [{
+    type: 'custom', customType: 'fight-workflow-role-v3', data: access.checkpoint(sessionId),
+  }] });
+
+  access.input('/skill:sync TASK-00139 --checkout /project/previous', 'interactive');
+  assert.equal(restore().checkout, '/project/previous');
+  access.input('/skill:sync TASK-00139', 'interactive');
+  const resumed = restore();
+  assert.equal(resumed.skill, 'sync');
+  assert.equal(resumed.taskId, 'TASK-00139');
+  assert.equal(resumed.checkout, null);
+  assert.equal(restore('/other/project').skill, 'review');
+  resumed.input('/skill:work TASK-00139', 'interactive');
+  assert.equal(resumed.checkout, checkout);
+});

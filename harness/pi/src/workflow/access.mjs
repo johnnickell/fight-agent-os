@@ -21,7 +21,8 @@ const scopedSubject = (skill, value) => skill === 'sync' ? typeof value === 'str
 export class WorkflowAccess {
   constructor(phase = 'local', scope = {}) {
     this.role = 'engineer'; this.revision = 0;
-    this.skill = 'work'; this.taskId = scope.taskId ?? null; this.checkout = scope.checkout ?? null; this.mode = scope.mode ?? 'default';
+    this.defaultCheckout = scope.checkout ?? null;
+    this.skill = 'work'; this.taskId = scope.taskId ?? null; this.checkout = this.defaultCheckout; this.mode = scope.mode ?? 'default';
     if (phase !== 'local') this.select(phase);
     this.launcher = phase === 'local' ? null : this.role;
   }
@@ -38,7 +39,10 @@ export class WorkflowAccess {
       access.select(data.role);
       if (prior.customType === 'fight-workflow-role-v3' && Object.hasOwn(skillEffects, data.skill) &&
           skillRole(data.skill) === data.role && (data.taskId === null || scopedSubject(data.skill, data.taskId)) &&
-          typeof data.checkout === 'string' && isAbsolute(data.checkout) && ['default', 'query', 'status'].includes(data.mode)) {
+          ((typeof data.checkout === 'string' && isAbsolute(data.checkout)) ||
+            (data.skill === 'sync' && data.taskId !== null && data.checkout === null &&
+              typeof data.syncRoot === 'string' && isAbsolute(data.syncRoot) && data.syncRoot === checkout)) &&
+          ['default', 'query', 'status'].includes(data.mode)) {
         access.skill = data.skill; access.taskId = data.taskId; access.checkout = data.checkout; access.mode = data.mode;
       } else if (prior.customType === 'fight-workflow-role-v3') access.select('review');
     }
@@ -51,15 +55,18 @@ export class WorkflowAccess {
   checkpoint(sessionId, role = this.role) {
     const current = this.pending && this.pending.role === role ? this.pending : this;
     return { sessionId, role, launcher: this.launcher,
-      ...(this.checkout ? { skill: current.role === role ? current.skill : 'review', taskId: current.taskId,
-        checkout: current.checkout, mode: current.mode } : {}) };
+      ...(current.checkout || (current.skill === 'sync' && current.role === role) ?
+        { skill: current.role === role ? current.skill : 'review', taskId: current.taskId,
+          checkout: current.checkout, mode: current.mode,
+          ...(current.checkout === null ? { syncRoot: this.defaultCheckout } : {}) } : {}) };
   }
   select(value, persist = () => {}) {
     const key = normalizeRole(value);
     const role = Object.hasOwn(skillEffects, key) ? skillRole(key) : key === 'team-lead' ? 'qa' : stageRole(key);
     if (!role) throw new Unavailable('unknown-workflow-role');
     const skill = Object.hasOwn(skillEffects, key) ? key : key === 'team-lead' ? 'build' : ({ engineer: 'work', reviewer: 'review', qa: 'qa', land: 'land' })[role];
-    const next = { role, skill, taskId: this.taskId, checkout: this.checkout, mode: this.mode, ...this.requested };
+    const next = { role, skill, taskId: this.taskId, checkout: this.checkout ?? this.defaultCheckout,
+      mode: this.mode, ...this.requested };
     this.pending = next;
     try { persist(role); } finally { this.pending = undefined; }
     if (['role', 'skill', 'taskId', 'checkout', 'mode'].some(key => next[key] !== this[key])) {
@@ -86,7 +93,7 @@ export class WorkflowAccess {
     if (taskId !== null && !scopedSubject(selected[1], taskId)) throw new Unavailable('workflow-subject-required');
     const checkout = (sync ? syncInput[2] : /(?:^|\s)--checkout\s+(.+)$/.exec(selected[2])?.[1])?.replace(/^(?:"(.*)"|'(.*)')$/, '$1$2');
     if (checkout !== undefined && (!isAbsolute(checkout) || /[\x00-\x1f\x7f]/.test(checkout))) throw new Unavailable('workflow-checkout-required');
-    this.requested = { taskId, checkout: checkout ? resolve(checkout) : this.checkout,
+    this.requested = { taskId, ...(checkout ? { checkout: resolve(checkout) } : sync ? { checkout: null } : {}),
       mode: sync ? 'default' : /\b(query|trace)\b/.test(selected[2]) ? 'query' : /\b(status|preview|dry-run)\b/.test(selected[2]) ? 'status' : 'default' };
     try { this.select(selected[1], persist); } finally { this.requested = undefined; }
     return true;
