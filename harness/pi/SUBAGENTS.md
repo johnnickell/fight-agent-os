@@ -152,6 +152,14 @@ The original 0.23.0/Pi 1.5.0 missing-hook probe remains evidence in TASK-00560, 
 version gate. John approved the bundled component on 2026-11-04; its supported local setup/root hooks are in
 [the engine RPC contract](vendor/pi-subagents/docs/rpc.md). No external fork or upstream publication is required.
 
+### Build Engineer prerequisite — TASK-00560 held
+
+Historical locator for TASK-00560's 2026-11-03 missing-capability evidence: read the
+[original hold at revision 03241436](https://github.com/johnnickell/fight-agent-os/blob/0324143618496c3cf26bdd3e315243a47934dbc9/harness/pi/SUBAGENTS.md#build-engineer-prerequisite--task-00560-held).
+The later bundled hooks and accepted Engineer journey superseded that hold. Its old setup instructions are
+not current commands; use the all-role bootstrap above for this candidate. This reference does not clear
+TASK-00561's remaining qualification or default-cutover requirements.
+
 ## Supported observation boundary
 
 The passive bridge resolves actual manager records with exact native-root custody, stable record/session objects,

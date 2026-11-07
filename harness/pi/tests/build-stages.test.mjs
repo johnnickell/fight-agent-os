@@ -160,7 +160,7 @@ test('shared repairs and exact role pins survive assessor changes and reload ent
   assert.throws(() => stageHistory(entries, { ...request, checkout: '/other' }), /target-changed/);
 });
 
-function engine(f, behavior = 'completed') {
+function engine(f, behavior = 'completed', deferPromise = false) {
   let record, calls = 0, signal;
   const registry = { ...f.registry, getRecord: () => record, spawn(_pi, _ctx, type, prompt, options) {
     calls++; assert.equal(type, stageDefinitions[f.request.role].agent); assert.equal(options.inheritContext, false);
@@ -168,14 +168,19 @@ function engine(f, behavior = 'completed') {
     const session = f.child(); signal = options.signal;
     session.resourceLoader.getExtensions = () => ({ errors: [], extensions: ['workflow-extension.ts', 'build-stages-extension.ts']
       .map(path => ({ path: fileURLToPath(new URL('../src/' + path, import.meta.url)) })) });
-    let settle;
-    record = { id: 'record', rootSessionId: 'actual-parent', status: 'running', promise: new Promise(resolve => { settle = resolve; }) };
+    let settle, reject;
+    const promise = new Promise((resolve, fail) => { settle = resolve; reject = fail; });
+    record = { id: 'record', rootSessionId: 'actual-parent', startedAt: 1, status: 'running',
+      abortController: new AbortController(), promise: deferPromise ? undefined : promise };
+    if (deferPromise) record.status = 'queued';
     queueMicrotask(async () => {
       try {
+        if (deferPromise) { record.status = 'running'; record.startedAt++; }
         await options.beforeSessionStart(session, options.signal);
         publishWorkflow(session.sessionManager, new WorkflowAccess(f.assignment.skill, { taskId: f.request.task, checkout: f.root }));
         stageBinding(session.sessionManager).admitted = true; record.session = session;
-        if (['completed', 'error', 'steered', 'aborted'].includes(behavior)) { record.status = behavior; settle(); }
+        if (typeof behavior === 'function') behavior({ record, session, settle, reject, signal, promise });
+        else if (['completed', 'error', 'steered', 'aborted'].includes(behavior)) { record.status = behavior; settle(); }
         else if (behavior === 'record-loss') record = undefined;
         else options.signal.addEventListener('abort', () => { record.status = 'stopped'; settle(); }, { once: true });
       } catch { record.status = 'error'; settle(); }
@@ -201,6 +206,53 @@ for (const behavior of ['completed', 'error', 'steered', 'aborted', 'timeout', '
     assert.equal(JSON.parse(readFileSync(join(f.request.attempt, 'sdk-outcome.json'))).acceptance, false);
     await assert.rejects(runStage(e.pi, f.ctx, f.request, { ...f.options, registry: e.registry }), /EEXIST|attempt-not-fresh/);
   });
+
+for (const transition of ['settled-before-replacement', 'late-resolution', 'late-rejection', 'promise-only',
+  'foreground-resume', 'same-clock-resume', 'queued-resume', 'replacement-already-settled'])
+  test(`same-record ${transition} holds the admitted stage instead of proving quiescence`, async t => {
+    const f = fixture(t, 'reviewer'), timers = []; let releaseReplacement;
+    t.after(() => { timers.forEach(clearTimeout); releaseReplacement?.(); });
+    const e = engine(f, ({ record, session, settle, reject }) => {
+      t.after(settle);
+      record.status = 'completed';
+      if (transition === 'settled-before-replacement') { session.isStreaming = true; settle(); }
+      // Allow a terminal poll to subscribe before the record is reused.
+      timers.push(setTimeout(() => {
+        if (!['late-resolution', 'late-rejection'].includes(transition)) settle();
+        if (!['foreground-resume', 'same-clock-resume', 'queued-resume'].includes(transition)) {
+          record.promise = new Promise(resolve => { releaseReplacement = resolve; });
+          if (transition === 'replacement-already-settled') releaseReplacement();
+        }
+        if (transition !== 'promise-only' && transition !== 'same-clock-resume' && transition !== 'queued-resume') record.startedAt++;
+        if (transition === 'same-clock-resume') record.abortController = new AbortController();
+        record.status = transition === 'queued-resume' ? 'queued' : 'stopped';
+        session.isStreaming = false;
+        if (transition === 'late-resolution') timers.push(setTimeout(settle, 0));
+        if (transition === 'late-rejection') timers.push(setTimeout(() => reject(new Error('prior-run-failed')), 0));
+        // Keep the old implementation finite even for a queued transition.
+        if (transition === 'queued-resume') timers.push(setTimeout(() => { record.status = 'stopped'; }, 300));
+      }, 150));
+    });
+    const outcome = await runStage(e.pi, f.ctx, f.request, { ...f.options, registry: e.registry });
+    assert.equal(outcome.executionSettled, false);
+    assert.equal(outcome.state, 'uncertain'); assert.equal(outcome.reason, 'stage-run-changed');
+    assert.equal(e.signal().aborted, true); assert.equal(e.calls(), 1); assert.equal(outcome.acceptance, false);
+    const entry = { type: 'custom', customType: 'fight-build-sdk-attempt-v1', data: outcome };
+    assert.throws(() => stageHistory([entry], { ...f.request, role: 'qa' }), /unreconciled/);
+  });
+
+test('initial promise installation and current streaming must both finish before settlement', async t => {
+  const f = fixture(t), timers = []; let streamingFinished = false;
+  t.after(() => timers.forEach(clearTimeout));
+  const e = engine(f, ({ record, session, settle, promise }) => {
+    session.isStreaming = true;
+    timers.push(setTimeout(() => { record.promise = promise; record.status = 'completed'; settle(); }, 150));
+    timers.push(setTimeout(() => { session.isStreaming = false; streamingFinished = true; }, 350));
+  }, true);
+  const outcome = await runStage(e.pi, f.ctx, f.request, { ...f.options, registry: e.registry });
+  assert.equal(streamingFinished, true); assert.equal(outcome.executionSettled, true);
+  assert.equal(outcome.state, 'completed'); assert.equal(outcome.reason, null); assert.equal(e.calls(), 1);
+});
 
 test('pre-abort is not-started; possibly-started synchronous exceptions stay uncertain', async t => {
   const f = fixture(t);

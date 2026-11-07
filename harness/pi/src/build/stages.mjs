@@ -107,9 +107,26 @@ export async function runStage(pi, ctx, request, options) {
     role: prepared.role, checkout: request.checkout, base: prepared.base, head: request.head,
     provider: request.provider, model: request.model, thinking: request.thinking,
     repair: request.repair, repairsUsed: request.repairsUsed, repairLimit: request.repairLimit, requestDigest: prepared.requestDigest };
-  let id, session, binding, observedRecord, reason = null, settled = false, unknown = false, spawnCalled = false;
+  let id, session, binding, observedRecord, run, watchedPromise, terminalSeen = false;
+  let reason = null, settled = false, unknown = false, spawnCalled = false;
   const save = value => writeFileSync(join(request.attempt, 'sdk-outcome.json'), JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
   const cancel = code => { reason ??= code; controller.abort(); };
+  const currentRun = record => record === observedRecord && !!run && record?.startedAt === run.startedAt &&
+    record?.abortController === run.abortController && record?.promise === run.promise;
+  const watchRun = record => {
+    // Queued startup may install its first promise later. A resume is never a fresh stage.
+    run ??= { startedAt: record.startedAt, abortController: record.abortController, promise: record.promise };
+    if (record.startedAt !== run.startedAt || record.abortController !== run.abortController ||
+        run.promise && record.promise !== run.promise || terminalSeen && !terminal.has(record.status)) return false;
+    run.promise ??= record.promise;
+    if (run.promise && !watchedPromise) {
+      watchedPromise = run.promise;
+      const settle = () => { if (currentRun(registry.getRecord(id))) settled = true; };
+      watchedPromise.then(settle, settle);
+    }
+    terminalSeen ||= terminal.has(record.status);
+    return true;
+  };
   const aborted = () => cancel('abort');
   options.signal?.addEventListener('abort', aborted, { once: true });
   const remove = options.onShutdown?.(() => cancel('parent-shutdown-or-reload'));
@@ -129,6 +146,8 @@ export async function runStage(pi, ctx, request, options) {
           if (!record || observedRecord && record !== observedRecord || record.rootSessionId !== parent ||
               record.parentAgentId !== undefined || record.workflowId !== undefined) fail('stage-parent-mismatch');
           authorized(ctx, request); candidate(request);
+          observedRecord = record;
+          if (!watchRun(record)) fail('stage-run-changed');
           binding = bindStageSession(child, assignment); session = child;
         },
       });
@@ -138,7 +157,7 @@ export async function runStage(pi, ctx, request, options) {
       if (event?.id === id) pi.events.emit('subagents:rpc:consume', { requestId: `fight-stage-${id}`, agentId: id });
     };
     const uncomplete = pi.events.on('subagents:completed', consume), unfail = pi.events.on('subagents:failed', consume);
-    let abortAt, nextProgress = 0, watchedPromise;
+    let abortAt, nextProgress = 0;
     try {
       while (true) {
         const record = registry.getRecord(id);
@@ -147,9 +166,8 @@ export async function runStage(pi, ctx, request, options) {
         }
         observedRecord = record;
         if (reason) abortAt ??= performance.now();
-        if (terminal.has(record.status) && record.promise && watchedPromise !== record.promise) {
-          watchedPromise = record.promise;
-          record.promise.then(() => { settled = true; }, () => { settled = true; });
+        if ((record.promise || session) && !watchRun(record)) {
+          unknown = true; cancel('stage-run-changed'); break;
         }
         if (terminal.has(record.status) && settled && !session?.isStreaming) break;
         if (abortAt !== undefined && performance.now() - abortAt > 10000) { unknown = true; break; }
@@ -161,6 +179,7 @@ export async function runStage(pi, ctx, request, options) {
       }
     } finally { uncomplete(); unfail(); }
     const record = registry.getRecord(id), report = reportSnapshot(prepared.report);
+    if (!unknown && !currentRun(record)) { unknown = true; cancel('stage-run-changed'); }
     if (session && !reason && !stageIdentity(session, parent)) binding.failure = 'stage-final-identity-mismatch';
     const outcome = { ...identity, id, session: session?.sessionManager.getSessionId() ?? null,
       effective: session ? { provider: session.model?.provider ?? null, model: session.model?.id ?? null, thinking: session.thinkingLevel ?? null } : null,
