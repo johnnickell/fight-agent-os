@@ -1,13 +1,11 @@
 /** Normalize extension status text without allowing embedded line breaks */
 const singleLine = text => text.replace(/[\r\n\t]/g, ' ').replace(/ +/g, ' ').trim();
 
-/** Keep Codex usage immediately above the combined screening and Jev row */
+/** Keep Codex usage on its own row without hiding other extension statuses */
 export function footerStatusRows(statuses) {
-  const fight = ['fight-file-screen', 'fight-jev'];
-  const others = [...statuses].filter(([key]) => key !== 'codex-weekly-usage' && !fight.includes(key))
+  const others = [...statuses].filter(([key]) => key !== 'codex-weekly-usage')
     .sort(([a], [b]) => a.localeCompare(b)).map(([, text]) => singleLine(text));
-  return [others.join(' '), singleLine(statuses.get('codex-weekly-usage') ?? ''),
-    fight.map(key => singleLine(statuses.get(key) ?? '')).filter(Boolean).join(' · ')].filter(Boolean);
+  return [others.join(' '), singleLine(statuses.get('codex-weekly-usage') ?? '')].filter(Boolean);
 }
 
 /** Include assistant, nested-tool, standalone and summary usage without double counting */

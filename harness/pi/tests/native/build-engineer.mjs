@@ -12,7 +12,7 @@ mkdirSync(evidence, { recursive: true });
 const root = realpathSync(mkdtempSync(join(evidence, 'installed-'))), agentDir = join(root, 'private-agent');
 mkdirSync(agentDir);
 process.env.PI_CODING_AGENT_DIR = agentDir; process.env.PI_OFFLINE = '1';
-process.env.FIGHT_SCREENING_PHASE = 'build'; process.env.FIGHT_SCREENING_TASK = 'TASK-00560'; process.env.FIGHT_SCREENING_CHECKOUT = root;
+process.env.FIGHT_WORKFLOW_PHASE = 'build'; process.env.FIGHT_WORKFLOW_TASK = 'TASK-00560'; process.env.FIGHT_WORKFLOW_CHECKOUT = root;
 // Inherit no operator setup, enrollment, credentials, settings or Herdr endpoints.
 process.env.HOME = join(root, 'home'); mkdirSync(process.env.HOME);
 for (const key of Object.keys(process.env).filter(key => /^(HERDR_|FIGHT_WORKSPACE)/.test(key))) delete process.env[key];
@@ -62,14 +62,14 @@ async function call(name, args) {
 try {
   await session.bindExtensions({ onError: error => errors.push(error.message) });
   session.setActiveToolsByName([...session.getActiveToolNames(), 'fight_build_engineer']);
-  const initial = await call('file_screening_status', {});
+  const initial = await call('fight_workflow_status', {});
   assert.equal(JSON.parse(initial.result.content[0].text).workflow.skill, 'build');
   // Controlled input dispatch checks, not operator authority or live acceptance:
   // RPC cannot select a role; an actual root interactive selection needs no Jev.
   await session.extensionRunner.emitInput('/skill:work TASK-00560', undefined, 'rpc');
-  assert.equal(JSON.parse((await call('file_screening_status', {})).result.content[0].text).workflow.skill, 'build');
+  assert.equal(JSON.parse((await call('fight_workflow_status', {})).result.content[0].text).workflow.skill, 'build');
   await session.extensionRunner.emitInput('/skill:work TASK-00560', undefined, 'interactive');
-  assert.equal(JSON.parse((await call('file_screening_status', {})).result.content[0].text).workflow.skill, 'work');
+  assert.equal(JSON.parse((await call('fight_workflow_status', {})).result.content[0].text).workflow.skill, 'work');
   await session.extensionRunner.emitInput('/skill:build TASK-00560', undefined, 'interactive');
   const registry = globalThis[Symbol.for('pi-subagents:manager')];
   const observer = new SubagentObserver(session.sessionManager.getSessionId(), frame => frames.push(frame));
@@ -114,7 +114,7 @@ try {
   assert.equal(frames.at(-1).identity.task, 'TASK-00560'); assert.equal(frames.at(-1).identity.role, 'engineer');
   assert.equal(frames.at(-1).identity.attempt, attempt); assert.match(frames.at(-1).text, /Qualified scripted/);
   // Native SDK child retained exact session identity and actual Fight Work admission.
-  const childStatus = record.session.agent.state.tools.find(tool => tool.name === 'file_screening_status');
+  const childStatus = record.session.agent.state.tools.find(tool => tool.name === 'fight_workflow_status');
   const status = await childStatus.execute('status', {}, undefined, undefined, { sessionManager: record.session.sessionManager });
   const child = JSON.parse(status.content[0].text);
   assert.equal(child.workflow.skill, 'work'); assert.equal(child.workflow.taskId, 'TASK-00560');
@@ -126,12 +126,12 @@ try {
   const subordinate = registry.spawn(null, null, 'fight-explorer', 'Controlled subordinate probe.', { description: 'No stage authority', isBackground: true });
   await registry.waitForAll();
   const sub = registry.getRecord(subordinate).session;
-  const subStatus = await sub.agent.state.tools.find(tool => tool.name === 'file_screening_status').execute('status', {}, undefined, undefined, {});
+  const subStatus = await sub.agent.state.tools.find(tool => tool.name === 'fight_workflow_status').execute('status', {}, undefined, undefined, {});
   assert.equal(JSON.parse(subStatus.content[0].text).workflow.skill, 'review');
   await sub.extensionRunner.emitInput('/skill:work TASK-00560', undefined, 'interactive');
-  const stillSubordinate = await sub.agent.state.tools.find(tool => tool.name === 'file_screening_status').execute('status', {}, undefined, undefined, {});
+  const stillSubordinate = await sub.agent.state.tools.find(tool => tool.name === 'fight_workflow_status').execute('status', {}, undefined, undefined, {});
   assert.equal(JSON.parse(stillSubordinate.content[0].text).workflow.skill, 'review');
-  assert.equal(process.env.FIGHT_SCREENING_PHASE, 'build');
+  assert.equal(process.env.FIGHT_WORKFLOW_PHASE, 'build');
   const failures = [];
   const fresh = (name, timeout = 10) => {
     const attempt = join(root, '.runs/build/TASK-00560/run', name); mkdirSync(attempt, { recursive: true });

@@ -7,7 +7,7 @@ description: Implement or revise an approved TASK on a feature branch, verify it
 
 Read the target's instructions, TASK/parent, Board and [execution standards](../../../docs/engineering/EXECUTION.md).
 Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md); never substitute provider policy for the
-target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md).
+target's own gates. Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md).
 
 For a fresh Engineer assigned by real [Sync](../sync/SKILL.md), follow its
 [integration assignment](../sync/references/integration.md) instead of implementing new behavior or routing a

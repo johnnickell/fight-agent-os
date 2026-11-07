@@ -31,9 +31,8 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Never pin Pi to a version number. For Pi integrations, qualify the currently installed supported APIs and behavior;
   record the tested version as evidence, not an equality gate or future compatibility guarantee. Missing capabilities
   block the affected behavior; preserve historical version receipts and unrelated dependency/model pins.
-- In a participating session with `jev_read_file` and its shared rule available, follow
-  [selective file reads](harness/pi/FILE_SCREENING_RULE.md). Load mandatory governing/selected-skill instructions
-  directly. Native reads need no screening receipt or exception; discovery refusals do not prohibit them
+- Use bounded native discovery and file access under the installed [workflow rule](harness/pi/WORKFLOW_RULE.md).
+  Load mandatory governing/selected-skill instructions directly; no evaluator enrollment or screening is required
 - For PHP implementation, planning or assessment, read the shared [architecture contract](docs/engineering/STANDARDS.md#architecture):
   aggregate-first ownership, Project vocabulary, registered handlers, adapter admission, typed creation/results,
   transaction/audit and application breaking-change/data rules. ADRs retain rationale and explicit amendments;

@@ -7,7 +7,7 @@ description: Challenge a reviewed TASK, PR or release candidate with adversarial
 
 Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target instructions and
 [QA standards](../../../docs/engineering/QA.md). Follow the
-[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md); provider policy never replaces target-owned gates.
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md); provider policy never replaces target-owned gates.
 For `release <version>` or an assigned release PR, first use
 [release acceptance](../release/references/acceptance.md), substituting its subject, criteria and canonical paths.
 Include required release scenarios and return to that coordinator; TASK routing below does not apply to releases.

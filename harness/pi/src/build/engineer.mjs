@@ -71,7 +71,7 @@ export function prepareEngineer(ctx, request, { selected, registry, profile }) {
   // an inheritable-context witness. No context section means none was discovered.
   const instructions = [...governing.matchAll(/<project_context>\n([\s\S]*?)\n<\/project_context>/g)]
     .map(match => match[1].trim()).filter(Boolean);
-  const requiredExtensions = ['jev-extension.ts', 'build-engineer-extension.ts'].map(path => join(harness, 'src', path));
+  const requiredExtensions = ['workflow-extension.ts', 'build-engineer-extension.ts'].map(path => join(harness, 'src', path));
   // Claim BEFORE spawn. An uncertain spawn, abort or crash never releases this
   // claim for replay. Build reconciles the original attempt; it never falls back.
   mkdirSync(join(request.attempt, 'dispatch.lock'), { mode: 0o700 });

@@ -114,7 +114,7 @@ def main():
         monitor = (package / 'src/observation/run-stage.py').resolve(strict=True)
         if monitor.parent != package / 'src/observation':
             raise ValueError('monitor outside package')
-        # Exercise native registration with the same package injection used by enrolled screening.
+        # Exercise the same native package registration used by the selected child.
         # Pi can exit zero despite registration conflicts, so diagnostics also hold.
         registration = native_pi('--offline', '-e', str(package), '--help')
         if registration.returncode or registration.stderr.strip():

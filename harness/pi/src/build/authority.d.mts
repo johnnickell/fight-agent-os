@@ -1,5 +1,5 @@
 import type { AgentSession, ExtensionContext } from '@earendil-works/pi-coding-agent';
-import type { WorkflowAccess } from '../jev/workflow-access.mjs';
+import type { WorkflowAccess } from '../workflow/access.mjs';
 export declare const engineerEffects: readonly string[];
 export type EngineerAssignment = {
   parent: string; task: string; role: 'engineer'; skill: 'work'; effects: readonly string[];

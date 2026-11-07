@@ -26,10 +26,9 @@ const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.j
 let credentialReads = 0;
 runtime.getApiKeyForProvider = async () => { credentialReads++; throw new Error('Unexpected credential resolution'); };
 const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
-const expectedCommands = ['fight-agents', 'fight-header', 'fight-policy', 'fight-subagents', 'fight-workspace', 'file-screening', 'jev'];
-const expectedFlags = ['fight-build-engineer', 'fight-header', 'fight-screening-required', 'fight-tool-policy'];
-// file_locate is session/enrollment-dependent and exercised by optional-jev.mjs.
-const expectedTools = ['fight_build_engineer', 'file_screening_status', 'jev_read_file'];
+const expectedCommands = ['fight-agents', 'fight-header', 'fight-policy', 'fight-subagents', 'fight-workflow', 'fight-workspace'];
+const expectedFlags = ['fight-build-engineer', 'fight-header', 'fight-tool-policy'];
+const expectedTools = ['fight_build_engineer', 'fight_workflow_status'];
 const scenarios = [], headers = {};
 let outcomes = 0;
 async function load(paths) {
@@ -93,7 +92,7 @@ for (const [name, paths, mode] of [
       assert.equal(render(80).length, 1); outcomes++;
       headers[name] = views;
       if (!headerOnly) {
-        await session.prompt('/jev inspect'); assert.match(notices.at(-1), /missing-setup/); outcomes++;
+        await session.prompt('/fight-workflow'); assert.match(notices.at(-1), /workflow/); outcomes++;
         await session.prompt('/fight-policy'); assert.match(notices.at(-1), /not-selected/); outcomes++;
         await session.prompt('/fight-workspace'); assert.match(notices.at(-1), /Requires native Pi inside Herdr/); outcomes++;
       }

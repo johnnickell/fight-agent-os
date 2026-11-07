@@ -14,8 +14,8 @@ export default function installWorkspaceStartup(pi: ExtensionAPI) {
       if (ctx.mode !== 'tui' || typeof pi.getCommands !== 'function' || !pi.events?.emit) throw Error('Native startup APIs unavailable');
       const root = dirname(fileURLToPath(import.meta.url));
       const expected = new Map([
-        ['fight-header', 'header-extension.ts'], ['jev', 'jev-extension.ts'],
-        ['file-screening', 'jev-extension.ts'], ['fight-policy', 'tool-policy-extension.ts'],
+        ['fight-header', 'header-extension.ts'], ['fight-workflow', 'workflow-extension.ts'],
+        ['fight-policy', 'tool-policy-extension.ts'],
         ['fight-workspace', 'herdr-workspace-extension.ts'],
       ]);
       const commands = pi.getCommands();

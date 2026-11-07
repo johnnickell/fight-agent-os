@@ -15,7 +15,7 @@ packages, change settings/trust or pin Pi. A separate authorized Work invocation
 
 ## Trace the selected scope
 
-1. Resolve the selected checkout and read its instructions. Follow the [selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md)
+1. Resolve the selected checkout and read its instructions. Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md)
    for bounded discovery. Read the [Diagrams contract](../../../docs/engineering/DIAGRAMS.md) before authoring;
    it owns view selection, edge semantics, source traces, limitations and image inspection. For PHP also read
    [the architecture contract](../../../docs/engineering/STANDARDS.md#architecture); actual placement is not

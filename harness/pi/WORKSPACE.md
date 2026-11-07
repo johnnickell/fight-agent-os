@@ -294,7 +294,7 @@ Harness package identity automatically. Adopt reviewed source explicitly and ful
 For an existing RPC conversation, record its **actual displayed session file**, stop that owned RPC client
 normally, change to the same conversation checkout and run `pi --session /absolute/actual-session.jsonl`.
 Do not use `--continue` to guess, fork/clone history, copy launcher-role flags or select authority through injected
-input. In native Pi inspect `/session` and `/file-screening` for the actual session and workflow binding; select
+input. In native Pi inspect `/session` and `/fight-workflow` for the actual session and workflow binding; select
 a workflow only through the operator's explicit native action if needed. Then open the companions, or use `fight-workspace --session /absolute/actual-session.jsonl` from that same
 checkout for automatic companion opening with the identical file. Ephemeral
 `--no-session` conversations cannot be resumed. Session files and historical evidence are never deleted.
@@ -825,7 +825,7 @@ for executing policy-boundary probes.
 
 Prompts, supported registered extension commands and prompt templates go through RPC `prompt`; streaming prompts
 explicitly steer. `agent_settled`, not a successful command response, clears the running indicator. Shell input
-uses RPC `bash`, preserving Pi's `user_bash` route. Under the [native-shell rule](FILE_SCREENING_RULE.md#native-shell-remains-independent),
+uses RPC `bash`, preserving Pi's `user_bash` route. Under the [native-shell rule](https://github.com/johnnickell/fight-agent-os/blob/21de9f7bc330b44fb5c1a9fd1954f9f87c3b2aaa/harness/pi/FILE_SCREENING_RULE.md#native-shell-remains-independent),
 there is no Jev command assessment, disclosure or confirmation, and no Jev setup is required. Existing task and
 native runtime permissions still apply; RPC grants no shell authority. Explicit-file checks do not confine shell,
 its descendants or trusted SDK calls, and do not provide OS isolation. Any independently selected

@@ -10,7 +10,7 @@ Act as local coordinator, never implementer or independent acceptor. This is acc
 Build's new-implementation sequence. Read [project context](../../../docs/engineering/PROJECT_CONTEXT.md), the
 target instructions, complete TASK/accepted parents, canonical Review/QA and
 [advancing-base policy](../../../docs/engineering/LANDING.md#reconcile-an-advancing-base).
-Follow the [portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md).
+Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md).
 
 ## Admit one accepted subject
 
@@ -25,7 +25,8 @@ only when missing. A workflow selection is not installation, project trust or OS
    a request, RPC/extension input, stage label nor an Engineer child can select Sync by prompt. If the active
    Harness lacks Sync admission, hold for the operator's reviewed-package adoption and explicit native invocation;
    do not fabricate Build authority or mutate settings/install/trust. Use the supported status surface
-   (`file_screening_status.workflow` on the enrolled profile).
+   (`fight_workflow_status.workflow` or `/fight-workflow`). Native file/shell availability is independent of
+   this responsibility binding; no evaluator enrollment or credential is required.
 2. Verify cwd/origin, Git common-directory/canonical base, registered selected checkout, feature branch, clean
    status and current OIDs. Preserve unrelated changes; an unsafe/dirty selected subject holds integration.
    Read the existing task-owned run ledger and Work/Land handoffs before selecting effects. Do not assume a
