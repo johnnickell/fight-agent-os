@@ -71,7 +71,7 @@ procedures for that checkout. Preserve the original Build ledger and independent
 Reuse [Build's model pinning and process launch protocol](../build/SKILL.md#pin-models-then-launch-fresh-roles)
 for capability checks, absolute provider launcher, fresh private attempts/requests, native package/trust/custody,
 visible progress, finite timeouts, observation and exit reconciliation. Use the default process route for both
-roles, not the opt-in Build-only SDK Engineer tool. Do not create another launcher or execution engine.
+roles, not the explicitly selected Build-only SDK stage tool. Do not create another launcher or execution engine.
 Pin the same role model defaults and preserve them on continuation. Observation remains human-only;
 visibility loss never authorizes a second worker.
 

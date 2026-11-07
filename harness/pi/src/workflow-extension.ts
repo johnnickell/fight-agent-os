@@ -3,7 +3,7 @@ import { Type } from 'typebox';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { WorkflowAccess, skillEffects } from './workflow/access.mjs';
 import { inChildSessionContext } from '../vendor/pi-subagents/src/child-context.ts';
-import { closeWorkflow, engineerIdentity, isSdkSession, publishWorkflow, rememberSdkSession, stageBinding } from './build/authority.mjs';
+import { closeWorkflow, stageIdentity, isSdkSession, publishWorkflow, rememberSdkSession, stageBinding } from './build/authority.mjs';
 import { installStatusFooter } from './status-footer.ts';
 
 const rule = readFileSync(new URL('../WORKFLOW_RULE.md', import.meta.url), 'utf8');
@@ -19,8 +19,9 @@ export default function installWorkflow(pi: ExtensionAPI) {
     return { state: failure ? 'held' : 'active', reason: failure ?? null, phase: workflow.role,
       workflow: { skill: workflow.skill, effect: skillEffects[workflow.skill], taskId: workflow.taskId,
         checkout: workflow.checkout, mode: workflow.mode, launcherRole: workflow.launcher },
-      ...(binding ? { stage: { role: 'engineer', skill: 'work', task: binding.task, attempt: binding.attempt,
-        parent: binding.parent, effects: binding.effects, live: binding.live } } : {}) };
+      ...(binding ? { stage: { role: binding.role, skill: binding.skill, task: binding.task, attempt: binding.attempt,
+        parent: binding.parent, candidate: binding.head, evidenceBase: binding.base, canonicalReport: binding.report,
+        effects: binding.effects, live: binding.live } } : {}) };
   };
   const persistRole = (role: string) => {
     try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, role)); }
@@ -48,7 +49,7 @@ export default function installWorkflow(pi: ExtensionAPI) {
     try {
       if (childFactory) rememberSdkSession(ctx.sessionManager);
       const binding = stageBinding(ctx.sessionManager), sdk = isSdkSession(ctx.sessionManager);
-      workflow = binding?.live ? new WorkflowAccess('work', { taskId: binding.task, checkout: binding.checkout }) :
+      workflow = binding?.live ? new WorkflowAccess(binding.skill, { taskId: binding.task, checkout: binding.checkout }) :
         WorkflowAccess.restore({ phase: sdk ? 'review' : process.env.FIGHT_WORKFLOW_PHASE, sessionId,
           taskId: sdk ? undefined : process.env.FIGHT_WORKFLOW_TASK,
           checkout: sdk ? ctx.cwd : process.env.FIGHT_WORKFLOW_CHECKOUT ?? ctx.cwd,
@@ -60,8 +61,8 @@ export default function installWorkflow(pi: ExtensionAPI) {
   pi.on('input', (event, ctx) => {
     const binding = stageBinding(ctx.sessionManager);
     if (binding) {
-      if (!engineerIdentity({ sessionManager: ctx.sessionManager, model: ctx.model, thinkingLevel: ctx.thinkingLevel }, binding.parent) || failure) {
-        binding.failure = 'engineer-initialized-admission-mismatch';
+      if (!stageIdentity({ sessionManager: ctx.sessionManager, model: ctx.model, thinkingLevel: ctx.thinkingLevel }, binding.parent) || failure) {
+        binding.failure = 'stage-initialized-admission-mismatch';
         return { action: 'handled' as const };
       }
       binding.admitted = true;

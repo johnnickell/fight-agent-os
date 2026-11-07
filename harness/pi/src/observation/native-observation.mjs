@@ -44,7 +44,10 @@ export class NativeObservation {
       env: childEnvironment(process.env), stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     this.child = child;
     child.on('message', message => this.receive(message));
-    child.on('error', () => this.close());
+    const lost = () => { this.ready = false; this.close(); };
+    child.on('error', lost);
+    child.on('disconnect', lost);
+    child.on('exit', lost);
     // The daemon is an observation reader, never an executor or child custodian.
     child.send({ type: 'initialize', primary: this.primary, parent: this.parent, parentFile: this.parentFile,
       pendingParentFile: this.pendingParentFile, generation,
@@ -65,6 +68,9 @@ export class NativeObservation {
     this.flushSubagents();
   }
   flushSubagents() {
+    if (!this.closed && this.ready && this.child && !this.child.connected) {
+      this.ready = false; this.close();
+    }
     if (this.closed || !this.ready || !this.parentFile || !this.child?.connected) return;
     this.pendingSubagents ??= new Set();
     for (const [id, message] of this.queuedSubagents ?? []) {

@@ -19,5 +19,5 @@
     "@earendil-works/pi-tui": "*",
     "typebox": "*"
   },
-  "pi": {"subagents": {"agents": ["./agents"]}, "extensions": ["./src/build-engineer-extension.ts", "./vendor/pi-subagents/src/index.ts", "./src/header-extension.ts", "./src/workflow-extension.ts", "./src/tool-policy-extension.ts", "./src/native-observation-extension.ts", "./src/herdr-workspace-extension.ts"]}
+  "pi": {"subagents": {"agents": ["./agents"]}, "extensions": ["./src/build-stages-extension.ts", "./vendor/pi-subagents/src/index.ts", "./src/header-extension.ts", "./src/workflow-extension.ts", "./src/tool-policy-extension.ts", "./src/native-observation-extension.ts", "./src/herdr-workspace-extension.ts"]}
 }

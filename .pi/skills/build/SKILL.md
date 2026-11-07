@@ -56,15 +56,19 @@ provider/model/thinking per role for repairs/resume; an explicit human change pr
 configured identity separately from unavailable provider attestation. Check installed `pi --version`, `--help`
 and `--list-models`; versions are evidence, not equality gates. No global install/settings/trust changes.
 
-Launch **one child at a time**. The default and all non-Engineer stages use the existing provider-owned
-`scripts/run-stage.py`. Only a new native Build host deliberately started with `--fight-build-engineer sdk`
-uses [the opt-in SDK Engineer route](../../../harness/pi/SUBAGENTS.md#opt-in-build-engineer). That route requires
-actual Build/coordination authority for the same TASK and selected checkout; a subordinate Agent, stage label,
-profile or request cannot supply it. Use `fight_build_engineer` for that host's actual Engineer assignment, not
-an SDK demonstration. Never run the Python Engineer executor after SDK dispatch or display loss; reconcile the
-original attempt first. An active host without this capability needs a deliberately prepared fresh native host,
-not `/reload`, fabricated interactive input or a shared installation replacement. Do not advance a bootstrap
-candidate to Review as a completed TASK before its required real assignment and native evidence exist.
+Launch **one child at a time**. A fresh native host explicitly prepared with `--fight-build-stages sdk` uses
+[`fight_build_stage` for every role](../../../harness/pi/SUBAGENTS.md#all-role-build-bootstrap), including repairs
+and cleanup-only Land. Actual Build/coordination authority must name the same TASK and checkout. A subordinate
+Agent, profile, request or pane label cannot grant it. Never inherit Engineer conversation into assessors, resume
+an old assessor as a fresh verdict, or dispatch an SDK demonstration in place of the assigned Work.
+
+TASK-00561 is a bootstrap, not a qualified default cutover. Existing active hosts without this tool continue their
+original provider-owned `scripts/run-stage.py` route; Sync still has that demonstrated process caller. Do not
+update/reload this active host or shared installation implicitly. The owning Build must deliberately prepare a
+fresh native host and select Build interactively to qualify the required real journey. Once an SDK attempt has
+been dispatched, no process fallback is permitted, including after display loss. Reconcile its actual execution
+and external effects before replacement. Source/controlled checks do not complete TASK-00561 or authorize retiring
+its still-live process callers.
 
 For process stages, resolve the launcher's absolute path
 beside this skill, never from an unrelated target. The launcher uses the running Pi's exported native resource
@@ -101,6 +105,18 @@ No `--continue`, `--resume`, `--session`, `--fork`, parent transcript or reused 
 
 Write and read back the request under the shared [readability rules](../../../docs/engineering/HANDOFFS.md#readable-handoff-text)
 before dispatch, including when adapting an earlier or compressed handoff.
+
+For SDK dispatch, pass the current target base/branch/record/context, exact checkout/head/attempt, canonical role,
+that role's original provider/model/thinking pin and finite timeout to `fight_build_stage`. Carry `repairLimit`
+and `repairsUsed` from the existing ledger. Set `repair: true` only for Engineer repair and consume its cycle
+**before** dispatch; all other stages carry unchanged usage with `repair: false`. The host refuses reset/drift
+and unresolved execution across reloads; fresh host creation does not reset the original ledger. Runtime
+`reportObservation` records canonical bytes changed during the bound owner, not verdict validity or OS-enforced
+writer provenance. Missing/unchanged/wrong-candidate reports, negative verdicts and SDK completed/steered/error
+states cannot substitute for the report inspection below. Do not dispatch Land without current independent
+acceptance and the original invocation's publication scope. Cleanup-only scope remains narrower than Land's tools.
+
+For an existing process host, use its original launch path:
 
 ```sh
 cd "$task_checkout"

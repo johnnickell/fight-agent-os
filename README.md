@@ -230,10 +230,12 @@ npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-f
 pi install ./harness/pi
 ```
 
-TASK-00560 supplies an [opt-in SDK Engineer route](harness/pi/SUBAGENTS.md#opt-in-build-engineer),
-requiring an explicitly selected fresh native Build host and actual session-local authority. Its real Engineer/Herdr
-journey has independent Review and QA acceptance; delivery results are in `.runs/tasks/TASK-00560/runs/land/receipt.md`.
-This is not a default all-role cutover. Existing active Builds/shared installations stay untouched.
+TASK-00560's [opt-in SDK Engineer journey](harness/pi/SUBAGENTS.md#opt-in-build-engineer) has independent Review
+and QA acceptance; its delivery results remain in `.runs/tasks/TASK-00560/runs/land/receipt.md`. Current source
+extends that boundary with an incomplete [all-role Build bootstrap](harness/pi/SUBAGENTS.md#all-role-build-bootstrap),
+requiring a deliberately prepared fresh native host and genuine Build selection. Controlled copied-install checks
+are not the required real all-role journey or a qualified default cutover. Active Builds/shared installations stay
+untouched; demonstrated process callers remain until replacement qualification.
 
 Restart only the intended session at a safe boundary, then use `/fight-header` to choose a presentation or `off` to restore its default header.
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
