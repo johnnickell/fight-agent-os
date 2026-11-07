@@ -46,6 +46,7 @@ planning and human-prerequisite handoffs remain specific to the actual state; `n
 | QA is incomplete | Name the actual missing prerequisite, then `/skill:qa TASK-NNNNN` to resume; missing technical acceptance first routes to independent review |
 | QA passes or establishes justified N/A, with current technical acceptance | `/skill:land TASK-NNNNN` within publication authority |
 | Initial independent acceptance lacks only explicitly required hosted evidence | Authorized `/skill:land TASK-NNNNN` draft-evidence path; then `/skill:review TASK-NNNNN` once that evidence is available |
+| Explicitly requested synchronization of an accepted TASK with an existing open PR | `/skill:sync TASK-NNNNN` coordinates fresh Engineer integration and automatic fresh Land; reuse original Review/QA only under advancing-base policy, never for new behavior |
 | Accepted candidate A has administrative closeout B, with final delivery proof pending or newly available | `/skill:land TASK-NNNNN` verifies closeout and required checks; no additional independent review or canonical review update solely for delivery |
 | TASK closes | Close eligible TICKET/EPIC ancestors and refresh views in the same operation under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion); no separate parent-closeout handoff |
 | Explicit Land resume observes an ended original merge handoff | Use [ended-handoff recovery](LANDING.md#resume-an-ended-delivery-handoff) for that exact TASK/PR within authority; no automatic invocation or replacement delivery |
@@ -65,7 +66,7 @@ Preserve independent reports and historical facts in their owning records, plus 
 handoffs. Apply the [authored routing boundary](../../planning/CONVENTIONS.md#authored-routing-boundary): no per-TASK
 acceptance/delivery journal on the Board or copied into Roadmap/README. Planning stays offline.
 
-Work and Build carry native [resource observations](LANDING.md#inventory-and-preserve) in their existing
+Work, Build and Sync carry native [resource observations](LANDING.md#inventory-and-preserve) in their existing
 handoffs to Land: Git checkout/ref/published OIDs, Compose project/config/minimal teardown locator, current native
 containers/networks/volumes/task tags/builders, live source consumers and evidence still needed. Task database/
 storage is disposable by definition; main/foreign projects and shared images/caches are separate. No second
@@ -79,7 +80,7 @@ with incomplete cleanup, naming the resource, reason, recovery owner/action
 and durable receipt. Resume only missing effects; never recommend repeating publication to resolve a cleanup hold. Use
 `/skill:land TASK-NNNNN cleanup-only` with the actual TASK ID for local resource retirement, including after
 merge; this enters [cleanup-only intake](LANDING.md#cleanup-only-intake), not ended-handoff corrective publication.
-When the hold is the Land worker's own cwd, its owning coordinator observes worker exit and continues from the
+When the hold is the Land worker's own cwd, its owning Build or Sync coordinator observes worker exit and continues from the
 safe canonical checkout under existing authority before human handoff. Read-only virtualization handles require
 [consumer qualification](LANDING.md#qualify-live-consumers), not automatic shared-VM shutdown. Explicit
 repository merged-resource cleanup also inventories orphan Docker stacks independently of registered worktrees;

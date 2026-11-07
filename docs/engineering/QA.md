@@ -26,6 +26,12 @@ builder self-checks are diagnostic only. Independent QA may produce its own veri
 
 ## Applicability
 
+[Sync](../../.pi/skills/sync/SKILL.md) reuses applicable independent QA for accepted input work under
+[advancing-base policy](LANDING.md#reconcile-an-advancing-base). Intent-preserving integration, including code
+conflicts, does not routinely launch QA or rewrite its original report. A newer FAIL or incomplete required
+scenario still blocks advancement. New behavior/defect repair retains normal independent acceptance and
+applicable affected QA. Sync's own implementation is new behavior and requires normal Review/QA.
+
 After technical acceptance, route behavior-affecting changes to QA before ordinary landing. A UI is not required:
 APIs, commands, libraries/domain logic, workers, integrations, operational tooling and executable instructions
 can all expose observable contracts. Review owns structural/code/test quality; QA tries to find where the reviewed

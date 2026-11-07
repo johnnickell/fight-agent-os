@@ -19,6 +19,7 @@
 - `research/SKILL.md`
 - `security-audit/SKILL.md`
 - `show-me/SKILL.md`
+- `sync/SKILL.md`
 - `to-tasks/SKILL.md`
 - `to-tickets/SKILL.md`
 - `wayfinder/SKILL.md`

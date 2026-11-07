@@ -5,6 +5,12 @@ passive child observation, a bundled upstream SDK-agent engine and optional Herd
 managed Runner or an execution sandbox. Use native Pi file and shell tools; no evaluator enrollment, credentials,
 screening prompts or provider preflight is required.
 
+Explicit [`/skill:sync TASK-NNNNN`](../../.pi/skills/sync/SKILL.md) selects accepted-work coordination with
+`skill: sync` / `effect: coordination`, reusing the existing process dispatcher for fresh Engineer then Land.
+It requires current independent acceptance and an existing open PR; it is not Build authority or the SDK Engineer
+route. Skill discovery does not update a separately installed Harness; adopt reviewed source explicitly at a safe
+boundary before native invocation when Sync admission is missing.
+
 [Workflow and Jev retirement](WORKFLOW.md) describes surviving consumers, retained state and safe-boundary
 adoption. The installed [workflow rule](WORKFLOW_RULE.md) applies in every participating project; targets need
 no copy. Inspect `/fight-workflow` or `fight_workflow_status` for skill/effect/subject/checkout, not file permission.
