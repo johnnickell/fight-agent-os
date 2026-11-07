@@ -3,7 +3,10 @@
 TASK-00582 deliberately cuts the application and browser client over together. There is no old/new envelope
 mode, diagnostic-code discriminator or permission to retry a mutation. Deploy PHP, its locked dependencies,
 private exports and compiled client assets from the same revision. No database/schema change is required.
-Independent Review and HTTP/browser/security QA remain separate from implementation and local checks.
+The cutover has independent technical Review and HTTP/browser/security QA acceptance on its named candidate;
+see the [owning TASK](../../planning/tasks/00582-TASK.md#accepted-implementation-checkpoint--2026-11-07).
+Local canonical default-trust browser qualification is complete within its recorded Chrome/macOS/scenario limits,
+not a production ingress or deployment guarantee. Publication and human merge remain separate.
 
 ## Qualified supplier and composition
 

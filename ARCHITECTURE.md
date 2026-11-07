@@ -17,7 +17,9 @@ that the existing PHP inventory already conforms.
 Current registration still uses Repository names, internal creation IDs, original-result replay and Application
 authority fences. The Role audit transaction decorator still exists; DBAL-only transactions need actual supplier/consumer
 qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
-the local generic classifier and updates actual client/error contracts; independent acceptance remains separate. [Ownership guidance](docs/engineering/OWNERSHIP.md)
+the local generic classifier and updates actual client/error contracts, with scoped independent technical and
+HTTP/browser/security QA acceptance. This does not qualify the remaining capability-specific corrections or
+production deployment. [Ownership guidance](docs/engineering/OWNERSHIP.md)
 records those source facts and scoped correction owners. No runtime command, route, permission, table or marker
 is renamed by this documentation change. Unfinished individual plans remain TICKET-00132's separate portfolio.
 

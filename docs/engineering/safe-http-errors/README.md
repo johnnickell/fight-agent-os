@@ -47,5 +47,8 @@ retain explicit native translations. Startup/non-API/broken-factory escapes gain
 
 The source establishes calls/ownership and Slim registration order. Functional/integration checks separately
 exercise covered behavior; the diagram does not prove security, exactly-once delivery, rollback, browser trust
-or production readiness. Canonical local :443/browser qualification is currently held on privileged Herd
-configuration test/reload; supplier-only verified TLS probes are not browser acceptance.
+or production readiness. Canonical local :443/default-trust browser qualification subsequently completed with
+independent affected HTTP/browser/security QA; the [owning TASK](../../../planning/tasks/00582-TASK.md#accepted-implementation-checkpoint--2026-11-07)
+records its exact candidate, genuine historical comparison and limits. The earlier privileged test/reload hold
+is historical, not a current prerequisite. Supplier-only probes and this static picture do not supply browser
+acceptance or a promise that a disposable task environment remains running.

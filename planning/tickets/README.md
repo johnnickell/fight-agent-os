@@ -138,6 +138,6 @@
 | [TICKET-00133](00133-TICKET.md) | Adopt canonical transaction and audit contracts | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00134](00134-TICKET.md) | Register and inspect Projects through aggregate-owned CQRS | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00135](00135-TICKET.md) | Correct existing identity, security, and delivery use-case ownership | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
-| [TICKET-00136](00136-TICKET.md) | Adopt shared failures and safe error presentation | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
+| [TICKET-00136](00136-TICKET.md) | Adopt shared failures and safe error presentation | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00137](00137-TICKET.md) | Coordinate accepted TASK synchronization through PR refresh | done | [EPIC-00024](../epics/00024-EPIC.md) |
 <!-- /planning:records -->

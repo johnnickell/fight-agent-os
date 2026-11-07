@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -511,6 +511,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 17 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | — (standalone chore) | done | — | [PR #28](https://github.com/johnnickell/fight-agent-os/pull/28) |
 | 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #30](https://github.com/johnnickell/fight-agent-os/pull/30) |
 | 19 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #31](https://github.com/johnnickell/fight-agent-os/pull/31) |
+| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | done | — | — |
 | 20 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #32](https://github.com/johnnickell/fight-agent-os/pull/32) |
 | 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #45](https://github.com/johnnickell/fight-agent-os/pull/45) |
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | done | — | [PR #64](https://github.com/johnnickell/fight-agent-os/pull/64) |
