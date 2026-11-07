@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Workspace;
 
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 

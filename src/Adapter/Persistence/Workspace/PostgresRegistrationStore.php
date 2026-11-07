@@ -6,7 +6,6 @@ namespace App\Adapter\Persistence\Workspace;
 
 use App\Application\Workspace\RegistrationStore;
 use App\Application\Workspace\RegistrationView;
-use App\Application\Workspace\WorkspaceView;
 use App\Domain\Workspace\RegistrationConflict;
 use App\Domain\Workspace\RegistrationIntent;
 use App\Domain\Workspace\RegistrationMetadata;
@@ -14,12 +13,11 @@ use App\Domain\Workspace\RegistrationSources;
 use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\RepositoryRegistration;
 use App\Domain\Workspace\SourceDescriptor;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use Fight\Common\Domain\Messaging\MessageId;
 use LogicException;
 
@@ -40,55 +38,14 @@ final readonly class PostgresRegistrationStore implements RegistrationStore
     /**
      * @inheritDoc
      */
-    public function initialWorkspace(): ?WorkspaceView
-    {
-        $row = $this->connection->fetchAssociative(
-            "SELECT id, created_at FROM workspaces WHERE installation_slot = 'initial'"
-        );
-
-        return $row === false ? null : new WorkspaceView(
-            WorkspaceId::fromString($row['id']),
-            new DateTimeImmutable($row['created_at'])
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function holdInitialWorkspace(): void
+    public function holdRegistrationClaims(): void
     {
         $this->requireTransaction();
         if ($this->connection->fetchOne('SHOW transaction_isolation') !== 'read committed') {
             throw new LogicException('Workspace writes require READ COMMITTED isolation.');
         }
-        // One explicit installation Workspace today; future writers must retain the scoped fence.
+        // The remaining registration implementation serializes its business claims until TASK-00575.
         $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24130, 1)');
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function bootstrap(WorkspaceView $workspace, UserId $operator): void
-    {
-        $this->requireTransaction();
-        $this->connection->insert('workspaces', [
-            'id'                => $workspace->id->toString(),
-            'installation_slot' => 'initial',
-            'created_at'        => $workspace->createdAt->format('Y-m-d H:i:s.uP')
-        ]);
-        $this->evidence(
-            $workspace->id,
-            null,
-            $operator,
-            $workspace->createdAt,
-            'bootstrap_workspace',
-            'initial-workspace',
-            hash('sha256', 'bootstrap_workspace_v1'),
-            [
-                'workspace_id' => $workspace->id->toString(),
-                'created_at'   => $workspace->createdAt->format('Y-m-d\TH:i:s.uP')
-            ]
-        );
     }
 
     /**
@@ -255,31 +212,6 @@ SQL, [$workspace->toString(), $source->key()]) !== false
     }
 
     /**
-     * @inheritDoc
-     */
-    public function admitReference(UserId $actor, DateTimeImmutable $now): void
-    {
-        $this->requireTransaction();
-        $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24130, 2)');
-        $window = intdiv($now->getTimestamp(), 60) * 60;
-        $this->connection->executeStatement(
-            'DELETE FROM reference_generation_limits WHERE window_start < ?',
-            [$window]
-        );
-        if ((int) $this->connection->fetchOne('SELECT count(*) FROM reference_generation_limits') >= 10000) {
-            throw new RateLimitExceeded(retryDelaySeconds: 60);
-        }
-        $count = $this->connection->fetchOne(<<<'SQL'
-INSERT INTO reference_generation_limits (actor_id, window_start, attempts) VALUES (?, ?, 1)
-ON CONFLICT (actor_id) DO UPDATE SET attempts = reference_generation_limits.attempts + 1
-WHERE reference_generation_limits.attempts < 10 RETURNING attempts
-SQL, [$actor->toString(), $window]);
-        if ($count === false) {
-            throw new RateLimitExceeded(retryDelaySeconds: 60 - ($now->getTimestamp() - $window));
-        }
-    }
-
-    /**
      * Reconstitutes approved canonical sources and rejects unsupported persisted state
      *
      * @param array<string, mixed> $row
@@ -329,7 +261,7 @@ SQL, [$actor->toString(), $window]);
      */
     private function evidence(
         WorkspaceId $workspace,
-        ?RepositoryId $repository,
+        RepositoryId $repository,
         UserId $actor,
         DateTimeImmutable $at,
         string $kind,
@@ -338,28 +270,28 @@ SQL, [$actor->toString(), $window]);
         array $result
     ): void {
         $id = MessageId::generate()->toString();
-        $actorType = $repository === null ? 'installation_operator' : 'user';
+        $actorType = 'user';
         $date = $at->format('Y-m-d H:i:s.uP');
         $this->connection->insert('workspace_operations', [
             'id'              => $id,
             'workspace_id'    => $workspace->toString(),
-            'repository_id'   => $repository?->toString(),
+            'repository_id'   => $repository->toString(),
             'actor_type'      => $actorType,
             'actor_id'        => $actor->toString(),
             'command_kind'    => $kind,
             'idempotency_key' => $key,
             'request_digest'  => $digest,
             'original_result' => json_encode($result, JSON_THROW_ON_ERROR),
-            'event_name'      => $repository === null ? null : 'RepositoryRegistered',
+            'event_name'      => 'RepositoryRegistered',
             'created_at'      => $date
         ]);
         $this->connection->insert('workspace_audit', [
-            'operation_id'         => $id,
+            'id'                   => $id,
             'workspace_id'         => $workspace->toString(),
-            'repository_id'        => $repository?->toString(),
+            'repository_id'        => $repository->toString(),
             'actor_type'           => $actorType,
             'actor_id'             => $actor->toString(),
-            'action'               => $repository === null ? 'workspace_bootstrapped' : 'repository_registered',
+            'action'               => 'repository_registered',
             'predecessor_revision' => 0,
             'result_revision'      => 1,
             'result_code'          => 'created',

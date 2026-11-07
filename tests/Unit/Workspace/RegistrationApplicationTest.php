@@ -6,7 +6,6 @@ namespace Tests\Unit\Workspace;
 
 use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Workspace\BootstrapWorkspace;
 use App\Application\Workspace\GetRepositoryRegistration;
 use App\Application\Workspace\ListRepositoryRegistrations;
 use App\Application\Workspace\RegisterRepository;
@@ -14,7 +13,7 @@ use App\Application\Workspace\RegistrationAccess;
 use App\Application\Workspace\RegistrationFences;
 use App\Application\Workspace\RegistrationStore;
 use App\Application\Workspace\RegistrationView;
-use App\Application\Workspace\WorkspaceView;
+use App\Application\Workspace\Workspace\View\WorkspaceView;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Workspace\RegistrationConflict;
 use App\Domain\Workspace\RegistrationInputRejected;
@@ -24,7 +23,7 @@ use App\Domain\Workspace\RegistrationSources;
 use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\RepositoryRegistered;
 use App\Domain\Workspace\RepositoryRegistration;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
@@ -48,6 +47,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -79,7 +79,8 @@ final class RegistrationApplicationTest extends TestCase
         $this->clock->method('now')->willReturn($now);
         $this->workspace = new WorkspaceView(WorkspaceId::generate(), $now);
         $this->store = $this->createMock(RegistrationStore::class);
-        $this->store->method('initialWorkspace')->willReturn($this->workspace);
+        $queryBus = $this->createStub(QueryBus::class);
+        $queryBus->method('fetch')->willReturn($this->workspace);
         $this->fences = $this->createMock(RegistrationFences::class);
         $this->transactions = $this->createStub(TransactionalUnitOfWork::class);
         $this->transactions->method('commitTransactional')->willReturnCallback(function (callable $operation): mixed {
@@ -139,7 +140,7 @@ final class RegistrationApplicationTest extends TestCase
             new AuthoritativePrincipalResolver($users, $sessions, $roles, $catalog, $this->clock),
             new PermissionGuard()
         );
-        $this->access = new RegistrationAccess($authority, $this->store, $users, $roles);
+        $this->access = new RegistrationAccess($authority, $queryBus, $users, $roles);
         $this->authentication = new AuthenticationContext(
             $this->actor->getId(),
             $session->getId(),

@@ -8,8 +8,7 @@ use App\Domain\Workspace\RegistrationIntent;
 use App\Domain\Workspace\RegistrationSources;
 use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\RepositoryRegistration;
-use App\Domain\Workspace\WorkspaceId;
-use DateTimeImmutable;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
@@ -20,19 +19,9 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 interface RegistrationStore
 {
     /**
-     * Returns the explicit initial Workspace without creating it
+     * Serializes registration claims under READ COMMITTED
      */
-    public function initialWorkspace(): ?WorkspaceView;
-
-    /**
-     * Serializes installation bootstrap and registration claims under READ COMMITTED
-     */
-    public function holdInitialWorkspace(): void;
-
-    /**
-     * Records initial state, audit and immutable original result together
-     */
-    public function bootstrap(WorkspaceView $workspace, UserId $operator): void;
+    public function holdRegistrationClaims(): void;
 
     /**
      * Returns a payload-bound original result or rejects conflicting key reuse
@@ -62,9 +51,4 @@ interface RegistrationStore
      * @return array{items: list<RegistrationView>, has_more: bool}
      */
     public function page(WorkspaceId $workspace, int $offset, int $limit): array;
-
-    /**
-     * Enforces a bounded actor budget without persisting or reserving a generated identity
-     */
-    public function admitReference(UserId $actor, DateTimeImmutable $now): void;
 }

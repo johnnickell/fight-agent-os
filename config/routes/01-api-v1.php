@@ -23,7 +23,7 @@ use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ResendInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\RetryInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
-use App\Adapter\Http\Action\Api\V1\Repositories\GenerateExceptionalReferenceAction;
+use App\Adapter\Http\Action\Api\V1\References\GenerateExceptionalReferenceAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\GetRepositoryRegistrationAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\ListRepositoryRegistrationsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\PreviewRepositoryConflictsAction;

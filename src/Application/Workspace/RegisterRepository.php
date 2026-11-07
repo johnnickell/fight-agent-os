@@ -8,7 +8,7 @@ use App\Domain\Workspace\RegistrationConflict;
 use App\Domain\Workspace\RegistrationIntent;
 use App\Domain\Workspace\RepositoryRegistered;
 use App\Domain\Workspace\RepositoryRegistration;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
@@ -49,7 +49,7 @@ final readonly class RegisterRepository
             $intent
         ): array {
             $this->fences->holdAuthority($authentication);
-            $this->store->holdInitialWorkspace();
+            $this->store->holdRegistrationClaims();
             $actor = $this->access->require($authentication, $workspace, RegistrationAccess::REGISTER);
             $original = $this->store->original($workspace, $actor, $intent);
             if ($original !== null) {

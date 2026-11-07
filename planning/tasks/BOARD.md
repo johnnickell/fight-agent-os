@@ -19,13 +19,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | — | — |
 | 61 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
