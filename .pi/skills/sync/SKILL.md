@@ -17,30 +17,54 @@ Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md).
 `/skill:sync TASK-NNNNN [--checkout /absolute/selected/checkout]` selects exactly one TASK. No TICKET expansion,
 new PR, approval, PR merge, rebase, force-push, release, deployment or other-TASK sweep. Explicit operator invocation
 authorizes bounded integration/commit/checks, automatic Land, non-force update of the same PR and ordinary
-eligible cleanup, subject to narrower instructions. Reuse the user's checkout choice; ask main versus worktree
-only when missing. A workflow selection is not installation, project trust or OS isolation.
+eligible cleanup, subject to narrower instructions. An explicit checkout must already be registered. Omit
+`--checkout` to let Sync select or recreate an isolated worktree.
 
-1. Confirm native selected workflow is `sync`, effect `coordination`, same TASK/checkout and default mode.
+1. Confirm native selected workflow is `sync`, effect `coordination`, the same TASK and default mode.
+   A concrete checkout binds the run to that path. A null checkout selects isolated-worktree resolution
+   within the invoking session's repository. Keep the native selection intact and pass the resolved checkout
+   to the process stages.
    Its workflow phase is `qa`, not a QA worker. Only operator selection supplies coordinator authority; neither
    a request, RPC/extension input, stage label nor an Engineer child can select Sync by prompt. If the active
    Harness lacks Sync admission, hold for the operator's reviewed-package adoption and explicit native invocation;
    do not fabricate Build authority or mutate settings/install/trust. Use the supported status surface
    (`fight_workflow_status.workflow` or `/fight-workflow`). Native file/shell availability is independent of
    this responsibility binding; no evaluator enrollment or credential is required.
-2. Verify cwd/origin, Git common-directory/canonical base, registered selected checkout, feature branch, clean
-   status and current OIDs. Preserve unrelated changes; an unsafe/dirty selected subject holds integration.
-   Read the existing task-owned run ledger and Work/Land handoffs before selecting effects. Do not assume a
+2. Verify the invoking repository's origin, Git common directory and canonical base checkout.
+   Read the existing task-owned run ledger and Work/Land handoffs there before selecting effects. Do not assume a
    completed TASK or a PR URL proves current acceptance or hosting state.
 3. Bind the exact existing PR using Land's [target binder](../../../docs/engineering/LANDING.md#bind-the-publication-target)
-   with actual origin, accepted base policy, PR URL and feature branch. Require OPEN, correct TASK/title,
-   repository/base/head identity and exact remote OID. Current local history must contain published history;
-   unexplained remote/local divergence holds integration. No silent retargeting or replacement of an ended PR.
+   from the canonical checkout with actual origin, accepted base policy, PR URL and feature branch. Require
+   OPEN, correct TASK/title, repository/base/head identity and exact remote OID. No silent retargeting or
+   replacement of an ended PR. Fetch the exact bound head if its commit is missing locally and verify the
+   fetched OID against the live PR before inspecting acceptance. Leave local feature branches untouched.
 4. Require canonical independent Review ACCEPT and applicable QA PASS or criterion-specific justified N/A.
    Match TASK/branch/reviewed base/head, independence, coverage, findings and limitations. Inspect intervening
    commits and prior integration/administrative bridges against their actual subjects. A newer failure,
    incomplete required scenario, missing evidence or unreviewed intervening behavior blocks the fast path;
    never select an older pass. Preserve original report bytes and provenance, including reports in a different
    canonical base checkout. Record their original identities in the existing ledger; do not rewrite them.
+
+## Resolve and prepare the checkout
+
+Check the existing Build/Sync run for active consumers and acquire the shared subject lock before creating
+or preparing a checkout. Validate the selected checkout against the bound Git common directory, PR head
+branch, clean status and current OIDs. Preserve unrelated changes. Local history must contain the published
+head. Unexplained local commits, divergence or an unsafe checkout hold integration.
+
+- With an explicit path, use only that checkout after validation.
+- Otherwise reuse the registered isolated checkout for the bound PR branch if it qualifies. Prefer the
+  previous Build checkout when its ledger and current registration agree. If Land removed it, recreate
+  an isolated checkout on the same PR branch, using the prior task-owned location if free and consistent
+  with the target's current worktree convention. Use the target's native Git worktree workflow. If the local
+  branch is missing, create the same feature branch at the verified published OID. If the local branch
+  exists, verify it and preserve its ref. Hold if the branch is checked out in main, the intended path is
+  occupied, or ownership is unclear. Never reset a ref
+  or switch main to the feature branch to recover a checkout.
+
+Verify the resulting Git registration, branch, clean status and head before dispatch. Record the actual
+checkout and ownership in the existing ledger. Follow the target's runtime preparation and guarded cleanup
+procedures for that checkout. Preserve the original Build ledger and independent reports.
 
 ## Delegate integration, then delivery
 
@@ -53,8 +77,7 @@ visibility loss never authorizes a second worker.
 
 Use the SAME canonical `.runs/build/<TASK-ID>/active` exclusive lock and private
 `.runs/build/<TASK-ID>/<run>/` ledger/context convention as Build, recording workflow `sync`. Check current
-ownership before acquiring/resuming; no concurrent Build/Sync on the subject, resetting repair history or
-new recovery framework. Keep task execution scratch under `.runs/tasks/<TASK-ID>/runs/`.
+ownership before acquiring/resuming. Keep task execution scratch under `.runs/tasks/<TASK-ID>/runs/`.
 
 1. Launch one fresh `--role engineer` owning [Work](../work/SKILL.md), with the absolute
    [integration assignment](references/integration.md), resolved context and intake evidence. The assignment

@@ -20,7 +20,8 @@ Inspect `fight_workflow_status.workflow` or `/fight-workflow`: `skill`, `effect`
 a QA-worker mismatch. Sync also has phase `qa`, skill `sync` and effect `coordination`: it coordinates one
 previously accepted TASK through fresh Engineer then Land, not routine Review/QA or new implementation.
 Use `/skill:sync TASK-NNNNN [--checkout /absolute/selected/checkout]`; current acceptance and the same existing
-OPEN PR remain required by its owning skill. Only interactive operator input or a trusted host binding changes
+OPEN PR remain required by its owning skill. With no explicit checkout, Sync reports a null checkout and
+resolves an isolated worktree under its owning skill. Only interactive operator input or a trusted host binding changes
 authority. RPC, model prompts, stage labels, fixtures and profiles cannot promote a role. `/fight-workflow role engineer|reviewer|qa|land`
 is an explicit native-TUI alternative. SDK subordinates remain Reviewer unless the trusted host binds the actual
 fresh Engineer session through the supported Build route. An execution status is never independent acceptance.
