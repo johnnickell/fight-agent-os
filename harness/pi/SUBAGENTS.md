@@ -49,8 +49,11 @@ Agent delegation at its tool boundary; SDK/extension OS calls are not sandboxed 
 The candidate provides **`--fight-build-stages sdk`** and **`fight_build_stage`** for fresh Engineer, Reviewer,
 QA and Land owners through the same engine. It replaces the Engineer-only source entry/tool/flag, not an active
 installed host. There is no compatibility alias or silent fallback. Existing copied installations retain their
-original Engineer route until explicitly updated. The default process Build route remains until the required
-real all-role journey supports cutover; never claim that retaining it completes TASK-00561.
+original Engineer route until explicitly updated. The default process Build route remains until replacement evidence supports cutover under
+[TASK-00561's approved staged qualification](../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07).
+That same TASK receives bounded bootstrap Review then native/installed QA, final cutover then fresh final
+Review/QA, and only then authorized Land as the actual delivery observation. Bounded acceptance is not
+complete-TASK acceptance or Land authority; never claim that retaining the process Build default completes it.
 
 ### Prepare a fresh native host
 

@@ -135,6 +135,13 @@ Never arbitrarily signal a reused/unknown PID or assume remote effects stopped w
 
 ## Advance by evidence
 
+When coordinating TASK-00561's replacement qualification, follow its
+[approved staged contract](../../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07).
+Its bounded bootstrap Review/native QA does not accept the complete TASK or authorize Land. Carry later-stage
+obligations explicitly, then obtain fresh final Review/applicable QA after cutover before ordinary Land.
+Actual Land supplies delivery evidence, not a circular prerequisite for its own authorization. This TASK-specific
+ordering neither changes other TASKs nor permits advancement from a negative or missing in-scope verdict.
+
 - Engineer: committed implementation and truthful gate/resource handoff → fresh independent Review.
 - Review: current canonical ACCEPT with Standards/Spec passes → applicable independent QA. Findings → bounded
   Engineer repair; evidence-only gaps → their owner, not speculative source edits.
