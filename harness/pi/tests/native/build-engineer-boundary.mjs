@@ -1,4 +1,4 @@
-// Installed Pi's separate extension APIs and actual Screening/tool pipeline.
+// Installed Pi's separate extension APIs and actual workflow/tool pipeline.
 // Controlled private target + faux transport only, NOT operator selection or real Work.
 // Usage: node build-engineer-boundary.mjs PI_NODE_MODULES TASK_EVIDENCE INSTALLED_HARNESS
 import assert from 'node:assert/strict';
@@ -14,16 +14,14 @@ const fixture = realpathSync(mkdtempSync(join(evidence, 'boundary-'))), root = j
 for (const path of [root, agentDir, join(fixture, 'home')]) mkdirSync(path, { mode: 0o700 });
 process.env.HOME = join(fixture, 'home'); process.env.PI_CODING_AGENT_DIR = agentDir; process.env.PI_OFFLINE = '1';
 // Controlled launcher fixture, not a genuine Build invocation. Never emit interactive input.
-process.env.FIGHT_SCREENING_PHASE = 'build'; process.env.FIGHT_SCREENING_TASK = 'TASK-00560'; process.env.FIGHT_SCREENING_CHECKOUT = root;
+process.env.FIGHT_WORKFLOW_PHASE = 'build'; process.env.FIGHT_WORKFLOW_TASK = 'TASK-00560'; process.env.FIGHT_WORKFLOW_CHECKOUT = root;
 for (const key of Object.keys(process.env).filter(key => /^(HERDR_|FIGHT_WORKSPACE)/.test(key))) delete process.env[key];
 const load = path => import(pathToFileURL(path));
 const sdk = await load(join(modules, '@earendil-works/pi-coding-agent/dist/index.js'));
 const ai = await load(join(modules, '@earendil-works/pi-ai/dist/index.js'));
 const { runToolCall } = await load(join(modules, '@earendil-works/pi-agent-core/dist/index.js'));
-const { ScreeningProfiles } = await load(join(harness, 'src/jev/screening-profile.mjs'));
-const { connection } = await load(join(harness, 'src/jev/readiness.mjs'));
 const { publishWorkflow, sessionWorkflow, stageBinding } = await load(join(harness, 'src/build/authority.mjs'));
-const { WorkflowAccess } = await load(join(harness, 'src/jev/workflow-access.mjs'));
+const { WorkflowAccess } = await load(join(harness, 'src/workflow/access.mjs'));
 const git = (...args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 git('init', '--initial-branch=topic/boundary');
 writeFileSync(join(root, 'CLAUDE.md'), 'Controlled boundary fixture. No external requests, real Work or acceptance.');
@@ -31,10 +29,6 @@ mkdirSync(join(root, 'work-items'));
 writeFileSync(join(root, 'work-items/assigned.md'), '# TASK-00560\nState: approved-to-code (fixture only).\n');
 git('add', '.'); git('-c', 'user.name=Harness fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Controlled fixture');
 writeFileSync(join(agentDir, 'subagents.json'), readFileSync(join(harness, 'profiles/subagents.json')));
-const { schema, ...fixed } = connection;
-const config = { ...fixed, revision: randomUUID(), priceConfirmedAt: Date.now(), disclosure: 'authorized-supplied-state', requestMicroUsd: 2688, sessionMicroUsd: 100000 };
-const profiles = new ScreeningProfiles();
-profiles.save(profiles.preview({ cwd: root, configuration: config, providerDisclosure: true }), []);
 const settingsData = { packages: [harness], sessionDir: join(root, '.runs/tasks/TASK-00560/runs/sessions'),
   compaction: { enabled: false }, retry: { enabled: false } };
 writeFileSync(join(agentDir, 'settings.json'), JSON.stringify(settingsData));
@@ -77,7 +71,7 @@ async function create(selected) {
   return session;
 }
 async function call(session, name, args) {
-  // Normal agent tool preflight/result hooks, including Screening's actual tool_call.
+  // Normal agent tool preflight/result hooks, without an evaluator.
   session.setActiveToolsByName([...session.getActiveToolNames(), name]);
   const tools = session.agent.state.tools;
   return runToolCall({ type: 'toolCall', id: randomUUID(), name, arguments: args }, {
@@ -94,8 +88,8 @@ async function refused(session, request, reason, label) {
 }
 let session = await create(true);
 try {
-  const status = JSON.parse(text(await call(session, 'file_screening_status', {})));
-  assert.notEqual(status.state, 'disabled'); assert.equal(status.access.state, 'available');
+  const status = JSON.parse(text(await call(session, 'fight_workflow_status', {})));
+  assert.equal(status.state, 'active');
   assert.equal(status.workflow.skill, 'build'); assert.equal(status.workflow.mode, 'default');
   const request = fresh('explicit-opt-in');
   faux.setResponses([
@@ -103,7 +97,7 @@ try {
     () => { requests++; return ai.fauxAssistantMessage('Bounded scripted child completion, not real Work.'); },
     () => { requests++; return ai.fauxAssistantMessage('Controlled coordinator completion, not acceptance.'); },
   ]);
-  // Full SDK prompt -> model tool call -> Screening -> actual Build tool -> ONE engine child.
+  // Full SDK prompt -> model tool call -> actual Build tool -> ONE engine child.
   await session.prompt('Run the controlled boundary qualification, not a real assignment.');
   const result = session.messages.find(message => message.role === 'toolResult' && message.toolName === 'fight_build_engineer');
   assert.ok(result); assert.equal(result.isError, false, JSON.stringify(result));
@@ -115,7 +109,7 @@ try {
   assert.equal(sessionWorkflow(child.sessionManager).skill, 'work');
   assert.equal(child.messages.filter(message => message.role === 'user').length, 1);
   assert.equal(child.thinkingLevel, 'high'); assert.equal(session.thinkingLevel, 'medium');
-  cases.push({ admitted: 'explicit opt-in through enrolled Screening and normal SDK prompt', outcome });
+  cases.push({ admitted: 'explicit host fixture opt-in through normal SDK prompt', outcome });
   const before = starts;
   assert.equal((await call(session, 'fight_build_engineer', request)).isError, true);
   assert.equal(starts, before); cases.push({ refused: 'duplicate attempt' });
@@ -127,7 +121,7 @@ try {
     ['wrong checkout', new WorkflowAccess('build', { taskId: request.task, checkout: harness })],
   ]) {
     publishWorkflow(session.sessionManager, workflow); // Controlled trusted-state fixture, not a user input event.
-    await refused(session, fresh(label.replaceAll(' ', '-')), /unsupported-explicit-tool-route|build-authority-required/, label);
+    await refused(session, fresh(label.replaceAll(' ', '-')), /build-authority-required/, label);
   }
   publishWorkflow(session.sessionManager, original);
   faux.setResponses([() => { requests++; return ai.fauxAssistantMessage('Unbound subordinate.'); }]);
@@ -135,7 +129,7 @@ try {
   await registry.waitForAll();
   const sibling = registry.getRecord(siblingId).session;
   assert.equal(sessionWorkflow(sibling.sessionManager).skill, 'review');
-  await refused(sibling, fresh('unbound-sibling'), /unsupported-explicit-tool-route|not-selected|build-authority-required/, 'unbound sibling');
+  await refused(sibling, fresh('unbound-sibling'), /not-selected|build-authority-required/, 'unbound sibling');
   // Actual supported reload closes old in-memory ownership then binds a new runtime.
   const oldManager = session.sessionManager;
   await session.reload();
@@ -149,12 +143,12 @@ try {
   // Shutdown revokes route/workflow even if the old tool is forcibly reactivated by this probe.
   await session.extensionRunner.emit({ type: 'session_shutdown', reason: 'new' });
   assert.equal(sessionWorkflow(oldManager), undefined);
-  await refused(session, fresh('closed-session'), /unsupported-explicit-tool-route|build-authority-required|not-selected/, 'closed old session');
+  await refused(session, fresh('closed-session'), /build-authority-required|not-selected|Reconcile the existing SDK Engineer attempt/, 'closed old session');
 } finally { await session.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' }); session.dispose(); }
 // Replacement session has a different real manager, and must NOT borrow the former flag/readiness.
 session = await create(false);
 try {
-  await refused(session, fresh('replacement-without-opt-in'), /unsupported-explicit-tool-route|not-selected/, 'replacement without opt-in');
+  await refused(session, fresh('replacement-without-opt-in'), /not-selected/, 'replacement without opt-in');
   assert.equal(sessionWorkflow(session.sessionManager).skill, 'build');
   assert.deepEqual(errors, []);
   const summary = { pass: true, sdk: sdk.VERSION, harness, fixture, cases, engineerDispatches: 1, engineStarts: starts,

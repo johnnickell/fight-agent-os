@@ -7,7 +7,7 @@ description: Publish an accepted TASK, obtain required hosted evidence, resume a
 
 Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target rules and
 [landing standards](../../../docs/engineering/LANDING.md). Follow the
-[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md). This is one subject, not a fleet sweep.
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md). This is one subject, not a fleet sweep.
 
 1. **Choose the route.** Explicit `cleanup-only` enters
    [cleanup intake](../../../docs/engineering/LANDING.md#cleanup-only-intake), never publication. An ended PR
@@ -16,8 +16,10 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    acceptance or implementation edits. Otherwise require current independent Review ACCEPT and applicable QA
    PASS/criterion-specific N/A. A current FAIL/INCOMPLETE cannot be replaced by an older pass.
 2. **Bind the subject.** Verify target origin/live default/policy/base, exact checkout/ref/OIDs, canonical reports,
-   independence and actual live PR. An advancing base needs a proven mechanical bridge or fresh Work/Review/QA;
-   never rewrite acceptance or a published branch. Preserve unrelated work and historical evidence.
+   independence and actual live PR. An advancing base follows the standards' behavior-preserving integration
+   boundary, including code conflicts without routine Review/QA. A Sync assignment also requires its original
+   reports, integration handoff and same existing OPEN PR; no replacement PR. Stop for concrete incompatible
+   intent, defects, new behavior or failed verification. Never rewrite acceptance or published history.
 3. **Close out and publish only when authorized.** Reconcile applicable current TASK/parent/docs/handoffs;
    generated Board changes only here unless separate authored planning is approved. Apply the
    [authored routing boundary](../../../planning/CONVENTIONS.md#authored-routing-boundary): update/remove existing
@@ -26,8 +28,8 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    or publication. Refresh/check planning,
    inspect exact administrative diff and whitespace. [Reuse qualified gate evidence](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse)
    rather than repeating it for metadata. Run `./bin/build` normally for automatic reuse; use `--force` for
-   deliberate fresh execution and distinguish reused receipts from fresh evidence. Substantive changes need
-   renewed verification/independence. Commit only
+   deliberate fresh execution and distinguish reused receipts from fresh evidence. Genuinely new implementation
+   needs renewed verification/independence; integration-only changes follow advancing-base policy. Commit only
    owned files, non-force push, create/update the exact PR using its template and `TASK-NNNNN — <title>`. Verify
    current base/head/remote OID, required checks and audience-accessible applicable captures. Follow the standards'
    upload/partial-publication recovery and the [native attachment method](#github-native-artifact-attachments) below;

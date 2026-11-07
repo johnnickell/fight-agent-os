@@ -69,12 +69,11 @@ admit a declared operation; they do not constrain what trusted script code does 
 
 ## Runtime compatibility
 
-The shared guard accepts stable `>=1.2.0 <2.0.0`; it does not pin each Pi minor/patch release. Both this policy
-and enrolled file screening require successful registration of `session_start`, `tool_call`,
-`session_before_switch`, `session_before_fork`, `session_before_tree` and `session_shutdown`. Each registration
-must return Pi's unsubscribe function. This deterministic policy additionally requires `user_bash`; enrolled
-file screening leaves shell native after TASK-00492 and does not register that hook. File screening requires `before_agent_start`, `input`, `getSettings` and `appendEntry`.
-Both require callable `on`, `registerTool`, `getAllTools`, `getActiveTools`, `setActiveTools` and `getFlag` APIs.
+The deterministic policy guard accepts stable `>=1.2.0 <2.0.0`; it does not pin each Pi minor/patch release.
+It requires successful registration of `session_start`, `tool_call`, `user_bash`, `session_before_switch`,
+`session_before_fork`, `session_before_tree` and `session_shutdown`. Each registration must return Pi's
+unsubscribe function. It also requires callable `on`, `registerTool`, `getAllTools`, `getActiveTools`,
+`setActiveTools` and `getFlag` APIs.
 Missing acknowledgements/capabilities keep activation unavailable with `unsupported-runtime-or-hooks`; presence
 of `on` alone or a hard-coded `hooks: true` is not sufficient. Native tool factories remain required imports.
 
@@ -197,12 +196,8 @@ not a supported external launch API. Separate real CLI PTYs exercise policy insp
 presentation-only package. Native terminal images are unavailable: ANSI transcripts demonstrate interaction and
 file effects, **not visual clipping/font/layout correctness**. Independent Review and QA remain separate.
 
-Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; no semantic command gate remains. TASK-00309's separate
-[enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) provides optional relevance discovery and
-workflow metadata with native reads, writes, edits and shell execution. Discovery exclusions and task
-responsibilities do not intercept native file tools in either profile.
-Shell relevance bypass and same-user access are accepted interim limitations, not containment. This does not change
-this standalone optional policy's exact-script shell restrictions. Current workflow proof/independent acceptance
-remain pending.
-Do not combine its enrollment with `--fight-tool-policy`: that conflict holds activation. This standalone
-profile continues to deny Jev tools. Neither profile establishes TASK-00138 sandbox qualification.
+Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; TASK-00586 retires the remaining
+local evaluator/discovery integration. [Native workflow binding](WORKFLOW.md) is independent of this optional
+policy. No enrollment or provider setup is required. Task responsibilities do not intercept native file tools.
+This policy retains its exact-script shell restrictions and denies unsupported helper/nested/child tools.
+Same-user access is not containment; neither workflow metadata nor this policy establishes TASK-00138 isolation.

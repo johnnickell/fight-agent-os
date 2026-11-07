@@ -31,9 +31,8 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Never pin Pi to a version number. For Pi integrations, qualify the currently installed supported APIs and behavior;
   record the tested version as evidence, not an equality gate or future compatibility guarantee. Missing capabilities
   block the affected behavior; preserve historical version receipts and unrelated dependency/model pins.
-- In a participating session with `jev_read_file` and its shared rule available, follow
-  [selective file reads](harness/pi/FILE_SCREENING_RULE.md). Load mandatory governing/selected-skill instructions
-  directly. Native reads need no screening receipt or exception; discovery refusals do not prohibit them
+- Use bounded native discovery and file access under the installed [workflow rule](harness/pi/WORKFLOW_RULE.md).
+  Load mandatory governing/selected-skill instructions directly; no evaluator enrollment or screening is required
 - For PHP implementation, planning or assessment, read the shared [architecture contract](docs/engineering/STANDARDS.md#architecture):
   aggregate-first ownership, Project vocabulary, registered handlers, adapter admission, typed creation/results,
   transaction/audit and application breaking-change/data rules. ADRs retain rationale and explicit amendments;
@@ -48,6 +47,10 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Use repository `./bin/*` Docker wrappers. Focus iteration, then run `./bin/build` normally; it freshly validates planning and automatically reuses verified application evidence when build inputs match. Planning records do not invalidate application reuse; governing instructions, code, dependencies, runtime and artifacts remain covered. Use `--force` for deliberate fresh execution; follow [gate evidence reuse](docs/engineering/EXECUTION.md#gate-evidence-reuse) for boundaries and evidence reporting
 - Surface warnings and incomplete verification. Do not label inherited receipts as fresh application evidence
 - Land closes accepted TASKs and applicable current Board/Roadmap/README/docs during delivery, validates the exact live PR and completes eligible owned local Git/Docker/storage cleanup. No persistent delivery markers/queue or routine post-merge planning maintenance; historical acceptance/publication remain evidence. Planning checks/refresh stay offline
+- Explicit `/skill:sync TASK-NNNNN` coordinates accepted-work integration through fresh Engineer then Land,
+  using existing dispatch and the [advancing-base boundary](docs/engineering/LANDING.md#reconcile-an-advancing-base).
+  Preserve original Review/QA reports; code overlap alone needs no new acceptance. New behavior/defect repair
+  retains normal independent acceptance. Sync updates only the same existing open PR, never rebases or force-pushes
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate. Follow the [authored routing boundary](planning/CONVENTIONS.md#authored-routing-boundary): keep acceptance/delivery journals in owning records, not the Board
 - Ask for checkout/worktree choice before implementation unless already provided. Use `feature/*` from `develop`
 - Prefer the simplest native-tool workflow; delete unnecessary machinery instead of adding compatibility/proof/recovery layers

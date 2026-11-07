@@ -25,7 +25,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | — | — |
 | 61 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
@@ -44,7 +43,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -499,6 +497,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 7 | [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | — |
 | 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #228](https://github.com/johnnickell/fight-agent-os/pull/228) |
 | 8 | [TASK-00008](00008-TASK.md) | Replace inherited receipts with the Agent OS smoke baseline | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | [PR #12](https://github.com/johnnickell/fight-agent-os/pull/12) |
+| 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #230](https://github.com/johnnickell/fight-agent-os/pull/230) |
 | 9 | [TASK-00009](00009-TASK.md) | Accept the application ownership and orchestration ADR | [TICKET-00008 — Establish application ownership and orchestration boundaries](../tickets/00008-TICKET.md) | done | — | [PR #13](https://github.com/johnnickell/fight-agent-os/pull/13) |
 | 10 | [TASK-00010](00010-TASK.md) | Prove and enforce application ownership boundaries | [TICKET-00008 — Establish application ownership and orchestration boundaries](../tickets/00008-TICKET.md) | done | — | [PR #14](https://github.com/johnnickell/fight-agent-os/pull/14) |
 | 11 | [TASK-00011](00011-TASK.md) | Accept the PostgreSQL consistency and durable-effects ADR | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #15](https://github.com/johnnickell/fight-agent-os/pull/15) |
@@ -636,4 +635,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | done | — | [PR #211](https://github.com/johnnickell/fight-agent-os/pull/211) |
 | — | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | — (standalone bug) | done | — | [PR #216](https://github.com/johnnickell/fight-agent-os/pull/216) |
 | — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | done | — | [PR #224](https://github.com/johnnickell/fight-agent-os/pull/224) |
+| — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | done | — | [PR #231](https://github.com/johnnickell/fight-agent-os/pull/231) |
+| — | [TASK-00587](00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | [TICKET-00137 — Coordinate accepted TASK synchronization through PR refresh](../tickets/00137-TICKET.md) | done | — | [PR #232](https://github.com/johnnickell/fight-agent-os/pull/232) |
 <!-- /planning:board -->

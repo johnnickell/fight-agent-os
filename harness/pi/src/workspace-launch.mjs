@@ -16,7 +16,7 @@ Missing logs or cancelling selection never blocks the workspace.
 Forwarded values: --provider --model --thinking --models --session --session-dir
   --name (-n) --use-theme --tui-mode --fight-header
 Forwarded switches: --continue (-c), --resume (-r), --no-session, --offline, --verbose
---session requires an absolute existing file; inspect /session and /file-screening.
+--session requires an absolute existing file; inspect /session and /fight-workflow.
 One session selector only. No prompts/@files, mode/print/export, forks, API keys,
 trust overrides, resource overrides or unknown/extension options are accepted.
 Values remain separate argv entries, including paths/names with spaces.

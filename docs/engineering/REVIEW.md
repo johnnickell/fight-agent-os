@@ -12,7 +12,12 @@ an explicit target policy or incompatible report consumer requires its named res
 
 Read the TASK, its accepted decisions, the diff against the identified base, current status, and claimed tests. Disclose whether the reviewer authored, directed, repaired, or supplied evidence for the implementation. A material contributor cannot independently accept it. Include staged, unstaged, and untracked target changes in the reviewed scope; a clean committed target is preferable for a landing handoff.
 
-A review of a rebased branch challenges the new base and effective diff, not just the old patch. A prior report may remain applicable through a **proven mechanical reconciliation** under [landing standards](LANDING.md); changed commit IDs alone neither prove a defect nor require another review. Substantive behavior changes or uncertain integration require a new independent review.
+A review of an integrated branch challenges the new base and effective diff, not just the old patch. Original
+acceptance can remain applicable through behavior-preserving integration under
+[landing standards](LANDING.md#reconcile-an-advancing-base), including intent-preserving code conflict resolution.
+Changed OIDs or code overlap alone require no new Review/QA. Sync preserves original report bytes/subjects and
+records integration/gate evidence separately; it cannot accept new behavior or override a newer failure. Concrete
+defects/new implementation retain normal independent acceptance; missing evidence routes to its actual owner.
 
 ## Two named passes
 
@@ -115,7 +120,7 @@ literal source-head run. Never substitute a branch name, an old green run, or a 
 
 For unchanged reviewed content, retain the previous findings and clearly identified inherited checks; inspect
 the missing evidence without repeating the entire code review or local gate solely because CI is now available.
-Apply the existing mechanical-reconciliation rules when relevant; substantive changes require review of the
+Apply the existing advancing-base rules when relevant; genuinely new behavior requires review of the
 affected implementation and interactions. Replace the complete canonical report atomically with the current
 assessment. Only change to `accept` when all required evidence passes. A code failure routes to `work`; a queued,
 missing, cancelled or infrastructure-failed run stays an evidence action, with its actual cause and next step.
@@ -127,8 +132,9 @@ receipt and PR body, and marks the PR ready when the publication requirements ar
 neither rescinds A's acceptance nor requires a delivery-only `revise` report. No additional independent review
 or canonical review update is required solely for administrative closeout, changed commit IDs or newly available
 delivery CI results. Preserve the distinction between A's independent acceptance and B's delivery evidence.
-Substantive changes, demonstrated defects or unproven integration still require independent review; defects
-first route to `work` for repair. These rules do not waive initial acceptance or required final-head checks.
+Genuinely new implementation requires independent review; defects first route to `work` for repair. Missing
+integration applicability holds its affected route for concrete evidence, not a new review solely for code overlap.
+These rules do not waive initial acceptance or required final-head checks.
 
 ## Durable handoff
 

@@ -3,27 +3,23 @@ import assert from 'node:assert/strict';
 import { collectFooterUsage, footerStatusRows, footerTokens } from '../src/footer.mjs';
 
 const statuses = () => new Map([
-  ['fight-jev', 'Jev: configured'], ['codex-weekly-usage', 'Codex week: 73% left · resets tomorrow'],
-  ['fight-file-screen', 'File screening: active'],
+  ['codex-weekly-usage', 'Codex week: 73% left · resets tomorrow'],
 ]);
 
-test('Codex usage occupies the row immediately above the combined Fight statuses', () => {
-  assert.deepEqual(footerStatusRows(statuses()), [
-    'Codex week: 73% left · resets tomorrow', 'File screening: active · Jev: configured',
-  ]);
+test('Codex usage occupies its own row', () => {
+  assert.deepEqual(footerStatusRows(statuses()), ['Codex week: 73% left · resets tomorrow']);
 });
 
 test('other statuses are preserved and missing or cleared statuses leave no empty rows', () => {
   const values = statuses(); values.set('z-other', 'Last'); values.set('a-other', 'First');
   assert.equal(footerStatusRows(values)[0], 'First Last');
-  values.delete('codex-weekly-usage'); values.delete('fight-file-screen');
-  assert.deepEqual(footerStatusRows(values), ['First Last', 'Jev: configured']);
+  values.delete('codex-weekly-usage');
+  assert.deepEqual(footerStatusRows(values), ['First Last']);
   assert.deepEqual(footerStatusRows(new Map()), []);
 });
 
 test('changes and errors remain visible and embedded newlines cannot reorder status rows', () => {
-  const values = statuses(); values.set('fight-file-screen', 'File screening: degraded'); values.set('fight-jev', 'Jev: billing');
-  assert.equal(footerStatusRows(values).at(-1), 'File screening: degraded · Jev: billing');
+  const values = statuses();
   values.set('codex-weekly-usage', 'Codex\nweek:\t unavailable\r');
   assert.equal(footerStatusRows(values)[0], 'Codex week: unavailable');
 });

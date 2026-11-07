@@ -22,7 +22,10 @@ For first implementation, a missing report is normal. For revision, read the can
 
 Version 3 is the current format; version-2 canonical reports remain usable if their identity and recorded snapshot match. If the branch has moved, trace the intervening changes rather than guessing that findings still apply.
 
-Reject an unreadable, ambiguous or stale handoff and request a fresh review. A `revise` report supplies correction
+Reject unreadable, ambiguous or inapplicable evidence and name its concrete recovery owner/action. Original
+acceptance may remain applicable through [behavior-preserving integration](LANDING.md#reconcile-an-advancing-base),
+including code conflict resolution. Missing provenance is not permission to rewrite reports or require Review/QA
+solely for overlap. A `revise` report supplies correction
 input; after `accept`, satisfy [QA applicability](QA.md#applicability) before ordinary landing. Landing can
 reconcile a moving base under [landing standards](LANDING.md) without pretending the old report names new OIDs.
 

@@ -5,8 +5,8 @@ description: Assess a named security boundary through safe read-only threat and 
 
 # Security Audit
 
-For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); native reads need no screening receipt or exception, including mandatory instructions and exact targets.
+Use bounded native discovery and direct file reads under the shared
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md); load mandatory instructions directly.
 
 Establish the repository/revision, selected boundary, protected assets, plausible actors and their existing
 privileges, entry points, deployment assumptions and permitted evidence methods. Read applicable local security

@@ -13,10 +13,7 @@ export function supportsRuntime(runtime) {
 }
 
 /** Track actual registrations; API presence alone does not establish installed hooks */
-export function trackRuntimeHooks(pi, { screening = false } = {}) {
-  // File screening leaves shell native; the independent deterministic policy still owns user_bash.
-  const required = [...boundaryHooks.filter(name => !screening || name !== 'user_bash'), ...(screening ? ['before_agent_start', 'input'] : [])];
-  const methods = [...boundaryMethods, ...(screening ? ['getSettings', 'appendEntry'] : [])];
+export function trackRuntimeHooks(pi) {
   const registered = new Map();
   return {
     on(event, handler) {
@@ -27,8 +24,8 @@ export function trackRuntimeHooks(pi, { screening = false } = {}) {
       return () => { registered.set(event, false); unsubscribe(); };
     },
     available() {
-      return methods.every(name => typeof pi[name] === 'function') &&
-        required.every(name => registered.get(name) === true);
+      return boundaryMethods.every(name => typeof pi[name] === 'function') &&
+        boundaryHooks.every(name => registered.get(name) === true);
     },
   };
 }

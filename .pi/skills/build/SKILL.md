@@ -9,9 +9,13 @@ disable-model-invocation: true
 Act as Team Lead, not implementer or independent acceptor. Resolve
 [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target instructions/TASK/parents/Board and
 [execution rules](../../../docs/engineering/EXECUTION.md). Follow the
-[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md). Fresh Pi contexts are not OS isolation.
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md). Fresh Pi contexts are not OS isolation.
 
 ## Bound one delivery
+
+Accepted-work synchronization uses explicit [Sync](../sync/SKILL.md), not a shortened Build or an Engineer
+promoted by prompt. Sync reuses this process launch/model/observation protocol and the same subject lock;
+ordinary Build keeps Engineer → independent Review → applicable QA → Land for new implementation.
 
 `/skill:build TASK-NNNNN` delegates Work, independent Review, applicable QA and Land, including owned commits,
 non-force publication and suitable capture uploads. Do not ask again for these effects or ordinary task-owned

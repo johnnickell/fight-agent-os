@@ -42,6 +42,16 @@ and its instructions/bindings. Shared skill links stay with the provider; planni
 and completion rules come from the target. `build` passes that context to every fresh role, so a bound consumer
 does not need the same project substitutions repeated in each request.
 
+[Sync](sync/SKILL.md) is the explicit accepted-work coordinator: `/skill:sync TASK-NNNNN`, with an optional
+absolute `--checkout` for an already selected checkout. It requires current independent acceptance and the same
+existing open PR, merges `origin/develop` through fresh Engineer, then automatically delegates verified delivery
+to fresh Land. It reuses Build's process dispatch/model/observation and subject lock, not the Build-only SDK route.
+Intent-preserving code conflicts alone do not require Review/QA again; defects, new behavior and failed checks
+stop the fast path. Original reports remain unchanged. Actual native Sync selection requires a Harness containing
+Sync admission; skill discovery alone does not update an installed copy or grant coordinator authority.
+The [source-traced role flow](../../docs/engineering/sync/README.md) separates current ownership from prior
+native-journey evidence; independent Review/QA of Sync itself remains required.
+
 [Writing for Agents](writing-for-agents/SKILL.md) supports skill/instruction authoring now.
 [Graphify](graphify/SKILL.md) queries derived source relationships and scopes explicit maintenance; installing this
 skill does not install its CLI or refresh a graph. The [skill assessment](../../docs/engineering/SKILL_GAPS.md)
