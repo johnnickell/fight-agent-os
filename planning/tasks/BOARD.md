@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00588](00588-TASK.md) | Match public and error headers to the compact application frame | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 

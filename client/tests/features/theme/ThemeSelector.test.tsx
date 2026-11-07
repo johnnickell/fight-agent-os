@@ -25,6 +25,9 @@ it('offers one named keyboard-operable radio group with explicit selection and r
   const user = userEvent.setup();
   const view = render(<ThemeSelector theme={theme} />);
   expect(screen.getByRole('group', { name: 'Appearance' })).toBeVisible();
+  expect(screen.getByRole('group', { name: 'Appearance' })).toHaveAccessibleDescription(
+    'Showing dark mode'
+  );
   expect(screen.getByRole('radio', { name: 'System' })).toBeChecked();
   expect(screen.getByText('Showing dark mode')).toBeVisible();
   await user.tab();
@@ -32,6 +35,9 @@ it('offers one named keyboard-operable radio group with explicit selection and r
   await user.keyboard('{ArrowRight}');
   expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
   expect(screen.getByText('Showing light mode')).toBeVisible();
+  expect(screen.getByRole('group', { name: 'Appearance' })).toHaveAccessibleDescription(
+    'Showing light mode'
+  );
   expect(root.getAttribute('data-bs-theme')).toBe('light');
   view.unmount();
 });
