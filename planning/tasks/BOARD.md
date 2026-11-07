@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00588](00588-TASK.md) | Match public and error headers to the compact application frame | — (standalone bug) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -638,4 +638,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | done | — | [PR #224](https://github.com/johnnickell/fight-agent-os/pull/224) |
 | — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | done | — | [PR #231](https://github.com/johnnickell/fight-agent-os/pull/231) |
 | — | [TASK-00587](00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | [TICKET-00137 — Coordinate accepted TASK synchronization through PR refresh](../tickets/00137-TICKET.md) | done | — | [PR #232](https://github.com/johnnickell/fight-agent-os/pull/232) |
+| — | [TASK-00588](00588-TASK.md) | Match public and error headers to the compact application frame | — (standalone bug) | done | — | — |
 <!-- /planning:board -->
