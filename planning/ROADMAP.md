@@ -457,7 +457,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00021](epics/00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | first-private-production | ready-for-agent |
 | [EPIC-00022](epics/00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | feature-architecture-review | done |
 | [EPIC-00023](epics/00023-EPIC.md) | Adopt canonical Fight contracts and refactor Agent OS around Project-owned CQRS | maintainable-project-owned-cqrs | ready-for-agent |
-| [EPIC-00024](epics/00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | accepted-task-base-synchronization | ready-for-agent |
+| [EPIC-00024](epics/00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | accepted-task-base-synchronization | done |
 <!-- /planning:epics -->
 
 ## Planning Frontier

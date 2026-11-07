@@ -26,5 +26,5 @@
 | [EPIC-00021](00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | ready-for-agent | — |
 | [EPIC-00022](00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | done | — |
 | [EPIC-00023](00023-EPIC.md) | Adopt canonical Fight contracts and refactor Agent OS around Project-owned CQRS | ready-for-agent | — |
-| [EPIC-00024](00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | ready-for-agent | — |
+| [EPIC-00024](00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | done | — |
 <!-- /planning:records -->

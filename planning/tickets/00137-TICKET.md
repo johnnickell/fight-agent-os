@@ -2,7 +2,7 @@
 id: TICKET-00137
 epic: EPIC-00024
 title: Coordinate accepted TASK synchronization through PR refresh
-status: ready-for-agent
+status: done
 ---
 
 # Coordinate accepted TASK synchronization through PR refresh
@@ -130,7 +130,7 @@ and applicable QA; the fast path applies to its already-accepted input TASKs.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00587](../tasks/00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | in-progress |
+| [TASK-00587](../tasks/00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -157,7 +157,9 @@ covering AC-01–AC-08 in one implementation PR. No blockers were identified; th
 not reorder the existing Board. Workflow admission/dispatch integration, instruction alignment and actual direct
 qualification belong to that same TASK, not separate scaffolding or qualification-only records.
 
-This TICKET's TASK decomposition is approved and written in full. TASK-00587 implementation is underway in
-the operator-selected main checkout; its owning record and canonical handoff carry verification and remaining
-qualification. Independent acceptance and delivery are separate. Consult the TASK Board for work selection
-rather than starting work as a planning side effect.
+This TICKET's TASK decomposition is approved and written in full. Its sole child TASK-00587 has independent
+Review ACCEPT and QA PASS on the candidate named in its accepted implementation checkpoint. The complete
+AC-01–AC-08 outcome is accepted; automatic parent completion closes this TICKET with the child. Publication,
+eligible cleanup and human merge remain separate in the TASK's owning delivery receipt and actual PR. This
+does not adopt a shared installation or complete the all-role SDK cutover. Consult the TASK Board for work
+selection rather than starting work as a planning side effect.
