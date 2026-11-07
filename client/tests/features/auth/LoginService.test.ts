@@ -52,7 +52,9 @@ describe('explicit memory-only login', () => {
     const post = vi
       .fn()
       .mockResolvedValueOnce(loginSuccess())
-      .mockResolvedValueOnce(jsonResponse({ status: 'error', message: 'Forbidden.' }, 403, false))
+      .mockResolvedValueOnce(
+        jsonResponse({ status: 'fail', data: { message: 'Permission denied.' } }, 403, false)
+      )
       .mockResolvedValue(loginRejected());
     const deps = loginDependencies(post);
     await deps.service.submit(values, false);

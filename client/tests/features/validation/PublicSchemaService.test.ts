@@ -25,7 +25,9 @@ describe('schema read boundary', () => {
   it('fails explicitly for absent, inconsistent, malformed and cancelled reads', async () => {
     const fetch = vi
       .fn<ApiTransport>()
-      .mockResolvedValueOnce(jsonResponse({ status: 'error', message: 'Not found.' }, 404))
+      .mockResolvedValueOnce(
+        jsonResponse({ status: 'fail', data: { message: 'Resource not found.' } }, 404)
+      )
       .mockResolvedValueOnce(response({ ...fixture, form_name: 'other_form' }))
       .mockResolvedValueOnce(response({ ...fixture, schema_version: 99 }));
     const service = new PublicSchemaService(new ApiClient(configuration, { fetch }));

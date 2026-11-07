@@ -584,7 +584,7 @@
 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent | [TICKET-00136](../tickets/00136-TICKET.md) |
+| [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | done | [TICKET-00136](../tickets/00136-TICKET.md) |
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |
 | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | done | — |

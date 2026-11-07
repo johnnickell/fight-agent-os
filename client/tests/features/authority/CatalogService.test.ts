@@ -174,12 +174,12 @@ describe('CatalogService', () => {
   });
 
   it.each([
-    [401, 'Unauthorized.', 'authentication'],
-    [403, 'Forbidden.', 'authorization'],
-    [404, 'Not found.', 'not-found']
+    [401, 'Authentication required.', 'authentication'],
+    [403, 'Permission denied.', 'authorization'],
+    [404, 'Resource not found.', 'not-found']
   ] as const)('preserves safe %i outcomes without retries', async (status, message, kind) => {
     const fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ status: 'error', message }), {
+      new Response(JSON.stringify({ status: 'fail', data: { message } }), {
         status,
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
       })

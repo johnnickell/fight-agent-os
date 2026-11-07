@@ -80,7 +80,8 @@ final readonly class LogoutAction
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
             new OA\Response(ref: '#/components/responses/MethodNotAllowed', response: 405),
             new OA\Response(ref: '#/components/responses/BrowserAuthThrottled', response: 429),
-            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500),
+            new OA\Response(ref: '#/components/responses/ServiceUnavailable', response: 503)
         ]
     )]
     #[JsonBody]
@@ -93,8 +94,8 @@ final readonly class LogoutAction
                 $this->authentication->logout($credential);
             } catch (RefreshSessionNotFoundException) {
                 // Deliberately indistinguishable from an admitted current-session logout.
-            } catch (Throwable) {
-                return $this->responder->unavailable();
+            } catch (Throwable $failure) {
+                return $this->responder->unavailable($failure);
             }
         }
 

@@ -26,7 +26,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | — | — |
-| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | ready-for-agent | — | — |
 | 61 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
@@ -512,6 +511,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 17 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | — (standalone chore) | done | — | [PR #28](https://github.com/johnnickell/fight-agent-os/pull/28) |
 | 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #30](https://github.com/johnnickell/fight-agent-os/pull/30) |
 | 19 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #31](https://github.com/johnnickell/fight-agent-os/pull/31) |
+| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | done | — | [PR #233](https://github.com/johnnickell/fight-agent-os/pull/233) |
 | 20 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #32](https://github.com/johnnickell/fight-agent-os/pull/32) |
 | 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #45](https://github.com/johnnickell/fight-agent-os/pull/45) |
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | done | — | [PR #64](https://github.com/johnnickell/fight-agent-os/pull/64) |

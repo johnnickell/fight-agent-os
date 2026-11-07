@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Middleware\Api\Auth;
 
-use App\Application\Failure\RateLimited;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Http\Message\ResponseInterface;
@@ -49,7 +49,7 @@ final readonly class ActivationAdmission implements MiddlewareInterface
     {
         $network = $request->getServerParams()['REMOTE_ADDR'] ?? null;
         if (!is_string($network) || filter_var($network, FILTER_VALIDATE_IP) === false) {
-            throw new RateLimited(60);
+            throw new RateLimitExceeded(retryDelaySeconds: 60);
         }
         if ($this->connection->isTransactionActive()) {
             throw new LogicException('Activation admission requires an independent transaction.');
@@ -72,11 +72,11 @@ final readonly class ActivationAdmission implements MiddlewareInterface
                 if ($attempts === false) {
                     ++$missing;
                 } elseif ((int) $attempts >= $limit) {
-                    throw new RateLimited($end - $now);
+                    throw new RateLimitExceeded(retryDelaySeconds: $end - $now);
                 }
             }
             if ((int) $this->connection->fetchOne('SELECT count(*) FROM activation_rate_limits') + $missing > 10000) {
-                throw new RateLimited($end - $now);
+                throw new RateLimitExceeded(retryDelaySeconds: $end - $now);
             }
             foreach (array_keys($keys) as $key) {
                 $this->connection->executeStatement(

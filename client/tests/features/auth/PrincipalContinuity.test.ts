@@ -186,7 +186,11 @@ describe('one production /me cache across session transitions', () => {
       old.resolve(
         oldStatus === 200
           ? jsonResponse(view)
-          : jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false)
+          : jsonResponse(
+              { status: 'fail', data: { message: 'Authentication required.' } },
+              401,
+              false
+            )
       );
       await flush();
       expect(allowed(d.authority)).toBe('forbidden');
@@ -200,7 +204,11 @@ describe('one production /me cache across session transitions', () => {
     const d = setup(() =>
       Promise.resolve(
         rejected
-          ? jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false)
+          ? jsonResponse(
+              { status: 'fail', data: { message: 'Authentication required.' } },
+              401,
+              false
+            )
           : jsonResponse(view)
       )
     );

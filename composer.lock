@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9f62aee1f4a4638fd6460e873d64c367",
+    "content-hash": "242936a82a32cfe3205716be0aef044c",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1364,16 +1364,16 @@
         },
         {
             "name": "johnnickell/fight-common",
-            "version": "v1.3.0",
+            "version": "v1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/johnnickell/fight-common",
-                "reference": "7de6cad6e8a9752973ad9f8e27e285b0c1510582"
+                "reference": "a482c220d312d2ef7762c3f0d85d9fb76a7021fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/johnnickell/fight-common/zipball/7de6cad6e8a9752973ad9f8e27e285b0c1510582",
-                "reference": "7de6cad6e8a9752973ad9f8e27e285b0c1510582",
+                "url": "https://api.github.com/repos/johnnickell/fight-common/zipball/a482c220d312d2ef7762c3f0d85d9fb76a7021fa",
+                "reference": "a482c220d312d2ef7762c3f0d85d9fb76a7021fa",
                 "shasum": ""
             },
             "require": {
@@ -1494,7 +1494,7 @@
                 "MIT"
             ],
             "description": "A shared PHP library for Hexagonal Architecture, CQRS, and reusable domain primitives",
-            "time": "2026-10-04T05:36:45+00:00"
+            "time": "2026-11-04T18:48:25+00:00"
         },
         {
             "name": "lcobucci/jwt",
@@ -2381,7 +2381,8 @@
                 "issues": "https://github.com/php-fig/http-server-middleware/issues",
                 "source": "https://github.com/php-fig/http-server-middleware/tree/1.0.2"
             },
-            "time": "2023-04-11T06:14:47+00:00"
+            "time": "2023-04-11T06:14:47+00:00",
+            "published-time": "2023-04-11T06:15:22+00:00"
         },
         {
             "name": "psr/link",
@@ -9124,5 +9125,5 @@
     "platform-overrides": {
         "php": "8.5.4"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

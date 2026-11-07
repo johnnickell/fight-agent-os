@@ -67,9 +67,9 @@ describe('single-tab cookie-only refresh and logout', () => {
   });
 
   it.each([
-    [401, 'Unauthorized.', 'authentication'],
-    [409, 'Conflict.', 'conflict'],
-    [403, 'Forbidden.', 'authorization'],
+    [401, 'Authentication required.', 'authentication'],
+    [409, 'State conflict.', 'conflict'],
+    [403, 'Permission denied.', 'authorization'],
     [429, 'Too many requests.', 'rate-limited'],
     [500, 'Internal server error.', 'system']
   ] as const)(
@@ -77,7 +77,13 @@ describe('single-tab cookie-only refresh and logout', () => {
     async (status, message, kind) => {
       const post = vi
         .fn()
-        .mockResolvedValue(jsonResponse({ status: 'error', message }, status, false));
+        .mockResolvedValue(
+          jsonResponse(
+            status >= 500 ? { status: 'error', message } : { status: 'fail', data: { message } },
+            status,
+            false
+          )
+        );
       const { service, tokens, csrf } = dependencies(post);
       tokens.accept('old.access.token', performance.now());
       expect(await service.refresh()).toMatchObject({ ok: false, error: { kind } });

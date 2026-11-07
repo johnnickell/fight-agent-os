@@ -268,7 +268,7 @@ final class ApiActionSecurityTest extends TestCase
         $response = $this->request($token);
         $this->assertResponse($response, 401);
         self::assertSame(
-            ['status' => 'error', 'message' => 'Unauthorized.'],
+            ['status' => 'fail', 'data' => ['message' => 'Authentication required.']],
             json_decode((string) $response->getBody(), true)
         );
         self::assertSame(0, $this->constructions);
@@ -414,7 +414,7 @@ final class ApiActionSecurityTest extends TestCase
         $response = $this->request($this->token);
         $this->assertResponse($response, 401);
         self::assertSame(
-            ['status' => 'error', 'message' => 'Unauthorized.'],
+            ['status' => 'fail', 'data' => ['message' => 'Authentication required.']],
             json_decode((string) $response->getBody(), true)
         );
         self::assertSame(0, $this->queries);

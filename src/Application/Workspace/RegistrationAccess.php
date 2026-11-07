@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\Workspace;
 
 use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Failure\PermissionDenied;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Workspace\WorkspaceId;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
@@ -14,6 +13,7 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 
 /**
  * Class RegistrationAccess

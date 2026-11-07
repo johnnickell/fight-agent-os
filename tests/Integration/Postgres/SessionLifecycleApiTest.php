@@ -214,7 +214,10 @@ final class SessionLifecycleApiTest extends TestCase
         $current = explode(';', explode('=', $winner->getHeaderLine('Set-Cookie'), 2)[1], 2)[0];
         $this->clock->time = $this->clock->now()->modify('+4 seconds');
         $conflict = $this->request('refresh', $old);
-        self::assertSame(['status' => 'error', 'message' => 'Conflict.'], $this->check($conflict, 409, 'refresh'));
+        self::assertSame(
+            ['status' => 'fail', 'data' => ['message' => 'State conflict.']],
+            $this->check($conflict, 409, 'refresh')
+        );
         self::assertSame([], $conflict->getHeader('Set-Cookie'));
         self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions'));
         $this->clock->time = $this->clock->now()->modify('+2 seconds');
@@ -405,7 +408,10 @@ final class SessionLifecycleApiTest extends TestCase
             'ALTER TABLE auth_rate_limits ADD CONSTRAINT session_abort CHECK (false) NOT VALID'
         );
         foreach (['refresh', 'logout'] as $operation) {
-            $this->check($this->request($operation, $credential), 429, $operation);
+            $unavailable = $this->request($operation, $credential);
+            $this->check($unavailable, 503, $operation);
+            self::assertSame('60', $unavailable->getHeaderLine('Retry-After'));
+            self::assertSame([], $unavailable->getHeader('Set-Cookie'));
         }
         self::assertSame(0, (int) $this->connection->fetchOne('SELECT revision FROM refresh_sessions'));
     }

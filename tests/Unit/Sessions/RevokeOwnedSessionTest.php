@@ -6,7 +6,6 @@ namespace Tests\Unit\Sessions;
 
 use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Sessions\DenySessionAdministration;
 use App\Application\Sessions\RevokeOwnedSession;
 use DateTimeImmutable;
@@ -31,6 +30,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;

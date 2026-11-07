@@ -32,10 +32,13 @@ function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
         if (scenario === 'forbidden') return Promise.resolve(directoryResponse(null, 403));
         if (scenario === 'missing')
           return Promise.resolve(
-            new Response(JSON.stringify({ status: 'error', message: 'Not found.' }), {
-              status: 404,
-              headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-            })
+            new Response(
+              JSON.stringify({ status: 'fail', data: { message: 'Resource not found.' } }),
+              {
+                status: 404,
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+              }
+            )
           );
         if (scenario === 'error') return Promise.resolve(new Response('', { status: 503 }));
         return Promise.resolve(directoryResponse(user));

@@ -8,10 +8,10 @@ use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Security\Authentication\AuthAdmission;
-use App\Application\Failure\RateLimited;
 use DateTimeImmutable;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
@@ -53,7 +53,7 @@ final class AuthAdmissionRaceWorker
                     $admission->endpoint(AuthOperation::from($input['operation']), '192.0.2.1');
                 }
                 $allowed = true;
-            } catch (RateLimited) {
+            } catch (RateLimitExceeded) {
                 // Return only the safe admission outcome.
             }
         }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Authorization;
 
 use App\Application\Authorization\InstallationAuthority;
-use App\Application\Failure\PermissionDenied;
 use ArrayObject;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
@@ -21,6 +20,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\TestCase;
 

@@ -152,7 +152,7 @@ final class PasswordChangeApiTest extends TestCase
             try {
                 $this->container->get(AuthenticateAccessToken::class)->authenticate($access);
                 self::fail('Old access survived password change.');
-            } catch (\App\Application\Failure\AuthenticationRequired) {
+            } catch (\Fight\Common\Application\Error\Exception\AuthenticationRequired) {
                 // Expected authoritative rejection.
             }
             try {
@@ -175,7 +175,7 @@ final class PasswordChangeApiTest extends TestCase
     {
         $before = $this->user();
         $body = $this->check($this->request(['current_password' => trim($this->oldPassword)]), 409);
-        self::assertSame(['status' => 'error', 'message' => 'Conflict.'], $body);
+        self::assertSame(['status' => 'fail', 'data' => ['message' => 'State conflict.']], $body);
         self::assertSame($before, $this->user());
         self::assertSame(0, (int) $this->connection->fetchOne(
             'SELECT count(*) FROM refresh_sessions WHERE revoked = true'

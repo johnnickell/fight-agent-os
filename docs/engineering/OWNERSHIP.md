@@ -24,7 +24,7 @@ Source observations at TASK-00564's base `eb5fe2f56a8fbb8b5c27f64b959dc2d36d5bc0
 | `config/common/persistence.php` binds one shared EntityManager/DBAL Connection and Common `DoctrineTransactionalUnitOfWork` | TASK-00572 qualifies an actual DBAL-only alternative; no ORM replacement or second transaction authority is implied |
 | `AuthenticatedRoleAssignment::assign()` is the existing Application admission path, not a new all-entry rule | TASK-00576 owns its correction; do not bypass current checks or expose raw messages to untrusted callers meanwhile |
 | `ChangePasswordAction` calls owned `ChangePassword`, which invokes public package `AuthenticationService::changePassword()` synchronously with sensitive inputs | Actual sensitive non-serializable exception, not a reason to put passwords/tokens in messages; broader correction belongs to TASK-00580 |
-| Local failure classes and HTTP mappings remain in use; the lock selects Common v1.3.0 and Access Control v0.8.0 | TASK-00582 qualifies shared failures/safe HTTP and owned consumer cutover; supplier plans/local tags are not available/qualified consumer APIs |
+| TASK-00582 selects released Common v1.4.1 and preserves Access Control v0.8.0; canonical categories and the Common safe HTTP boundary replace the local generic classifier | [Safe API failures](SAFE_HTTP_ERRORS.md) records actual composition, direct cookie effects, strict client cutover and scoped independent HTTP/browser/security acceptance; capability-specific corrections and deployment remain separate |
 
 This documentation changes no source, executable dependency rule, dependency lock, runtime route/permission or
 data. TICKET-00132 owns unfinished individual-plan reconciliation; TICKET-00133 through TICKET-00136 own source

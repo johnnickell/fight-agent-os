@@ -6,7 +6,7 @@ namespace App\Application\Invitation;
 
 use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Failure\IncompleteInvitation;
-use App\Application\Failure\StateConflict;
+use App\Application\Failure\InvitationConfirmationRequired;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationOperation;
 use App\Domain\Invitation\InvitationRoleEvidence;
@@ -23,9 +23,11 @@ use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
+use Fight\Common\Domain\Exception\ValidationException;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 use Throwable;
@@ -66,7 +68,11 @@ final readonly class IssueInvitation
             $permissions[] = PermissionName::fromString('ASSIGN_SUPER_ADMIN');
         }
         $actor = $this->authority->require($authentication, $permissions);
-        $mode->requireConfirmation($confirmed);
+        try {
+            $mode->requireConfirmation($confirmed);
+        } catch (ValidationException $failure) {
+            throw new InvitationConfirmationRequired(previous: $failure);
+        }
         $this->limiter->consume($actor, InvitationOperation::ISSUE);
         try {
             $this->policy->requireInstallation();

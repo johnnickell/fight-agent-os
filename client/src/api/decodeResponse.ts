@@ -1,4 +1,9 @@
-import { apiFailure, type ApiFailureKind, type ApiResult } from '@/api/ApiResult';
+import {
+  apiFailure,
+  type ApiFailureKind,
+  type ApiResult,
+  type InvitationPartial
+} from '@/api/ApiResult';
 
 export type ResponseDecoder<T> = (data: unknown) => T | null;
 
@@ -19,13 +24,18 @@ export function hasExactKeys(
 }
 
 const errors: Readonly<Record<number, readonly [ApiFailureKind, string]>> = {
-  400: ['bad-request', 'Bad request.'],
-  401: ['authentication', 'Unauthorized.'],
-  403: ['authorization', 'Forbidden.'],
-  404: ['not-found', 'Not found.'],
+  400: ['bad-request', 'Invalid input.'],
+  401: ['authentication', 'Authentication required.'],
+  403: ['authorization', 'Permission denied.'],
+  404: ['not-found', 'Resource not found.'],
   405: ['method-not-allowed', 'Method not allowed.'],
-  409: ['conflict', 'Conflict.'],
-  410: ['gone', 'Gone.'],
+  406: ['bad-request', 'Not acceptable.'],
+  409: ['conflict', 'State conflict.'],
+  410: ['gone', 'Resource gone.'],
+  412: ['precondition', 'Precondition failed.'],
+  413: ['bad-request', 'Request too large.'],
+  415: ['bad-request', 'Unsupported media type.'],
+  422: ['rule-violation', 'Rule violation.'],
   429: ['rate-limited', 'Too many requests.']
 };
 
@@ -65,6 +75,60 @@ function validationFields(data: unknown): Readonly<Record<string, readonly strin
   return Object.freeze(safe);
 }
 
+const uuid = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
+
+/** Retains only the closed, secretless partial-outcome contract, never retry authority. */
+function decodeInvitationPartial(value: unknown): InvitationPartial | null {
+  if (
+    !hasExactKeys(value, ['user_id', 'assignment', 'audit', 'delivery']) ||
+    !(value.user_id === null || uuid(value.user_id)) ||
+    typeof value.assignment !== 'string' ||
+    !['confirmed', 'unconfirmed', 'unknown'].includes(value.assignment) ||
+    typeof value.audit !== 'string' ||
+    !['confirmed', 'unconfirmed'].includes(value.audit)
+  )
+    return null;
+  let delivery: InvitationPartial['delivery'] = null;
+  if (value.delivery !== null) {
+    const item: unknown = value.delivery;
+    if (
+      !hasExactKeys(item, ['user_id', 'activation_delivery_id', 'status', 'expires_at']) ||
+      !uuid(item.user_id) ||
+      item.user_id !== value.user_id ||
+      !uuid(item.activation_delivery_id) ||
+      typeof item.status !== 'string' ||
+      ![
+        'pending',
+        'claimed',
+        'retry_pending',
+        'delivered',
+        'permanent_failure',
+        'expired',
+        'invalidated'
+      ].includes(item.status) ||
+      typeof item.expires_at !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/.test(item.expires_at) ||
+      !Number.isFinite(Date.parse(item.expires_at)) ||
+      new Date(item.expires_at).toISOString().replace('.000Z', '+00:00') !== item.expires_at
+    )
+      return null;
+    delivery = Object.freeze({
+      userId: item.user_id,
+      generation: item.activation_delivery_id,
+      status: item.status as NonNullable<InvitationPartial['delivery']>['status'],
+      expiresAt: item.expires_at
+    });
+  }
+  return Object.freeze({
+    userId: value.user_id,
+    assignment: value.assignment as InvitationPartial['assignment'],
+    audit: value.audit as InvitationPartial['audit'],
+    delivery
+  });
+}
+
 /**
  * Maps JSend and HTTP together, rejecting contradictory or unrecognized envelopes
  */
@@ -86,22 +150,50 @@ export function decodeResponse<T>(
       const fields = validationFields(envelope.data);
       if (fields) return apiFailure('validation', correlationId, fields);
     }
+    if (
+      status === 409 &&
+      envelope.status === 'fail' &&
+      hasExactKeys(envelope.data, ['message', 'intent']) &&
+      envelope.data.intent === 'use_logout' &&
+      envelope.data.message === 'Use Logout for the current session.'
+    ) {
+      return apiFailure('current-session', correlationId);
+    }
+    const expected = errors[status];
+    if (
+      envelope.status === 'fail' &&
+      expected &&
+      hasExactKeys(envelope.data, ['message']) &&
+      envelope.data.message === expected[1]
+    ) {
+      return apiFailure(expected[0], correlationId);
+    }
   }
   if (
-    status === 409 &&
-    hasExactKeys(envelope, ['status', 'message', 'code']) &&
+    status === 503 &&
+    hasExactKeys(envelope, ['status', 'message', 'data']) &&
     envelope.status === 'error' &&
-    envelope.code === 5801 &&
-    envelope.message === 'Use Logout for the current session.'
-  )
-    return apiFailure('current-session', correlationId);
+    envelope.message ===
+      'Invitation completion is unconfirmed. Read invitation status before another operation.'
+  ) {
+    const partial = decodeInvitationPartial(envelope.data);
+    return partial
+      ? apiFailure('uncertain', correlationId, undefined, partial)
+      : apiFailure('protocol', correlationId);
+  }
   if (hasExactKeys(envelope, ['status', 'message']) && envelope.status === 'error') {
-    const expected =
-      status >= 500 && status <= 599
-        ? (['system', 'Internal server error.'] as const)
-        : errors[status];
-    if (expected && envelope.message === expected[1]) {
-      return apiFailure(expected[0], correlationId);
+    if (status === 503 && envelope.message === 'Service unavailable.') {
+      return apiFailure('unavailable', correlationId);
+    }
+    if (
+      status === 503 &&
+      envelope.message ===
+        'Recovery outcome uncertain. Read invitation status before another operation.'
+    ) {
+      return apiFailure('uncertain', correlationId);
+    }
+    if ([500, 502, 504].includes(status) && envelope.message === 'Internal server error.') {
+      return apiFailure('system', correlationId);
     }
   }
   return apiFailure('protocol', correlationId);

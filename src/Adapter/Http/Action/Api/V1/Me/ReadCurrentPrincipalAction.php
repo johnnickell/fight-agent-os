@@ -6,11 +6,11 @@ namespace App\Adapter\Http\Action\Api\V1\Me;
 
 use App\Adapter\Http\Attribute\Authenticated;
 use App\Adapter\Http\Responder\Api\V1\Me\ReadCurrentPrincipalResponder;
-use App\Application\Failure\AuthenticationRequired;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
 use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;

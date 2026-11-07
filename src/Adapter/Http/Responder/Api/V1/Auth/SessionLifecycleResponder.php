@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Auth;
 
+use App\Adapter\Http\Api\Failure\FailureData;
+use App\Adapter\Http\Api\V1\Auth\SessionResponseFailure;
 use Fight\AccessControl\Application\AccessControl\User\Security\RefreshOutcome;
 use Fight\AccessControl\Application\AccessControl\User\Security\RefreshResult;
+use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
+use Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\ServerError;
+use Fight\Common\Application\Error\Exception\ServiceUnavailable;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Psr\Http\Message\ResponseInterface;
 use SensitiveParameter;
+use Throwable;
 
 /**
  * Class SessionLifecycleResponder
@@ -21,8 +28,12 @@ final readonly class SessionLifecycleResponder
     /**
      * Constructs SessionLifecycleResponder
      */
-    public function __construct(private SessionResponder $sessions, private JSendResponseFactory $responses)
-    {
+    public function __construct(
+        private SessionResponder $sessions,
+        private JSendResponseFactory $responses,
+        private SafeHttpDiagnostics $diagnostics,
+        private SafeHttpErrorPolicy $httpErrorPolicy
+    ) {
     }
 
     /**
@@ -35,7 +46,11 @@ final readonly class SessionLifecycleResponder
             return $this->sessions->refreshed($tokens);
         }
 
-        return $this->responses->fromEnvelope(JSendEnvelope::error('Conflict.'), 409, ['Cache-Control' => 'no-store']);
+        return $this->responses->fromEnvelope(
+            JSendEnvelope::fail(new FailureData('State conflict.')),
+            409,
+            ['Cache-Control' => 'no-store']
+        );
     }
 
     /**
@@ -43,7 +58,17 @@ final readonly class SessionLifecycleResponder
      */
     public function terminal(): ResponseInterface
     {
-        return $this->sessions->clear($this->responses->fromEnvelope(JSendEnvelope::error('Unauthorized.'), 401));
+        try {
+            $response = $this->responses->fromEnvelope(
+                JSendEnvelope::fail(new FailureData('Authentication required.')),
+                401,
+                ['WWW-Authenticate' => 'Bearer']
+            );
+
+            return $this->sessions->clear($response);
+        } catch (Throwable $failure) {
+            return $this->unavailable($failure);
+        }
     }
 
     /**
@@ -51,17 +76,41 @@ final readonly class SessionLifecycleResponder
      */
     public function loggedOut(): ResponseInterface
     {
-        return $this->sessions->clear($this->responses->fromEnvelope(JSendEnvelope::success(null), 200));
+        try {
+            return $this->sessions->clear($this->responses->fromEnvelope(JSendEnvelope::success(null), 200));
+        } catch (Throwable $failure) {
+            return $this->unavailable($failure);
+        }
     }
 
     /**
      * Clears browser authority while honestly leaving the server outcome unconfirmed
      */
-    public function unavailable(): ResponseInterface
+    public function unavailable(Throwable $failure): ResponseInterface
     {
-        return $this->sessions->clear($this->responses->fromEnvelope(
-            JSendEnvelope::error('Internal server error.'),
-            500
-        ));
+        // This direct transport outcome must clear cookies even when reporting fails. Unknown faults remain
+        // server errors; only declared availability failures receive 503. Neither result implies rollback.
+        $intent = $failure instanceof ServiceUnavailable ? $failure : new ServerError(previous: $failure);
+        try {
+            $this->diagnostics->report($intent);
+            [$status, $envelope, $headers] = $this->httpErrorPolicy->present($intent);
+        } catch (Throwable) {
+            // One reporting attempt only; use the same supplier's nonrecursive safe fallback.
+            [$status, $envelope, $headers] = $this->httpErrorPolicy->fallback();
+        }
+
+        try {
+            return $this->sessions->clear($this->responses->fromEnvelope($envelope, $status, $headers));
+        } catch (Throwable) {
+            // Keep direct recovery bounded; the outer boundary retains deletion if this attempt also fails.
+            // Reporting/projection failure above still gets this bounded rendering recovery, not another report.
+            try {
+                [$status, $envelope, $headers] = $this->httpErrorPolicy->fallback();
+
+                return $this->sessions->clear($this->responses->fromEnvelope($envelope, $status, $headers));
+            } catch (Throwable) {
+                throw new SessionResponseFailure();
+            }
+        }
     }
 }

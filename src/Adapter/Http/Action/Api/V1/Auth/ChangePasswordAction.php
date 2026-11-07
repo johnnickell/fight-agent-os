@@ -7,11 +7,11 @@ namespace App\Adapter\Http\Action\Api\V1\Auth;
 use App\Adapter\Http\Attribute\Authenticated;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Responder\Api\V1\Auth\PasswordChangeResponder;
-use App\Application\Failure\AuthenticationRequired;
 use App\Application\Security\PasswordChange\ChangePassword;
 use App\Domain\Security\Password\PasswordStructure;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -105,7 +105,8 @@ final readonly class ChangePasswordAction
                 content: new OA\JsonContent(ref: '#/components/schemas/ValidationFail')
             ),
             new OA\Response(ref: '#/components/responses/InvitationThrottled', response: 429),
-            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500),
+            new OA\Response(ref: '#/components/responses/ServiceUnavailable', response: 503)
         ]
     )]
     #[JsonBody]

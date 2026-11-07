@@ -20,22 +20,26 @@ export function invitationTarget(overrides: Record<string, unknown> = {}) {
 export function invitationResponse(data: unknown, status = 200) {
   const message =
     status === 403
-      ? 'Forbidden.'
+      ? 'Permission denied.'
       : status === 401
-        ? 'Unauthorized.'
+        ? 'Authentication required.'
         : status === 404
-          ? 'Not found.'
+          ? 'Resource not found.'
           : status === 429
             ? 'Too many requests.'
             : status === 409
-              ? 'Conflict.'
+              ? 'State conflict.'
               : 'Internal server error.';
   // Delivery-shaped mutation fixtures now mean an empty command acknowledgement.
   const payload =
     data && typeof data === 'object' && 'activation_delivery_id' in data ? null : data;
   return new Response(
     JSON.stringify(
-      status === 200 ? { status: 'success', data: payload } : { status: 'error', message }
+      status === 200
+        ? { status: 'success', data: payload }
+        : status >= 500
+          ? { status: 'error', message }
+          : { status: 'fail', data: { message } }
     ),
     { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
   );

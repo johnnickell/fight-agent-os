@@ -164,7 +164,9 @@ describe('production invitation form', () => {
 
   it('shows generic terminal recovery and clears the transient owner after a conflict', async () => {
     const deps = activationDependencies(() =>
-      Promise.resolve(jsonResponse({ status: 'error', message: 'Conflict.' }, 409, false))
+      Promise.resolve(
+        jsonResponse({ status: 'fail', data: { message: 'State conflict.' } }, 409, false)
+      )
     );
     render(<ActivationPage {...deps} />);
     await screen.findByLabelText('New password (required)');

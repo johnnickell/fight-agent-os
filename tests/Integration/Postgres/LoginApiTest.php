@@ -514,7 +514,9 @@ final class LoginApiTest extends TestCase
         $this->connection->executeStatement(
             'ALTER TABLE auth_rate_limits ADD CONSTRAINT login_abort CHECK (false) NOT VALID'
         );
-        $this->assertResponse($this->request(), 429);
+        $unavailable = $this->request();
+        $this->assertResponse($unavailable, 503);
+        self::assertSame('60', $unavailable->getHeaderLine('Retry-After'));
         self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
     }
 

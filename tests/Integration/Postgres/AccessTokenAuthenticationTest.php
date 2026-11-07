@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Api\Auth\BearerCredential;
-use App\Adapter\Http\Api\Failure\ApiFailureMapper;
-use App\Adapter\Http\Middleware\Api\ApiFailureMiddleware;
 use App\Adapter\Http\Middleware\Api\Auth\AccessTokenAuthentication;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
@@ -14,7 +12,6 @@ use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
-use App\Application\Failure\AuthenticationRequired;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use DateInterval;
 use DateTimeImmutable;
@@ -45,6 +42,7 @@ use Fight\Common\Adapter\Auth\Security\PhpPasswordHasher;
 use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use Monolog\Handler\TestHandler;
@@ -449,11 +447,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         RequestHandlerInterface $next
     ): void {
         $logs = new TestHandler();
-        $failure = new ApiFailureMiddleware(
-            new ApiFailureMapper(),
-            new JSendResponseFactory(new ResponseFactory(), new StreamFactory()),
-            new Logger('auth-test', [$logs])
-        );
+        $failure = \Tests\Support\ApiErrors::boundary(new Logger('auth-test', [$logs]));
         $pipeline = new class ($authentication, $next) implements RequestHandlerInterface {
             /**
              * Constructs RequestHandler
@@ -475,7 +469,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         $response = $failure->process($request, $pipeline);
         self::assertSame(401, $response->getStatusCode());
         self::assertSame(
-            ['status' => 'error', 'message' => 'Unauthorized.'],
+            ['status' => 'fail', 'data' => ['message' => 'Authentication required.']],
             json_decode((string) $response->getBody(), true, 8, JSON_THROW_ON_ERROR)
         );
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));

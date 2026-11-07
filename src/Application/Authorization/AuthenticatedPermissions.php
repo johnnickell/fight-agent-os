@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Application\Authorization;
 
-use App\Application\Failure\PermissionDenied;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\SecurityContext;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Throwable;
 
 /**

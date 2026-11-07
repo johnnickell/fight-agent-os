@@ -30,10 +30,9 @@ function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
           jsonResponse(
             status === 422
               ? { status: 'fail', data: { fields: { 'body.password': [passwordGuidance] } } }
-              : {
-                  status: 'error',
-                  message: status === 429 ? 'Too many requests.' : 'Internal server error.'
-                },
+              : status === 429
+                ? { status: 'fail', data: { message: 'Too many requests.' } }
+                : { status: 'error', message: 'Internal server error.' },
             status,
             false
           )

@@ -305,7 +305,8 @@ foundation below remain shared; no browser authority persistence or synthetic pr
   retained only for explicit feature-level mapping against approved public schema messages; generic failures
   still expose no server prose. Correlation is taken only from a single canonical 32-hex response header; absent or
   invalid values become null. No raw Response, URL, headers, body, exception, cause or server message is returned
-  as diagnostics. `ApiResult` failures expose only their category and safe correlation.
+  as diagnostics. `ApiResult` failures expose category/correlation, bounded fields for approved form mapping,
+  and only the declared secretless partial-invitation facts when that 503 contract is received.
 - `src/features/auth/CsrfProofService.ts` calls the actual `/auth/csrf` operation. Its exact codec maps `expires_at`
   to UTC-second `expiresAt`, checks the proof format and matching expiry, and rejects extra fields including cookie
   material. One instance per tab's future authentication coordinator owns the proof in private volatile state.
@@ -326,10 +327,11 @@ Both server reads require current READ_SWAGGER and configured environment eligib
 credential-free state/snippets, teardown ordering and source/asset-byte qualification are documented in the runbook.
 Scoped default styles reuse the sole theme preference; no CSP exception or arbitrary remote explorer is added.
 
-The shared normalization matrix distinguishes validation (400/422 fail), authentication (401), authorization
-(403), conflict (409), not-found (404), bad-request (400 error), method-not-allowed (405), gone (410), rate-limited
-(429), generic system (5xx with the canonical message), protocol, network and cancellation. Non-bootstrap cases
-are transport tests against documented mapper contracts, **not implemented protected endpoints**. Activation now consumes these seams through `ActivationService`, which owns its fixed path/codec, accepts the
+The [shared safe-error contract](../docs/engineering/SAFE_HTTP_ERRORS.md) distinguishes structured validation
+(400/422 fail), fixed expected-4xx fail categories, explicit current-session intent, declared unavailable and
+uncertain outcomes (503 error), generic system errors, protocol, network and cancellation. Retired 4xx error
+shapes and diagnostic-code coupling are rejected, not supported as a second mode. Client-owned copy and all
+no-automatic-mutation-retry rules remain. Activation now consumes these seams through `ActivationService`, which owns its fixed path/codec, accepts the
 returned access token only into `MemoryAccessToken` and never retries mutations. POST sends JSON plus the explicit
 CSRF proof, keeps all transport privacy controls and deliberately does not abort an observed server mutation
 success. Login consumes the same response codec and memory-token seam through `LoginService`; activation does not mount restoration or a principal cache. `SessionService` now supplies explicit single-tab refresh/logout using that shared memory seam; it never retries conflicts, persists authority or invents a principal. Login success mounts current-session logout and truthful uncertain-server outcomes. TASK-00048’s `SessionCoordinator`

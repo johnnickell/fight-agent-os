@@ -31,7 +31,10 @@ export function directoryResponse(data: unknown, status = 200) {
     JSON.stringify(
       status === 200
         ? { status: 'success', data }
-        : { status: 'error', message: status === 403 ? 'Forbidden.' : 'Unauthorized.' }
+        : {
+            status: 'fail',
+            data: { message: status === 403 ? 'Permission denied.' : 'Authentication required.' }
+          }
     ),
     {
       status,

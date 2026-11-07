@@ -16,7 +16,8 @@ runtime security or the complete login/refresh/logout pipeline.
 ## Composition and request matrix
 
 Login, refresh and logout Actions declare `#[JsonBody]` and `#[Validation]` and consume only the validated source attribute.
-The API pipeline is failure/correlation → routing/security → `ApiInputValidation` → the registered
+The API pipeline is scoped Common safe errors/correlation → explicit native translation → routing/security →
+`ApiInputValidation` → the registered
 `auth.guard.login`, `auth.guard.refresh` or `auth.guard.logout` → Action. These guards require the validated
 JSON attribute; attaching them without source validation fails closed. They combine `BrowserMutationGuard`,
 endpoint shape and independently committed admission. They never call an authentication service themselves.
@@ -88,7 +89,9 @@ transactions, commits all checked dimensions atomically. Nested admission transa
 advisory lock serializes capacity checks (10,000 rows); histories hold at most their configured attempt limit,
 expired hits/rows are reclaimed lazily, and no denied attempt adds data. Maximum history is 1,000 entries at the
 store boundary; this profile uses at most 300. Lock/statement timeouts are 2/3 seconds; contention/storage failure
-denies with safe bounded retry, not a database exception chain. Retry-After is 1–900 seconds (outage: 60).
+denies as declared 503 unavailability with a safe 60-second hint, not a fabricated 429 budget or database
+exception chain. Actual exhausted budgets remain 429 fail with a 1–900-second Retry-After. See
+[safe API failures](SAFE_HTTP_ERRORS.md); neither hint authorizes command replay.
 The table and payload are secret-free apart from one-way pseudonymous keys; backup/access policy still applies.
 
 ## HTTPS, startup and deployment limits

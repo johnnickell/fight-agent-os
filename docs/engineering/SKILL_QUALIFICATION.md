@@ -8,10 +8,12 @@ No product source, tests, external project or dependency version was changed for
 ## Audit: API failure boundary
 
 Question: does the API failure boundary expose arbitrary errors or affect non-API paths? Read
-[ApiFailureMiddleware](../../src/Adapter/Http/Middleware/Api/ApiFailureMiddleware.php),
-[ApiFailureMapper](../../src/Adapter/Http/Api/Failure/ApiFailureMapper.php), their
-[middleware](../../tests/Unit/Http/ApiFailureMiddlewareTest.php) and
-[mapper](../../tests/Unit/Http/ApiFailureMapperTest.php) tests against TASK-00020 and engineering standards.
+[ApiFailureMiddleware](https://github.com/johnnickell/fight-agent-os/blob/21de9f7bc330b44fb5c1a9fd1954f9f87c3b2aaa/src/Adapter/Http/Middleware/Api/ApiFailureMiddleware.php),
+[ApiFailureMapper](https://github.com/johnnickell/fight-agent-os/blob/21de9f7bc330b44fb5c1a9fd1954f9f87c3b2aaa/src/Adapter/Http/Api/Failure/ApiFailureMapper.php), their
+[middleware](https://github.com/johnnickell/fight-agent-os/blob/21de9f7bc330b44fb5c1a9fd1954f9f87c3b2aaa/tests/Unit/Http/ApiFailureMiddlewareTest.php) and
+[mapper](https://github.com/johnnickell/fight-agent-os/blob/21de9f7bc330b44fb5c1a9fd1954f9f87c3b2aaa/tests/Unit/Http/ApiFailureMapperTest.php) tests against TASK-00020 and engineering standards.
+These links preserve the pre-cutover source available at the pinned revision, not today's implementation.
+TASK-00582's replacement is documented in [safe API failures](SAFE_HTTP_ERRORS.md).
 
 The trace reaches the downstream handler only after exact `/api` or `/api/` matching. Non-API requests return
 through the handler outside the catch/log/correlation path. Known exceptions use fixed representations; unknown

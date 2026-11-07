@@ -34,17 +34,17 @@ use OpenApi\Attributes as OA;
                 Future access credentials and CSRF proofs stay memory-only; responses are no-store.
                 TEXT
         ],
-        'mapper-only-failures'    => [
+        'safe-failures'           => [
             'description' => <<<'TEXT'
-                Existing failure classification, NOT advertised bootstrap outcomes or new operations.
-                Transport ValidationException -> 400 ValidationFail (body: Invalid input.);
-                Domain ValidationException -> 422 ValidationFail (input: Invalid value.);
-                AuthenticationRequired -> 401 Error (Unauthorized.);
-                PermissionDenied -> 403 Error (Forbidden.);
-                StateConflict/OptimisticConcurrencyException -> 409 Error (Conflict.);
-                ResourceNotFound -> 404 Error (Not found.);
-                framework equivalents plus 410 Gone. and 429 Too many requests. use Error.
-                Unknown exceptions, including generic LookupException, become generic 500.
+                Qualified Common safe HTTP policy owns generic classification and fallback.
+                Expected 4xx categories use fail with fixed data.message; structured validation preserves data.fields.
+                AuthenticationRequired -> 401 with WWW-Authenticate: Bearer; permission denial -> 403;
+                required absence -> 404; explicit conflict -> 409; rule refusal -> 422; rate limiting -> 429.
+                Native method rejection preserves exact Allow. Only validated 429/503 hints become Retry-After.
+                Unknown faults remain 500 error. Declared availability is 503 error.
+                Partial invitation retains safe inspected data.
+                Current-session revocation uses explicit use_logout intent, never a diagnostic exception code.
+                Correlation/no-store apply throughout the API scope. No retry hint implies replay or rollback.
                 TEXT
         ]
     ]

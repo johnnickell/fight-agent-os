@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Application\Security\PasswordChange;
 
-use RuntimeException;
+use Fight\Common\Application\Error\Exception\RuleViolation;
 
 /**
  * Class PasswordChangePolicyRejected
  *
  * Reports replacement rejection without retaining candidate material
  */
-final class PasswordChangePolicyRejected extends RuntimeException
+final class PasswordChangePolicyRejected extends RuleViolation
 {
     /**
      * Constructs PasswordChangePolicyRejected

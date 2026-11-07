@@ -26,10 +26,14 @@ All responses are no-store and pass through the existing correlation boundary.
 | Admitted operation/result | Public mapping | Cookies | Client memory |
 |---|---|---|---|
 | Refresh rotation | 200, existing `SessionAccessSuccess` view | Replace refresh only; preserve CSRF nonce | Replace access, invalidate superseded generation |
-| Most-recent used credential within package five-second window | 409, exact generic `Conflict.` | Unchanged | No retained old access; typed recoverable conflict, no automatic retry |
-| Refresh missing/malformed/unknown/revoked/expired/non-authoritative authority, or terminal replay | 401, exact generic `Unauthorized.` | Expire exact refresh and CSRF identities | Clear access and proof |
+| Most-recent used credential within package five-second window | 409 fail, `data.message: "State conflict."` | Unchanged | No retained old access; typed recoverable conflict, no automatic retry |
+| Refresh missing/malformed/unknown/revoked/expired/non-authoritative authority, or terminal replay | 401 fail, `data.message: "Authentication required."`, Bearer challenge | Expire exact refresh and CSRF identities | Clear access and proof |
 | Logout current/missing/malformed/unknown/used/already-revoked credential | 200, `{"status":"success","data":null}` | Expire both exact identities | Clear immediately; no claim about server existence |
-| Package/storage/event failure | 500, exact generic `Internal server error.` | Expire both identities | Clear; logout UI explicitly reports unconfirmed server sign-out |
+| Unknown package/storage/event fault after Action entry | 500 error, fixed `Internal server error.` | Expire both identities | Clear; logout UI explicitly reports unconfirmed server sign-out |
+| Declared availability failure after Action entry | 503 error, fixed `Service unavailable.` | Expire both identities | Clear; no replay or rollback claim |
+| Admission storage unavailable before Action entry | 503 error with validated availability hint | Unchanged | Non-authoritative failure; explicit recovery only |
+
+See [safe API failures](SAFE_HTTP_ERRORS.md) for the single diagnostics sink and Common policy/fallback.
 
 `AuthenticationService::refresh()` alone owns rotation, used-digest lookup, five-second conflict and replay
 revocation; the Action never retries. Rotation preserves session/owner/authentication version/remembered flag

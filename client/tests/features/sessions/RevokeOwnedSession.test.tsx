@@ -100,10 +100,17 @@ describe('confirmed other-owned session revocation', () => {
   });
 
   it.each([
-    [409, { status: 'error', message: 'Conflict.' }, 'That session is no longer available'],
     [
       409,
-      { status: 'error', message: 'Use Logout for the current session.', code: 5801 },
+      { status: 'fail', data: { message: 'State conflict.' } },
+      'That session is no longer available'
+    ],
+    [
+      409,
+      {
+        status: 'fail',
+        data: { message: 'Use Logout for the current session.', intent: 'use_logout' }
+      },
       'Use Sign out (Logout)'
     ],
     [500, { status: 'error', message: 'Internal server error.' }, 'Revocation was not confirmed']

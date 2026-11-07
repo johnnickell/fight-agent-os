@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Authorization;
 
-use App\Application\Failure\PermissionDenied;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
@@ -14,6 +13,7 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 
 /**
  * Class InstallationAuthority

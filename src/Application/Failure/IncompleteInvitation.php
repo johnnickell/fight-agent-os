@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Application\Failure;
 
 use App\Application\Invitation\InvitationIssuance;
-use RuntimeException;
+use Fight\Common\Application\Error\Exception\ServiceUnavailable;
 
 /**
  * Class IncompleteInvitation
  *
  * Retains only safe inspected state after a possibly committed invitation step
  */
-final class IncompleteInvitation extends RuntimeException
+final class IncompleteInvitation extends ServiceUnavailable
 {
     /**
      * Constructs IncompleteInvitation

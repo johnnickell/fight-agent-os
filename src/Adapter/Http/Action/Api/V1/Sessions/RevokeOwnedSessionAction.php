@@ -7,11 +7,11 @@ namespace App\Adapter\Http\Action\Api\V1\Sessions;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Sessions\SessionRevocationResponder;
-use App\Application\Failure\AuthenticationRequired;
 use App\Application\Sessions\RevokeOwnedSession;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -46,7 +46,8 @@ final readonly class RevokeOwnedSessionAction
             path target and an empty JSON object are accepted. Package RevokeSession owns usability, ownership,
             current-session exclusion, optimistic replacement and RefreshSessionRevoked. Cross-user administration
             is always denied; no administrative reason or logout-everywhere capability exists here.
-            Current target returns 409 code 5801 and directs to Logout. All other unknown, cross-user, expired,
+            Current target returns 409 fail with public intent use_logout and directs to Logout.
+            All other unknown, cross-user, expired,
             revoked or competing targets return identical 409 Conflict. without target details. Refetch the list
             after success or conflict. Only target is revoked; target access and refresh fail authoritatively.
             No credential is returned. All responses are no-store. Cross-device push is not provided.

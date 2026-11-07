@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Sessions;
 
+use App\Adapter\Http\Api\Failure\CurrentSessionRevocation;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\CurrentRefreshSessionRevocationException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -31,11 +33,13 @@ use Throwable;
 )]
 #[OA\Schema(
     schema: 'CurrentSessionRevocationConflict',
-    required: ['status', 'message', 'code'],
+    required: ['status', 'data'],
     properties: [
-        new OA\Property(property: 'status', type: 'string', enum: ['error']),
-        new OA\Property(property: 'message', type: 'string', enum: ['Use Logout for the current session.']),
-        new OA\Property(property: 'code', type: 'integer', enum: [5801])
+        new OA\Property(property: 'status', type: 'string', enum: ['fail']),
+        new OA\Property(property: 'data', required: ['message', 'intent'], properties: [
+            new OA\Property(property: 'message', type: 'string', enum: ['Use Logout for the current session.']),
+            new OA\Property(property: 'intent', type: 'string', enum: ['use_logout'])
+        ], type: 'object', additionalProperties: false)
     ],
     type: 'object',
     additionalProperties: false
@@ -58,12 +62,8 @@ final readonly class SessionRevocationResponder
     {
         try {
             $operation();
-        } catch (CurrentRefreshSessionRevocationException) {
-            return $this->responses->fromEnvelope(
-                JSendEnvelope::error('Use Logout for the current session.', code: 5801),
-                409,
-                ['Cache-Control' => 'no-store']
-            );
+        } catch (CurrentRefreshSessionRevocationException $failure) {
+            throw new CurrentSessionRevocation(previous: $failure);
         } catch (Throwable $failure) {
             if (
                 !$failure instanceof RefreshSessionNotFoundException
@@ -73,11 +73,7 @@ final readonly class SessionRevocationResponder
                 throw $failure;
             }
 
-            return $this->responses->fromEnvelope(
-                JSendEnvelope::error('Conflict.'),
-                409,
-                ['Cache-Control' => 'no-store']
-            );
+            throw new StateConflict(previous: $failure);
         }
 
         return $this->responses->fromEnvelope(JSendEnvelope::success(), 200, ['Cache-Control' => 'no-store']);

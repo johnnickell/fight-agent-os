@@ -21,7 +21,11 @@ function LoginExample({ scenario = 'ready' }: { scenario?: Scenario }) {
               scenario === 'success'
                 ? loginSuccess()
                 : scenario === 'throttle'
-                  ? jsonResponse({ status: 'error', message: 'Too many requests.' }, 429, false)
+                  ? jsonResponse(
+                      { status: 'fail', data: { message: 'Too many requests.' } },
+                      429,
+                      false
+                    )
                   : scenario === 'outage'
                     ? jsonResponse(
                         { status: 'error', message: 'Internal server error.' },

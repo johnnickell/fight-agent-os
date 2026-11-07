@@ -6,7 +6,6 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
-use App\Application\Failure\RateLimited;
 use App\Domain\Invitation\InvitationOperation;
 use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
@@ -14,6 +13,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -69,8 +69,8 @@ final class InvitationRateLimiterTest extends TestCase
         try {
             $limiter->consume($actor, InvitationOperation::STATUS);
             self::fail('Status budget was not enforced.');
-        } catch (RateLimited $failure) {
-            self::assertSame(60, $failure->retryAfter);
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(60, $failure->retryDelaySeconds());
         }
         $limiter->consume(UserId::generate(), InvitationOperation::ISSUE);
         $this->clock->time = $this->clock->time->modify('+59 seconds');
@@ -219,8 +219,8 @@ final class InvitationRateLimiterTest extends TestCase
         try {
             $limiter->consume($actor, InvitationOperation::RETRY, $target);
             self::fail('Two scopes cannot fit a single-row capacity.');
-        } catch (RateLimited $failure) {
-            self::assertSame(60, $failure->retryAfter);
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(60, $failure->retryDelaySeconds());
             self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits'));
         }
         $limiter = new PostgresInvitationRateLimiter(
@@ -232,7 +232,7 @@ final class InvitationRateLimiterTest extends TestCase
         try {
             $limiter->consume($actor, InvitationOperation::RETRY, UserId::generate());
             self::fail('Changing targets cannot evade the actor budget.');
-        } catch (RateLimited) {
+        } catch (RateLimitExceeded) {
             self::assertSame([1, 1], array_map(
                 'intval',
                 $this->connection->fetchFirstColumn('SELECT attempts FROM invitation_rate_limits')
@@ -248,9 +248,9 @@ final class InvitationRateLimiterTest extends TestCase
         try {
             $limiter->consume($actor, InvitationOperation::ISSUE);
             self::fail('Issue budget was not enforced.');
-        } catch (RateLimited $failure) {
-            self::assertSame($seconds, $failure->retryAfter);
-            self::assertSame('Too many requests.', $failure->getMessage());
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame($seconds, $failure->retryDelaySeconds());
+            self::assertSame('', $failure->getMessage());
             self::assertNull($failure->getPrevious());
         }
     }

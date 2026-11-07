@@ -6,10 +6,7 @@ namespace App\Adapter\Http\Action\Api\V1\Invitations;
 
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationMutationResponder;
-use App\Application\Failure\AuthenticationRequired;
 use App\Application\Failure\InvitationRecoveryUncertain;
-use App\Application\Failure\PermissionDenied;
-use App\Application\Failure\StateConflict;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
@@ -17,6 +14,9 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\RetryInvita
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotRetryableException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use Fight\Common\Application\Validation\Exception\ValidationException;
@@ -88,7 +88,7 @@ final readonly class RetryInvitationAction
             new OA\Response(
                 response: 503,
                 description: 'Uncertain outcome; read status, do not automatically retry',
-                content: new OA\JsonContent(ref: '#/components/schemas/Error')
+                content: new OA\JsonContent(ref: '#/components/schemas/UnavailableError')
             )
         ]
     )]

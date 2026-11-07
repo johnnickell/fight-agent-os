@@ -54,7 +54,9 @@ describe('real authenticated change form', () => {
   });
   it('clears secrets on current-proof rejection, keeps session and permits explicit repeated submission', async () => {
     const post = vi.fn(() =>
-      Promise.resolve(jsonResponse({ status: 'error', message: 'Conflict.' }, 409, false))
+      Promise.resolve(
+        jsonResponse({ status: 'fail', data: { message: 'State conflict.' } }, 409, false)
+      )
     );
     const d = passwordChangeDependencies(post);
     await d.authority.load();

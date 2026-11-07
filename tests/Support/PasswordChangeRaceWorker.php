@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Failure\StateConflict;
 use App\Application\Security\PasswordChange\ChangePassword;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -17,6 +16,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSes
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Throwable;
 
 /**

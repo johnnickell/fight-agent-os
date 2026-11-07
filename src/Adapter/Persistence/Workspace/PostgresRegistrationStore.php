@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Workspace;
 
-use App\Application\Failure\RateLimited;
 use App\Application\Workspace\RegistrationStore;
 use App\Application\Workspace\RegistrationView;
 use App\Application\Workspace\WorkspaceView;
@@ -20,6 +19,7 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use Fight\Common\Domain\Messaging\MessageId;
 use LogicException;
 
@@ -267,7 +267,7 @@ SQL, [$workspace->toString(), $source->key()]) !== false
             [$window]
         );
         if ((int) $this->connection->fetchOne('SELECT count(*) FROM reference_generation_limits') >= 10000) {
-            throw new RateLimited(60);
+            throw new RateLimitExceeded(retryDelaySeconds: 60);
         }
         $count = $this->connection->fetchOne(<<<'SQL'
 INSERT INTO reference_generation_limits (actor_id, window_start, attempts) VALUES (?, ?, 1)
@@ -275,7 +275,7 @@ ON CONFLICT (actor_id) DO UPDATE SET attempts = reference_generation_limits.atte
 WHERE reference_generation_limits.attempts < 10 RETURNING attempts
 SQL, [$actor->toString(), $window]);
         if ($count === false) {
-            throw new RateLimited(60 - ($now->getTimestamp() - $window));
+            throw new RateLimitExceeded(retryDelaySeconds: 60 - ($now->getTimestamp() - $window));
         }
     }
 

@@ -24,16 +24,18 @@ Owned Application orchestration calls `AuthenticationService::changePassword()` 
 package reads/verifies current proof using its real/dummy path. The package owns Argon2id replacement,
 authentication-version/authority-revision advancement, reset-grant retirement, all-active-session
 revocation, atomic audit and the post-commit `PasswordChanged` event. No password history or requirement
-to differ is added. Qualification uses the unchanged Access Control v0.8.0 lock/source
+to differ is added. Original qualification used Access Control v0.8.0 lock/source
 `319738255e682d587642b67856039f882b9588d6` and Common v1.3.0
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582`, not version arithmetic.
+`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. TASK-00582's [safe-error cutover](SAFE_HTTP_ERRORS.md)
+selects Common v1.4.1 while retaining that Access Control version; current behavior needs actual checks,
+not version arithmetic.
 
 Success is HTTP 200, no-store `{"status":"success","data":{"changed":true}}`, with fixed refresh/nonce
 cookie deletion (Secure, HttpOnly, SameSite=Strict, Path=/api/v1/auth). No access/refresh token or identity
 is returned. Every old access version and refresh session fails after commit. Wrong current proof and
-safe package rejection share generic 409 `Conflict.`; the UI offers one safe message. Replacement policy
+safe package rejection share 409 fail with `data.message: "State conflict."`; the UI offers one safe message. Replacement policy
 uses published 422 feedback. Transport errors are 400/403, lost authentication 401, admission 429 and
-infrastructure failure sanitized 500. A post-commit event/network failure can leave a completed change;
+unknown infrastructure faults sanitized 500. Declared limiter unavailability is 503, not a fabricated 429. A post-commit event/network failure can leave a completed change;
 there is no automatic mutation retry. Failure before commit leaves still-authoritative sessions intact.
 
 Admission consumes independently committed peer/endpoint budgets: **20 peer / 300 endpoint attempts per

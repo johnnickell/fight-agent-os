@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Authorization;
 
-use App\Application\Failure\PermissionDenied;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\SecurityContext;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 
 /**
  * Class PermissionGuard

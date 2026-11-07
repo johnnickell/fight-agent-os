@@ -2,7 +2,7 @@
 id: TICKET-00136
 epic: EPIC-00023
 title: Adopt shared failures and safe error presentation
-status: ready-for-agent
+status: done
 ---
 
 # Adopt shared failures and safe error presentation
@@ -104,10 +104,16 @@ its complete behavior evidence; a mapper-only partial slice does not complete in
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00582](../tasks/00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent |
+| [TASK-00582](../tasks/00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+[TASK-00582's accepted implementation](../tasks/00582-TASK.md#accepted-implementation-checkpoint--2026-11-07)
+completes this requirement's single end-to-end cutover. Scoped independent Review and HTTP/browser/security QA
+cover Common v1.4.1 adoption, the sole safe boundary/redacted sink, direct responders, strict client/fields,
+Console/contracts and obsolete-path removal. Publication and human merge remain separate; other source/supplier
+corrections stay with their owners. The planning-only approvals and evidence below are preserved history.
 
 John approved this sixth requirement area and then the single complete integration slice, now written as
 [TASK-00582](../tasks/00582-TASK.md), kind `chore`, order `19`, `ready-for-agent`, with TASK-00564 as its sole local

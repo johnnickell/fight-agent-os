@@ -8,6 +8,7 @@ use App\Adapter\Persistence\PersistenceConflict;
 use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -43,12 +44,8 @@ final readonly class RoleMutationResponder
     {
         try {
             $view = $operation();
-        } catch (CustomRoleException | PersistenceConflict) {
-            return $this->responses->fromEnvelope(
-                JSendEnvelope::error('Conflict.'),
-                409,
-                ['Cache-Control' => 'no-store']
-            );
+        } catch (CustomRoleException | PersistenceConflict $failure) {
+            throw new StateConflict(previous: $failure);
         }
 
         return $this->responses->fromEnvelope(

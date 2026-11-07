@@ -63,9 +63,12 @@ use Psr\Http\Message\ResponseInterface;
 )]
 #[OA\Schema(
     schema: 'InvitationIncomplete',
-    required: ['status', 'data'],
+    required: ['status', 'message', 'data'],
     properties: [
-        new OA\Property(property: 'status', type: 'string', enum: ['fail']),
+        new OA\Property(property: 'status', type: 'string', enum: ['error']),
+        new OA\Property(property: 'message', type: 'string', enum: [
+            'Invitation completion is unconfirmed. Read invitation status before another operation.'
+        ]),
         new OA\Property(property: 'data', ref: '#/components/schemas/InvitationIssuanceData')
     ],
     type: 'object',

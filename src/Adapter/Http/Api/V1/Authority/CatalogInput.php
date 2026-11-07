@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Api\V1\Authority;
 
-use App\Application\Failure\AuthenticationRequired;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**

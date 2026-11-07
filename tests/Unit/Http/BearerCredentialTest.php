@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Http;
 
 use App\Adapter\Http\Api\Auth\BearerCredential;
-use App\Application\Failure\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;

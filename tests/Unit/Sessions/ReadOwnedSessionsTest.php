@@ -6,7 +6,6 @@ namespace Tests\Unit\Sessions;
 
 use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Sessions\ReadOwnedSessions;
 use App\Application\Sessions\SessionPresentation;
 use DateTimeImmutable;
@@ -31,6 +30,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Repository\ResultSet;

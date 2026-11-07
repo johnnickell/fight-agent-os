@@ -51,7 +51,10 @@ describe('activation transport and volatile session ownership', () => {
       const response =
         status === 422
           ? { status: 'fail', data: { fields: { 'body.password': [passwordGuidance] } } }
-          : { status: 'error', message: status === 409 ? 'Conflict.' : 'Too many requests.' };
+          : {
+              status: 'fail',
+              data: { message: status === 409 ? 'State conflict.' : 'Too many requests.' }
+            };
       const deps = activationDependencies(() =>
         Promise.resolve(jsonResponse(response, status, false))
       );

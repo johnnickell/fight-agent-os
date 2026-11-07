@@ -12,7 +12,10 @@ those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling, public-safe form metadata and local engineering skills are
-present. Explicit initial Workspace bootstrap and protected Repository registration/inspection are implemented under
+present. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
+HTTP boundary with strict matching client contracts, protocol metadata and preserved session-cookie recovery;
+scoped independent HTTP/browser/security QA covers the cutover, not production deployment or unrelated use cases.
+Explicit initial Workspace bootstrap and protected Repository registration/inspection are implemented under
 [TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending fresh independent Review/QA after repair. They add no
 checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
 canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;

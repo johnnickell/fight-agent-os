@@ -43,7 +43,7 @@ export const loginSchemaSource = {
 export const loginSuccess = () =>
   jsonResponse({ access_token: 'header.payload.signature', issued_at: 1000, expires_at: 1900 });
 export const loginRejected = () =>
-  jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false);
+  jsonResponse({ status: 'fail', data: { message: 'Authentication required.' } }, 401, false);
 
 export function loginDependencies(
   post: ApiTransport = () => Promise.resolve(loginRejected()),

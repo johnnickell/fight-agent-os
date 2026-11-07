@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Application\Security\PasswordChange;
 
-use App\Application\Failure\StateConflict;
 use App\Application\Security\Password\PasswordSetting;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\PasswordChangeRejectedException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use SensitiveParameter;
 use Throwable;
 

@@ -405,9 +405,9 @@ final class UserDirectoryApiTest extends TestCase
         self::assertSame(1, $this->probe->count());
         self::assertCount(1, $logs->getRecords());
         $record = $logs->getRecords()[0];
-        self::assertSame('Unhandled HTTP request failure.', $record->message);
+        self::assertSame('HTTP request failed.', $record->message);
         self::assertSame(
-            ['correlation_id', 'correlation_source', 'request_method', 'exception_type'],
+            ['http_status', 'exception_type'],
             array_keys($record->context)
         );
         self::assertStringNotContainsString(

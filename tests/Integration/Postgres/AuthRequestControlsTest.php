@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\Http\Api\Failure\ApiFailureMapper;
 use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
-use App\Adapter\Http\Middleware\Api\ApiFailureMiddleware;
 use App\Adapter\Http\Middleware\Api\Auth\AuthEndpointGuard;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
+use App\Adapter\Http\Middleware\Api\NativeApiFailures;
 use App\Adapter\Http\Middleware\Api\Validation\ApiInputValidation;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
@@ -100,11 +99,8 @@ final class AuthRequestControlsTest extends TestCase
         }
         $this->app->addRoutingMiddleware();
         $this->logs = new TestHandler();
-        $this->app->add(new ApiFailureMiddleware(
-            new ApiFailureMapper(),
-            $responses,
-            new Logger('test', [$this->logs])
-        ));
+        $this->app->add(new NativeApiFailures());
+        $this->app->add(\Tests\Support\ApiErrors::boundary(new Logger('test', [$this->logs])));
         LoginJsonAction::$calls = EmptyAuthJsonAction::$calls = 0;
     }
 

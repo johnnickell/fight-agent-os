@@ -8,11 +8,12 @@ use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Security\Authentication\AuthAdmission;
-use App\Application\Failure\RateLimited;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
+use Fight\Common\Application\Error\Exception\ServiceUnavailable;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -111,13 +112,18 @@ final class AuthAdmissionTest extends TestCase
         }
         $this->connection->executeStatement('ALTER TABLE auth_rate_limits RENAME TO auth_rate_limits_hidden');
         try {
-            self::assertFalse($this->admission()->allows(EmailAddress::fromString('outage@example.test')));
-            try {
-                $this->admission()->endpoint(AuthOperation::REFRESH, '192.0.2.1');
-                self::fail('Unavailable storage accepted.');
-            } catch (RateLimited $failure) {
-                self::assertSame(60, $failure->retryAfter);
-                self::assertNull($failure->getPrevious());
+            foreach (['email', 'endpoint'] as $operation) {
+                try {
+                    if ($operation === 'email') {
+                        $this->admission()->allows(EmailAddress::fromString('outage@example.test'));
+                    } else {
+                        $this->admission()->endpoint(AuthOperation::REFRESH, '192.0.2.1');
+                    }
+                    self::fail('Unavailable storage accepted.');
+                } catch (ServiceUnavailable $failure) {
+                    self::assertSame(60, $failure->retryDelaySeconds());
+                    self::assertNull($failure->getPrevious());
+                }
             }
         } finally {
             $this->connection->executeStatement('ALTER TABLE auth_rate_limits_hidden RENAME TO auth_rate_limits');
@@ -135,8 +141,8 @@ final class AuthAdmissionTest extends TestCase
             try {
                 $admission->endpoint(AuthOperation::LOGIN, $network);
                 self::fail('Exceeded network or capacity accepted.');
-            } catch (RateLimited $failure) {
-                self::assertSame(900, $failure->retryAfter);
+            } catch (RateLimitExceeded $failure) {
+                self::assertSame(900, $failure->retryDelaySeconds());
             }
         }
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM auth_rate_limits'));
@@ -246,8 +252,8 @@ SQL,
             try {
                 $this->admission()->endpoint(AuthOperation::LOGIN, $network);
                 self::fail('Invalid peer accepted.');
-            } catch (RateLimited $failure) {
-                self::assertSame(60, $failure->retryAfter);
+            } catch (RateLimitExceeded $failure) {
+                self::assertSame(60, $failure->retryDelaySeconds());
             }
         }
         $invalid = [['', 20, 300], [str_repeat('a', 64), 20, 300], [$this->key, 21, 300], [$this->key, 20, 301]];
