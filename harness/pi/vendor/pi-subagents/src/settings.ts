@@ -1,4 +1,5 @@
 // Persistence for pi-subagents operational settings.
+// - Fight package: bundled defaults, overridden by global and project settings
 // - Global:  ~/.pi/agent/subagents.json (via getAgentDir()) — manual defaults, never written here
 // - Project: <cwd>/.pi/subagents.json — written by /agents → Settings; overrides global on load
 
@@ -549,9 +550,9 @@ function readSettingsFile(path: string): SubagentsSettings {
   }
 }
 
-/** Load merged settings: global provides defaults, project overrides. */
-export function loadSettings(cwd: string = process.cwd()): SubagentsSettings {
-  return { ...readSettingsFile(globalPath()), ...readSettingsFile(projectPath(cwd)) };
+/** Load bundled defaults, then global and project overrides. */
+export function loadSettings(cwd: string = process.cwd(), defaultsPath?: string): SubagentsSettings {
+  return { ...(defaultsPath ? readSettingsFile(defaultsPath) : {}), ...readSettingsFile(globalPath()), ...readSettingsFile(projectPath(cwd)) };
 }
 
 /**
@@ -625,8 +626,9 @@ export function applyAndEmitLoaded(
   appliers: SettingsAppliers,
   emit: SettingsEmit,
   cwd: string = process.cwd(),
+  defaultsPath?: string,
 ): SubagentsSettings {
-  const settings = loadSettings(cwd);
+  const settings = loadSettings(cwd, defaultsPath);
   applySettings(settings, appliers);
   emit("subagents:settings_loaded", { settings });
   return settings;

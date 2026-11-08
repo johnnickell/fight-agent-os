@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -28,7 +28,6 @@ git('init', '--initial-branch=topic/controlled-consumer');
 writeFileSync(join(root, 'CLAUDE.md'), 'Controlled fixture. No genuine Work, acceptance, provider or publication effects.');
 mkdirSync(join(root, 'work-items')); writeFileSync(join(root, 'work-items/assigned.md'), '# TASK-00561\nState: approved-to-code (fixture only).\n');
 git('add', '.'); git('-c', 'user.name=Harness fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Controlled fixture');
-writeFileSync(join(agentDir, 'subagents.json'), readFileSync(join(harness, 'profiles/subagents.json')));
 const settingsData = { packages: [harness], sessionDir: join(root, '.runs/tasks/TASK-00561/runs/sessions'),
   compaction: { enabled: false }, retry: { enabled: false } };
 writeFileSync(join(agentDir, 'settings.json'), JSON.stringify(settingsData)); process.chdir(root);

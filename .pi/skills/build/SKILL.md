@@ -23,7 +23,8 @@ cleanup. Never approve/merge/force-push/release/deploy or continue to another TA
 authority. A TICKET selects only its sole unambiguous eligible TASK; otherwise ask, without decomposing it.
 
 Verify cwd/origin/branch/base/status, blockers, existing PR and unrelated changes. Reuse the operator's selected
-checkout; ask main versus worktree only when missing. Keep source in that selected checkout. Resolve canonical
+checkout; ask main versus worktree only when missing. If the native checkout is null, resolve or create the
+chosen registered checkout and pass it directly to the stage tool. Keep source in that checkout. Resolve canonical
 base through Git; canonical Review/QA reports there remain authoritative. Read existing reports/ledger before
 choosing a stage; resume current evidence, never reset repair usage or rebuild an accepted unchanged candidate.
 
@@ -59,12 +60,13 @@ and `--list-models`; versions are evidence, not equality gates. No global instal
 Launch **one child at a time** through
 [`fight_build_stage` for every role](../../../harness/pi/SUBAGENTS.md#all-role-build-default), including repairs
 and cleanup-only Land. This is the default and sole fresh Build route; no execution-selector flag is required.
-Actual Build/coordination authority must name the same TASK and checkout in default mode. SDK subordinates cannot
+Build requires authority for the same TASK in default mode. Use the bound path when supplied, or resolve
+the chosen checkout within the invoking repository. SDK subordinates cannot
 coordinate nested stages even if a tool is visible. An Agent, profile, request or pane label cannot grant authority.
 Never inherit Engineer conversation into assessors, resume an old assessor as a fresh verdict, or dispatch an SDK
 demonstration in place of the assigned Work.
 
-Missing tool, supported engine capabilities or qualified profile means hold for deliberate safe-boundary adoption,
+Missing tool or supported engine capabilities means hold for deliberate safe-boundary adoption,
 not process fallback. Active hosts keep their original loaded implementation; do not update/reload them or shared
 installations implicitly. Reconcile original execution and external effects before adoption or any replacement.
 Explicit Sync retains its demonstrated process Engineer/Land route under its own

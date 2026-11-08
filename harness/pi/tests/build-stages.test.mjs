@@ -33,10 +33,9 @@ function fixture(t, role = 'engineer') {
   const request = { task: 'TASK-00561', role, checkout: root, base: root, branch: 'topic/consumer', context,
     record: join(root, 'work-items/task.md'), attempt, head: git('rev-parse', 'HEAD'),
     provider: model.provider, model: model.id, thinking: 'high', timeout: 10, repair: false, repairsUsed: 0, repairLimit: 5 };
-  const profile = JSON.parse(readFileSync(new URL('../profiles/subagents.json', import.meta.url)));
   const registry = { capabilities: { beforeSessionStart: true, boundRootSession: true }, hasRunning: () => false,
     spawn() { throw new Error('possibly-started'); }, getRecord() {} };
-  const options = { registry, profile };
+  const options = { registry };
   publishWorkflow(parent, new WorkflowAccess('build', { taskId: request.task, checkout: root }));
   const child = () => {
     const sessionDir = join(root, '.runs/tasks/TASK-00561/runs/sessions'); mkdirSync(sessionDir, { recursive: true });
@@ -50,7 +49,7 @@ function fixture(t, role = 'engineer') {
   const assignment = { parent: 'actual-parent', task: request.task, role, skill: stageDefinitions[role].skill,
     effects: stageDefinitions[role].effects, checkout: root, attempt, provider: model.provider, model: model.id,
     thinking: 'high', requiredExtensions: [], instructions: ['Controlled governing instructions'], sessionRoots: [join(root, '.runs/tasks/TASK-00561/runs')] };
-  return { root, ctx, request, options, child, assignment, registry, profile, entries };
+  return { root, ctx, request, options, child, assignment, registry, entries };
 }
 
 test('default route requires actual session-local Build authority and excludes SDK subordinates', t => {
@@ -64,6 +63,18 @@ test('default route requires actual session-local Build authority and excludes S
   assert.throws(() => prepareStage(f.ctx, f.request, f.options), /build-authority-required/);
   publishWorkflow(f.ctx.sessionManager, new WorkflowAccess('build', { taskId: f.request.task, checkout: f.root }));
   assert.equal(prepareStage(f.ctx, f.request, f.options).role, 'engineer');
+});
+
+test('an interactive Build can dispatch into its selected sibling worktree without another command', t => {
+  const f = fixture(t), foreign = fixture(t), checkout = join(f.root, 'isolated');
+  execFileSync('git', ['-C', f.root, 'worktree', 'add', '-b', 'feature/isolated', checkout], { stdio: 'ignore' });
+  const workflow = new WorkflowAccess('local', { checkout: f.root });
+  workflow.input('/skill:build TASK-00561', 'interactive');
+  publishWorkflow(f.ctx.sessionManager, workflow);
+
+  const request = { ...f.request, checkout, branch: 'feature/isolated', record: join(checkout, 'work-items/task.md') };
+  assert.throws(() => prepareStage(f.ctx, { ...request, checkout: foreign.root }, f.options), /stage-checkout-unregistered/);
+  assert.equal(prepareStage(f.ctx, request, { registry: f.registry }).role, 'engineer');
 });
 
 for (const role of Object.keys(stageDefinitions)) {
@@ -107,13 +118,11 @@ for (const role of Object.keys(stageDefinitions)) {
   });
 }
 
-test('unsupported hooks, unsafe profile, concurrent work and unavailable models refuse before dispatch', t => {
+test('unsupported hooks, concurrent work and unavailable models refuse before dispatch', t => {
   const f = fixture(t);
   for (const capabilities of [{}, { beforeSessionStart: true }, { boundRootSession: true }])
     assert.throws(() => prepareStage(f.ctx, f.request, { ...f.options, registry: { ...f.registry, capabilities } }), /capability-unavailable/);
   assert.throws(() => prepareStage(f.ctx, f.request, { ...f.options, registry: { ...f.registry, hasRunning: () => true } }), /already-running/);
-  for (const patch of [{ worktreeIsolation: true }, { workflowsEnabled: true }, { schedulingEnabled: true }, { maxSubagentDepth: 2 }, { packageAgents: [] }])
-    assert.throws(() => prepareStage(f.ctx, f.request, { ...f.options, profile: { ...f.profile, ...patch } }), /profile-unqualified/);
   f.ctx.modelRegistry.find = () => undefined; assert.throws(() => prepareStage(f.ctx, f.request, f.options), /model-unavailable/);
 });
 
@@ -215,12 +224,12 @@ for (const transition of ['settled-before-replacement', 'late-resolution', 'late
   test(`same-record ${transition} holds the admitted stage instead of proving quiescence`, async t => {
     const f = fixture(t, 'reviewer'), timers = []; let releaseReplacement;
     t.after(() => { timers.forEach(clearTimeout); releaseReplacement?.(); });
+    let replaceRun;
     const e = engine(f, ({ record, session, settle, reject }) => {
       t.after(settle);
       record.status = 'completed';
       if (transition === 'settled-before-replacement') { session.isStreaming = true; settle(); }
-      // Allow a terminal poll to subscribe before the record is reused.
-      timers.push(setTimeout(() => {
+      replaceRun = () => {
         if (!['late-resolution', 'late-rejection'].includes(transition)) settle();
         if (!['foreground-resume', 'same-clock-resume', 'queued-resume'].includes(transition)) {
           record.promise = new Promise(resolve => { releaseReplacement = resolve; });
@@ -234,8 +243,18 @@ for (const transition of ['settled-before-replacement', 'late-resolution', 'late
         if (transition === 'late-rejection') timers.push(setTimeout(() => reject(new Error('prior-run-failed')), 0));
         // Keep the old implementation finite even for a queued transition.
         if (transition === 'queued-resume') timers.push(setTimeout(() => { record.status = 'stopped'; }, 300));
-      }, 150));
+      };
     });
+    const getRecord = e.registry.getRecord;
+    e.registry.getRecord = () => {
+      const record = getRecord();
+      if (record?.status === 'completed' && replaceRun) {
+        // Reuse the record after the dispatcher observes the terminal run.
+        queueMicrotask(replaceRun);
+        replaceRun = undefined;
+      }
+      return record;
+    };
     const outcome = await runStage(e.pi, f.ctx, f.request, { ...f.options, registry: e.registry });
     assert.equal(outcome.executionSettled, false);
     assert.equal(outcome.state, 'uncertain'); assert.equal(outcome.reason, 'stage-run-changed');

@@ -18,7 +18,7 @@ Follow the [native workflow rule](../../../harness/pi/WORKFLOW_RULE.md).
 new PR, approval, PR merge, rebase, force-push, release, deployment or other-TASK sweep. Explicit operator invocation
 authorizes bounded integration/commit/checks, automatic Land, non-force update of the same PR and ordinary
 eligible cleanup, subject to narrower instructions. An explicit checkout must already be registered. Omit
-`--checkout` to let Sync select or recreate an isolated worktree.
+`--checkout` to let Sync select or recreate an isolated worktree and continue the same run.
 
 1. Confirm native selected workflow is `sync`, effect `coordination`, the same TASK and default mode.
    A concrete checkout binds the run to that path. A null checkout selects isolated-worktree resolution

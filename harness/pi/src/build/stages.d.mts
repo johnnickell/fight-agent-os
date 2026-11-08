@@ -7,7 +7,7 @@ export type StageRequest = {
   repair: boolean; repairsUsed: number; repairLimit: number;
 };
 export type StageOptions = {
-  registry: unknown; profile: unknown; signal?: AbortSignal;
+  registry: unknown; signal?: AbortSignal;
   dispatched?: (identity: unknown) => void; onShutdown?: (cancel: () => void) => () => void; progress?: (value: unknown) => void;
 };
 export type StageOutcome = {

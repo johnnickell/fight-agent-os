@@ -9,7 +9,7 @@ Explicit [`/skill:sync TASK-NNNNN`](../../.pi/skills/sync/SKILL.md) selects acce
 `skill: sync` / `effect: coordination`, reusing the existing process dispatcher for fresh Engineer then Land.
 It requires current independent acceptance and an existing open PR; it is not Build authority or the SDK stage
 route. The [all-role SDK default](SUBAGENTS.md#all-role-build-default) is the sole fresh Build execution route,
-without a selector flag. Actual Build/TASK/checkout selection and supported capabilities/profile remain required;
+without a selector flag. Build requires TASK authority, a verified checkout and supported engine capabilities;
 missing prerequisites hold rather than selecting process fallback. This source cutover does not migrate active
 hosts, change Sync's process route or predeclare final independent acceptance/actual delivery. Skill discovery
 does not update a separately installed Harness; adopt reviewed source explicitly at a safe boundary.

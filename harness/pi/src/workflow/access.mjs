@@ -11,6 +11,7 @@ export const skillEffects = Object.freeze({
   'to-tasks': 'task-planning', wayfinder: 'map-planning', research: 'research', design: 'scratch',
   prototype: 'scratch', 'writing-for-agents': 'instructions', graphify: 'graph', release: 'release',
 });
+const resolvesCheckout = skill => skill === 'build' || skill === 'sync';
 const skillRole = skill => ({ work: 'engineer', review: 'reviewer', qa: 'qa', land: 'land', build: 'qa', sync: 'qa' })[skill] ?? 'reviewer';
 const subject = value => typeof value === 'string' && /^(TASK|TICKET|EPIC|WF)-\d{3,5}$/.test(value);
 const releaseVersion = value => typeof value === 'string' && value.length <= 96 ?
@@ -34,14 +35,15 @@ export class WorkflowAccess {
     const prior = [...entries].reverse().find(entry => entry.type === 'custom' &&
       ['fight-workflow-role-v1', 'fight-workflow-role-v2', 'fight-workflow-role-v3'].includes(entry.customType));
     const data = prior?.data;
+    const checkoutRoot = data?.checkoutRoot ?? data?.syncRoot;
     if (['fight-workflow-role-v2', 'fight-workflow-role-v3'].includes(prior?.customType) && data?.sessionId === sessionId &&
       data.launcher === null && stageRole(data.role) === data.role) {
       access.select(data.role);
       if (prior.customType === 'fight-workflow-role-v3' && Object.hasOwn(skillEffects, data.skill) &&
           skillRole(data.skill) === data.role && (data.taskId === null || scopedSubject(data.skill, data.taskId)) &&
           ((typeof data.checkout === 'string' && isAbsolute(data.checkout)) ||
-            (data.skill === 'sync' && data.taskId !== null && data.checkout === null &&
-              typeof data.syncRoot === 'string' && isAbsolute(data.syncRoot) && data.syncRoot === checkout)) &&
+            (resolvesCheckout(data.skill) && data.taskId !== null && data.checkout === null &&
+              typeof checkoutRoot === 'string' && isAbsolute(checkoutRoot) && checkoutRoot === checkout)) &&
           ['default', 'query', 'status'].includes(data.mode)) {
         access.skill = data.skill; access.taskId = data.taskId; access.checkout = data.checkout; access.mode = data.mode;
       } else if (prior.customType === 'fight-workflow-role-v3') access.select('review');
@@ -55,10 +57,10 @@ export class WorkflowAccess {
   checkpoint(sessionId, role = this.role) {
     const current = this.pending && this.pending.role === role ? this.pending : this;
     return { sessionId, role, launcher: this.launcher,
-      ...(current.checkout || (current.skill === 'sync' && current.role === role) ?
+      ...(current.checkout || (resolvesCheckout(current.skill) && current.role === role) ?
         { skill: current.role === role ? current.skill : 'review', taskId: current.taskId,
           checkout: current.checkout, mode: current.mode,
-          ...(current.checkout === null ? { syncRoot: this.defaultCheckout } : {}) } : {}) };
+          ...(current.checkout === null ? { checkoutRoot: this.defaultCheckout } : {}) } : {}) };
   }
   select(value, persist = () => {}) {
     const key = normalizeRole(value);
@@ -93,7 +95,8 @@ export class WorkflowAccess {
     if (taskId !== null && !scopedSubject(selected[1], taskId)) throw new Unavailable('workflow-subject-required');
     const checkout = (sync ? syncInput[2] : /(?:^|\s)--checkout\s+(.+)$/.exec(selected[2])?.[1])?.replace(/^(?:"(.*)"|'(.*)')$/, '$1$2');
     if (checkout !== undefined && (!isAbsolute(checkout) || /[\x00-\x1f\x7f]/.test(checkout))) throw new Unavailable('workflow-checkout-required');
-    this.requested = { taskId, ...(checkout ? { checkout: resolve(checkout) } : sync ? { checkout: null } : {}),
+    this.requested = { taskId, checkout: checkout ? resolve(checkout) :
+      resolvesCheckout(selected[1]) && taskId !== null ? null : this.defaultCheckout,
       mode: sync ? 'default' : /\b(query|trace)\b/.test(selected[2]) ? 'query' : /\b(status|preview|dry-run)\b/.test(selected[2]) ? 'status' : 'default' };
     try { this.select(selected[1], persist); } finally { this.requested = undefined; }
     return true;

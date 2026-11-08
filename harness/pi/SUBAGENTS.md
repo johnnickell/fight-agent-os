@@ -19,9 +19,8 @@ No global package/settings/trust or active session is changed by this source upd
 
 Before starting a deliberately selected new installation:
 
-1. Inspect `profiles/subagents.json` and explicitly merge it into the project's `.pi/subagents.json` or the private
-   agent-directory `subagents.json`. Project settings override private defaults. Never overwrite another operator's
-   configuration. Installation does not apply the profile, select workflow authority or grant delivery effects.
+1. The engine loads `profiles/subagents.json` from the package at startup. Private agent-directory settings
+   override these defaults, and project settings override both.
 2. Select **one complete Fight package** in Pi's configured `packages[]`. Inspect `pi list` and direct extension
    paths/filters. Remove only an explicitly replaced standalone `npm:@tintinweb/pi-subagents...` declaration in the
    intended settings scope after affected clients exit. Never load standalone and bundled engines together.
@@ -53,9 +52,8 @@ Agent delegation at its tool boundary; SDK/extension OS calls are not sandboxed 
 owners through the same engine. No execution-selector flag or process fallback remains; the bootstrap
 `--fight-build-stages sdk` flag and route-readiness state are removed, without a compatibility alias.
 The historical bootstrap anchor above preserves evidence links, not old runnable instructions.
-Actual default-mode Build authority must name the TASK and checkout. Missing supported capabilities or qualified
-profile holds dispatch, never selects another executor. SDK subordinates are excluded even with a visible tool
-or Build-shaped label.
+Build requires default-mode authority for the TASK and a verified checkout. A bound path must match exactly.
+The engine must support trusted stage startup. SDK subordinates cannot dispatch stages.
 
 [TASK-00561's approved staged qualification](../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07)
 separates bounded bootstrap acceptance, this final source cutover, fresh complete-implementation Review/QA and
@@ -77,7 +75,7 @@ npm install --prefix "$private_prefix" --install-links --ignore-scripts --legacy
 Inspect that `$private_prefix/node_modules/@fight/agent-os-pi` is a real copy. Prepare the private Pi directory
 with `settings.json` containing `packages: ["/absolute/private-prefix/node_modules/@fight/agent-os-pi"]`, the actual
 provider skill directory in `skills`, and an absolute task-owned `sessionDir` at the canonical base or selected
-checkout. Apply the shipped profile to that private directory before launching. Resolve provider authentication
+checkout. Resolve provider authentication
 through the existing supported operator/SDK path; never copy credential files into the private directory or logs.
 Unavailable auth holds real qualification, not permission to use a faux provider as real acceptance.
 
@@ -88,8 +86,9 @@ PI_CODING_AGENT_DIR="$private_agent_dir" pi \
   --provider "$coordinator_provider" --model "$coordinator_model" --thinking "$coordinator_thinking"
 ```
 
-The **operator** must genuinely select `/skill:build TASK-NNNNN --checkout /absolute/selected/checkout` with the
-actual TASK. Inspect `fight_workflow_status`: Build/coordination, same TASK/checkout, default mode. Package/tool
+The **operator** must genuinely select `/skill:build TASK-NNNNN` with the actual TASK. Inspect
+`fight_workflow_status` for Build/coordination, the same TASK and default mode. A null checkout delegates
+checkout resolution to Build within the invoking repository. Package/tool
 availability does not select Build authority. An Engineer, profile, RPC prompt or programmatic
 interactive-input fixture cannot promote itself. No automatic active-host `/reload`, user-input synthesis or
 shared installation update is allowed. If this session cannot express that genuine selection, commit the
