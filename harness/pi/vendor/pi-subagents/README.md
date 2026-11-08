@@ -21,8 +21,11 @@ is reference documentation, not our installation procedure or evidence that its 
   qualification reproduce the former duplicate-store failure before repair; no shared environment role mutation.
 - Remove upstream's extra EOF blank lines in `agent-types.ts` and `enabled-models.ts` so the delivered source passes
   Git whitespace checks. These two formatting-only deviations are deliberate; the original base remains above.
-- Harness packaging owns runtime dependencies and loads this source entry once. Host Pi peers use capability-based
-  ranges; the inherited development lock records tested dependency identities, not an allowed Pi-version list.
+- Generic activation accepts an optional packaged-defaults path for initial discovery and applied settings;
+  absent that path, ordinary generic defaults remain intact. Harness `src/subagents-extension.ts` selects the
+  shipped Fight profile and calls this same engine once; the manifest does not also load the vendor entry.
+  Harness packaging owns runtime dependencies. Host Pi peers use capability-based ranges; the inherited
+  development lock records tested dependency identities, not an allowed Pi-version list.
 - Native `.mts` test config and task-private temporary/cache output allow the suite to run with read-only source.
   The canonical gate limits the suite to two workers and includes lint, typechecking and the full upstream tests.
 
@@ -30,7 +33,9 @@ is reference documentation, not our installation procedure or evidence that its 
 
 Fight owns stage policy, admission and observation. This component owns SDK execution; no second session engine,
 scheduler, worktree owner or compatibility facade is introduced. The supported profile disables upstream scheduling,
-workflows, nesting and automatic worktree management. The engine loads the packaged profile as defaults.
+workflows, nesting and automatic worktree management. Fight's composition entry injects that packaged profile as
+optional engine defaults, beneath private agent-directory and project overrides; generic engine tests do not
+implicitly select Fight policy.
 Do not load a separate standalone companion alongside this bundled source.
 
 Update deliberately from an inspected upstream revision, review its changes against this small delta, and run the
