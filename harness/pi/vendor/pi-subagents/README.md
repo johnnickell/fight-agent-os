@@ -12,6 +12,8 @@ is reference documentation, not our installation procedure or evidence that its 
 
 - Awaited host-only `beforeSessionStart(session, signal)` before child extension binding/session_start and prompting,
   with rejection/cancellation disposal and queued-start protection. Factories load before this hook; it is not a sandbox.
+- The Build host supplies an explicit session directory for each fresh persistent stage. Ordinary subagents
+  use their existing session settings.
 - Registry/RPC spawn derives API, context and root id from the bound parent; forged caller context cannot grant identity.
   Capability flags, stale-parent checks and fourteen real-session regressions are in the source and [RPC contract](docs/rpc.md).
 - Child resource-loading context uses one async-local store across Pi module-loader copies, preventing child factories
@@ -28,7 +30,7 @@ is reference documentation, not our installation procedure or evidence that its 
 
 Fight owns stage policy, admission and observation. This component owns SDK execution; no second session engine,
 scheduler, worktree owner or compatibility facade is introduced. The supported profile disables upstream scheduling,
-workflows, nesting and automatic worktree management. Package installation does not apply that profile automatically.
+workflows, nesting and automatic worktree management. The engine loads the packaged profile as defaults.
 Do not load a separate standalone companion alongside this bundled source.
 
 Update deliberately from an inspected upstream revision, review its changes against this small delta, and run the

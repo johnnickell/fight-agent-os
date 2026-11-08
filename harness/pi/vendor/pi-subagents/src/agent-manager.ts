@@ -295,6 +295,8 @@ interface SpawnOptions {
   onTextDelta?: (delta: string, fullText: string) => void;
   /** Called when the agent session is created (for accessing session stats). */
   onSessionCreated?: (session: AgentSession) => void;
+  /** Session directory supplied by the host for a fresh persistent child. */
+  sessionDir?: string;
   /** Trusted host setup before extension binding; rejection/cancellation prevents execution. */
   beforeSessionStart?: (session: AgentSession, signal?: AbortSignal) => void | Promise<void>;
   /** Called at the end of each agentic turn with the cumulative count. */
@@ -847,6 +849,7 @@ export class AgentManager {
       worktreeBase: worktreeCwd ? baseCwd : undefined,
       configCwd: options.configCwd ?? (customCwd !== undefined ? ctx.cwd : undefined),
       signal: record.abortController!.signal,
+      sessionDir: options.sessionDir,
       beforeSessionStart: options.beforeSessionStart,
       onToolActivity: (activity) => {
         if (activity.type === "end") record.toolUses++;

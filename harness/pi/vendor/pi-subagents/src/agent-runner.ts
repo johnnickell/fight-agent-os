@@ -562,6 +562,8 @@ export interface RunOptions {
   /** Called on streaming text deltas from the assistant response. */
   onTextDelta?: (delta: string, fullText: string) => void;
   onSessionCreated?: (session: AgentSession) => void;
+  /** Session directory supplied by the host for a fresh persistent child. */
+  sessionDir?: string;
   /**
    * Trusted host setup, awaited before binding extensions or prompting. Factories
    * have already loaded; session_start has not fired. Rejection or cancellation
@@ -1242,7 +1244,7 @@ export async function runAgent(
   // Frontmatter wins when it says anything; otherwise the project default,
   // which `rememberAgents` supplies for top-level agents only. Same precedence
   // as `outputTranscript`.
-  const persistSession = agentConfig?.persistSession ?? (options.nested ? false : rememberAgents);
+  const persistSession = options.sessionDir !== undefined || (agentConfig?.persistSession ?? (!options.nested && rememberAgents));
   const parentSessionFile = ctx.sessionManager?.getSessionFile?.();
   const sessionManager = options.resumeSessionFile
     // Reopening an existing conversation: the file already carries its own
@@ -1250,7 +1252,7 @@ export async function runAgent(
     // apply. `sessionDir` still matters for a later /new or /branch off it.
     ? reopenSession(options.resumeSessionFile, parentSessionFile, configuredSessionDir ?? defaultSessionDir)
     : persistSession
-      ? SessionManager.create(effectiveCwd, configuredSessionDir ?? defaultSessionDir, {
+      ? SessionManager.create(effectiveCwd, options.sessionDir ?? configuredSessionDir ?? defaultSessionDir, {
           // Optional metadata — it only nests the subagent under its spawner in
           // `/resume`. Until `rememberAgents` this ran solely for the rare
           // `persist_session: true` agent; now it runs for every spawn, so a

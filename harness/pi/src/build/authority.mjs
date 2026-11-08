@@ -1,5 +1,5 @@
 import { realpathSync } from 'node:fs';
-import { sep } from 'node:path';
+import { dirname } from 'node:path';
 
 // Actual SessionManager objects share authority across Pi's module loaders. No
 // process.env mutation, transcript entry, profile or agent name grants a role.
@@ -34,8 +34,8 @@ export function bindStageSession(session, assignment) {
       JSON.stringify(assignment.effects) !== JSON.stringify(definition.effects)) fail('stage-assignment-invalid');
   if (realpathSync(manager.getCwd()) !== assignment.checkout || manager.getCwd() !== assignment.checkout) fail('stage-checkout-mismatch');
   const file = manager.getSessionFile?.();
-  if (!file || !assignment.sessionRoots.some(root => file.startsWith(root + sep)) ||
-      realpathSync(manager.getSessionDir()) !== manager.getSessionDir()) fail('stage-session-storage-unqualified');
+  if (!file || dirname(file) !== assignment.sessionDir || manager.getSessionDir() !== assignment.sessionDir ||
+      realpathSync(assignment.sessionDir) !== assignment.sessionDir) fail('stage-session-storage-unqualified');
   if (session.model?.provider !== assignment.provider || session.model?.id !== assignment.model ||
       session.thinkingLevel !== assignment.thinking) fail('stage-model-mismatch');
   if (typeof session.subscribe !== 'function' || !session.resourceLoader?.getExtensions ||

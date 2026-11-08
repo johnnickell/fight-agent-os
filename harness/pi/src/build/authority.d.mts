@@ -6,7 +6,7 @@ export type StageAssignment = {
   parent: string; task: string; role: StageRole; skill: string; effects: readonly string[];
   checkout: string; attempt: string; provider: string; model: string; thinking: string;
   head: string; base: string; report: string | null;
-  requiredExtensions: string[]; instructions: string[]; sessionRoots: string[];
+  requiredExtensions: string[]; instructions: string[]; sessionDir: string;
 };
 export type StageBinding = StageAssignment & { sessionId: string; live: boolean; admitted?: boolean; failure?: string };
 export declare function rememberSdkSession(manager: object): void;
