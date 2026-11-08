@@ -19,7 +19,8 @@ Explicit initial Workspace bootstrap has independent technical and behavioral ac
 [TASK-00574](planning/tasks/00574-TASK.md#accepted-implementation-checkpoint--2026-11-08), including its separately
 owned exceptional-reference admission and factory. Protected Project registration/detail/list/conflict preview now use
 Project-owned CQRS, entry-generated IDs and ordinary conflict/fresh-query recovery under the
-[current runbook](docs/engineering/REPOSITORY_REGISTRATION.md); TASK-00575 independent Review/QA remain pending. These capabilities add no checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
+[current runbook](docs/engineering/REPOSITORY_REGISTRATION.md), with independent technical and failure/concurrency/
+canonical Swagger-browser QA acceptance under [TASK-00575](planning/tasks/00575-TASK.md#accepted-implementation-checkpoint--2026-11-08). These capabilities add no checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
 canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
 TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
 pending independent Review/QA, at `/`, `/app` and registered protected destinations. Local system/light/dark

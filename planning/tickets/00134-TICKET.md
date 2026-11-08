@@ -2,7 +2,7 @@
 id: TICKET-00134
 epic: EPIC-00023
 title: Register and inspect Projects through aggregate-owned CQRS
-status: ready-for-agent
+status: done
 ---
 
 # Register and inspect Projects through aggregate-owned CQRS
@@ -97,10 +97,17 @@ slice owns callers, Views, persistence, tests/docs and its actual prerequisite e
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00574](../tasks/00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done |
-| [TASK-00575](../tasks/00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | in-progress |
+| [TASK-00575](../tasks/00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Both complete cutovers are independently accepted: TASK-00574 supplies Workspace/bootstrap/reference ownership;
+[TASK-00575's accepted checkpoint](../tasks/00575-TASK.md#accepted-implementation-checkpoint--2026-11-08) supplies
+Project creation/inspection, preservation and obsolete-path removal with required behavioral/browser QA.
+Ordinary child rollup closes this TICKET; excluded physical linking/access/lifecycle features remain with their
+product owners. Delivery and human merge remain separate. The following decomposition/verification paragraphs
+retain their original planning-only checkpoint, not current unstarted-work instructions.
 
 John approved this fourth requirement area, including Project terminology, ID-bearing void creation, ordinary
 unique-conflict/fresh-query reconciliation and admission-time access checks, then approved two complete cutovers:
