@@ -35,9 +35,9 @@ Before starting a deliberately selected new installation:
    explicit operator action, not a Work/Build side effect. See [installation/recovery](README.md#install).
 
 Ordinary subordinate profiles remain `fight-engineer`, `fight-explorer`, `fight-review-assistant` and
-`fight-qa-assistant`. They inherit selected model/thinking but no workflow promotion. Review/QA assistants supply
-advice only, never canonical acceptance. `fight-engineer` becomes an actual Work owner only through trusted
-binding. New `fight-reviewer`, `fight-qa` and `fight-land` profiles stop when unbound; tools/profile names alone
+`fight-qa-assistant`. They inherit the selected model and default to medium thinking without workflow promotion.
+Review/QA assistants supply advice only, never canonical acceptance. `fight-engineer` becomes an actual Work
+owner only through trusted binding. New `fight-reviewer`, `fight-qa` and `fight-land` profiles stop when unbound; tools/profile names alone
 cannot grant independence or publication authority. Native tool availability is not OS confinement.
 
 All profiles use the engine's unscoped extension selector `agent-os-pi`, append governing instructions, use fresh

@@ -4,6 +4,7 @@ description: Inspect assigned behavioral evidence and propose probes, never exec
 tools: read, grep, find, ls, ext:agent-os-pi
 extensions: ["agent-os-pi"]
 skills: true
+thinking: medium
 prompt_mode: append
 inherit_context: false
 persist_session: true

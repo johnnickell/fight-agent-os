@@ -4,6 +4,7 @@ description: Implement one explicitly delegated bounded Engineer assignment, wit
 tools: read, bash, edit, write, grep, find, ls, ext:agent-os-pi
 extensions: ["agent-os-pi"]
 skills: true
+thinking: medium
 prompt_mode: append
 inherit_context: false
 persist_session: true
