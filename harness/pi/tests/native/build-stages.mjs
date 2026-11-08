@@ -59,7 +59,7 @@ async function create() {
   events.on('subagents:started', event => { starts++; currentId = event.id; });
   await session.bindExtensions({ onError: error => errors.push(error.message) });
   assert.equal(loader.getExtensions().extensions.filter(extension => extension.flags.has('fight-build-stages')).length, 0);
-  assert.equal(loader.getExtensions().extensions.filter(extension => extension.path.endsWith('/vendor/pi-subagents/src/index.ts')).length, 1);
+  assert.equal(loader.getExtensions().extensions.filter(extension => extension.path.endsWith('/src/subagents-extension.ts')).length, 1);
   return { session, events };
 }
 async function call(session, name, args) {
