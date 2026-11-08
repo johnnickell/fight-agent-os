@@ -225,6 +225,14 @@ OS-sandbox, universal hostile-local-process protection or provider attestation i
   `.runs/tasks/TASK-00507/runs/work-handoff.md`; earlier failures remain historical, never relabeled passes.
   Config/teardown locator is canonical `var/worktrees/fight-wt-4116abea7eff/locator.json`; do not expose `task.env`.
   Teardown uses canonical `bin/down --worktree` with the exact selected checkout path, not main or foreign resources.
+- **Evidence-only cache recovery, 2026-11-08:** the approved repair's first gate failed PHPStan's generated
+  DI-cache rename/create operation with ENOENT; its failed receipt remains unchanged. Fresh mount, ownership,
+  alias, process and gate-lock checks qualified only this project's disposable `output/cache/phpstan` subtree.
+  Owning `clear-result-cache` succeeded but retained compiled DI entries, so that exact generated subtree was
+  retired under the gate lock, without source/configuration/dependency changes or weakened parallel analysis.
+  Cache ownership/readiness is established, not the original failure's causal mechanism. Canonical evidence is
+  `.runs/tasks/TASK-00507/runs/cache-recovery-20261108T1859Z/`; the subsequent one normal gate result and final
+  committed-subject bridge belong to the TASK and Work handoff above. No new approach or origin proof is implied.
 
 A future authorized scope must qualify the issuer rather than merely add signatures, and supply the real
 counterexample/lifetime/UX evidence before implementation adoption. This bounded assessment stops here; it does
