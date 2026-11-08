@@ -17,12 +17,12 @@ export function ShellLayout({
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <header className={`border-bottom py-3${publicJourney ? ' activation-header' : ''}`}>
-        <div className="container shell-width">
+      <header className={`shell-header border-bottom${publicJourney ? ' activation-header' : ''}`}>
+        <div className="container shell-width shell-header-row">
           <nav aria-label="Application">
             <a href="/app">Fight Agent OS</a>
           </nav>
-          {theme && <ThemeSelector theme={theme} />}
+          {theme && <ThemeSelector theme={theme} compact />}
         </div>
       </header>
       <main id="main-content" tabIndex={-1} className="container shell-width py-5">

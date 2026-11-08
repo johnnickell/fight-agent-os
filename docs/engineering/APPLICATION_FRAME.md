@@ -96,7 +96,12 @@ opening, destination arrows, dismissal and focus return; native radio arrows own
 Light/Dark/System choices. The selected preference stays explicit, including System when following the OS.
 The frame keeps the existing appearance store subscribed outside its pathname-keyed content, so media/storage
 updates remain active before the lazy menu opens and after navigation. That subscription is released with the
-frame; it adds no store or persistence policy. Public login/activation retain their existing full selector.
+frame; it adds no store or persistence policy. Public/error screens use the shared `ShellLayout` compact
+brand-left/appearance-right header (TASK-00588), normally 61px at default desktop text size, with wrapping rather
+than a fixed height. Its inline icon/label radios retain 44px targets and explicit checked preference; the
+Appearance legend and described effective-mode text remain available to assistive technology without a tall
+visible stack. Narrow widths and enlarged text reflow; optional-theme failures retain branding and recovery.
+The authenticated User Menu's appearance layout and the sole preference store remain unchanged.
 Native links recheck current authority at activation; paused dropdown destinations prevent native navigation
 as well as library selection. Menu Escape does not collapse
 the wide rail. Every rail destination retains its full Title Case text alongside a decorative self-contained SVG.

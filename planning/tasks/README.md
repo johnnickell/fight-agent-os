@@ -590,4 +590,5 @@
 | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | done | — |
 | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | done | — |
 | [TASK-00587](00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | done | [TICKET-00137](../tickets/00137-TICKET.md) |
+| [TASK-00588](00588-TASK.md) | Match public and error headers to the compact application frame | done | — |
 <!-- /planning:records -->

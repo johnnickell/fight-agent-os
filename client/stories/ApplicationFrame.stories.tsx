@@ -206,7 +206,30 @@ export const LongEmail: Story = { args: { longEmail: true } };
 export const Forbidden: Story = { args: { outcome: 'denied' } };
 export const RestoringAuthority: Story = { args: { outcome: 'pending' } };
 export const MalformedAuthority: Story = { args: { outcome: 'protocol' } };
-export const SessionNetworkFailure: Story = { args: { outcome: 'network' } };
+export const SessionNetworkFailure: Story = {
+  args: { outcome: 'network' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('Session connection unavailable')).toBeVisible();
+    await canvasElement.ownerDocument.fonts.ready;
+    const header = canvas.getByRole('banner');
+    const brand = within(header).getByRole('link', { name: 'Fight Agent OS' });
+    const appearance = within(header).getByRole('group', { name: 'Appearance' });
+    // Observe the real public header, not its CSS implementation or the authenticated menu.
+    if (canvasElement.clientWidth >= 768) {
+      await expect(header.getBoundingClientRect().height).toBeLessThanOrEqual(64);
+      await expect(brand.getBoundingClientRect().right).toBeLessThan(
+        appearance.getBoundingClientRect().left
+      );
+    }
+    for (const radio of within(appearance).getAllByRole('radio')) {
+      const target = radio.closest('label')?.getBoundingClientRect();
+      await expect(target?.width).toBeGreaterThanOrEqual(44);
+      await expect(target?.height).toBeGreaterThanOrEqual(44);
+    }
+    await expect(canvas.queryByRole('button', { name: 'User Menu' })).not.toBeInTheDocument();
+  }
+};
 export const SessionExpired: Story = { args: { outcome: 'terminal' } };
 export const BackgroundCheckUnavailable: Story = {
   args: { outcome: 'background' },
