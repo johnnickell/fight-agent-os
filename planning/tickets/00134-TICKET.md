@@ -97,7 +97,7 @@ slice owns callers, Views, persistence, tests/docs and its actual prerequisite e
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00574](../tasks/00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done |
-| [TASK-00575](../tasks/00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | ready-for-agent |
+| [TASK-00575](../tasks/00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

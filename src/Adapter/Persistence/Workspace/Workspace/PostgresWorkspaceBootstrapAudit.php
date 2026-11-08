@@ -36,7 +36,7 @@ final readonly class PostgresWorkspaceBootstrapAudit implements WorkspaceBootstr
         $this->connection->insert('workspace_audit', [
             'id'                   => MessageId::generate()->toString(),
             'workspace_id'         => $workspace->id->toString(),
-            'repository_id'        => null,
+            'project_id'           => null,
             'actor_type'           => 'installation_operator',
             'actor_id'             => $operatorId->toString(),
             'action'               => 'workspace_bootstrapped',

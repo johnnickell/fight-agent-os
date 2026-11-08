@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\References;
 
-use App\Adapter\Http\Api\V1\Repositories\RegistrationInput;
+use App\Adapter\Http\Api\V1\Projects\ProjectInput;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\References\GenerateExceptionalReferenceResponder;
 use App\Adapter\Reference\ExceptionalReferences;
@@ -52,7 +52,7 @@ final readonly class GenerateExceptionalReferenceAction
             an admitted request may finish after a concurrent permission revocation.
             TEXT,
         security: [['AccessBearer' => []]],
-        parameters: [new OA\Parameter(ref: '#/components/parameters/RegistrationWorkspace')],
+        parameters: [new OA\Parameter(ref: '#/components/parameters/WorkspaceScope')],
         responses: [
             new OA\Response(
                 response: 200,
@@ -62,7 +62,7 @@ final readonly class GenerateExceptionalReferenceAction
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
-            new OA\Response(ref: '#/components/responses/RegistrationRejected', response: 422),
+            new OA\Response(ref: '#/components/responses/ProjectRejected', response: 422),
             new OA\Response(ref: '#/components/responses/ReferenceThrottled', response: 429),
             new OA\Response(ref: '#/components/responses/InternalError', response: 500)
         ]
@@ -70,8 +70,8 @@ final readonly class GenerateExceptionalReferenceAction
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         // ApiActionSecurity has authenticated this request and admitted the independent operation permission.
-        $authentication = RegistrationInput::authentication($request);
-        $workspaceId = RegistrationInput::workspace($request);
+        $authentication = ProjectInput::authentication($request);
+        $workspaceId = ProjectInput::workspace($request);
         $initial = $this->queryBus->fetch(new FindInitialWorkspace());
         $roleId = RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID);
         $role = $this->roleRepository->getById($roleId);

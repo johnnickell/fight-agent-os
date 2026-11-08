@@ -577,7 +577,7 @@
 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done | [TICKET-00134](../tickets/00134-TICKET.md) |
-| [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | ready-for-agent | [TICKET-00134](../tickets/00134-TICKET.md) |
+| [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | in-progress | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
