@@ -6,20 +6,19 @@ import { stageRole } from './stage-roles.mjs';
 
 /** Execute fresh role owners only for an explicitly selected Build coordinator */
 export default function installBuildStages(pi: ExtensionAPI) {
-  let profile: unknown, running = false, unresolved = false;
+  let running = false, unresolved = false;
   pi.on('session_start', (_event, ctx) => {
     const prior = [...ctx.sessionManager.getEntries()].reverse().find(entry =>
       entry.type === 'custom' && entry.customType === 'fight-build-sdk-attempt-v1');
     unresolved = prior?.type === 'custom' && (prior.data as { executionSettled?: boolean })?.executionSettled !== true;
   });
   const shutdown = new Set<() => void>();
-  pi.events.on('subagents:settings_loaded', event => { profile = (event as { settings?: unknown } | undefined)?.settings; });
   pi.events.on('subagents:settings_changed', () => { for (const cancel of shutdown) cancel(); });
   pi.on('session_shutdown', () => {
     for (const cancel of shutdown) cancel(); shutdown.clear();
   });
   pi.registerTool({ name: 'fight_build_stage', label: 'Build stage (SDK)', defaultActive: false,
-    description: 'Execute one fresh Work/Review/QA/Land owner through the bundled engine. Default and sole fresh Build route; requires actual Build/TASK/checkout authority, never an SDK subordinate. No scheduler, fallback or acceptance; inspect canonical reports and original repair ledger before advancement.',
+    description: 'Execute one fresh Work/Review/QA/Land owner through the bundled engine. Default and sole fresh Build route; requires Build authority for the TASK and a verified checkout. SDK subordinates cannot dispatch. No scheduler, fallback or acceptance; inspect canonical reports and original repair ledger before advancement.',
     prepareArguments(args) {
       const input = args as { role?: unknown };
       return { ...input, role: stageRole(input?.role) ?? input?.role } as StageRequest;
@@ -36,7 +35,7 @@ export default function installBuildStages(pi: ExtensionAPI) {
       if (running || unresolved) throw new Error('Reconcile the existing SDK stage attempt before any replacement. No executor fallback.');
       running = true;
       try {
-        const outcome = await runStage(pi, ctx, request, { registry: (globalThis as Record<symbol, unknown>)[Symbol.for('pi-subagents:manager')], profile, signal,
+        const outcome = await runStage(pi, ctx, request, { registry: (globalThis as Record<symbol, unknown>)[Symbol.for('pi-subagents:manager')], signal,
           dispatched(identity: unknown) {
             unresolved = true;
             pi.appendEntry('fight-build-sdk-attempt-v1', { ...(identity as object), executionSettled: false });

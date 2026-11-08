@@ -24,8 +24,8 @@ deployment retain their workflows. Do not implement missing product features or 
    Use [package profiles](references/package-profiles.md) for Fight Common or Access Control as discovery hints,
    then verify them against current files. Paths in profiles are relative to the target, never this skill's home.
 2. Confirm repository, package name, remote/fork identity, release line, checkout ownership and requested version.
-   Inspect status, worktrees, branches, tags and existing PRs. Follow local checkout/branch policy; preserve
-   unrelated changes. Fetch the needed refs without overwriting local tags or changing the human checkout.
+   Inspect status, worktrees, branches, tags and existing PRs. Use the checkout choice already given and
+   continue in the same run. Follow local checkout/branch policy and preserve unrelated changes. Fetch the needed refs without overwriting local tags or changing the human checkout.
    Read hosted release and Packagist state when relevant. Failed authentication, transport or parsing means
    **unknown**, not “does not exist.” Do not infer the target from a hardcoded machine path.
 3. Build a short stage ledger: phase, observed identity, timestamp/evidence, completed/needed/blocked/unknown,

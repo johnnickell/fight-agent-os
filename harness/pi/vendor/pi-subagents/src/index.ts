@@ -10,6 +10,7 @@
  *   /agents                 — Interactive agent management menu
  */
 
+import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { type AgentSession, defineTool, type ExtensionAPI, type ExtensionCommandContext, type ExtensionContext, getAgentDir, getSettingsListTheme } from "@earendil-works/pi-coding-agent";
@@ -398,7 +399,8 @@ export default function (pi: ExtensionAPI) {
 
   // Read directly rather than waiting for applyAndEmitLoaded below: these decide
   // the initial load, which happens hundreds of lines before settings are applied.
-  const bootSettings = loadSettings(process.cwd());
+  const defaultsPath = fileURLToPath(new URL("../../../profiles/subagents.json", import.meta.url));
+  const bootSettings = loadSettings(process.cwd(), defaultsPath);
   let strictAgentFiles = bootSettings.strictAgentFiles === true;
 
   // Seed the package gates from the same merged settings, before the first load
@@ -1619,6 +1621,8 @@ export default function (pi: ExtensionAPI) {
       setPackageWorkflows: setPackageWorkflowsGate,
     },
     (event, payload) => pi.events.emit(event, payload),
+    process.cwd(),
+    defaultsPath,
   );
 
   // ---- Agent tool ----

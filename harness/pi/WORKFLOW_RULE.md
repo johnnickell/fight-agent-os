@@ -8,8 +8,9 @@ evaluator credential or provider preflight is required. Keep credentials and pri
 ## Session-local workflow
 
 Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other installed skill
-invocations select responsibilities. Select the operator's intended checkout with `--checkout /absolute/selected/checkout`; this
-records task ownership, not another approval or file permission. Fresh sessions use their containing checkout.
+invocations select responsibilities. Pass `--checkout /absolute/selected/checkout` when specifying an exact path
+at invocation. Honor a checkout choice already given in the current request, including a choice to create an
+isolated worktree. Apply the owning skill's checkout rules and continue in the same run.
 A trusted process launcher supplies role, task and checkout. A launcher takes precedence on every startup/reload.
 Otherwise the latest session-wide selection survives tree navigation and restart only with matching session and
 launcher provenance. Forked, legacy or unverifiable history defaults to Reviewer; fresh unassigned sessions
@@ -20,8 +21,9 @@ Inspect `fight_workflow_status.workflow` or `/fight-workflow`: `skill`, `effect`
 a QA-worker mismatch. Sync also has phase `qa`, skill `sync` and effect `coordination`: it coordinates one
 previously accepted TASK through fresh Engineer then Land, not routine Review/QA or new implementation.
 Use `/skill:sync TASK-NNNNN [--checkout /absolute/selected/checkout]`; current acceptance and the same existing
-OPEN PR remain required by its owning skill. With no explicit checkout, Sync reports a null checkout and
-resolves an isolated worktree under its owning skill. Only interactive operator input or a trusted host binding changes
+OPEN PR remain required by its owning skill. With no explicit path, Build and Sync report a null checkout
+and resolve it within the invoking repository under their owning skills. Only interactive operator input or a
+trusted host binding changes
 authority. RPC, model prompts, stage labels, fixtures and profiles cannot promote a role. `/fight-workflow role engineer|reviewer|qa|land`
 is an explicit native-TUI alternative. SDK subordinates remain Reviewer unless the trusted host binds the actual
 fresh stage session through the sole SDK Build route. Actual Build selection is required; no route flag, profile

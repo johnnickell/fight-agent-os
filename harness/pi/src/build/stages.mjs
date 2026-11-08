@@ -21,12 +21,10 @@ const document = path => {
   return readFileSync(path, 'utf8');
 };
 const digest = value => createHash('sha256').update(value).digest('hex');
-const profileKeys = { worktreeIsolation: false, workflowsEnabled: false, schedulingEnabled: false,
-  maxSubagentDepth: 1, disableDefaultAgents: true, fallbackSubagent: 'none', packageWorkflows: false, strictAgentFiles: true };
 const authorized = (ctx, request) => {
   const workflow = sessionWorkflow(ctx.sessionManager);
   if (isSdkSession(ctx.sessionManager) || workflow?.skill !== 'build' || workflow.role !== 'qa' || workflow.mode !== 'default' ||
-      workflow.taskId !== request.task || workflow.checkout !== request.checkout) fail('build-authority-required');
+      workflow.taskId !== request.task || (workflow.checkout !== null && workflow.checkout !== request.checkout)) fail('build-authority-required');
 };
 const candidate = request => {
   if (git(request.checkout, 'rev-parse', 'HEAD') !== request.head ||
@@ -34,7 +32,7 @@ const candidate = request => {
 };
 
 /** Preflight a fresh stage, never choose the next stage or accept its evidence */
-export function prepareStage(ctx, request, { registry, profile }) {
+export function prepareStage(ctx, request, { registry }) {
   authorized(ctx, request);
   const role = stageRole(request.role), definition = stageDefinitions[role];
   if (!/^TASK-\d{5}$/.test(request.task) || !definition) fail('stage-assignment-invalid');
@@ -43,8 +41,6 @@ export function prepareStage(ctx, request, { registry, profile }) {
   if (registry?.capabilities?.beforeSessionStart !== true || registry.capabilities.boundRootSession !== true ||
       typeof registry.spawn !== 'function' || typeof registry.getRecord !== 'function' || typeof registry.hasRunning !== 'function') fail('sdk-stage-capability-unavailable');
   if (registry.hasRunning()) fail('sdk-stage-work-already-running');
-  if (!profile || !Object.entries(profileKeys).every(([key, value]) => profile[key] === value) ||
-      JSON.stringify(profile.packageAgents) !== JSON.stringify(['@fight/agent-os-pi'])) fail('sdk-stage-profile-unqualified');
   if (!canonical(request.checkout) || git(request.checkout, 'rev-parse', '--show-toplevel') !== request.checkout) fail('stage-checkout-mismatch');
   const registrations = git(ctx.cwd, 'worktree', 'list', '--porcelain', '-z').split('\0');
   const common = cwd => realpathSync(git(cwd, 'rev-parse', '--path-format=absolute', '--git-common-dir'));
