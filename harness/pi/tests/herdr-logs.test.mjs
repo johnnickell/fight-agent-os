@@ -69,6 +69,8 @@ test('idle uses verified main, active uses only its own stack and Main pin survi
   const main = f.logs.logs.current;
   await f.select('/worktree-b'); assert.equal(f.logs.logs.current, main, 'activity cannot steal Main');
   await f.idle(); assert.equal(f.logs.logs.current, main); assert.match(f.logs.view(), /MAIN PIN/);
+  assert.match(f.logs.view(), /^MAIN PIN · All services\n/);
+  assert.doesNotMatch(f.logs.view(), /(?:^|\n)LOGS\n|f Follow|finite tail/);
   await f.select('/worktree-b'); f.key('f'); await f.settle();
   assert.equal(f.logs.mode, 'follow'); assert.equal(f.logs.logs.current.source.main, '/worktree-b');
   await f.idle(); assert.equal(f.logs.logs.current.source.main, '/canonical-main');

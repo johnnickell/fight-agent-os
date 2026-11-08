@@ -2,19 +2,36 @@ import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { clean } from '../workspace/presentation.mjs';
 import { stageIdentity, stageBinding } from '../build/authority.mjs';
+import { appendSdkOutput } from './custody.mjs';
 
 export const upstreamTerminal = new Set(['completed', 'steered', 'aborted', 'stopped', 'error']);
 const text = value => clean(typeof value === 'string' ? value.slice(-2400) : '').replace(/\n/g, ' ').slice(-600);
-// Only finalized assistant prose from the live SDK. Never reasoning, tool bodies or transcript files.
-const assistantText = message => Array.isArray(message?.content)
-  ? text(message.content.slice(-16).filter(part => part.type === 'text').map(part => text(part.text)).join(' ')) : '';
-function lastText(session) {
+function reasoningSummary(api, part) {
+  if (part.type !== 'thinking' || part.redacted || !['openai-responses', 'openai-codex-responses'].includes(api)) return '';
+  // Pi's generic thinking field can also contain raw reasoning. Read only the Responses item's explicit summary.
+  try {
+    const item = JSON.parse(part.thinkingSignature);
+    if (item?.type !== 'reasoning' || !Array.isArray(item.summary)) return '';
+    const summary = item.summary.filter(entry => entry?.type === 'summary_text' && typeof entry.text === 'string')
+      .map(entry => clean(entry.text)).join('\n\n').trim();
+    return summary ? `Reasoning summary · ${summary.replaceAll('\n', '\n│ ')}` : '';
+  } catch { return ''; }
+}
+function capture(run, message) {
+  if (message?.role !== 'assistant' || !Array.isArray(message.content) || run.lastMessage === message) return;
+  run.lastMessage = message;
+  for (const part of message.content.slice(-16)) {
+    const output = part.type === 'text' ? clean(part.text).trim() : reasoningSummary(message.api, part);
+    if (output) run.pending = appendSdkOutput(run.pending, output);
+  }
+}
+function lastMessage(session) {
   const messages = session.messages;
   if (!Array.isArray(messages)) return '';
   for (let i = messages.length - 1; i >= Math.max(0, messages.length - 16); i--) {
     const message = messages[i];
     if (message?.role === 'assistant' && Array.isArray(message.content)) {
-      return assistantText(message);
+      return message;
     }
   }
   return '';
@@ -62,7 +79,7 @@ export class SubagentObserver {
     if (!run.identity) return;
     const lifecycle = upstreamTerminal.has(status) ? (['completed', 'steered'].includes(status) ? 'completed' : 'failed') : 'running';
     this.send({ type: 'subagent-progress', id: run.id, parent: this.parent, identity: run.identity,
-      sequence: ++run.sequence, lifecycle, exitCode: null, upstreamStatus: status, text: text(message) });
+      sequence: ++run.sequence, lifecycle, exitCode: null, upstreamStatus: status, text: message });
   }
   tick() {
     if (this.closed) return;
@@ -106,29 +123,24 @@ export class SubagentObserver {
           run.identity = { task: stage?.task ?? 'Unassigned', role: stage?.role ?? (text(record.type) || 'subagent'), provider: text(session.model?.provider) || 'unknown',
             model: text(session.model?.id) || 'unknown', thinking: text(session.thinkingLevel) || 'unknown',
             worktree: realpathSync(session.sessionManager.getCwd()), attempt: stage?.attempt ?? id, assignment: text(record.description) || 'Assignment unavailable' };
-          this.emit(run, `Observing ${text(record.description)}`);
+          this.emit(run, '');
           if (this.closed || this.runs.get(id) !== run) continue;
           run.unsubscribe = session.subscribe(event => {
             try {
               if (this.closed || this.runs.get(id) !== run) return;
-              if (event.type === 'message_update' && event.assistantMessageEvent?.type === 'text_delta') {
-                run.pending = text((run.pending ?? '') + text(event.assistantMessageEvent.delta));
-              } else if (event.type === 'message_end' && event.message?.role === 'assistant') {
-                run.pending = assistantText(event.message) || run.pending;
-              } else if (event.type === 'tool_execution_start' || event.type === 'tool_execution_end') {
-                run.pending = text(`${run.pending || ''} · ${event.type === 'tool_execution_start' ? 'Tool' : 'Finished'}: ${text(event.toolName)}`);
-              }
+              if (event.type === 'message_end') capture(run, event.message);
             } catch { this.remove(id, 'session-observation-unavailable'); }
           });
           // Startup precedes session creation upstream; recover bounded finalized output missed before attachment.
-          run.pending = lastText(session);
+          capture(run, lastMessage(session));
           this.diagnose('Observing supported top-level Agent session');
         }
         if (upstreamTerminal.has(record.status)) {
-          this.emit(run, lastText(session) || run.pending || `Upstream ${record.status}; no assistant text available`, record.status);
+          capture(run, lastMessage(session));
+          this.emit(run, run.pending ?? '', record.status);
           this.remove(id);
         } else {
-          this.emit(run, run.pending || 'Running'); run.pending = '';
+          this.emit(run, run.pending ?? ''); run.pending = '';
         }
       } catch { this.remove(id, 'session-observation-unavailable'); }
     }

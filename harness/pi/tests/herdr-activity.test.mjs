@@ -54,7 +54,7 @@ test('CSI-u Enter/Escape press encodings, split/coalesced, stay pane-local; modi
 test('AGENTS list/detail/back stays pane-local and preserves selected identity', async t => {
   const f = await fixture(t); await f.activity.tick();
   const selected = f.activity.children.selected;
-  assert.match(f.activity.view(), /^AGENTS\n/); assert.match(f.activity.view(), /› ● work/);
+  assert.match(f.activity.view(), /^1 live · 0 finished\n/); assert.match(f.activity.view(), /› ● work/);
   f.activity.action('enter'); assert.match(f.activity.view(), /configured-only/);
   f.activity.action('back'); assert.equal(f.activity.details, false);
   assert.equal(f.activity.children.selected, selected);

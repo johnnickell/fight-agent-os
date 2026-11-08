@@ -31,5 +31,5 @@ export function agentDetail(children, key = children.selected) {
 }
 export function agentList(children) {
   return children.orderedSources.flatMap(([key, item]) => [agentRow(children, key, item),
-    `  └ ${clean(item.history.at(-1) ?? 'Waiting for bounded activity')}`]);
+    `  └ ${clean(item.history.at(-1)?.replace(/\s+/g, ' ') ?? 'Waiting for agent output')}`]);
 }

@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import { custodianScript, sessionFileIdentity, sameSessionFile } from './custody.mjs';
+import { appendSdkOutput, custodianScript, sessionFileIdentity, sameSessionFile } from './custody.mjs';
 import { childEnvironment } from '../workspace/rpc.mjs';
 
 // Observation resources only. There is deliberately no execute, launch or cancel method.
@@ -64,7 +64,8 @@ export class NativeObservation {
     if (!this.queuedSubagents.has(message.id) && this.queuedSubagents.size >= 8) {
       this.refused({ id: message.id, reason: 'observation-capacity-eight' }); return;
     }
-    this.queuedSubagents.set(message.id, message);
+    const queued = this.queuedSubagents.get(message.id);
+    this.queuedSubagents.set(message.id, queued?.text ? { ...message, text: appendSdkOutput(queued.text, message.text) } : message);
     this.flushSubagents();
   }
   flushSubagents() {

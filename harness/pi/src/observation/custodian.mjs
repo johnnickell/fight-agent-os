@@ -6,7 +6,7 @@ import { chmodSync, lstatSync, readFileSync, realpathSync, unlinkSync, writeFile
 import { createServer } from 'node:net';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { directory, limits, privateDirectory, privateFile, processIdentity, endpointPath, sessionFileIdentity, sameSessionFile, pruneCandidates } from './custody.mjs';
+import { directory, limits, sdkOutputLimit, privateDirectory, privateFile, processIdentity, endpointPath, sessionFileIdentity, sameSessionFile, pruneCandidates } from './custody.mjs';
 import { clean } from '../workspace/presentation.mjs';
 import { stageRole } from '../stage-roles.mjs';
 
@@ -17,17 +17,20 @@ const terminalStates = new Set(['completed', 'failed']);
 const sdkStatuses = new Set(['running', 'completed', 'steered', 'aborted', 'stopped', 'error']);
 
 export function applyProgress(registration, event) {
+  const sdk = registration.source === 'pi-subagents';
   if (terminalStates.has(registration.lifecycle) || !['starting', 'running', 'settled-awaiting-exit', 'completed', 'failed'].includes(event.lifecycle) ||
-      typeof event.text !== 'string' || [...event.text].length > 600 || !Number.isSafeInteger(event.sequence) || event.sequence <= registration.sequence ||
-      (registration.source === 'pi-subagents'
+      typeof event.text !== 'string' || (sdk ? event.text.length > sdkOutputLimit : [...event.text].length > 600) || !Number.isSafeInteger(event.sequence) || event.sequence <= registration.sequence ||
+      (sdk
         ? event.exitCode !== null || !sdkStatuses.has(event.upstreamStatus) ||
           event.lifecycle !== (event.upstreamStatus === 'running' ? 'running' : ['completed', 'steered'].includes(event.upstreamStatus) ? 'completed' : 'failed')
         : (terminalStates.has(event.lifecycle) ? !Number.isInteger(event.exitCode) || event.exitCode < 0 || event.exitCode > 255 || (event.lifecycle === 'completed') !== (event.exitCode === 0) : event.exitCode !== null))) throw new Error('Invalid monitor progress');
   registration.gaps = Math.min(Number.MAX_SAFE_INTEGER, (registration.gaps ?? 0) + event.sequence - registration.sequence - 1);
   registration.sequence = event.sequence; registration.lifecycle = event.lifecycle; registration.exitCode = event.exitCode;
-  if (registration.source === 'pi-subagents') registration.upstreamStatus = event.upstreamStatus;
+  if (sdk) registration.upstreamStatus = event.upstreamStatus;
   registration.receivedAt = Date.now(); registration.state = 'connected';
-  const text = clean(event.text).replace(/\n/g, ' '); registration.history.push(text); registration.units += text.length;
+  const text = sdk ? clean(event.text) : clean(event.text).replace(/\n/g, ' ');
+  if (sdk && !text) return;
+  registration.history.push(text); registration.units += text.length;
   while (registration.history.length > limits.records || registration.units > limits.units) { registration.units -= registration.history.shift().length; registration.omitted++; }
 }
 export function bindParentFile(pendingPath, witness) {

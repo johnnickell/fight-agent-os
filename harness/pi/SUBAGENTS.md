@@ -178,9 +178,11 @@ registered worktrees and no nested/workflow ownership. Foreign/rootless/replaced
 input is only a lookup candidate. Foreground resume, which has no upstream started event, waits for an actual
 record run transition; its display attempt is fresh without executing/recreating the SDK session.
 
-At most eight records are sampled once a second. Assistant prose and tool **names** are bounded; reasoning,
-arguments, result bodies and transcript files are never ingested. Live-session finalized text recovers early/final
-output; transport coalescing preserves terminal frames. Slow legitimate session initialization now produces a
+At most eight records are sampled once a second. The activity history shows finalized assistant messages and
+provider-supplied reasoning summaries when Pi exposes them for OpenAI Responses or Codex. Tool events and idle
+heartbeats stay out of the output history. Raw reasoning, tool arguments, tool results and transcript files stay
+outside the observation bridge. The reader recovers early and final output from the live session. Transport
+coalescing preserves recent output and terminal state. Slow legitimate session initialization produces a
 finite delayed diagnostic while retaining only that same owned record; five seconds is not an execution deadline.
 Record replacement, actual terminal absence or shutdown still detaches it. Execution owns cancellation/deadlines.
 
