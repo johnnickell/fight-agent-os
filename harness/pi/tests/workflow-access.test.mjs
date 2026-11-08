@@ -79,6 +79,29 @@ test('workflow checkpoints preserve subject, selected checkout and query/status 
   assert.equal(restore().skill, 'release');
 });
 
+test('release assessors select and restore a version and explicit checkout', () => {
+  const sessionId = randomUUID(), checkout = '/Users/john/Projects/Fight/fight-common';
+  const access = new WorkflowAccess('local', { checkout: '/project/provider' });
+  for (const [skill, role] of [['review', 'reviewer'], ['qa', 'qa']]) {
+    for (const version of ['', '1.4', '../1.4.2', 'TASK-00139']) {
+      assert.throws(() => access.input(`/skill:${skill} release ${version} --checkout ${checkout}`, 'interactive'),
+        { code: 'workflow-subject-required' });
+    }
+    assert.equal(access.input(`/skill:${skill} release 1.4.2 --checkout ${checkout}`, 'interactive'), true);
+    const restored = WorkflowAccess.restore({ sessionId, entries: [{ type: 'custom',
+      customType: 'fight-workflow-role-v3', data: access.checkpoint(sessionId) }] });
+    for (const workflow of [access, restored]) {
+      assert.equal(workflow.role, role);
+      assert.equal(workflow.skill, skill);
+      assert.equal(workflow.taskId, 'release 1.4.2');
+      assert.equal(workflow.checkout, checkout);
+    }
+    assert.equal(access.input(`/skill:${skill} TASK-00139`, 'interactive'), true);
+    assert.equal(access.taskId, 'TASK-00139');
+  }
+  assert.throws(() => access.input('/skill:build release 1.4.2', 'interactive'), { code: 'workflow-subject-required' });
+});
+
 test('Sync defaults to isolated checkout resolution and preserves explicit checkout selection', () => {
   const sessionId = randomUUID();
   const checkout = '/project/main';
