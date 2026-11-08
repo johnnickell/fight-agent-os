@@ -10,7 +10,6 @@
  *   /agents                 — Interactive agent management menu
  */
 
-import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { type AgentSession, defineTool, type ExtensionAPI, type ExtensionCommandContext, type ExtensionContext, getAgentDir, getSettingsListTheme } from "@earendil-works/pi-coding-agent";
@@ -307,7 +306,7 @@ export const WORKFLOW_FILE_FLAG = "subagents-workflow-file";
  */
 export { FOREIGN_WORKFLOW_TOOL_NAMES, WORKFLOW_ENTRY_TYPE, type WorkflowEntryData, workflowEntryData };
 
-export default function (pi: ExtensionAPI) {
+export default function (pi: ExtensionAPI, defaultsPath?: string) {
   // Child AgentSessions load normal extensions. Re-entering this extension there
   // would create another manager and leak handlers. Nested orchestration is
   // injected as scoped custom tools by the existing manager instead.
@@ -399,7 +398,6 @@ export default function (pi: ExtensionAPI) {
 
   // Read directly rather than waiting for applyAndEmitLoaded below: these decide
   // the initial load, which happens hundreds of lines before settings are applied.
-  const defaultsPath = fileURLToPath(new URL("../../../profiles/subagents.json", import.meta.url));
   const bootSettings = loadSettings(process.cwd(), defaultsPath);
   let strictAgentFiles = bootSettings.strictAgentFiles === true;
 
