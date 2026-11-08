@@ -376,7 +376,8 @@ or command is introduced. `OrdinaryInvitationService` and `/app/admin/invite` no
 validation projects only a safe target ID; partial/system/network/protocol outcomes remain unconfirmed and
 are never automatically retried. Every completion retires directory/status generations, including late work.
 Status links additionally require exact READ_USERS. See [ordinary invitations](../docs/engineering/ORDINARY_INVITATIONS.md).
-Elevated issuance remains unavailable under TASK-00062. Independent acceptance remains separate.
+Elevated issuance remains unavailable under TASK-00062. Independent technical Review and behavioral QA
+accepted the ordinary journey; TASK-00061 records its evidence and remaining platform limits.
 
 `features/authority/CatalogService` supplies protected role/permission page and get reads with exact safe
 snake_case-to-camelCase codecs, bounded pagination, current Bearer transport and no retained catalog cache.

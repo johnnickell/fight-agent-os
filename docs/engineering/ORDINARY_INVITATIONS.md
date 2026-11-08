@@ -71,6 +71,10 @@ duplicate/deadline/retired results, volatile fields and marker redaction have ow
 Twelve production-backed Storybook states cover ready/light/dark, validation, pending, conflict, throttling,
 uncertainty, system failure, success, invite-only continuation and long Unicode input. Catalog interaction,
 axe, 320px/1280px captures and production build checks qualify their own boundaries, not real inbox delivery,
-all browser engines, physical assistive technology or universal WCAG compliance. Independent Review and
-behavioral QA remain separate. Exact current gate results, warnings, captures and browser prerequisites
-belong in TASK-00061 and its canonical Work handoff.
+all browser engines, physical assistive technology or universal WCAG compliance. Independent technical
+Review and behavioral QA accepted TASK-00061's ordinary journey, including real ordinary/literal creation,
+canonical conflict/race, delayed/unmounted completion, authority refusal, redaction and completed-logout
+revocation. Forced-colors and 400%-equivalent reflow are emulated evidence, not native-platform certification;
+forced-colors axe computed-style anomalies remain disclosed. Exact gate subjects, inherited versus fresh
+scenarios, warnings and captures belong in TASK-00061 and its canonical reports. Publication and cleanup
+remain separate in the canonical Land handoff.

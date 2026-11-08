@@ -62,7 +62,8 @@ a current human merge action. Other capability states are unchanged.
   TASK-00061's [ordinary invitation form](docs/engineering/ORDINARY_INVITATIONS.md) uses exact INVITE_USERS,
   a fixed ordinary API request and strict safe-ID projection; directory/status invalidation and READ_USERS-only
   continuation reuse the same client graph. It does not replace the existing PHP issuance composition owned by
-  TASK-00577 or add elevated input. Independent acceptance remains pending.
+  TASK-00577 or add elevated input. Independent technical Review and behavioral QA accepted the ordinary
+  journey within the evidence boundaries recorded by its TASK.
   TASK-00060's invitation page deliberately reads safe user detail and package delivery status under READ_USERS.
   Mutation Actions admit MANAGE_USER_INVITATIONS and dispatch package commands with no data response; manage-only
   grants no reading. Page management requires both permissions. This maintainer revision awaits independent acceptance;
