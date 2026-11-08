@@ -4,6 +4,7 @@ description: Perform independent QA only when a trusted Build session binding as
 tools: read, bash, write, edit, grep, find, ls, ext:agent-os-pi
 extensions: ["agent-os-pi"]
 skills: true
+thinking: medium
 prompt_mode: append
 inherit_context: false
 persist_session: true
