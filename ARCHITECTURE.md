@@ -14,9 +14,13 @@ handlers, collection-like repositories, adapter-owned admission and presentation
 required audit, and deliberate application cutovers that preserve needed data. This is direction, not a claim
 that the existing PHP inventory already conforms.
 
-Current registration still uses Repository names, internal creation IDs, original-result replay and Application
-authority fences. The Role audit transaction decorator still exists; DBAL-only transactions need actual supplier/consumer
-qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
+Initial Workspace bootstrap now uses an aggregate-owned repository, an adapter-generated typed ID in a registered
+void command, explicit handler-owned state/audit transaction and registered typed current-state reads. Exceptional
+references have HTTP-owned permission/Workspace admission and adapter-owned atomic limiting/UUID generation, without
+aggregate creation or reservation. [The runbook](docs/engineering/REPOSITORY_REGISTRATION.md) distinguishes these
+paths from remaining registration, which still uses Repository names, internal creation IDs, original-result replay
+and Application authority fences until TASK-00575. The Role audit transaction decorator still exists; DBAL-only
+transactions need actual supplier/consumer qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
 the local generic classifier and updates actual client/error contracts, with scoped independent technical and
 HTTP/browser/security QA acceptance. This does not qualify the remaining capability-specific corrections or
 production deployment. [Ownership guidance](docs/engineering/OWNERSHIP.md)

@@ -32,6 +32,21 @@ corrections. A missing supplier holds only its affected integration, not unrelat
 retain their own compatibility obligations; deliberate Agent OS breaks still require needed-data preservation,
 migration or explicitly authorized disposal.
 
+## Current Workspace and technical-reference cutover
+
+TASK-00574 replaces the extracted mixed-store paths with `Domain/Workspace/Workspace` (root, ID, repository,
+bootstrap command and current-state queries) and mirrored registered Application handlers/typed Views. Console
+owns trusted-operator admission and generates the ID before void dispatch. The bootstrap handler coordinates
+collection persistence and an explicit required audit writer through the qualified Common Doctrine transaction;
+all participating writes share its connection. No audit is inferred from a callback result.
+
+The reference HTTP Action owns current Workspace admission after central authentication/permission enforcement;
+`Adapter/Reference/ExceptionalReferences` owns technical limiter metadata and the UUID factory, not a business
+command or Application forwarder. Registration's current admission uses the registered initial-Workspace query.
+The remaining registration Store and original-result path remain live for TASK-00575. The data-preserving migration
+separates shared audit identity from replay bookkeeping without deleting existing evidence. See the
+[current runbook and diagram](REPOSITORY_REGISTRATION.md#explicit-installation-setup).
+
 ## Planned canonical observations and MCP binding
 
 [TICKET-00096's supplier mapping](../../planning/tickets/00096-TICKET.md#canonical-observation-supplier-and-delivery--2026-11-06)

@@ -74,7 +74,8 @@ The only source exclusions are:
 - `Adapter/Persistence/Guard/DatabaseTargetGuard.php`: destructive test-tool safety, probed directly rather than
   tested as product behavior.
 - `Adapter/Validation/PublicForms.php`: the explicit publication registry (composition).
-- `GetCsrfProofHandler::queryRegistration()`: static query-bus registration metadata.
+- `GetCsrfProofHandler::queryRegistration()` and the Workspace bootstrap/current-read handlers' registration
+  methods: static bus metadata, not handler behavior.
 - The eight explicitly named empty private constructors in the coverage policy: prevent instantiation of static
   persistence helpers; their actual adapter methods remain covered.
 
