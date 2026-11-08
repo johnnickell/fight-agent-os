@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
-use App\Application\Workspace\BootstrapWorkspace;
+use App\Application\Workspace\Workspace\View\WorkspaceView;
+use App\Domain\Workspace\Workspace\Command\BootstrapWorkspace;
+use App\Domain\Workspace\Workspace\InitialWorkspaceAlreadyExists;
+use App\Domain\Workspace\Workspace\Query\FindInitialWorkspace;
+use App\Domain\Workspace\Workspace\Query\GetWorkspaceById;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -26,7 +33,7 @@ final class BootstrapWorkspaceCommand extends Command
     /**
      * Constructs BootstrapWorkspaceCommand
      */
-    public function __construct(private readonly BootstrapWorkspace $bootstrap)
+    public function __construct(private readonly CommandBus $commandBus, private readonly QueryBus $queryBus)
     {
         parent::__construct();
     }
@@ -77,7 +84,23 @@ final class BootstrapWorkspaceCommand extends Command
             return self::INVALID;
         }
         try {
-            $workspace = $this->bootstrap->bootstrap($actor);
+            $workspace = $this->queryBus->fetch(new FindInitialWorkspace());
+            if ($workspace === null) {
+                $workspaceId = WorkspaceId::generate();
+                try {
+                    $this->commandBus->execute(new BootstrapWorkspace($workspaceId, $actor));
+                } catch (InitialWorkspaceAlreadyExists) {
+                    $error->writeln(
+                        'Another caller owns the initial Workspace; repeat explicit bootstrap to inspect current state',
+                        OutputInterface::OUTPUT_RAW
+                    );
+
+                    return self::FAILURE;
+                }
+                // Fetch current creation time for presentation, not an identity or original-response recovery.
+                $workspace = $this->queryBus->fetch(new GetWorkspaceById($workspaceId));
+            }
+            assert($workspace instanceof WorkspaceView);
             $output->writeln(json_encode([
                 'workspace_id' => $workspace->id->toString(),
                 'created_at'   => $workspace->createdAt->format('Y-m-d\TH:i:s.uP')
@@ -86,7 +109,7 @@ final class BootstrapWorkspaceCommand extends Command
             return self::SUCCESS;
         } catch (Throwable) {
             $error->writeln(
-                'Workspace bootstrap outcome is uncertain; retry the same explicit bootstrap for the original result.',
+                'Workspace bootstrap outcome is uncertain; repeat explicit bootstrap to inspect current state.',
                 OutputInterface::OUTPUT_RAW
             );
 

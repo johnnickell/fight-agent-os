@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Console\BootstrapWorkspaceCommand;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
-use App\Application\Workspace\BootstrapWorkspace;
 use App\Application\Workspace\GetRepositoryRegistration;
 use App\Application\Workspace\RegistrationAccess;
 use App\Application\Workspace\RegistrationFences;
@@ -19,7 +19,9 @@ use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\RepositoryRegistered;
 use App\Domain\Workspace\RepositoryRegistration;
 use App\Domain\Workspace\SourceDescriptor;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\Command\BootstrapWorkspace;
+use App\Domain\Workspace\Workspace\Query\FindInitialWorkspace;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -44,6 +46,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Utility\ClassName;
@@ -57,8 +60,9 @@ use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Slim\App;
 use Slim\Psr7\Factory\ServerRequestFactory;
-use Tests\Support\AccessClock;
+use Symfony\Component\Console\Tester\CommandTester;
 use Tests\Support\AccessTokens;
+use Tests\Support\WorkspaceTestClock;
 use Tooling\OpenApi\Document;
 
 /**
@@ -102,18 +106,18 @@ final class RepositoryRegistrationTest extends TestCase
             $this->environment[$name] = getenv($name);
         }
         $tokens = new AccessTokens();
-        $tokens->clock->time = new DateTimeImmutable();
+        $tokens->clock->time = new DateTimeImmutable('2026-11-07T12:00:00Z');
         $this->referenceTime = $tokens->clock->now();
         $now = $tokens->clock->now()->modify('-1 minute');
         putenv('DATABASE_URL='.$url);
         putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($tokens->configuration, JSON_THROW_ON_ERROR));
-        $this->app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $this->app = WorkspaceTestClock::application($this->referenceTime);
         $container = $this->app->getContainer();
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
         $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
         $permissionIds = [];
-        foreach ([RegistrationAccess::VIEW, RegistrationAccess::REGISTER, RegistrationAccess::GENERATE] as $name) {
+        foreach ([RegistrationAccess::VIEW, RegistrationAccess::REGISTER, 'GENERATE_REFERENCE_IDS'] as $name) {
             $permissionIds[] = $container->get(PermissionRepository::class)
                 ->getByName(PermissionName::fromString($name))->getId();
         }
@@ -152,7 +156,8 @@ final class RepositoryRegistrationTest extends TestCase
         $claims['sid'] = $this->session->getId()->toString();
         $claims['auth_version'] = $this->actor->getAuthenticationVersion();
         $this->token = $tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
-        $this->workspace = $container->get(BootstrapWorkspace::class)->bootstrap($this->actor->getId())->id;
+        $this->workspace = WorkspaceId::generate();
+        $container->get(CommandBus::class)->execute(new BootstrapWorkspace($this->workspace, $this->actor->getId()));
         $this->logs = new TestHandler();
         $container->get('http.failure.logger')->setHandlers([$this->logs]);
     }
@@ -189,7 +194,7 @@ final class RepositoryRegistrationTest extends TestCase
         self::assertCount(1, $this->events);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM repository_registrations'));
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM workspace_audit'));
-        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM workspace_operations'));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM workspace_operations'));
         $original = $this->connection->fetchOne(
             "SELECT original_result FROM workspace_operations WHERE command_kind = 'register_repository'"
         );
@@ -209,8 +214,13 @@ final class RepositoryRegistrationTest extends TestCase
      */
     public function testIdempotentExplicitBootstrap(): void
     {
-        $original = $this->container->get(BootstrapWorkspace::class)->bootstrap($this->actor->getId());
-        $again = $this->container->get(BootstrapWorkspace::class)->bootstrap(UserId::generate());
+        $original = $this->container->get(QueryBus::class)->fetch(new FindInitialWorkspace());
+        $console = new CommandTester($this->container->get(BootstrapWorkspaceCommand::class));
+        self::assertSame(0, $console->execute([
+            '--internal' => true, '--confirm-bootstrap' => true, '--operator' => UserId::generate()->toString()
+        ]));
+        $again = $this->container->get(QueryBus::class)->fetch(new FindInitialWorkspace());
+        self::assertSame($original->id->toString(), json_decode($console->getDisplay(), true)['workspace_id']);
         self::assertTrue($original->id->equals($again->id));
         self::assertEquals($original->createdAt, $again->createdAt);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM workspaces'));
@@ -405,6 +415,9 @@ final class RepositoryRegistrationTest extends TestCase
     public function testExceptionalReferences(): void
     {
         $before = $this->counts();
+        $this->assertResponse($this->request('POST', '/references', null, WorkspaceId::generate()), 403, 'reference');
+        $this->assertResponse($this->request('POST', '/references', null, null, false), 401, 'reference');
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM reference_generation_limits'));
         $references = [];
         for ($index = 0; $index < 10; ++$index) {
             $data = $this->assertResponse($this->request('POST', '/references'), 200, 'reference')['data'];
@@ -422,8 +435,151 @@ final class RepositoryRegistrationTest extends TestCase
         $this->assertResponse($this->request('POST', '/references'), 200, 'reference');
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT attempts FROM reference_generation_limits'));
         $this->assertResponse($this->request('POST', '/references', ['timestamp' => 1]), 400, 'reference');
-        $this->revokeOperation(RegistrationAccess::GENERATE);
+        $this->revokeOperation('GENERATE_REFERENCE_IDS');
         $this->assertResponse($this->request('POST', '/references'), 403, 'reference');
+    }
+
+    /**
+     * Rolls back initial state when required audit fails and reconciles only through fresh current state
+     */
+    public function testBootstrapAuditRollbackAndUncertainResponse(): void
+    {
+        $this->connection->executeStatement('TRUNCATE workspaces CASCADE');
+        $this->freshApplication();
+        self::assertNull($this->container->get(QueryBus::class)->fetch(new FindInitialWorkspace()));
+        self::assertSame([0, 0, 0, 0, 0], $this->counts());
+        $this->connection->executeStatement(<<<'SQL'
+ALTER TABLE workspace_audit ADD CONSTRAINT registration_fixture_abort
+CHECK (action <> 'workspace_bootstrapped') NOT VALID
+SQL);
+        $console = new CommandTester($this->container->get(BootstrapWorkspaceCommand::class));
+        $intent = [
+            '--internal' => true, '--confirm-bootstrap' => true, '--operator' => $this->actor->getId()->toString()
+        ];
+        self::assertSame(1, $console->execute($intent));
+        self::assertStringContainsString('uncertain', $console->getDisplay());
+        self::assertStringNotContainsString('registration_fixture_abort', $console->getDisplay());
+        self::assertSame([0, 0, 0, 0, 0], $this->counts());
+        $this->connection->executeStatement('ALTER TABLE workspace_audit DROP CONSTRAINT registration_fixture_abort');
+        $this->freshApplication();
+        $realQueryBus = $this->container->get(QueryBus::class);
+        $queryBus = $this->createStub(QueryBus::class);
+        $queryBus->method('fetch')->willReturnCallback(static function (
+            \Fight\Common\Domain\Messaging\Query\Query $query
+        ) use ($realQueryBus): mixed {
+            if ($query instanceof \App\Domain\Workspace\Workspace\Query\GetWorkspaceById) {
+                throw new RuntimeException('private-provider secret-marker');
+            }
+
+            return $realQueryBus->fetch($query);
+        });
+        $uncertain = new CommandTester(new BootstrapWorkspaceCommand(
+            $this->container->get(CommandBus::class),
+            $queryBus
+        ));
+        self::assertSame(1, $uncertain->execute($intent));
+        self::assertStringContainsString('uncertain', $uncertain->getDisplay());
+        self::assertStringNotContainsString('secret-marker', $uncertain->getDisplay());
+        self::assertSame([1, 0, 0, 1, 0], $this->counts());
+        $this->freshApplication();
+        $console = new CommandTester($this->container->get(BootstrapWorkspaceCommand::class));
+        self::assertSame(0, $console->execute($intent));
+        $current = json_decode($console->getDisplay(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame($this->connection->fetchOne('SELECT id FROM workspaces'), $current['workspace_id']);
+        self::assertSame(
+            $this->actor->getId()->toString(),
+            $this->connection->fetchOne('SELECT actor_id FROM workspace_audit')
+        );
+        self::assertSame([1, 0, 0, 1, 0], $this->counts());
+    }
+
+    /**
+     * Enforces ten actor attempts across independently authenticated concurrent real HTTP paths
+     */
+    public function testConcurrentReferenceHttpBudget(): void
+    {
+        $before = $this->counts();
+        $children = [];
+        try {
+            for ($index = 0; $index < 12; ++$index) {
+                $input = $this->workerInput([]);
+                $input['mode'] = 'reference';
+                $input['token'] = $this->token;
+                $children[] = $this->startWorker($input);
+            }
+            foreach ($children as $child) {
+                self::assertSame('ready', trim((string) fgets($child['pipes'][1])));
+            }
+            foreach ($children as $child) {
+                $this->releaseWorker($child);
+            }
+            $statuses = [];
+            foreach ($children as &$child) {
+                $result = $this->finishWorker($child);
+                $statuses[] = $result['status'];
+                if ($result['status'] === 429) {
+                    self::assertSame('60', $result['retry_after']);
+                }
+            }
+            unset($child);
+            sort($statuses);
+            self::assertSame([...array_fill(0, 10, 200), 429, 429], $statuses);
+            self::assertSame($before, $this->counts());
+            self::assertSame([[
+                'actor_id'     => $this->actor->getId()->toString(),
+                'window_start' => $this->referenceTime->getTimestamp(),
+                'attempts'     => 10
+            ]], $this->connection->fetchAllAssociative('SELECT * FROM reference_generation_limits'));
+        } finally {
+            foreach ($children as $child) {
+                $this->cleanWorker($child);
+            }
+        }
+    }
+
+    /**
+     * Bounds current buckets without refusing an existing actor's remaining budget and expires at UTC rollover
+     */
+    public function testReferenceBucketCapacityAndBoundary(): void
+    {
+        $window = $this->referenceTime->getTimestamp();
+        for ($batch = 0; $batch < 10; ++$batch) {
+            $ids = [];
+            $size = 1000;
+            for ($index = 0; $index < $size; ++$index) {
+                $ids[] = UserId::generate()->toString();
+            }
+            $values = implode(',', array_fill(0, $size, '(?, '.$window.', 1)'));
+            $this->connection->executeStatement(
+                'INSERT INTO reference_generation_limits (actor_id, window_start, attempts) VALUES '.$values,
+                $ids
+            );
+        }
+        $full = $this->request('POST', '/references');
+        $this->assertResponse($full, 429, 'reference');
+        self::assertSame('60', $full->getHeaderLine('Retry-After'));
+        self::assertSame(10000, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM reference_generation_limits'
+        ));
+        $this->connection->delete('reference_generation_limits', ['actor_id' => $ids[0]]);
+        $this->assertResponse($this->request('POST', '/references'), 200, 'reference');
+        $this->assertResponse($this->request('POST', '/references'), 200, 'reference');
+        self::assertSame(10000, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM reference_generation_limits WHERE window_start = ?',
+            [$window]
+        ));
+        $this->referenceTime = $this->referenceTime->modify('+59 seconds');
+        $this->connection->executeStatement(
+            'UPDATE reference_generation_limits SET attempts = 10 WHERE actor_id = ?',
+            [$this->actor->getId()->toString()]
+        );
+        $denied = $this->request('POST', '/references');
+        $this->assertResponse($denied, 429, 'reference');
+        self::assertSame('1', $denied->getHeaderLine('Retry-After'));
+        $this->referenceTime = $this->referenceTime->modify('+1 second');
+        $this->assertResponse($this->request('POST', '/references'), 200, 'reference');
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM reference_generation_limits'));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT attempts FROM reference_generation_limits'));
     }
 
     /**
@@ -579,16 +735,17 @@ final class RepositoryRegistrationTest extends TestCase
     }
 
     /**
-     * Gives two explicit bootstrap callers the same durable identity and original evidence
+     * Gives one of two ID-bearing bootstrap commands the initial slot without replay evidence
      */
-    public function testConcurrentBootstrap(): void
+    #[DataProvider('bootstrapEntries')]
+    public function testConcurrentBootstrap(string $mode): void
     {
         $this->connection->executeStatement('TRUNCATE workspaces CASCADE');
         $children = [];
         try {
             for ($index = 0; $index < 2; ++$index) {
                 $input = $this->workerInput([]);
-                $input['mode'] = 'bootstrap';
+                $input['mode'] = $mode;
                 $children[] = $this->startWorker($input);
             }
             foreach ($children as $child) {
@@ -599,14 +756,28 @@ final class RepositoryRegistrationTest extends TestCase
             }
             $one = $this->finishWorker($children[0]);
             $two = $this->finishWorker($children[1]);
-            self::assertSame('bootstrapped', $one['status']);
-            self::assertSame($one, $two);
-            self::assertSame([1, 0, 0, 1, 1], $this->counts());
+            $statuses = [$one['status'], $two['status']];
+            sort($statuses);
+            self::assertSame(['bootstrapped', 'conflict'], $statuses);
+            $winner = $one['status'] === 'bootstrapped' ? $one : $two;
+            self::assertSame($winner['workspace_id'], $this->connection->fetchOne('SELECT id FROM workspaces'));
+            self::assertSame([1, 0, 0, 1, 0], $this->counts());
         } finally {
             foreach ($children as $child) {
                 $this->cleanWorker($child);
             }
         }
+    }
+
+    /**
+     * Supplies trusted command and actual Console competition
+     *
+     * @return iterable<array{string}>
+     */
+    public static function bootstrapEntries(): iterable
+    {
+        yield ['bootstrap'];
+        yield ['bootstrap_console'];
     }
 
     /**
@@ -628,6 +799,8 @@ final class RepositoryRegistrationTest extends TestCase
         $before = $this->counts();
         $this->assertResponse($this->request('POST', '', $this->input('denied')), 403, 'register');
         $this->assertResponse($this->request('GET'), 403, 'list');
+        $this->assertResponse($this->request('POST', '/references'), 403, 'reference');
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM reference_generation_limits'));
         self::assertSame($before, $this->counts());
     }
 
@@ -849,6 +1022,7 @@ JSON);
     {
         return [
             'mode'      => 'register',
+            'clock'     => $this->referenceTime->format(DATE_ATOM),
             'body'      => $body,
             'workspace' => $this->workspace->toString(),
             'actor'     => $this->actor->getId()->toString(),
@@ -933,12 +1107,10 @@ JSON);
      */
     private function freshApplication(): void
     {
-        $this->app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $this->app = WorkspaceTestClock::application($this->referenceTime);
         $container = $this->app->getContainer();
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
-        $time = $this->referenceTime;
-        $container->set(Clock::class, static fn() => new AccessClock($time));
         $container->get('http.failure.logger')->setHandlers([$this->logs]);
         $container->get(EventDispatcher::class)->addHandler(
             ClassName::underscore(RepositoryRegistered::class),

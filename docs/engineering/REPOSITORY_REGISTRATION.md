@@ -5,9 +5,10 @@ This is a **current-source runbook**, not the approved target. The
 [shared contract](STANDARDS.md#architecture) and amended
 [ADR 0005](../../planning/adr/0005-repository-identity-and-link-consistency.md) now specify Project vocabulary,
 adapter-generated IDs in void commands, entry admission and ordinary uniqueness/fresh-query recovery.
-TASK-00574/00575 own that source cutover. Today's Repository routes, internal IDs, original-result replay,
-Application checks and authority fences below still describe executable behavior; they must not be copied as
-new requirements. No source, endpoint, permission, table or data has changed in TASK-00564.
+TASK-00574 implements the Workspace/bootstrap and exceptional-reference ownership cutover; TASK-00575 still owns
+Project registration/inspection. Today's Repository routes, internal registration IDs, registration original-result
+replay, Application registration checks and registration authority fences below remain live until that second
+cutover; they must not be copied as new requirements. TASK-00564 changed guidance, not application behavior.
 
 John's approved 2026-10-20 amendment separates explicit Workspace bootstrap here from initial Host enrollment
 in TASK-00079. No Host/Checkout/Worktree persistence or physical linking is implemented here.
@@ -27,19 +28,35 @@ trusted Console boundary: these flags and the supplied attribution do not authen
 Permission or enroll a Host/Runner. Never expose this command through an untrusted shell, Agent or HTTP caller.
 The normal shared container loads the operation without running it at startup or during queries.
 
-Success returns exactly `workspace_id` and `created_at`. Agent OS generates a typed COMB Workspace ID inside the
-owning transaction. A unique `initial` installation slot and transaction fence choose one winner; retries,
-including response-loss retries, return the same committed identity/time without another audit record. Current
-state, bounded operator attribution, audit and original result commit together. Failures report uncertainty,
-not proof of rollback: retry this same explicit bootstrap after restoring the required database capability.
-Never delete the slot or generate a replacement identity to recover a failed query/startup. Preserve database
-history/backups. There is one initial Workspace, not implemented multi-workspace membership or tenancy.
+Success returns exactly `workspace_id` and `created_at`. Console first reads current initial state through the
+registered `FindInitialWorkspace` query. If absent, Console generates a typed COMB `WorkspaceId` **before** void
+`BootstrapWorkspace` bus dispatch. The registered handler owns one generic transaction: add the Workspace root,
+then explicitly record required bootstrap audit on the same connection. The database's unique `initial` slot
+chooses one winner; there is no bootstrap response snapshot, transparent replay or original-result journal.
+Console queries the known identity's current state for its creation-time presentation after successful dispatch.
+
+Repeated explicit invocation reads the current committed identity/time without another command/audit. A competing
+caller can win after an absent read: the loser exits 1 with safe conflict wording, never its uncommitted ID.
+Unknown execution or presentation failure exits 1 with uncertainty, not proof of rollback. Restore the failed
+capability and repeat explicit bootstrap to inspect authoritative **current** state. Invalid/missing/duplicate
+flags or attribution exit 2 without dispatch. Parsing/verbose failures do not echo private input.
+Never delete the slot or generate a replacement identity to recover a failed query/startup. Startup and registered
+queries never create a Workspace or grant access. There is one initial Workspace, not implemented membership or
+tenancy. See the [ownership/flow view](workspace-bootstrap/README.md).
+
+Apply `Version20261107230757` before running the new code. It detaches required `workspace_audit` from replay rows
+and renames its identity column from `operation_id` to `id`, preserving every existing identity, attribution,
+revision and timestamp. Historical `workspace_operations`, including old bootstrap snapshots, remain unchanged;
+no new bootstrap snapshots are written or read. Live registration still writes its required audit and original
+result together, now without an audit-to-replay foreign key. Rollback of this migration is deliberately refused:
+new independent audit cannot be rebound without inventing replay records or losing history. Back up normally;
+do not dispose installation data to adopt the new schema.
 
 ## Current access and permissions
 
-Every API interaction freshly resolves its bearer authentication and package authority. Application operations
-recheck authority independently of HTTP. The implemented initial-Workspace access path is the authoritative
-managed Super Admin identity, checked against the installed stable Role ID and current membership, **plus the
+Every API interaction freshly resolves its bearer authentication and package authority. The remaining registration
+Application operations recheck authority independently of HTTP; reference admission belongs only to its HTTP adapter.
+The implemented initial-Workspace access path is the authoritative managed Super Admin identity, checked against the installed stable Role ID and current membership, **plus the
 interaction's separate Permission**. A matching Role name or operation Permission alone is insufficient.
 Unknown Workspace, missing bootstrap, stale authentication and missing authority fail closed.
 
@@ -57,11 +74,18 @@ not new installation defaults. See [managed policy](MANAGED_POLICY.md#permission
 TASK-00498 owns later Workspace Admin and explicit User/Agent Repository access and corresponding read filtering;
 there is no synthetic membership or access grant in registration. Agent authentication is not exposed here.
 
-Protected mutations hold the existing permission/role-reference fences, per-user authentication fence and current
-User/session rows before resolving authority. Those locks serialize actual Permission membership, Role assignment,
-authentication and session writers with the operation. Registration then holds the initial-Workspace claim fence.
-All use the exact shared EntityManager/DBAL connection and canonical `commitTransactional()` at READ COMMITTED.
-Queries use a short transaction for coherent current disclosure checks; they persist no business state or events.
+The remaining registration mutations hold existing permission/role-reference fences, per-user authentication
+fences and current User/session rows before resolving authority. Registration then holds its registration-claim
+fence. These still-live paths use the shared EntityManager/DBAL connection and `commitTransactional()` at READ
+COMMITTED until TASK-00575. Registration queries use a short transaction for current disclosure checks.
+
+References do **not** take authority-revocation fences or call the registration Application gate. Central
+`ApiActionSecurity` authenticates and checks the Action's independent `GENERATE_REFERENCE_IDS`; the Action checks
+current Workspace scope and managed administrator identity/membership through a registered current-state query
+and the owning user/role repositories. An admitted request may finish after revocation; the next is checked afresh.
+The technical `Adapter/Reference/ExceptionalReferences` owns only atomic limiter admission and Common's COMB UUID
+factory. Its short DBAL transaction serializes bounded bucket maintenance, not a business command or aggregate.
+Workspace queries return typed safe Views and persist no business state or events.
 
 ## Versioned API
 
@@ -150,21 +174,28 @@ another registration's identity. Unknown driver/provider details remain sanitize
 view authority and emits no event or business write; it guarantees neither later claim availability nor linkage.
 
 Exceptional references use an independent current Permission and atomic actor budget: ten per UTC 60-second fixed
-window, at most 10000 current actor buckets. Exhaustion returns safe `429` and `Retry-After` 1–60. Only bounded
-limiter metadata is persisted; no generated reference is persisted/reserved, no aggregate is created and no future
-aggregate ID is predicted. The operation accepts no kind, requested ID, timestamp or import authority. It cannot
-bypass a separately controlled migration/import path.
+window, at most 10000 current actor buckets. Exhaustion returns safe `429` and `Retry-After` 1–60. At capacity an
+existing actor can consume its remaining budget, but a new bucket is refused. Time is evaluated after acquiring the
+technical limiter lock; expired windows are removed before admitting current attempts. Only actor UUID, UTC window
+and attempt count persist; no generated reference or private request/credential data enters storage or diagnostics.
+No reference is reserved, no aggregate is created and no future aggregate ID is predicted. The operation accepts no
+kind, requested ID, timestamp or import authority. It cannot bypass a separately controlled migration/import path.
 
 ## Verification and exclusions
 
 Use `./bin/database test-reset` after a gate cleans the guarded test schema, then focused
 `./bin/phpunit tests/Unit/Workspace tests/Integration/Postgres/RepositoryRegistrationTest.php`.
-The tests exercise owned Domain/Application, real API/JSend/OpenAPI/redaction, PostgreSQL round trips, exact retries,
-source/slug final constraints, atomic evidence rollback, and ten separate-connection claim/bootstrap/authority
-interleavings. No migration/configuration/generated-text/tooling tests or vendor patches are introduced.
+The tests exercise owned Domain/Application and Console admission/outcomes, real routed HTTP/JSend/OpenAPI/redaction,
+PostgreSQL round trips, remaining registration retries/source/slug constraints, required bootstrap audit rollback,
+post-commit presentation uncertainty/current-state reconciliation, competing bootstrap commands and Console entries,
+twelve concurrent authenticated reference requests, the 10000-bucket bound and exact UTC rollover. Security-time
+consumers share a fixed clock. Remaining registration authority races are retained until TASK-00575, not imposed on
+references. Validate the generated migration against populated history with Doctrine directly, not product tests of
+migrations/configuration/generated text/tools. No vendor patch is required.
 Run the full `./bin/build`; focused checks and this runbook are not independent acceptance.
 
 Registration performs no Host/Checkout/Worktree persistence, directory or marker write, physical observation,
 branch/remote mutation, source update, lifecycle change, designation, Planning import/context/cutover, Agent/Runner/
 Workflow execution or Git publication. Markdown remains authoritative. Evidence and exact limits belong in
-[TASK-00078](../../planning/tasks/00078-TASK.md); independent Review/QA and delivery remain separate.
+[TASK-00078](../../planning/tasks/00078-TASK.md) and the current
+[TASK-00574 cutover](../../planning/tasks/00574-TASK.md); independent Review/QA and delivery remain separate.

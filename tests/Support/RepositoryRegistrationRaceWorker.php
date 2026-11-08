@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use App\Adapter\Console\BootstrapWorkspaceCommand;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Workspace\BootstrapWorkspace;
 use App\Application\Workspace\RegisterRepository;
 use App\Application\Workspace\RegistrationFences;
 use App\Domain\Workspace\RegistrationConflict;
@@ -13,7 +13,10 @@ use App\Domain\Workspace\RegistrationIntent;
 use App\Domain\Workspace\RegistrationMetadata;
 use App\Domain\Workspace\RegistrationSources;
 use App\Domain\Workspace\SourceDescriptor;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\Command\BootstrapWorkspace;
+use App\Domain\Workspace\Workspace\InitialWorkspaceAlreadyExists;
+use App\Domain\Workspace\Workspace\Query\FindInitialWorkspace;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -28,7 +31,13 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
+use Fight\Common\Domain\Messaging\Query\Query;
+use Fight\Common\Domain\Messaging\Query\QueryMessage;
+use Slim\Psr7\Factory\ServerRequestFactory;
+use Symfony\Component\Console\Tester\CommandTester;
 use Throwable;
 
 /**
@@ -56,13 +65,75 @@ final class RepositoryRegistrationRaceWorker
             putenv('DATABASE_URL='.$url);
             $container = require dirname(__DIR__, 2).'/config/services.php';
             $container->set(Connection::class, static fn(): Connection => $connection);
+            WorkspaceTestClock::configure($container, new DateTimeImmutable($input['clock']));
             echo $connection->fetchOne('SELECT pg_backend_pid()')."\n";
             flush();
-            if ($input['mode'] === 'bootstrap') {
+            if ($input['mode'] === 'reference') {
+                $app = WorkspaceTestClock::application(new DateTimeImmutable($input['clock']));
                 self::barrier('ready');
-                $view = $container->get(BootstrapWorkspace::class)->bootstrap(UserId::fromString($input['actor']));
+                $request = (new ServerRequestFactory())->createServerRequest(
+                    'POST',
+                    'https://localhost/api/v1/workspaces/'.$input['workspace'].'/references'
+                )->withHeader('Authorization', 'Bearer '.$input['token']);
+                $response = $app->handle($request);
                 echo json_encode([
-                    'status' => 'bootstrapped', 'workspace_id' => $view->id->toString()
+                    'status'      => $response->getStatusCode(),
+                    'retry_after' => $response->getHeaderLine('Retry-After')
+                ], JSON_THROW_ON_ERROR)."\n";
+            } elseif ($input['mode'] === 'bootstrap_console') {
+                $queryBus = $container->get(QueryBus::class);
+                $container->set(QueryBus::class, static fn() => new class ($queryBus) implements QueryBus {
+                    /**
+                     * Constructs the real-read barrier for competing Console invocations
+                     */
+                    public function __construct(private readonly QueryBus $queryBus)
+                    {
+                    }
+
+                    /**
+                     * @inheritDoc
+                     */
+                    public function fetch(Query $query): mixed
+                    {
+                        $result = $this->queryBus->fetch($query);
+                        if ($query instanceof FindInitialWorkspace) {
+                            RepositoryRegistrationRaceWorker::barrier('ready');
+                        }
+
+                        return $result;
+                    }
+
+                    /**
+                     * @inheritDoc
+                     */
+                    public function dispatch(QueryMessage $queryMessage): mixed
+                    {
+                        return $this->queryBus->dispatch($queryMessage);
+                    }
+                });
+                $console = new CommandTester($container->get(BootstrapWorkspaceCommand::class));
+                $exit = $console->execute([
+                    '--internal' => true, '--confirm-bootstrap' => true, '--operator' => $input['actor']
+                ]);
+                $data = $exit === 0 ? json_decode($console->getDisplay(), true, flags: JSON_THROW_ON_ERROR) : [];
+                echo json_encode([
+                    'status'       => $exit === 0 ? 'bootstrapped' : 'conflict',
+                    'workspace_id' => $data['workspace_id'] ?? null
+                ], JSON_THROW_ON_ERROR)."\n";
+            } elseif ($input['mode'] === 'bootstrap') {
+                self::barrier('ready');
+                $workspaceId = WorkspaceId::generate();
+                try {
+                    $container->get(CommandBus::class)->execute(new BootstrapWorkspace(
+                        $workspaceId,
+                        UserId::fromString($input['actor'])
+                    ));
+                    $status = 'bootstrapped';
+                } catch (InitialWorkspaceAlreadyExists) {
+                    $status = 'conflict';
+                }
+                echo json_encode([
+                    'status' => $status, 'workspace_id' => $workspaceId->toString()
                 ], JSON_THROW_ON_ERROR)."\n";
             } elseif ($input['mode'] === 'revoke') {
                 if (($input['subject'] ?? 'permission') === 'assignment') {

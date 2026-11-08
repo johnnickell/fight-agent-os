@@ -13,7 +13,7 @@ use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\RepositoryRegistered;
 use App\Domain\Workspace\RepositoryRegistration;
 use App\Domain\Workspace\SourceDescriptor;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use PHPUnit\Framework\Attributes\DataProvider;

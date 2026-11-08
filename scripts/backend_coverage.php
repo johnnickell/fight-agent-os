@@ -20,19 +20,22 @@ $fileExclusions = [
 ];
 $methodExclusions = [];
 $excludedMethods = [
-    'Application/Security/Csrf/QueryHandler/GetCsrfProofHandler' => 'queryRegistration',
-    'Adapter/Persistence/ActivationGrantRecords'                 => '__construct',
-    'Adapter/Persistence/ActivationGrantTransitions'             => '__construct',
-    'Adapter/Persistence/EmailChangeGrantRecords'                => '__construct',
-    'Adapter/Persistence/ExpiredCredentialDeliveryRecords'       => '__construct',
-    'Adapter/Persistence/PasswordResetGrantRecords'              => '__construct',
-    'Adapter/Persistence/PostgresAtomicOperation'                => '__construct',
-    'Adapter/Persistence/PostgresUniqueConstraintRace'           => '__construct',
-    'Adapter/Persistence/RefreshSessionRecords'                  => '__construct'
+    'Application/Security/Csrf/QueryHandler/GetCsrfProofHandler'               => 'queryRegistration',
+    'Application/Workspace/Workspace/CommandHandler/BootstrapWorkspaceHandler' => 'commandRegistration',
+    'Application/Workspace/Workspace/QueryHandler/FindInitialWorkspaceHandler' => 'queryRegistration',
+    'Application/Workspace/Workspace/QueryHandler/GetWorkspaceByIdHandler'     => 'queryRegistration',
+    'Adapter/Persistence/ActivationGrantRecords'                               => '__construct',
+    'Adapter/Persistence/ActivationGrantTransitions'                           => '__construct',
+    'Adapter/Persistence/EmailChangeGrantRecords'                              => '__construct',
+    'Adapter/Persistence/ExpiredCredentialDeliveryRecords'                     => '__construct',
+    'Adapter/Persistence/PasswordResetGrantRecords'                            => '__construct',
+    'Adapter/Persistence/PostgresAtomicOperation'                              => '__construct',
+    'Adapter/Persistence/PostgresUniqueConstraintRace'                         => '__construct',
+    'Adapter/Persistence/RefreshSessionRecords'                                => '__construct'
 ];
 foreach ($excludedMethods as $class => $name) {
     $method = new ReflectionMethod('App\\'.str_replace('/', '\\', $class), $name);
-    $reason = 'Static query-bus registration metadata, not handler behavior';
+    $reason = 'Static bus registration metadata, not handler behavior';
     if ($name === '__construct') {
         $reason = 'Empty private constructor prevents instantiation of static adapter composition';
     }
