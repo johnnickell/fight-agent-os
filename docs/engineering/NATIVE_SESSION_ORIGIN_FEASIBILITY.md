@@ -213,8 +213,9 @@ OS-sandbox, universal hostile-local-process protection or provider attestation i
   receipt is canonical `.runs/compose/fight-wt-4116abea7eff/build/20261108T164322Z-19/receipt.json`; it is not success.
   The recovery runtime/dependencies/output were retired, preserving source, private settings and needed evidence.
 - **Owner-approved repair, 2026-11-08:** John explicitly authorized only the small existing import-order fix,
-  rerun verification and independent Review/QA. In `harness/pi/vendor/pi-subagents/src/index.ts`, `node:url` now
-  follows `node:fs` and `node:path`; bindings, runtime behavior/API, vendored version and locks are unchanged.
+  rerun verification and independent Review/QA. That historical edit moved `node:url` after `node:fs` and
+  `node:path` in `harness/pi/vendor/pi-subagents/src/index.ts`, without changing bindings, runtime behavior/API,
+  vendored version or locks; the advancing-base integration below supersedes that workaround.
   Direct owning Biome lint reproduced **193 files / 1 error**, exit **1**, before the edit and passes **193 files /
   0 errors**, exit **0**, afterwards; no formatter or product test of tooling was added. New evidence is canonical
   `.runs/tasks/TASK-00507/runs/repair-1-20261108T1844Z/`. Gate-only prerequisites were restored in the **same**
@@ -233,6 +234,16 @@ OS-sandbox, universal hostile-local-process protection or provider attestation i
   Cache ownership/readiness is established, not the original failure's causal mechanism. Canonical evidence is
   `.runs/tasks/TASK-00507/runs/cache-recovery-20261108T1859Z/`; the subsequent one normal gate result and final
   committed-subject bridge belong to the TASK and Work handoff above. No new approach or origin proof is implied.
+
+- **Owner-authorized develop integration, 2026-11-08:** John directed merging develop and continuing verification.
+  Exact fetched develop `f671e398ebd168b6220c2b3f1f346bd4c12aee4e` was merged locally, including its existing
+  `b8b52798` fix: the Fight entry point passes its profile explicitly while the vendored engine retains optional
+  defaults. Integration removes the now-unused vendored `node:url` import, rather than reintroducing the local
+  ordering workaround or weakening the profile/tests. There were no textual conflicts; this semantic leftover
+  was reconciled to the exact develop implementation. Prior failed receipts remain history. Final verification
+  results and the exact committed-subject bridge belong to the TASK and canonical Work handoff, not a claim
+  of fresh origin-protocol evidence here. The decision, two approaches, zero proofs and no-publication limit
+  are unchanged; the installed host and original role/model pins were not updated.
 
 A future authorized scope must qualify the issuer rather than merely add signatures, and supply the real
 counterexample/lifetime/UX evidence before implementation adoption. This bounded assessment stops here; it does
