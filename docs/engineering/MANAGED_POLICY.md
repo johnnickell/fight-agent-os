@@ -32,7 +32,7 @@ concurrency token. Project registration uses 25 definitions/references with `REA
 permission identities in place without changing grants; migrate before running the changed catalog. Neither managed
 Role gains any of them;
 no User/Agent assignment follows. The current complete policy SHA-256 is
-`7d978dcc346bce2d0252fe861c1926e7b0cba6052c40a5f13beebb935e17ea38`.
+`36c258416583b448910c72ff2c588b7c63e4d3e742e146cdf2152f90dfe4c252`.
 See [registration setup and access limits](REPOSITORY_REGISTRATION.md) before attempting these operations.
 Preserve existing identities when extending the complete catalog. Before removing a definition or reference,
 inspect every consumer check and persisted assignment; do not submit a one-permission replacement policy.

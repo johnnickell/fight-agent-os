@@ -340,6 +340,63 @@ SQL);
     }
 
     /**
+     * Reports invalid persisted facts as sanitized internal faults on otherwise valid reads
+     *
+     * @param 'source'|'metadata'|'sources' $fault
+     */
+    #[DataProvider('persistedFaults')]
+    public function testPersistedFaultIsNotSubmittedInput(string $fault, string $operation): void
+    {
+        $input = $this->input('stored-fault');
+        $input['primary_source'] = ['type' => 'git_network_v1', 'locator' => 'https://github.com/team/secret-marker'];
+        $id = $this->assertResponse($this->request('POST', '', $input), 201, 'register')['data']['project_id'];
+        match ($fault) {
+            'source' => $this->connection->update('project_sources', [
+                'source_key' => json_encode([
+                    'type'       => 'github_repository_v1',
+                    'authority'  => 'github.com',
+                    'owner'      => 'TEAM',
+                    'repository' => 'secret-marker'
+                ], JSON_THROW_ON_ERROR)
+            ], ['project_id' => $id]),
+            'metadata' => $this->connection->update('projects', [
+                'display_name' => ' secret-marker '
+            ], ['id' => $id]),
+            'sources' => $this->connection->update('project_sources', [
+                'source_role' => 'equivalent'
+            ], ['project_id' => $id])
+        };
+        $before = $this->counts();
+        $events = $this->events;
+        $response = $this->request('GET', $operation === 'get' ? '/'.$id : '');
+        $body = $this->assertResponse($response, 500, $operation);
+        self::assertSame('error', $body['status']);
+        self::assertSame($before, $this->counts());
+        self::assertSame($events, $this->events);
+        foreach (['secret-marker', 'TEAM', $id, 'ProjectInputRejected'] as $private) {
+            self::assertStringNotContainsString($private, (string) $response->getBody());
+        }
+        self::assertStringNotContainsString(
+            'secret-marker',
+            json_encode($this->logs->getRecords(), JSON_THROW_ON_ERROR)
+        );
+    }
+
+    /**
+     * Supplies independently admitted reads over malformed stored source, metadata and equivalence facts
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function persistedFaults(): iterable
+    {
+        foreach (['source', 'metadata', 'sources'] as $fault) {
+            foreach (['get', 'list'] as $operation) {
+                yield $fault.' '.$operation => [$fault, $operation];
+            }
+        }
+    }
+
+    /**
      * Admits read and register independently and checks fresh permission after revocation
      */
     public function testIndependentAdmission(): void

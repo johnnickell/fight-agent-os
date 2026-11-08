@@ -7,6 +7,7 @@ namespace App\Adapter\Persistence\Workspace\Project;
 use App\Domain\Workspace\Project\Project;
 use App\Domain\Workspace\Project\ProjectConflict;
 use App\Domain\Workspace\Project\ProjectId;
+use App\Domain\Workspace\Project\ProjectInputRejected;
 use App\Domain\Workspace\Project\ProjectMetadata;
 use App\Domain\Workspace\Project\ProjectRepository;
 use App\Domain\Workspace\Project\ProjectSources;
@@ -148,32 +149,36 @@ SELECT source_key, source_role FROM project_sources WHERE workspace_id = ? AND p
 SQL,
             [$row['workspace_id'], $row['id']]
         );
-        foreach ($sourceRows as $sourceRow) {
-            $source = SourceDescriptor::reconstitute(json_decode(
-                $sourceRow['source_key'],
-                true,
-                32,
-                JSON_THROW_ON_ERROR
-            ));
-            if ($sourceRow['source_role'] === 'primary') {
-                $primary = $source;
-            } else {
-                $equivalent[] = $source;
+        try {
+            foreach ($sourceRows as $sourceRow) {
+                $source = SourceDescriptor::reconstitute(json_decode(
+                    $sourceRow['source_key'],
+                    true,
+                    32,
+                    JSON_THROW_ON_ERROR
+                ));
+                if ($sourceRow['source_role'] === 'primary') {
+                    $primary = $source;
+                } else {
+                    $equivalent[] = $source;
+                }
             }
-        }
 
-        return Project::reconstitute(
-            ProjectId::fromString($row['id']),
-            WorkspaceId::fromString($row['workspace_id']),
-            new ProjectMetadata($row['display_name'], $row['canonical_slug']),
-            new ProjectSources($primary, $equivalent),
-            UserId::fromString($row['created_by']),
-            UserId::fromString($row['updated_by']),
-            new DateTimeImmutable($row['created_at']),
-            new DateTimeImmutable($row['updated_at']),
-            (int) $row['metadata_revision'],
-            (int) $row['source_revision'],
-            (int) $row['lifecycle_revision']
-        );
+            return Project::reconstitute(
+                ProjectId::fromString($row['id']),
+                WorkspaceId::fromString($row['workspace_id']),
+                new ProjectMetadata($row['display_name'], $row['canonical_slug']),
+                new ProjectSources($primary, $equivalent),
+                UserId::fromString($row['created_by']),
+                UserId::fromString($row['updated_by']),
+                new DateTimeImmutable($row['created_at']),
+                new DateTimeImmutable($row['updated_at']),
+                (int) $row['metadata_revision'],
+                (int) $row['source_revision'],
+                (int) $row['lifecycle_revision']
+            );
+        } catch (ProjectInputRejected) {
+            throw new LogicException('Invalid persisted Project facts.');
+        }
     }
 }
