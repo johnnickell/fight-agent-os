@@ -71,7 +71,6 @@ export default function(pi) {
   });
 }
 `);
-  put(join(agentDir, 'subagents.json'), readFileSync(join(harness, 'profiles/subagents.json'), 'utf8'));
   const settings = { packages: [harness], extensions: [probe], defaultProvider: 'retirement-fixture', defaultModel: 'local',
     compaction: { enabled: true }, retry: { enabled: false }, openrouter: { retainedFixturePreference: true } };
   put(join(agentDir, 'settings.json'), settings);

@@ -19,7 +19,7 @@ Source observations at TASK-00564's base `eb5fe2f56a8fbb8b5c27f64b959dc2d36d5bc0
 
 | Current implementation, not target conformity | Correction / qualification owner |
 |---|---|
-| `RegisterRepositoryAction` directly calls container-registered `Application/Workspace/RegisterRepository::register()`, not a registered message handler; it uses internal aggregate IDs, `RegistrationStore`, original results and Application authority fences | TASK-00574/00575; current [registration runbook](REPOSITORY_REGISTRATION.md) remains executable |
+| Historical registration used an unregistered Application service, internal IDs and a mixed Store; TASK-00575 replaces that whole path with Project-owned registered commands/queries, an aggregate repository and adapter admission | Current [Project runbook](REPOSITORY_REGISTRATION.md) and TASK-00575 own implementation/evidence; independent acceptance is separate |
 | `RoleMutationUnitOfWork` infers required audit from the transaction callback's returned Role event | TASK-00573; preserve existing atomic audit until explicit package-handler support is qualified |
 | `config/common/persistence.php` binds one shared EntityManager/DBAL Connection and Common `DoctrineTransactionalUnitOfWork` | TASK-00572 qualifies an actual DBAL-only alternative; no ORM replacement or second transaction authority is implied |
 | `AuthenticatedRoleAssignment::assign()` is the existing Application admission path, not a new all-entry rule | TASK-00576 owns its correction; do not bypass current checks or expose raw messages to untrusted callers meanwhile |
@@ -42,10 +42,14 @@ all participating writes share its connection. No audit is inferred from a callb
 
 The reference HTTP Action owns current Workspace admission after central authentication/permission enforcement;
 `Adapter/Reference/ExceptionalReferences` owns technical limiter metadata and the UUID factory, not a business
-command or Application forwarder. Registration's current admission uses the registered initial-Workspace query.
-The remaining registration Store and original-result path remain live for TASK-00575. The data-preserving migration
-separates shared audit identity from replay bookkeeping without deleting existing evidence. See the
-[current runbook and diagram](REPOSITORY_REGISTRATION.md#explicit-installation-setup).
+command or Application forwarder. Project HTTP admission uses the registered initial-Workspace query and current
+managed administrator membership after central operation permission enforcement. `Domain/Workspace/Project` and
+mirrored registered Application handlers now own creation, detail/list and advisory preview. The collection port
+returns aggregates; typed Application Views carry safe current facts; HTTP Data/Responders serialize them.
+`RegisterProjectHandler` explicitly coordinates state/claims and required audit on the shared generic transaction,
+then publishes `ProjectRegistered` after commit. No ordinary authority-serialization fence or replay Store survives.
+The generated migration preserves current identities/source facts/grants and historical attribution/initial facts
+while removing ordinary original-response bookkeeping. See the [current runbook](REPOSITORY_REGISTRATION.md).
 
 ## Planned canonical observations and MCP binding
 

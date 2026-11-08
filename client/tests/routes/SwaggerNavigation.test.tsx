@@ -6,14 +6,14 @@ import { ShellApplication } from '@/ShellApplication';
 
 import { jsonResponse } from '../activationFixtures';
 
-const repositoryPath = '/api/v1/workspaces/{workspace_id}/repositories';
+const projectPath = '/api/v1/workspaces/{workspace_id}/projects';
 const contract = {
   openapi: '3.0.3',
   info: { title: 'Disposable API', version: '1' },
   'x-source-sha256': 'a'.repeat(64),
   paths: {
-    [repositoryPath]: {
-      get: { summary: 'List repositories', responses: { 200: { description: 'Repositories' } } }
+    [projectPath]: {
+      get: { summary: 'List Projects', responses: { 200: { description: 'Projects' } } }
     },
     '/api/v1/me': {
       get: { summary: 'Read identity', responses: { 200: { description: 'Identity' } } }
@@ -79,7 +79,7 @@ it('keeps real embedded operation links local, with keyboard expansion and no op
   if (!tag) throw new Error('Missing operation group');
   fireEvent.click(tag);
   const button = await screen.findByRole('button', {
-    name: `GET ${repositoryPath} List repositories`
+    name: `GET ${projectPath} List Projects`
   });
   const anchor = button.querySelector('a');
   if (!anchor) throw new Error('Missing real upstream operation anchor');

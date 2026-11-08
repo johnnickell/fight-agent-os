@@ -18,8 +18,10 @@ Initial Workspace bootstrap now uses an aggregate-owned repository, an adapter-g
 void command, explicit handler-owned state/audit transaction and registered typed current-state reads. Exceptional
 references have HTTP-owned permission/Workspace admission and adapter-owned atomic limiting/UUID generation, without
 aggregate creation or reservation. [The runbook](docs/engineering/REPOSITORY_REGISTRATION.md) distinguishes these
-paths from remaining registration, which still uses Repository names, internal creation IDs, original-result replay
-and Application authority fences until TASK-00575. The Role audit transaction decorator still exists; DBAL-only
+paths from Project creation/inspection, which TASK-00575 now cuts over to aggregate-owned registered commands/queries,
+entry-generated IDs, independent adapter admission and conflict/fresh-query recovery. The Project handler coordinates
+state/source claims and explicit required audit in one shared transaction, then dispatches ProjectRegistered after
+commit; safe typed Views cross into HTTP Data/Responders. The Role audit transaction decorator still exists; DBAL-only
 transactions need actual supplier/consumer qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
 the local generic classifier and updates actual client/error contracts, with scoped independent technical and
 HTTP/browser/security QA acceptance. This does not qualify the remaining capability-specific corrections or

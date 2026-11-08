@@ -19,8 +19,10 @@ No global package/settings/trust or active session is changed by this source upd
 
 Before starting a deliberately selected new installation:
 
-1. The engine loads `profiles/subagents.json` from the package at startup. Private agent-directory settings
-   override these defaults, and project settings override both.
+1. The sole Fight composition entry `src/subagents-extension.ts` passes the shipped `profiles/subagents.json`
+   to the generic engine at startup, for both initial discovery and applied settings. Private agent-directory
+   settings override these defaults, and project settings override both. Direct generic engine activation selects
+   no Fight policy; the manifest replaces the vendor entry rather than loading both.
 2. Select **one complete Fight package** in Pi's configured `packages[]`. Inspect `pi list` and direct extension
    paths/filters. Remove only an explicitly replaced standalone `npm:@tintinweb/pi-subagents...` declaration in the
    intended settings scope after affected clients exit. Never load standalone and bundled engines together.
@@ -208,7 +210,10 @@ FIGHT_QUALIFICATION_HARNESS="$installed_harness" node harness/pi/tests/native/mo
 python3 -B harness/pi/tests/native/portable-stages.py "$process_evidence" "$installed_harness" "$read_only_consumer"
 ```
 
-The all-role probe exercises actual copied engine/SDK/Fight initialization and seven fresh controlled role/repair
+The module-loading probe leaves private/project subagent settings absent and checks the emitted defaults against
+those shipped in the copied package; no settings pre-seeding may hide missing composition injection. The wrapper
+is the engine's one registration, not an additional Fight registration. The all-role probe exercises actual
+copied engine/SDK/Fight initialization and seven fresh controlled role/repair
 sessions, a normal model/tool pipeline, canonical negative/incomplete fixture reports, per-role pins, unbound
 siblings, provider errors, timeout and reload holds. It never writes real TASK acceptance or performs publication.
 Controlled launcher fixtures are **not** genuine operator selection, real provider Work, independent Review/QA,

@@ -38,9 +38,9 @@ final readonly class PublicFailureProjector implements SafeHttpProjector
                 'intent'  => 'use_logout'
             ]);
         }
-        if ($failure instanceof RegistrationInputFailure) {
+        if ($failure instanceof ProjectInputFailure) {
             return new SafeHttpPresentation(data: [
-                'fields' => ['input' => ['Invalid repository registration input.']]
+                'fields' => ['input' => ['Invalid Project input.']]
             ]);
         }
         if ($failure instanceof InvitationConfirmationRequired) {

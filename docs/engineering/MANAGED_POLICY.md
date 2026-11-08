@@ -27,10 +27,12 @@ on startup or reconciliation. The initial canonical representation is `ManagedPo
 PHP `json_encode(..., JSON_THROW_ON_ERROR)`; its SHA-256 is
 `bcf091f15a00e0611174a14344242bff0e448a8b2e3dde2300cc3c64a0129e8b`.
 This historical hash identifies the original desired policy, **not** a database snapshot, signed approval or
-concurrency token. TASK-00078 extends definitions/references to 25 with `READ_REPOSITORY_REGISTRATIONS`,
-`REGISTER_REPOSITORIES` and `GENERATE_REFERENCE_IDS`, all `ADMIN_SAFE`. Neither managed Role gains any of them;
+concurrency token. Project registration uses 25 definitions/references with `READ_PROJECTS`,
+`REGISTER_PROJECTS` and `GENERATE_REFERENCE_IDS`, all `ADMIN_SAFE`. TASK-00575 renames the two existing Project
+permission identities in place without changing grants; migrate before running the changed catalog. Neither managed
+Role gains any of them;
 no User/Agent assignment follows. The current complete policy SHA-256 is
-`7d978dcc346bce2d0252fe861c1926e7b0cba6052c40a5f13beebb935e17ea38`.
+`36c258416583b448910c72ff2c588b7c63e4d3e742e146cdf2152f90dfe4c252`.
 See [registration setup and access limits](REPOSITORY_REGISTRATION.md) before attempting these operations.
 Preserve existing identities when extending the complete catalog. Before removing a definition or reference,
 inspect every consumer check and persisted assignment; do not submit a one-permission replacement policy.
