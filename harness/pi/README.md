@@ -7,9 +7,12 @@ screening prompts or provider preflight is required.
 
 Explicit [`/skill:sync TASK-NNNNN`](../../.pi/skills/sync/SKILL.md) selects accepted-work coordination with
 `skill: sync` / `effect: coordination`, reusing the existing process dispatcher for fresh Engineer then Land.
-It requires current independent acceptance and an existing open PR; it is not Build authority or the SDK Engineer
-route. Skill discovery does not update a separately installed Harness; adopt reviewed source explicitly at a safe
-boundary before native invocation when Sync admission is missing.
+It requires current independent acceptance and an existing open PR; it is not Build authority or the SDK stage
+route. The [all-role SDK default](SUBAGENTS.md#all-role-build-default) is the sole fresh Build execution route,
+without a selector flag. Actual Build/TASK/checkout selection and supported capabilities/profile remain required;
+missing prerequisites hold rather than selecting process fallback. This source cutover does not migrate active
+hosts, change Sync's process route or predeclare final independent acceptance/actual delivery. Skill discovery
+does not update a separately installed Harness; adopt reviewed source explicitly at a safe boundary.
 
 [Workflow and Jev retirement](WORKFLOW.md) describes surviving consumers, retained state and safe-boundary
 adoption. The installed [workflow rule](WORKFLOW_RULE.md) applies in every participating project; targets need
@@ -142,7 +145,7 @@ last installed footer wins and shutdown restores Pi's footer. API-unavailable na
 
 Run owning Harness behavior checks with `npm --prefix harness/pi test` or the network-none
 `./bin/harness-check`, which reuses this checkout's explicitly prepared tooling image (`./bin/up --build-only`).
-Git and Python are required by the surviving custody/Build checks; no tools are installed by acceptance. The canonical `./bin/build` additionally checks the bundled engine and application gates.
+Git and Python are required by the surviving shared-custody/Sync process checks; no tools are installed by acceptance. The canonical `./bin/build` additionally checks the bundled engine and application gates.
 No product tests assert tooling/configuration behavior. Prepare the engine's locked development tools explicitly
 on the OS where checks execute (native optional modules are platform-specific):
 

@@ -61,9 +61,8 @@ export class RegisteredChildren {
     else if (!(this.explicit && this.completed(this.sources.get(this.selected))) && !this.active(this.sources.get(this.selected))) {
       this.selected = [...this.sources.values()].filter(item => this.active(item)).sort((a, b) =>
         b.started - a.started || (a.generation === b.generation ? b.order - a.order : 0) || a.id.localeCompare(b.id)).map(sourceKey)[0] ??
-        (this.completed(this.sources.get(this.selected)) ? this.selected :
-          [...this.sources.values()].filter(item => this.completed(item))
-            .sort((a, b) => b.started - a.started || b.order - a.order).map(sourceKey)[0]) ?? null;
+        [...this.sources.values()].filter(item => this.completed(item))
+          .sort((a, b) => b.started - a.started || b.order - a.order || a.id.localeCompare(b.id)).map(sourceKey)[0] ?? null;
     }
     if (previous !== this.selected) { this.explicit = false; this.paused = false; this.frozen = null; }
   }
@@ -183,7 +182,9 @@ export class RegisteredChildren {
     // An editable preference cannot create membership. Keep it pending only until the first discovery.
     this.preference = null;
     if (this.sources.get(choice.pin)?.verified) { this.pin = choice.pin; this.selected = choice.pin; }
-    else if (this.active(this.sources.get(choice.selected)) || this.completed(this.sources.get(choice.selected))) { this.selected = choice.selected; this.explicit = true; }
+    else if (choice.explicit === true && (this.active(this.sources.get(choice.selected)) || this.completed(this.sources.get(choice.selected)))) {
+      this.selected = choice.selected; this.explicit = true;
+    }
   }
   savePreference() {
     if (!this.preferences || !this.session || this.closed) return;
@@ -193,7 +194,7 @@ export class RegisteredChildren {
       fd = openSync(join(root, 'preference.json'), constants.O_WRONLY | constants.O_CREAT | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
       const info = fstatSync(fd);
       if (!info.isFile() || info.nlink !== 1 || info.uid !== process.getuid() || info.mode & 0o077) throw new Error();
-      ftruncateSync(fd, 0); writeFileSync(fd, JSON.stringify({ selected: this.selected, pin: this.pin }) + '\n');
+      ftruncateSync(fd, 0); writeFileSync(fd, JSON.stringify({ selected: this.selected, pin: this.pin, explicit: this.explicit === true }) + '\n');
     } catch { this.notice += ' · Preference not saved'; } finally { if (fd !== undefined) closeSync(fd); }
   }
   view() {

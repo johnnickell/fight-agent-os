@@ -68,12 +68,10 @@ procedures for that checkout. Preserve the original Build ledger and independent
 
 ## Delegate integration, then delivery
 
-Reuse [Build's model pinning and process launch protocol](../build/SKILL.md#pin-models-then-launch-fresh-roles)
-for capability checks, absolute provider launcher, fresh private attempts/requests, native package/trust/custody,
-visible progress, finite timeouts, observation and exit reconciliation. Use the default process route for both
-roles, not the opt-in Build-only SDK Engineer tool. Do not create another launcher or execution engine.
-Pin the same role model defaults and preserve them on continuation. Observation remains human-only;
-visibility loss never authorizes a second worker.
+Reuse [Build's model pinning rules](../build/SKILL.md#pin-models-then-launch-fresh-roles) and the
+[process protocol below](#process-stage-protocol) for both roles. The SDK stage tool is Build-only, not a Sync
+route or fallback. Do not create another launcher or execution engine. Pin the same role model defaults and
+preserve them on continuation. Observation remains human-only; visibility loss never authorizes a second worker.
 
 Use the SAME canonical `.runs/build/<TASK-ID>/active` exclusive lock and private
 `.runs/build/<TASK-ID>/<run>/` ledger/context convention as Build, recording workflow `sync`. Check current
@@ -100,6 +98,44 @@ ownership before acquiring/resuming. Keep task execution scratch under `.runs/ta
    services, unique source and active consumers. If Land's own cwd holds source, observe its exit and continue
    qualified cleanup from the safe canonical checkout, using the existing fresh cleanup-only Land route if needed.
    Never confuse protected source with permission to suppress independent Docker teardown.
+
+## Process stage protocol
+
+This retained route serves explicit Sync's accepted-work Engineer/Land dispatch, including cleanup-only Land.
+Resolve the absolute provider launcher [Build `scripts/run-stage.py`](../build/scripts/run-stage.py) from this
+skill's location, never from an unrelated target. Its directory name does not make it a current Build caller.
+The launcher uses the running Pi's exported native resource resolver offline to inspect configured packages and
+direct/auto-discovered extensions. One complete Harness selects its canonical package directory; with none
+configured, it selects the trusted provider checkout's `harness/pi`. Multiple owners, filtered/disabled/incomplete
+resources, unavailable inventory or monitor support hold before dispatch. Project configuration requires native
+project trust; inspection never grants it. Offline registration checks the selected package's actual injection;
+diagnostics hold even with Pi exit zero. Inspect settings and name the prerequisite; never change installation,
+settings/trust or discovery to bypass it. An explicit `--harness-package` must match any configured Harness.
+These checks apply to every fresh/resumed/cleanup-only stage. No evaluator or screening preflight is required.
+
+Create a fresh private attempt containing `request.md` with the exact role/TASK/checkout/base/head, absolute
+owning skill/context/instruction/evidence paths, accepted integration/publication scope, target-owned gate/runtime
+rules, original model/thinking pins and expected canonical handoff. Carry the same Compose project and native
+state. Read the request back under the shared handoff readability rules. No Engineer dialogue, parent transcript,
+`--continue`, `--resume`, `--session`, `--fork` or reused session directory. Use canonical `--role engineer` or
+`land`; the shared Harness role vocabulary also normalizes existing `work` aliases without granting authority.
+
+```sh
+cd "$task_checkout"
+python3 -u "$provider_stage_launcher" \
+  --attempt "$attempt" --task "$task_id" --role "$role" \
+  --provider "$stage_provider" --model "$stage_model" --thinking "$stage_thinking" \
+  --timeout "$stage_timeout_seconds"
+```
+
+Set `provider_stage_launcher` to that verified absolute provider path, use actual pinned variables and a finite
+stage timeout; shell timeout exceeds it plus termination grace. Keep stdout visible and relay meaningful progress
+at least every 60 seconds; inspect bounded `progress.log` if buffered. Do not detach, pipeline away exits, infer
+percentages or echo private source/thinking/credentials. Observe the original child through actual exit; inspect
+monitor/Pi exits, provider errors, model/thinking and handoff/report evidence. Zero exit is not success or acceptance.
+Timeout/cancel/uncertain liveness holds replacement until original execution and external effects are reconciled.
+Never signal a reused/unknown PID or assume remote effects stopped with the CLI. Native session-file birthtime,
+ancestry/custody and independent role admission remain required, separately from passive best-effort observation.
 
 ## Reconcile and finish
 

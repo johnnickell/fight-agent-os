@@ -2,7 +2,7 @@
 id: TICKET-00130
 epic: EPIC-00006
 title: Run local Build through upstream agents with browsable activity and stack logs
-status: ready-for-agent
+status: done
 ---
 
 # Run local Build through upstream agents with browsable activity and stack logs
@@ -111,7 +111,7 @@ and distinguish fresh from qualified reused evidence, implementation acceptance,
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | done |
-| [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent |
+| [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | done |
 | [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done |
 | [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done |
 <!-- /planning:children -->

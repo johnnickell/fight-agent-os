@@ -60,11 +60,12 @@ Model-invoked commands do not become trusted operator workflow selections. Nativ
 
 ### Current-session activity in Herdr
 
-The companion reuses the existing passive native-session custody reader; keep launching the ordinary authorized
-provider monitor, without per-child socket flags. It never launches, cancels or retries a child, changes the
+The companion reuses the existing passive native-session custody reader. Fresh Build uses the
+[sole all-role SDK route](SUBAGENTS.md#all-role-build-default); explicit Sync keeps its authorized provider monitor
+without per-child socket flags. Neither route needs per-stage pane opening. It never launches, cancels or retries a child, changes the
 executor/tool/shell settings, reads transcripts, or sends progress to Pi, provider context or Herdr agent metadata.
-Missing association leaves execution unchanged and visibly unavailable. The provider's ordinary monitor entry
-now delegates to `src/observation/run-stage.py` inside the selected trusted Harness package. Its observer and the
+Missing association leaves execution unchanged and visibly unavailable. Sync's retained provider monitor entry
+delegates to `src/observation/run-stage.py` inside the selected trusted Harness package. Its observer and the
 custodian qualify each other's fixed package-owned paths, not source-provider or target-checkout siblings.
 The provider entry uses the running Pi's native resource resolver offline to select one complete Harness from
 package settings or direct/auto-discovered extensions, or its own checkout package when none is configured.
@@ -72,8 +73,8 @@ An explicit `--harness-package` must match any configured Harness. Multiple owne
 resources or unavailable inventory hold before monitor dispatch. Project Harness configuration requires established
 native trust; path inspection cannot grant execution authority. Offline native registration also checks the selected
 package injection; diagnostics hold even with Pi exit zero. Inspect native settings without disabling discovery.
-The selection also owns screening preflight. No target skill copy, manual socket or per-child registration is
-needed. The package must include the monitor; an older copy requires
+No evaluator or screening preflight is required. No target skill copy, manual socket or per-child registration
+is needed. The package must include the monitor; an older copy requires
 an explicit owned update, never an automatic global mutation. Different package identities remain unavailable.
 The three-second best-effort association attempt emits at most one safe reason-only diagnostic on failure;
 no raw process command, host path or daemon error is disclosed. Never relaunch a child for observation.

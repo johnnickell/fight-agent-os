@@ -267,3 +267,28 @@ test('discovery and retention are bounded to eight sources, with an explicit ove
   f.set(values); await f.observe.start(f.parent, f.file); assert.equal(f.observe.sources.size, 8);
   f.set([...values, f.child()]); await f.observe.refresh(); assert.equal(f.observe.sources.size, 0); assert.match(f.observe.view(), /refused/);
 });
+
+for (const failed of [false, true]) test(`automatic follow catches a successor completed between polls (${failed ? 'failed' : 'completed'})`, async t => {
+  const f = fixture(t);
+  const first = f.child({ source: 'pi-subagents', upstreamStatus: 'completed', lifecycle: 'completed' });
+  f.set([first]); await f.observe.start(f.parent, f.file); f.observe.action('pause');
+  const next = f.child({ source: 'pi-subagents', upstreamStatus: failed ? 'error' : 'completed',
+    lifecycle: failed ? 'failed' : 'completed', started: first.started, order: 2,
+    identity: { ...first.identity, worktree: f.cwd, attempt: '/successor' } });
+  f.set([first, next]); await f.observe.refresh();
+  assert.equal(f.observe.sources.get(f.observe.selected).id, next.id);
+  assert.equal(f.observe.verifiedWorktree, f.cwd); assert.equal(f.observe.paused, false);
+});
+
+for (const explicit of [false, true]) test(`reader recreation preserves ${explicit ? 'explicit history' : 'automatic follow'} intent`, async t => {
+  const f = fixture(t, true);
+  const first = f.child({ source: 'pi-subagents', upstreamStatus: 'completed', lifecycle: 'completed' });
+  f.set([first]); await f.observe.start(f.parent, f.file);
+  if (explicit) f.observe.action('next');
+  f.observe.close();
+  const resumed = new RegisteredChildren(f.cwd, () => {}, f.options); t.after(() => resumed.close());
+  await resumed.start(f.parent, f.file);
+  const next = f.child({ source: 'pi-subagents', upstreamStatus: 'running', started: 2000, order: 2 });
+  f.set([first, next]); await resumed.refresh();
+  assert.equal(resumed.sources.get(resumed.selected).id, explicit ? first.id : next.id);
+});

@@ -77,10 +77,14 @@ a current human merge action. Other capability states are unchanged.
 - `harness/pi/`: installable terminal identity, native session-local workflow binding, an opt-in
   [deterministic Pi tool policy](harness/pi/TOOL_POLICY.md), and a Fight-maintained MIT-licensed upstream SDK-agent
   engine under `vendor/pi-subagents/`. The Harness packages one engine and owns policy/observation, not a second
-  scheduler. An explicitly selected SDK Engineer bootstrap now binds real session-local Work authority before
-  execution and reuses passive native observation. TASK-00560's real permitted Engineer/Herdr journey has
-  independent Review and QA acceptance; delivery results are in `.runs/tasks/TASK-00560/runs/land/receipt.md`.
-  Default and non-Engineer process callers remain live. Future typed Workflow clients, semantic tool screening and
+  scheduler. The sole fresh Build default uses `fight_build_stage` for all four roles, binding real session-local
+  role/effects before execution and reusing passive native observation. Actual Build/TASK/checkout selection and
+  supported capabilities/profile are required; SDK subordinates cannot coordinate nested stages, and no selector
+  flag or process fallback remains. TASK-00560's permitted Engineer/Herdr journey has independent Review and QA
+  acceptance; delivery results remain in `.runs/tasks/TASK-00560/runs/land/receipt.md`. TASK-00561's staged contract
+  separates bootstrap evidence, final source assessment and actual authorized same-TASK Land delivery; the source
+  cutover alone is not final acceptance or rollout. Explicit Sync retains its demonstrated process Engineer/Land
+  path and shared custody. Active installed hosts change only by deliberate safe-boundary adoption. Future typed Workflow clients, semantic tool screening and
   qualified process isolation remain separate
 
 Fight Common and Fight Access Control remain Composer dependencies. The inherited `App` namespace and

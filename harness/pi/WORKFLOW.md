@@ -2,7 +2,7 @@
 
 TASK-00586 retires the local evaluator integration under the
 [approved amendment](../../planning/epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05).
-Ordinary parent and process Build children use native Pi tools. Startup never loads evaluator enrollment,
+Ordinary parent, SDK Build and retained Sync process children use native Pi tools. Startup never loads evaluator enrollment,
 connection, cache, spend, locks or pending-liability files and never resolves evaluator credentials or sends
 Decisions requests. No screening-specific command, tool, flag, diagnostic relay or preflight remains.
 
@@ -11,9 +11,10 @@ Decisions requests. No screening-specific command, tool, flag, diagnostic relay 
 | Consumer | Current supplier and boundary |
 |---|---|
 | Interactive selection, session-wide restore, selected checkout and role status | `src/workflow-extension.ts` and `src/workflow/access.mjs`; existing `fight-workflow-role-v1/v2/v3` entries remain readable |
-| SDK Engineer initialized admission | `src/build/authority.mjs`, `src/build/engineer.mjs` and the workflow extension; actual bound SessionManager, fresh identity, model/thinking, context and registered checkout remain required |
+| SDK stage initialized admission | `src/build/authority.mjs`, `src/build/stages.mjs` and the workflow extension; actual fresh SessionManager, role/effects, model/thinking, context, canonical report scope and registered checkout remain required. [TASK-00561's staged contract](../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07) requires bootstrap Review/native QA before final cutover, fresh final Review/QA before authorized Land, and actual Land as delivery evidence |
 | Supported ordinary SDK subordinates | Bundled engine child context marks real child sessions; they ignore process launcher variables and cannot promote themselves through prompts |
-| Build and Sync process stages | Provider `.pi/skills/build/scripts/run-stage.py` selects one native package; that package's monitor injects the same package into Pi and supplies `FIGHT_WORKFLOW_PHASE/TASK/CHECKOUT`. Explicit Sync delegates accepted-work integration to fresh Engineer then automatic fresh Land; Build retains ordinary independent Review/QA |
+| Fresh Build default | `fight_build_stage` is the sole SDK route for Work/independent Review/applicable QA/authorized Land. Actual Build/TASK/checkout/default mode and supported engine/profile are required; SDK subordinates cannot coordinate nested stages. No selector flag or process fallback |
+| Explicit Sync process stages | Provider `.pi/skills/build/scripts/run-stage.py` selects one native package; that package's monitor injects it into Pi and supplies `FIGHT_WORKFLOW_PHASE/TASK/CHECKOUT`. Sync owns the [retained protocol](../../.pi/skills/sync/SKILL.md#process-stage-protocol) for fresh accepted-work Engineer then automatic Land, not a Build alternative |
 | Native session custody/identity and passive observation | Existing observation/custodian and Herdr modules, unchanged authority; no evaluator gate, registry or scheduler replacement |
 | Grouped TUI usage/status footer | `src/status-footer.ts`, now installed by the workflow extension; historical transcript tool usage remains counted |
 | Opt-in deterministic shell policy | `src/tool-policy-extension.ts` and `src/tool-policy/`; no enrollment supplier or workflow filesystem adapter; native read/write/edit stay native |
@@ -66,7 +67,10 @@ resource filters and copied executable prefix; follow [installation and recovery
 The new trusted process variables are `FIGHT_WORKFLOW_PHASE`, `FIGHT_WORKFLOW_TASK` and
 `FIGHT_WORKFLOW_CHECKOUT`; retired screening launcher flags/variables grant nothing. These are trusted local
 launcher inputs, not a hostile-process security boundary. SDK Build requires actual native session-local Build
-selection and private route selection; a prompt, fixture or label cannot create real Build authority.
+selection, not an execution-selector flag; a prompt, fixture or label cannot create real Build authority.
+Follow the [fresh-host default runbook](SUBAGENTS.md#all-role-build-default). Active hosts retain their original
+loaded implementation until deliberate safe-boundary adoption; never update/reload a live journey implicitly.
+Sync retains its process path. Missing capabilities and display loss cannot select a Build fallback.
 
 ## Direct qualification
 
@@ -80,13 +84,12 @@ node harness/pi/tests/native/retirement.mjs "$PI_SDK_MODULES" "$task_evidence/re
 node harness/pi/tests/native/read-policy.mjs "$PI_SDK_MODULES" "$task_evidence/policy"
 node harness/pi/tests/native/native-session.mjs "$PI_SDK_MODULES" "$task_evidence/session"
 node harness/pi/tests/native/native-executor.mjs "$PI_SDK_MODULES" "$task_evidence/executor"
-node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$task_evidence/engineer" "$candidate_harness"
-node harness/pi/tests/native/build-engineer-boundary.mjs "$PI_SDK_MODULES" "$task_evidence/boundary" "$candidate_harness"
+node harness/pi/tests/native/build-stages.mjs "$PI_SDK_MODULES" "$task_evidence/stages" "$candidate_harness"
 ```
 
 The retirement probe covers clean and previously enrolled fixtures through the actual Pi CLI and provider Build
 entry, byte-preserved retained state, role restore/input provenance and native tool effects. Scripted responses
 are local qualification only, not live provider access or genuine Work/Build dispatch authority. The SDK probes
-exercise initialized Engineer binding, subordinate non-promotion, replay/refusal, timeout/shutdown and passive
-observation. The installed runtime version/capabilities, exact counts, warnings, failures and retained locators
+exercise fresh all-role binding, subordinate non-promotion, shared repair/pin preservation, replay/refusal,
+provider failure, timeout/reload uncertainty and passive observation. The installed runtime version/capabilities, exact counts, warnings, failures and retained locators
 belong in the owning TASK/handoff. Independent Review/QA and rollout remain separate.

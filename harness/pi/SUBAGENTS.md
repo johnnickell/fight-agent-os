@@ -1,323 +1,234 @@
 # Bundled subagents and Fight observation
 
-## Fight-owned component — TASK-00560 packaging prerequisite
+## Component and current qualification
 
-John approved maintaining the patched upstream engine inside this GitHub repository on 2026-11-04.
-`vendor/pi-subagents/` is ordinary source, not a submodule, runtime checkout or second session engine. Its
-[component README](vendor/pi-subagents/README.md) records upstream 0.23.1/base revision, MIT attribution and the
-maintained delta. The Harness manifest loads its source entry once; the package ships runtime source/license/docs,
-not development dependencies or tests. Fight owns policy and observation; the bundled engine owns SDK execution.
-This packaging candidate is not independent acceptance, an everyday installation update or the actual Build route.
+`vendor/pi-subagents/` is the one Fight-maintained MIT-licensed upstream engine, not a submodule, separate
+installation, second scheduler or alternate session engine. Its [README](vendor/pi-subagents/README.md) records
+upstream 0.23.1/base `50460b5df6934c4237983a504808a04ee0f8a0a0`, attribution and maintained hooks. Fight owns
+workflow policy and observation; the engine owns SDK execution. Automatic worktree management, scheduling,
+workflows and nesting stay disabled in the supported profile.
 
-### Historical companion qualification
-
-[TASK-00554](../../planning/tasks/00554-TASK.md) implements a passive bridge to
-[`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents). Private installed/native qualification
-has run and the full local gate passed during delivered-base recovery. Independent Review ACCEPT and bounded
-behavioral/visual QA PASS cover the accepted candidate; see the TASK's completion checkpoint. This is not global rollout or publication.
+TASK-00560's real Engineer/Herdr journey has independent acceptance recorded in its TASK. TASK-00561 extends that
+boundary to all four roles and makes SDK execution the sole fresh Build default after bounded independent
+bootstrap Review/native QA. Final source still requires fresh independent complete-implementation Review/QA;
+actual authorized Land of that same accepted TASK supplies delivery evidence, not a circular precondition.
+Controlled copied-install checks alone are not that journey. Explicit Sync retains its demonstrated process path.
+No global package/settings/trust or active session is changed by this source update.
 
 ## Select the supported profile
 
-For a new, explicitly authorized installation:
+Before starting a deliberately selected new installation:
 
-1. Review the shipped `profiles/subagents.json` and explicitly merge it into the project's `.pi/subagents.json`
-   (or private agent-directory `subagents.json`) **before launching the updated package**. Never overwrite another
-   operator's configuration. Project settings override agent-directory defaults; absent profile is not the supported
-   setup. Package installation does not automatically apply settings or grant stage authority.
-2. Install only the Fight package through Pi's package settings. The subagent engine is now bundled; remove an
-   existing standalone `npm:@tintinweb/pi-subagents...` declaration in the intended settings scope, after affected
-   sessions/Builds exit and before starting the updated copy. Inspect `pi list` and explicit extension paths/filters:
-   there must be one Fight package identity and one engine, never standalone and bundled copies together.
-   No second npm/Git package is needed. For source-local installs, explicitly prepare runtime dependencies with
-   `npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund` from the repository root;
-   Pi does not install a local directory's dependencies. Copied npm installs install the declared runtime dependencies.
-   Pi itself is capability-qualified, never version-pinned. Earlier companion 0.22.1/source
-   `fc089c4b7ab0f1185453b2e53027997c1f637e38`, Pi 1.4.0 and Herdr 0.9.5 are historical evidence, not this candidate's
-   acceptance. Restart only the intended session; no active-parent reload or shared installation mutation.
-3. Confirm effective settings in upstream `/agents`: **worktreeIsolation false**, workflows/scheduling disabled,
-   nesting disabled, strict agent files, no default-agent fallback and only Fight package agents. Local agent
-   definitions override package definitions; inspect collisions rather than assuming package provenance.
-4. Use the upstream **Agent tool**, explicitly selecting a shipped type. `pi -e` alone does not make packaged
-   agents discoverable: upstream reads Pi's configured `packages[]`. Inspect `/fight-subagents` for capability,
-   transport readiness and the last bounded refusal diagnostic. Open `/fight-workspace` in native Pi/Herdr as usual.
+1. Inspect `profiles/subagents.json` and explicitly merge it into the project's `.pi/subagents.json` or the private
+   agent-directory `subagents.json`. Project settings override private defaults. Never overwrite another operator's
+   configuration. Installation does not apply the profile, select workflow authority or grant delivery effects.
+2. Select **one complete Fight package** in Pi's configured `packages[]`. Inspect `pi list` and direct extension
+   paths/filters. Remove only an explicitly replaced standalone `npm:@tintinweb/pi-subagents...` declaration in the
+   intended settings scope after affected clients exit. Never load standalone and bundled engines together.
+   `pi -e` alone does not make package agents discoverable to the engine. Source-local installs need explicit
+   `npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund`; copied npm installations
+   install declared dependencies. Pi is capability-qualified, never version-equality gated.
+3. In upstream `/agents`, confirm worktree isolation/workflows/scheduling/nesting disabled, strict agent files,
+   no fallback/default agents and only Fight package agents. Inspect local agent-definition collisions rather
+   than assuming a package name proves provenance. Read `/fight-subagents` for passive observation diagnostics.
+4. Restart only the intended client at a safe boundary. Preserve operator credentials, account settings, existing
+   sessions and historical receipts. Applying this candidate to a shared everyday installation is a separate
+   explicit operator action, not a Work/Build side effect. See [installation/recovery](README.md#install).
 
-The shipped agents are `fight-engineer`, `fight-explorer`, `fight-review-assistant` and `fight-qa-assistant`.
-Only the engineer requests editing and shell tools; the others request read-only built-ins. They load Fight's
-extensions through upstream's **unscoped** selector `agent-os-pi`, not a scoped package name interpreted as a path.
-They inherit the parent's selected model and thinking level, append governing context, and disable raw output-file
-transcripts. The profile disables automatic upstream worktree creation/cleanup. Fight's selected checkout, native
-parent/custody and single Compose project remain authoritative.
+Ordinary subordinate profiles remain `fight-engineer`, `fight-explorer`, `fight-review-assistant` and
+`fight-qa-assistant`. They inherit selected model/thinking but no workflow promotion. Review/QA assistants supply
+advice only, never canonical acceptance. `fight-engineer` becomes an actual Work owner only through trusted
+binding. New `fight-reviewer`, `fight-qa` and `fight-land` profiles stop when unbound; tools/profile names alone
+cannot grant independence or publication authority. Native tool availability is not OS confinement.
 
-These are subordinate assignments, **not trusted independent Work/Review/QA/Land launches**. In particular, review
-and QA assistants return advice to their parent, never canonical stage reports or acceptance. Profiles cannot
-promote workflow roles, provision resources or authorize publication. Tool allowlists and fresh contexts are not
-OS isolation. Fight extensions initialize their own session-local state; absent enrollment/Jev setup stays absent.
-Do not claim all parent protections automatically propagate: the opt-in deterministic tool policy refuses Agent
-at the parent tool boundary, so delegation under that selected policy is unavailable rather than a bypass.
+All profiles use the engine's unscoped extension selector `agent-os-pi`, append governing instructions, use fresh
+contexts and disable raw transcript output. The deterministic tool policy, if separately selected, refuses
+Agent delegation at its tool boundary; SDK/extension OS calls are not sandboxed by that policy.
 
-## Opt-in Build Engineer
+<a id="all-role-build-bootstrap"></a>
 
-The opt-in route provides **`--fight-build-engineer sdk`** and **`fight_build_engineer`** for one actual Engineer
-assignment. It does not change the default executor or migrate Review/QA/Land; those process callers remain live
-until TASK-00561. TASK-00560's real native Work assignment and inspected Herdr captures have independent Review and
-QA acceptance; delivery results are in `.runs/tasks/TASK-00560/runs/land/receipt.md`. Packaging or scripted SDK
-qualification alone is not that acceptance.
+## All-role Build default
 
-### Prepare a new native host
+**`fight_build_stage`** is the default and sole fresh Build execution route for Engineer, Reviewer, QA and Land
+owners through the same engine. No execution-selector flag or process fallback remains; the bootstrap
+`--fight-build-stages sdk` flag and route-readiness state are removed, without a compatibility alias.
+The historical bootstrap anchor above preserves evidence links, not old runnable instructions.
+Actual default-mode Build authority must name the TASK and checkout. Missing supported capabilities or qualified
+profile holds dispatch, never selects another executor. SDK subordinates are excluded even with a visible tool
+or Build-shaped label.
 
-At a safe session boundary, prepare one private copied installation using the profile above. Keep the active
-Build/shared installation untouched. The package manifest loads the Build listener before the engine so it sees
-the engine's actual settings-loaded event. Do not filter/reorder entries or load another engine. Prepare private
-Pi `settings.json` with `packages` containing that copy, the actual provider skill directory in `skills`, and an
-absolute `sessionDir` under the target canonical `.runs/tasks/<TASK-ID>/runs/` (or its Build run). Apply the shipped
-`subagents.json` to that private agent directory before starting; do not change global settings/trust. Resolve
-provider authentication through the existing supported operator/SDK credential path, never copied credentials.
-Unavailable authentication holds the live qualification; a faux provider is only a controlled check.
+[TASK-00561's approved staged qualification](../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07)
+separates bounded bootstrap acceptance, this final source cutover, fresh complete-implementation Review/QA and
+actual authorized same-TASK Land delivery. Bounded ACCEPT/PASS cannot authorize ordinary Land or TASK closure.
+Active copied hosts retain their original loaded implementation until deliberate safe-boundary adoption;
+source changes do not migrate them. Explicit Sync's demonstrated process Engineer/Land path remains under
+[its owning protocol](../../.pi/skills/sync/SKILL.md#process-stage-protocol), not a second Build engine.
 
-Start ordinary **native Pi in an owned Herdr terminal**, in the already selected registered checkout:
+### Prepare a fresh native host
+
+Keep the current coordinator/shared installation untouched. Under the canonical TASK scratch, explicitly create
+a private **copied** candidate installation (not a symlink back to disposable source). For example, from the
+selected source checkout, with absolute task-owned values:
 
 ```sh
-PI_CODING_AGENT_DIR="$private_agent_dir" pi --fight-build-engineer sdk \
+npm install --prefix "$private_prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$PWD/harness/pi"
+```
+
+Inspect that `$private_prefix/node_modules/@fight/agent-os-pi` is a real copy. Prepare the private Pi directory
+with `settings.json` containing `packages: ["/absolute/private-prefix/node_modules/@fight/agent-os-pi"]`, the actual
+provider skill directory in `skills`, and an absolute task-owned `sessionDir` at the canonical base or selected
+checkout. Apply the shipped profile to that private directory before launching. Resolve provider authentication
+through the existing supported operator/SDK path; never copy credential files into the private directory or logs.
+Unavailable auth holds real qualification, not permission to use a faux provider as real acceptance.
+
+Start native Pi in an owned Herdr terminal, in the operator-selected registered checkout:
+
+```sh
+PI_CODING_AGENT_DIR="$private_agent_dir" pi \
   --provider "$coordinator_provider" --model "$coordinator_model" --thinking "$coordinator_thinking"
 ```
 
-Build alone registers and reads this extension-local flag, after Pi binds CLI values at `session_start`.
-It publishes ephemeral route selection through the existing actual-SessionManager ownership state. Screening
-consults that same-session selection, never another extension's private `getFlag`. Shutdown clears selection;
-reload must bind it anew. SDK siblings cannot borrow it, and selection never substitutes for the actual
-Build/TASK/checkout/mode, fresh-attempt, profile/model or initialized-worker checks below.
+The **operator** must genuinely select `/skill:build TASK-NNNNN --checkout /absolute/selected/checkout` with the
+actual TASK. Inspect `fight_workflow_status`: Build/coordination, same TASK/checkout, default mode. Package/tool
+availability does not select Build authority. An Engineer, profile, RPC prompt or programmatic
+interactive-input fixture cannot promote itself. No automatic active-host `/reload`, user-input synthesis or
+shared installation update is allowed. If this session cannot express that genuine selection, commit the
+work incomplete and return this precise preparation/continuation to its owning Build.
 
-This flag selects a route, **not Build authority**. A genuine operator `/skill:build TASK-NNNNN --checkout /absolute/checkout`
-interaction or an existing trusted Build launcher must select Build/coordination for that exact TASK/checkout.
-An Engineer bootstrap cannot promote itself, replay coordinator dialogue or synthesize interactive user input.
-When the current host cannot load the candidate, commit the bootstrap and hand the exact private-host continuation
-to the authorized Build owner. Do not call it complete or launch a subordinate demo in place of the remaining Work.
+Before continuing an earlier journey, reconcile its original worker liveness and remote/local effects; a fresh
+host is not proof that old effects stopped. Carry the original authorization, reports, pinned identities, single
+Compose locator and repair usage forward. The human's fresh Build selection must preserve the existing delivery
+scope; it does not authorize another TASK, merge, release or deployment.
 
-### Dispatch and inspect
+### Dispatch one stage
 
-The coordinator prepares/reads back a fresh canonical `.runs/build/<TASK-ID>/<run>/<attempt>/request.md` under
-[Build's ordinary request rules](../../.pi/skills/build/SKILL.md). Keep governing skill/context paths, source/base/head,
-permitted Work effects, the pinned Engineer provider/model/thinking, single Compose project, repair allowance and
-canonical Work handoff. Then call `fight_build_engineer` with:
+Build prepares and reads back a fresh canonical `.runs/build/<TASK-ID>/<run>/<attempt>/request.md` under its
+[owning request rules](../../.pi/skills/build/SKILL.md). Every request names absolute target/skill/context/evidence
+paths, exact candidate, permitted effects, pinned model and existing runtime. Review/QA never inherit Engineer
+conversation. Land receives current independent acceptance and the original invocation's exact publication or
+cleanup-only scope. Advice-only helpers are not substitutions for these fresh owners.
 
-- `task`, `role: "engineer"`, exact canonical `checkout`, current full `head`, fresh absolute `attempt` directory;
-- resolved target `base` (canonical evidence checkout), exact current `branch`, absolute target `record`, and
-  absolute `context` from the coordinator's private `.runs/build/<TASK-ID>/`;
-- exact pinned `provider`, `model`, `thinking`, and finite `timeout` seconds (at most 21600).
+Call `fight_build_stage` with:
 
-Resolve these target facts using [PROJECT_CONTEXT](../../docs/engineering/PROJECT_CONTEXT.md) before dispatch:
-the coordinator verifies the actual record's approval/executable state, local branch/base rules, instructions,
-gates and runtime. The runtime does not parse Agent OS YAML/status spellings or require `planning/tasks`, a
-`feature/` prefix or root `AGENTS.md` in another project. It checks same-repository registered checkout/base,
-exact branch/head, context in that target's task-owned Build scope and the selected record's TASK identity inside
-the selected checkout. Matching TASK numbers in a provider/foreign repository are not permission to use it.
-Context/record contents join the fresh assignment; they supply target facts, never trusted stage authority.
-Native discovered instructions (`project_context`, including `CLAUDE.md` or ancestor instructions when used)
-remain inherited and verified; the engine supplies the child's own skills/cwd rather than a parent transcript.
-An unassigned/no-instruction target does not gain an artificial AGENTS prerequisite. Task-private session storage
-may use the resolved base or selected checkout; no first-worktree heuristic selects target policy.
+- `task`; canonical `role: engineer|reviewer|qa|land`; exact canonical registered `checkout`; current full `head`;
+  fresh absolute `attempt` containing `request.md`;
+- target canonical evidence `base`, current exact `branch`, absolute target `record` and task-owned Build `context`;
+- exact original per-role `provider`, `model`, `thinking`; finite `timeout` seconds, at most 21600;
+- `repairLimit` and `repairsUsed` from the **existing** shared ledger; `repair: true` only for an Engineer repair,
+  with that cycle already consumed. Initial Work is not a repair. Assessors/Land carry unchanged usage and false.
 
-The tool requires actual session-local Build authority, same TASK/checkout, registered repository membership,
-exact branch/head, resolved target context/record, supported profile/model and the engine's actual
-`capabilities.beforeSessionStart`/`boundRootSession` flags. It claims `dispatch.lock` before calling the **one
-upstream manager directly**. Existing execution evidence or an already claimed attempt refuses. No generic launch
-facade, scheduler, second engine, parent-path inference or automatic worktree management is involved.
+[PROJECT_CONTEXT](../../docs/engineering/PROJECT_CONTEXT.md) resolves target facts; the host does not impose Agent
+OS planning paths/status words/branch prefixes on another target. It requires matching registered repository,
+base/checkout, exact branch/head/context/record, actual Build authority and the engine's real
+`beforeSessionStart`/`boundRootSession` capabilities. The actual SessionManager owns initialized workflow authority;
+SDK siblings cannot borrow it or a native parent's launcher environment. Concurrent sessions never mutate shared `process.env`
+to impersonate role authority.
 
-The awaited host-only setup runs **after factories**, before extension binding/session_start/prompting. Inspection
-established that Fight chooses workflow authority in `session_start`, so this is early enough. Setup verifies the
-actual fresh child, bound root, checkout, model/thinking, task-private session storage, loaded Fight extensions and
-governing instructions, then binds Engineer/work/TASK/attempt and `source`, `checks`, `commit`, `task-handoff` effects
-to the actual SessionManager. Fight verifies its initialized workflow again at input before a provider request.
-No prompt, name, profile, persisted role entry or shared `process.env` impersonation grants the stage. The engine's
-async-local child marker is shared across Pi module loaders; ordinary unbound SDK assistants do not inherit the
-native parent's launcher role. Shutdown/reload revokes the binding; it cannot restore itself from transcript history.
-These are trusted-local workflow responsibilities, not OS confinement. Native file tools and shell remain native.
+The tool claims `dispatch.lock` before calling the one upstream manager. Its awaited setup runs after factories
+but before extension binding, `session_start` and prompting. It verifies actual fresh session/root/checkout,
+model/thinking, task-private storage, loaded Fight extensions and inherited native governing instructions, then
+binds the actual role/skill/TASK/checkout/attempt/effects. Workflow initializes that role and verifies it at input
+before a provider request. An unbound SDK child stays Reviewer regardless of transcript, profile or prompt.
 
-The existing passive observer derives assigned identity from that exact live binding while retaining native-root
-custody, registered-worktree verification, foreign/rootless/replaced refusal and bounded assistant/tool-name output.
-Reader closure never cancels work. Missing display does not change the executor or result. Upstream parent shutdown
-or reload aborts/disposes children; it does not provide durable survival.
+### Outcomes, reports and recovery
 
-The tool writes `sdk-outcome.json`, returns identity/state rather than Engineer dialogue, and consumes its own upstream
-completion notification. Timeout/abort/settings change/shutdown request cancellation and allow ten seconds for the
-original promise/live session to settle. A terminal label alone is not quiescence. Missing/replaced records, unsettled
-execution or an exception after spawn was called remain **uncertain**; the coordinator/session checkpoint holds another
-dispatch, including after reload. Reconcile the original native execution and any external effects before replacement;
-never retry through Python to get output. A fresh host is not proof that old effects stopped. No automatic recovery or
-acceptance follows from `completed`: inspect the committed candidate, normal gate and canonical Work handoff, then
-use the existing **fresh independent Review** process request without Engineer conversation.
+The tool returns `sdk-outcome.json` identity/lifecycle metadata, not worker dialogue. It consumes its own engine
+completion notification. `acceptance` is always false. Role pins and the shared repair usage persist in Build's
+existing session checkpoints; changed pins/target, allowance reset or unresolved prior execution refuse dispatch.
+A new host still consumes the original ledger; its absent checkpoints do not create a fresh repair allowance.
 
-Canonical process stages are `engineer`, `reviewer`, `qa`, `land`; their skills remain `work`, `review`, `qa`,
-`land`. Existing workflow aliases normalize at launch and after custody admission, from one shipped vocabulary
-in `src/stage-roles.json`. This includes legacy Work/Review callers and existing QA Engineer/Release Manager workflow inputs,
-not guessed aliases. Unknown roles refuse before starting a stage. SDK Engineer likewise accepts legitimate Work
-aliases at its owning tool boundary, but always binds/emits Engineer. Build coordination is not a QA stage.
-Non-Engineer process callers remain live until TASK-00561; no authority comes from AGENTS spelling alone.
+Review/QA report locations derive from the resolved **canonical base**, not model-selected output paths. Only
+actual independent owners write them under their owning skills. `reportObservation` records path/digest, changed
+bytes, bound session and assigned candidate. This is **not** a parsed verdict, proof of writer identity against
+hostile local code, or proof that the report covers that candidate. Build must read the report and verify full
+TASK/branch/base/head/status, independence, Spec/Standards, scenarios, findings and limits. Missing, unchanged,
+wrong-candidate, REVISE, FAIL or INCOMPLETE reports do not advance; no older PASS overrides newer failure. SDK
+completed/steered/error labels, process exits and pane state never supply acceptance. Native tools are trusted-local
+responsibilities, not filesystem/OS isolation.
 
-Controlled owning qualification (use new task-private evidence directories):
+Timeout, caller cancellation, settings change and parent shutdown/reload request cancellation and allow ten
+seconds for the original promise **and** actual streaming session to settle. Monotonic grace measurement avoids
+wall-clock jumps. Missing/replaced records, unsettled execution or possibly-started exceptions remain uncertain;
+old terminal status alone is not quiescence. Reload restores the unresolved-attempt hold. Inspect the original
+execution, reports, Git/remote PR and cleanup effects before any replacement; do not replay publication or switch
+to Python to recover output. There is no automatic reconciliation/acceptance command or alternate scheduler.
+Reader closure remains passive; upstream runtime shutdown/reload can abort/dispose workers.
 
-```sh
-node --test harness/pi/tests/build-engineer.test.mjs harness/pi/tests/subagents.test.mjs
-node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$sdk_evidence" "$installed_harness"
-node harness/pi/tests/native/build-engineer-boundary.mjs "$PI_SDK_MODULES" "$boundary_evidence" "$installed_harness"
-python3 -B harness/pi/tests/native/portable-stages.py "$process_evidence" "$installed_harness" "$read_only_consumer"
-```
+### Opt-in Build Engineer
 
-The boundary regression separately uses real extension API instances, enrolled Screening and the normal SDK
-prompt/model/tool-call pipeline into exactly one bounded Engineer dispatch. It does not stub shared flag access
-or invoke the registered executor directly. Absent opt-in, wrong workflow/mode/TASK/checkout, unbound siblings,
-closed/replaced sessions and unresolved-attempt reload remain refused before unauthorized dispatch. Its
-launcher/authority fixtures and faux transport are controlled checks, never genuine operator selection.
+This anchor preserves existing links to TASK-00560's historical Engineer-only qualification. Its accepted real
+journey and original receipts remain in [TASK-00560](../../planning/tasks/00560-TASK.md). The current copied source
+uses the all-role default above; do not pass its removed Engineer-only flag/tool to the new package. Earlier
+0.22.1/source `fc089c4b7ab0f1185453b2e53027997c1f637e38`, Pi 1.4.0 and Herdr 0.9.5 are historical observation receipts.
+The original 0.23.0/Pi 1.5.0 missing-hook probe remains evidence in TASK-00560, not a current API limitation or
+version gate. John approved the bundled component on 2026-11-04; its supported local setup/root hooks are in
+[the engine RPC contract](vendor/pi-subagents/docs/rpc.md). No external fork or upstream publication is required.
 
-The original installed probe uses a scripted provider and real SDK/engine/Fight initialization, including Work admission,
-passive early/final text and tool names, duplicate refusal, unbound subordinate roles, provider error, timeout and
-shutdown/reload uncertainty. Its private target has `work-items` records, a different state vocabulary,
-`topic/` branch and `CLAUDE.md`, with wrong-role/target/context/head refusals. The separate native process probe
-uses real installed Pi/monitor startup for each existing alias in a private main/linked target, plus read-only
-known-consumer startup/provider resolution and custody negatives. It handles input without a provider turn;
-its expected monitor exit 1 is an incomplete-response result, not successful Work. It creates no consumer TASK
-or source changes. These probes are **not** a real permitted Work assignment, Sol-provider attestation,
-inspected Herdr capture, independent acceptance or universal-project certification. Record sample limits and
-actual consumer availability in the TASK and Work handoff.
+### Build Engineer prerequisite — TASK-00560 held
 
-## Build Engineer prerequisite — TASK-00560 held
-
-This heading and the following original hold are retained as historical evidence. John's later supplier amendment
-and the opt-in bootstrap above supersede the missing-hook/MAIN-only instruction, not the incomplete actual Engineer
-acceptance. The bundled engine supplies the awaited setup and actual bound-root capabilities; see its
-[supported local RPC contract](vendor/pi-subagents/docs/rpc.md). No upstream maintainer approval or separate
-publication is a prerequisite to ordinary in-repository maintenance.
-
-### Historical missing-capability qualification
-
-TASK-00560's 2026-11-03 private qualification used Pi `1.5.0` and upstream `0.23.0`
-(source `a60247c47f8b0a17bfe7208f9e248e464eda05f0`). These are tested identities, not Pi version gates
-or adoption of a new everyday companion. The real Build Engineer route is **not implemented**. Keep the existing
-Build process stages; do not select a subordinate Agent as an independent stage or silently replace an executor.
-
-At that historical supplier revision, two capabilities were missing:
-
-- **Trusted initialization before extension binding.** The supported RPC/manager `spawn` surface overwrites a
-  caller's `onSessionCreated`. Internally `runAgent` calls it only after `session.bindExtensions()`, too late for
-  Fight's `session_start` workflow admission. `onSpawned` supplies a record ID, not the actual SDK session.
-- **Verified native-root association for programmatic spawn.** `spawnTopLevel` strips `rootSessionId` without
-  deriving it from the bound parent context. A persisted session's `parentSession` header does not supply the
-  missing manager-record association or grant Build stage authority. Existing rootless refusal stays intact.
-
-The original prerequisite owner was `@tintinweb/pi-subagents`: its supported host spawn boundary needed to derive the root
-from the actual bound parent and offer an awaited, session-specific trusted setup boundary before child extension
-initialization/prompting. Setup rejection must settle without executing the assignment, including queued starts
-and cancellation. Fight can then bind the actual session to the authorized stage/TASK/checkout/attempt/effects
-and verify exact model/thinking before execution. No existing hook name is claimed, and no upstream contribution
-or publication is authorized by this qualification. Pi's direct SDK supports host-controlled resource loading;
-replacing upstream execution with another session engine is not this TASK's accepted route.
-
-A real private installed/native TUI probe created **one pre-aborted qualification session**, not an Engineer
-assignment. It retained the exact model/thinking and checkout, but had no root association, zero caller
-`onSessionCreated` calls, zero messages/provider requests and no assigned TASK. Fight truthfully restored it as
-Reviewer and its passive reader emitted zero frames with `root-association-unavailable`. This is bounded failure
-evidence, not the required Engineer/Herdr/Review journey. Canonical TASK-00560 Work evidence records the exact
-session identities and limits. Do not poll/rename records, infer authority from profiles/prompts or mutate shared
-`process.env` to bypass this hold. The later authorized bundled candidate above addresses these API gaps locally, not the missing real Engineer
-qualification. Resume the Build route only after its capabilities and Fight admission are deliberately qualified
-in a private installation at a safe session boundary; never reload an active parent or change global settings/trust
-as an implicit effect.
+Historical locator for TASK-00560's 2026-11-03 missing-capability evidence: read the
+[original hold at revision 03241436](https://github.com/johnnickell/fight-agent-os/blob/0324143618496c3cf26bdd3e315243a47934dbc9/harness/pi/SUBAGENTS.md#build-engineer-prerequisite--task-00560-held).
+The later bundled hooks and accepted Engineer journey superseded that hold. Its old setup instructions are
+not current commands; use the all-role default above for this candidate. This reference does not clear
+TASK-00561's remaining final-assessment or actual-delivery requirements.
 
 ## Supported observation boundary
 
-The bridge uses upstream lifecycle events and its documented
-[manager registry](https://github.com/tintinweb/pi-subagents/blob/master/docs/rpc.md#the-manager-registry).
-An event/tool argument supplies only a lookup candidate. Admission requires the actual record's exact
-`rootSessionId`, no nested/workflow owner, stable record/session object identity, canonical registered worktree,
-and the existing native parent's process/file lifetime. SDK children use inherited native-parent IPC;
-the separate monitor route's ancestry checks are unchanged.
+The passive bridge resolves actual manager records with exact native-root custody, stable record/session objects,
+registered worktrees and no nested/workflow ownership. Foreign/rootless/replaced records remain refused. Event/tool
+input is only a lookup candidate. Foreground resume, which has no upstream started event, waits for an actual
+record run transition; its display attempt is fresh without executing/recreating the SDK session.
 
-Foreground and background Agent spawns are observed, as are same-session resumes. Upstream emits a started event
-for background resume but not foreground resume: the latter is armed from Pi's Agent-tool execution notification
-and waits for an actual record run transition. Input never supplies ownership. Resume creates a fresh display
-attempt identity without recreating or executing the SDK session. Existing pins deliberately stay on the old
-attempt until changed/unpinned; an active explicit selection is not stolen by concurrent output.
+At most eight records are sampled once a second. Assistant prose and tool **names** are bounded; reasoning,
+arguments, result bodies and transcript files are never ingested. Live-session finalized text recovers early/final
+output; transport coalescing preserves terminal frames. Slow legitimate session initialization now produces a
+finite delayed diagnostic while retaining only that same owned record; five seconds is not an execution deadline.
+Record replacement, actual terminal absence or shutdown still detaches it. Execution owns cancellation/deadlines.
 
-In the historically qualified standalone companion, RPC/direct `spawnTopLevel` strips root identity. That old
-rootless route remains **not observable**, even if the old companion executes it successfully. The bundled
-candidate instead derives actual bound-root identity; it does not waive any admission checks. They produce `root-association-unavailable`, not a guessed
-association from cwd, agent metadata or transcript filenames. Nested/workflow, missing, replaced and foreign
-records are likewise refused. Missing registry/session APIs, capacity and the five-second session/resume window
-have finite diagnostics. There is no requirement to make every upstream route supported, no monkey patch and no
-second session engine.
+AGENTS automatically follows a newer already-terminal SDK stage even when it completed between polls. A genuine
+explicit history choice or pin stays selected. Preferences preserve automatic-versus-explicit intent through
+reader recreation; recreating a companion must not silently pin an automatically followed completed stage.
+Selection changes reset frozen output and carry only verified existing worktree/log context. Lost custody removes
+log authority. Native daemon exit/disconnect becomes unavailable; it never replaces or replays a worker.
 
-## Output and lifecycle
+Existing eight-child history retirement preserves selected/pinned terminal entries, active SDK work and connected
+process monitors. Capacity refusal detaches display only. SDK outcomes remain distinct from real process exits.
+Closing/reopening readers is passive; reopening after native runtime reload requires new context/custody.
+No pane output enters the model, and missing display cannot establish execution success.
 
-At most eight agents are sampled once per second. Only bounded assistant text and tool **names** are forwarded;
-no reasoning, arguments, tool-result bodies or transcript files are ingested. Attachment and completion recover
-the latest bounded finalized assistant text from the **live SDK session**, including output produced before
-attachment. This is an activity view, not lossless history. Same-sample tool activity preserves early prose;
-transport coalescing preserves terminal frames through readiness/backpressure and bounded shutdown flushing.
+## Owning qualification and retirement inventory
 
-The signed existing custody/Herdr reader retains selection/pin/pause, history bounds and verified log context.
-Completed SDK attempts remain selectable so final output is readable. An unchanged refresh preserves an
-eligible completed selection and its paused display. Unpinned completion still yields to live work; a pin keeps
-its chosen attempt, and lost custody never retains log authority.
+Run with new canonical task-private evidence and an explicit private copied package:
 
-The daemon shares its eight child slots with existing monitors. Under admission pressure it retires the oldest
-terminal SDK attempt, excluding the current selection and pin from the reader's existing preference. Live SDK
-work and monitor entries are never retired by this policy; history remains bounded without a second registry.
-If no eligible history can retire, inherited IPC returns a fixed refusal diagnostic to `/fight-subagents` and
-detaches only that display reader. SDK execution is unchanged. SDK statuses (`completed`, `steered`,
-`aborted`, `stopped`, `error`) are shown as upstream/SDK outcomes, **not fabricated process exits or acceptance**.
-The native process-monitor route keeps its distinct real exit-code vocabulary.
+```sh
+node --test harness/pi/tests/build-stages.test.mjs harness/pi/tests/subagents.test.mjs harness/pi/tests/registered-children.test.mjs
+node harness/pi/tests/native/build-stages.mjs "$PI_SDK_MODULES" "$stage_evidence" "$installed_harness"
+FIGHT_QUALIFICATION_HARNESS="$installed_harness" node harness/pi/tests/native/module-loading.mjs "$PI_SDK_MODULES" "$loading_evidence"
+python3 -B harness/pi/tests/native/portable-stages.py "$process_evidence" "$installed_harness" "$read_only_consumer"
+```
 
-Closing/reopening Fight readers or companions is passive: subscriptions/layout are disposed, not SDK agents.
-However upstream itself aborts agents and disposes their sessions on Pi `session_shutdown`, including `/reload`,
-new/resume/fork and quit. Do not advertise whole-runtime reload as passive or agent-preserving. Native reload
-invalidates old companions/custody; reopen explicitly for the new context. Fight offers no launch, steer or
-cancel API and never sends pane output into Pi/model context.
+The all-role probe exercises actual copied engine/SDK/Fight initialization and seven fresh controlled role/repair
+sessions, a normal model/tool pipeline, canonical negative/incomplete fixture reports, per-role pins, unbound
+siblings, provider errors, timeout and reload holds. It never writes real TASK acceptance or performs publication.
+Controlled launcher fixtures are **not** genuine operator selection, real provider Work, independent Review/QA,
+Herdr capture or the required all-role delivery journey. Record source/install/model identity and limitations.
+Use real native/installed interaction and inspected comparable captures for applicable changed boundaries, then
+normal `./bin/build` and independent Review/applicable QA. Bootstrap native captures retain their original subject;
+changed final defaults/admission need final-source qualification. Missing evidence leaves TASK-00561 incomplete.
 
-## Qualification and remaining gate
-
-Engineer evidence is in canonical ignored `.runs/tasks/TASK-00554/runs/engineer-3/`, indexed by the Work handoff.
-Real installed native Pi used read-only SDK access to configured operator authentication; no credentials were
-copied into the private agent directory or evidence. The requested `openai-codex/gpt-6.1-sol` / `high` remained
-selected. Actual iTerm/Peekaboo images show Herdr foreground/background/concurrent agents, early/final output,
-selection/pin/pause, passive reader/companion closure and reopening, same-session foreground resume, rootless
-refusal, missing package and native runtime reload/shutdown. Controlled Harness checks separately exercise
-replacement/foreign/nested refusal and transport bounds; they are not live acceptance or independent QA.
-
-The complete direct host Harness run passed **657/657**, zero skips, using a canonical temporary path (macOS
-`/tmp` is a symlink and fails existing private-storage checks). Earlier failed host-environment attempts remain
-in evidence. At that earlier checkpoint, `./bin/build` was held before phases by the legacy preparation wrapper
-and full worktree startup needed the separately operated shared ingress. Delivered TASK-00543/00553 are now
-integrated; the TASK's recovery checkpoint records explicit headless setup and the successful full gate. No
-borrowed stack, fabricated receipt, shared-service startup or unfinished-branch merge was used.
-
-### Repair cycle 1 — Engineer evidence, acceptance still held
-
-Review R1/R2 were reproduced before repair. New direct owning regressions cover twelve sequential distinct
-sessions and twelve same-session resumes, protected terminal history, real active capacity, downstream refusal
-and repeated completed-selection/pause refresh. Fresh private native Pi/Herdr qualification on repaired executable
-bytes shows ten sequential Agent attempts with eight retained entries, older completed selection/pause surviving
-refresh, and foreground then background resume reusing the same actual SDK session. A pin survives history
-pressure. This is Engineer evidence, not independent Review/QA; genuine capacity refusal is controlled-boundary
-evidence, not a live eight-agent claim (the supported upstream profile retains maxConcurrent 4).
-
-Canonical ignored `repair-1/` and the Work handoff own current counts, inspected captures, source identity,
-cleanup and warnings. The gate remained held at that repair checkpoint; the TASK's later recovery checkpoint
-supplies its first full success and the test-fixture-only adjustment. The older Engineer-3 evidence above remains
-historical qualification with its original final-guard/capture limits; it is not fresh repaired-source QA.
-
-## Caller/removal inventory
-
-After actual upstream/native replacement qualification, source/caller search found no production callers of the
-explicit-socket readers. Removed `src/workspace/{concurrent-children,child-observation}.mjs` and their two obsolete
-test files; removed their gate/documentation entries and selected the bridge checks in the gate instead.
-
-| Retained path | Actual caller and reason |
+| Path | Actual current caller / retirement decision |
 |---|---|
-| `src/native-observation-extension.ts`, `src/observation/{native-observation,custodian,custody}.mjs` | Manifest loads native observation; upstream bridge and separate Build monitor reuse signed custody |
-| `src/observation/subagents.mjs` | Native extension's passive SDK reader, covered by direct Harness checks |
-| `src/observation/run-stage.py`, `automatic_observation.py`, `observation.py`, birth helpers | `.pi/skills/build/scripts/run-stage.py` delegates Work/Review/QA/Land monitoring here; separate TASK-00544 still owns that descendant-process route |
-| `src/workspace/registered-children.mjs`, `src/herdr/activity.mjs` | Live verified Herdr activity renderer and selected/pinned worktree context, reused by both routes |
+| `src/build-stages-extension.ts`, `src/build/{stages,authority,history}.mjs` | Manifest and sole fresh Build default; one engine, no scheduling/acceptance replacement |
+| Former Engineer-only extension/module and two native probes | Replaced by qualified copied all-role source/probe; removed, without compatibility wrappers |
+| Bootstrap flag, `stageRoutes`, `selectStageRoute` / `stageRouteSelected`, `selected` dispatch option and opt-in checks/docs | Superseded Build-only selector removed; default/unbound/subordinate/capability checks replace it |
+| Provider `.pi/skills/build/scripts/run-stage.py` and `harness-inventory.ts` | Explicit Sync's actual Engineer/Land launcher and native resource inventory; retained in place, no new wrapper or Build fallback |
+| `src/observation/run-stage.py`, `automatic_observation.py`, `observation.py`, process-birth/custodian/stage-presentation and owning checks | Sync's same live process path plus native qualification; role/alias fixtures retain shared vocabulary contracts |
+| `session-file-birth.py` and native session custody | Shared native parent/session-file witness, not process-only launch code |
+| Native custody/observer and `workspace/registered-children.mjs`, Herdr activity/logs | Shared passive path for both routes, not replaced launchers |
 
-The Python monitor's `fight-child-observation-v1` string is still live protocol vocabulary, not a caller of the
-deleted JavaScript readers. TASK-00544 was not repaired or retired. MCP evaluation remains separate
-[TASK-00555](../../planning/tasks/00555-TASK.md).
+No release-version dispatch is added: the release protocol explicitly uses independent standalone sessions when
+its version-owned dispatcher is unavailable. The TASK-only tool cannot supply release authority. Prior explicit-socket
+JavaScript readers were retired by TASK-00554; its historical 657/657 observation run and later recovery/repair
+receipts remain with that TASK, not fresh all-role qualification. Final complete-implementation assessment and
+actual same-TASK delivery remain separate obligations. Ordinary installation/adoption is always explicit;
+retaining Sync/shared custody does not retain a permanent Build process alternative.

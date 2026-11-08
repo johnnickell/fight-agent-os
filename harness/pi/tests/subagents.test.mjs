@@ -37,14 +37,14 @@ test('foreign, nested and workflow-owned records cannot join the pane', () => {
   }
 });
 
-test('late session creation is bounded; resume gets a fresh observation identity', () => {
+test('late session creation keeps bounded ownership; resume gets a fresh observation identity', () => {
   const f = fixture(); delete f.record.session; f.observer.started({ id: f.id });
   assert.equal(f.messages.length, 0); f.record.session = f.session; f.observer.tick();
   const first = f.messages.at(-1).id;
   f.observer.started({ id: f.id }); assert.notEqual(f.messages.at(-1).id, first);
   assert.equal(f.unsubscribed(), 1); f.observer.close(); assert.equal(f.unsubscribed(), 2);
   const g = fixture(); delete g.record.session; g.observer.started({ id: g.id }); g.advance(); g.observer.tick();
-  assert.equal(g.observer.runs.size, 0);
+  assert.equal(g.observer.runs.size, 1); g.observer.close();
 });
 
 test('replacement and disposal detach subscriptions without executing session commands', () => {
@@ -98,13 +98,13 @@ test('a replaced record cannot inherit the old subscription even when it reuses 
   assert.match(f.observer.inspect().notice, /record-replaced/);
 });
 
-test('rootless, missing package and delayed-session timeout have finite human diagnostics', () => {
+test('rootless, missing package and delayed-session startup have finite human diagnostics', () => {
   const f = fixture(); delete f.record.rootSessionId; f.observer.started({ id: f.id });
   assert.match(f.observer.inspect().notice, /root-association-unavailable/);
   assert.equal(f.messages.length, 0);
   f.observer.registry = () => undefined; assert.equal(f.observer.inspect().capability, 'manager-unavailable');
   const g = fixture(); delete g.record.session; g.observer.started({ id: g.id }); g.advance(); g.observer.tick();
-  assert.match(g.observer.inspect().notice, /session-creation-timeout/);
+  assert.match(g.observer.inspect().notice, /session-creation-delayed/); g.observer.close();
 });
 
 test('final progress waits for native readiness and survives per-child backpressure', () => {
@@ -241,4 +241,24 @@ test('native transport bounds outstanding messages per child without starving co
   native.observeSubagent(first); native.observeSubagent(first); native.observeSubagent(second);
   assert.equal(sent.length, 2); callbacks[0](); native.observeSubagent(first); assert.equal(sent.length, 3);
   native.closed = true; native.observeSubagent({ id: randomUUID() }); assert.equal(sent.length, 3);
+});
+
+test('disconnected native transport becomes unavailable without executing or replacing a worker', () => {
+  const native = Object.create(NativeObservation.prototype);
+  let unreferenced = 0;
+  Object.assign(native, { ready: true, parentFile: {}, child: { connected: false, unref() { unreferenced++; } } });
+  native.observeSubagent({ id: randomUUID(), lifecycle: 'running' });
+  assert.equal(native.closed, true); assert.equal(native.ready, false); assert.equal(unreferenced, 1);
+  assert.equal(native.queuedSubagents.size, 0);
+});
+
+test('slow actual SDK initialization remains observable on the same stable record', () => {
+  const f = fixture(); delete f.record.session;
+  f.observer.started({ id: f.id }); f.advance(); f.observer.tick();
+  assert.equal(f.observer.runs.size, 1, 'five seconds is diagnostic, not an execution deadline');
+  f.record.session = f.session; f.observer.tick();
+  assert.ok(f.messages.some(frame => frame.lifecycle === 'running'));
+  f.record.status = 'completed'; f.observer.tick();
+  assert.equal(f.messages.at(-1).lifecycle, 'completed');
+  assert.equal(f.observer.runs.size, 0);
 });

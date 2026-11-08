@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { clean } from '../workspace/presentation.mjs';
-import { engineerIdentity, stageBinding } from '../build/authority.mjs';
+import { stageIdentity, stageBinding } from '../build/authority.mjs';
 
 export const upstreamTerminal = new Set(['completed', 'steered', 'aborted', 'stopped', 'error']);
 const text = value => clean(typeof value === 'string' ? value.slice(-2400) : '').replace(/\n/g, ' ').slice(-600);
@@ -86,7 +86,13 @@ export class SubagentObserver {
         const session = record.session;
         if (!session) {
           if (upstreamTerminal.has(record.status)) this.remove(id, 'agent-ended-before-session-available');
-          else if (this.now() - run.since > 5000) this.remove(id, 'session-creation-timeout');
+          else if (this.now() - run.since > 5000 && !run.startupDelayed) {
+            // SDK resource loading can legitimately exceed one sample window.
+            // Keep only this exact owned record (bounded to eight); execution
+            // owns its deadline. Replacement/terminal/shutdown still detaches it.
+            run.startupDelayed = true;
+            this.diagnose('session-creation-delayed: waiting on the same live SDK record');
+          }
           continue;
         }
         if (run.session && run.session !== session) { this.remove(id, 'session-replaced'); continue; }
@@ -94,7 +100,7 @@ export class SubagentObserver {
           if (typeof session.subscribe !== 'function' || typeof session.sessionManager?.getCwd !== 'function') {
             this.remove(id, 'live-session-api-unavailable'); continue;
           }
-          const stage = engineerIdentity(session, this.parent);
+          const stage = stageIdentity(session, this.parent);
           if (stageBinding(session.sessionManager) && !stage) { this.remove(id, 'trusted-stage-identity-unavailable'); continue; }
           run.session = session;
           run.identity = { task: stage?.task ?? 'Unassigned', role: stage?.role ?? (text(record.type) || 'subagent'), provider: text(session.model?.provider) || 'unknown',

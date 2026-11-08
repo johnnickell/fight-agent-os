@@ -37,6 +37,7 @@ instructions](../../README.md#verification-and-packaging) for explicit platform-
 Keep source, tests, fixtures, examples required by the tests and API reference together; runtime packaging excludes
 development files and installed dependencies. Do not import upstream contributor instructions as Fight policy.
 
-No upstream maintainer acceptance or completed TASK-00560 acceptance is claimed. Fight now uses the setup boundary
-for its opt-in Engineer bootstrap and has controlled installed-SDK admission evidence. Real permitted Engineer work,
-inspected native Herdr activity and independent Review remain separate from bundling/scripted qualification.
+TASK-00560's real Engineer qualification and independent acceptance are recorded in its owning TASK, not supplied
+by bundling. The same setup boundary now supports TASK-00561's explicitly selected all-role source bootstrap.
+Controlled copied-install admission/repair checks are not the required real independent delivery journey,
+inspected native Herdr evidence, default cutover or upstream maintainer acceptance.
