@@ -142,14 +142,13 @@ SQL,
         }
         $primary = null;
         $equivalent = [];
-        foreach (
-            $this->connection->fetchAllAssociative(
-                <<<'SQL'
+        $sourceRows = $this->connection->fetchAllAssociative(
+            <<<'SQL'
 SELECT source_key, source_role FROM project_sources WHERE workspace_id = ? AND project_id = ? ORDER BY source_key
 SQL,
-                [$row['workspace_id'], $row['id']]
-            ) as $sourceRow
-        ) {
+            [$row['workspace_id'], $row['id']]
+        );
+        foreach ($sourceRows as $sourceRow) {
             $source = SourceDescriptor::reconstitute(json_decode(
                 $sourceRow['source_key'],
                 true,
