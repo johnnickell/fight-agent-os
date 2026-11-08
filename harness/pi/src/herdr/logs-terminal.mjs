@@ -7,6 +7,7 @@ import { fit, wrap } from '../workspace/presentation.mjs';
 const [receipt, token, bindingFile] = process.argv.slice(2);
 if (!receipt || !token || !bindingFile || process.env.HERDR_ENV !== '1' || !process.env.HERDR_PANE_ID || !process.stdin.isTTY || !process.stdout.isTTY) process.exit(1);
 let logs, server, timer, closing = false, blocked = false, dirty = false, scheduled = false, scroll = 0;
+const tint = (line, code) => `\x1b[${code}m${line}\x1b[0m`;
 const dimensions = () => ({ width: Math.max(1, (process.stdout.columns || 40) - 1), height: Math.max(1, process.stdout.rows || 20) });
 const canChoose = () => { const { width, height } = dimensions(); return width >= 39 && height >= 10; };
 const chooser = (choice, width, height) => {
@@ -15,12 +16,12 @@ const chooser = (choice, width, height) => {
   }
   // Keep the active ordinal and authorization controls outside the physical-row viewport.
   // Only the active source is paged: long labels/paths cannot hide it behind earlier choices.
-  const header = fit(`LOGS · ${choice.kind} ${choice.index + 1}/${choice.count}`, width);
+  const header = tint(fit(`${choice.kind} ${choice.index + 1}/${choice.count}`, width), 36);
   const controls = wrap('↑/↓ move · Space mark · Enter apply · Esc cancel\nf Follow active · m Main · PgUp/PgDn details · q exit', width);
   const body = wrap(`> ${choice.label}\n${choice.selection ?? ''}\nCheckout: ${choice.worktree}\n${choice.notice ?? ''}\nExact verified stack only; cancellation keeps panes open.`, width);
   const space = height - controls.length - 1;
   scroll = Math.max(0, Math.min(scroll, Math.max(0, body.length - space)));
-  return [header, ...body.slice(scroll, scroll + space), ...Array(Math.max(0, space - body.length)).fill(''), ...controls];
+  return [header, ...body.slice(scroll, scroll + space), ...Array(Math.max(0, space - body.length)).fill(''), ...controls.map(line => tint(line, 36))];
 };
 const draw = () => {
   if (closing) return;
@@ -32,14 +33,15 @@ const draw = () => {
     blocked = !process.stdout.write('\x1b[H\x1b[2J' + chooser(choice, width, height).join('\r\n'));
     return;
   }
-  const lines = logs.view().split('\n');
-  const header = lines.slice(0, 6).map(line => fit(line, width));
-  const controls = fit(width < 65 ? 'f Follow · m Main · s Services · i help · q exit' : 'f Follow active · m Main · s Services · p pause · c reader · r retry · i help · q exit', width);
-  const body = lines.slice(6).flatMap(line => wrap(line, width));
-  const space = Math.max(0, height - header.length - 1);
+  const { header, notices, output, empty } = logs.presentation();
+  const status = notices.flatMap(line => wrap(line, width)).slice(0, Math.max(0, height - 3)).map(line => tint(line, 33));
+  const controls = tint(fit(width < 39 ? 'f Follow · m Main · s · i help' : 'f Follow · m Main · s Services · i help', width), 36);
+  const body = output.length ? output.flatMap(line => wrap(line, width)) : empty ? [tint(fit(empty, width), 2)] : [];
+  const space = Math.max(0, height - status.length - 2);
   scroll = Math.max(0, Math.min(scroll, Math.max(0, body.length - space)));
   const end = body.length - scroll;
-  blocked = !process.stdout.write('\x1b[H\x1b[2J' + [...header, controls, ...body.slice(Math.max(0, end - space), end)].slice(0, height).join('\r\n'));
+  const frame = [tint(fit(header, width), 36), controls, ...status, ...body.slice(Math.max(0, end - space), end)];
+  blocked = !process.stdout.write('\x1b[H\x1b[2J' + frame.slice(0, height).join('\r\n'));
 };
 const changed = () => {
   if (scheduled || closing) return;

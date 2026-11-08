@@ -36,7 +36,6 @@ export class HerdrLogs {
     } else {
       void this.logs.refresh().catch(() => { if (!this.closed) this.hold('UNAVAILABLE — discovery failed; no fallback'); });
     }
-    this.notice = this.mode === 'main' ? 'MAIN PIN — active work cannot change this display' : value.state === 'idle' ? 'FOLLOW ACTIVE — idle; verified main stack' : 'FOLLOW ACTIVE — verified selected agent stack';
   }
   tick() {
     if (this.closed || this.invalidated || this.pending) return this.pending;
@@ -75,15 +74,29 @@ export class HerdrLogs {
     }
     try { await this.logs.action(type, options); } finally { this.changed(); }
   }
-  view() {
+  presentation() {
     const value = this.metadata;
-    return ['LOGS', this.notice,
-      value ? `${this.mode === 'main' || value.state === 'idle' ? 'MAIN' : value.child?.pinned ? 'PINNED AGENT' : 'ACTIVE AGENT'} · Services: ${this.logs.filterLabel()}` : 'Waiting for verified context',
-      this.logs.current?.summary() ?? 'Stack unavailable\nAutomatic bounded discovery; r retry',
-      'f Follow active · m Main · s Services',
-      ...(this.details ? [`Native session: ${this.binding.primary.sessionId}`, `Activity checkout: ${value?.worktree ?? 'unavailable'}`, this.logs.view(),
-        'Observation only: no provisioning, shell, container controls or model ingestion.'] : [this.logs.body()])
-    ].join('\n').split('\n').map(safeLog).join('\n');
+    const reader = this.logs.current;
+    const filter = this.logs.filterLabel();
+    const source = this.mode === 'main' ? 'MAIN PIN' : value?.state === 'idle' ? 'Following main' : value?.child?.pinned ? 'Following pinned agent' : 'Following agent';
+    const header = value ? `${source} · ${filter === 'All' ? 'All services' : filter}${reader?.paused ? ' · PAUSED' : ''}` : 'Following active';
+    const notices = [];
+    if (!reader) notices.push(value ? this.logs.notice : this.notice);
+    else {
+      if (reader.state !== 'following') notices.push(reader.notice);
+      if (reader.gaps) notices.push(`${reader.gaps} reader changes · possible gaps or duplicates`);
+      if (reader.omitted || reader.clipped) notices.push([reader.omitted ? `${reader.omitted} omitted` : '', reader.clipped ? `${reader.clipped} clipped` : ''].filter(Boolean).join(' · '));
+      if (reader.source.stopped?.length) notices.push(`Stopped: ${reader.source.stopped.join(', ')}`);
+    }
+    const records = (reader?.paused ? reader.frozen : reader?.history) ?? [];
+    const output = this.details ? [`Native session: ${this.binding.primary.sessionId}`, `Activity checkout: ${value?.worktree ?? 'unavailable'}`,
+      'p pause · c reader · r retry · PgUp/PgDn scroll · q exit', ...(reader?.view().split('\n') ?? [])] : records;
+    return { header: safeLog(header), notices: notices.filter(Boolean).map(safeLog), output: output.map(safeLog),
+      empty: reader?.state === 'following' ? 'Waiting for log lines' : '' };
+  }
+  view() {
+    const { header, notices, output, empty } = this.presentation();
+    return [header, ...notices, ...(output.length ? output : [empty])].join('\n');
   }
   /** Expose bounded display-process ownership facts only, never sources or output */
   readerPids() {

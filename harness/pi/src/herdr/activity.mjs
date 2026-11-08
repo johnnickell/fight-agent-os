@@ -62,16 +62,20 @@ export class HerdrActivity {
   }
   view() {
     const children = this.children;
-    if (!this.valid) return ['AGENTS', this.notice, 'Passive reader · no execution controls'].join('\n');
+    if (!this.valid) return 'UNAVAILABLE · agent activity';
     const counts = [...children.sources.values()].reduce((n, item) => { if (children.active(item)) n.live++; else if (children.completed(item)) n.done++; return n; }, { live: 0, done: 0 });
-    return ['AGENTS', this.details ? agentDetail(children)[0] : `${counts.live} live · ${counts.done} finished · ${children.sources.size}/8 retained${children.removed ? ` · lost/evicted ${children.removed}` : ''}${children.open ? '' : ' · READERS CLOSED'}`,
-      '↑↓ choose · Enter view · Esc list · f pin · p pause · i help',
-      ...(this.help ? ['Passive bounded activity, not a transcript or acceptance. No messages/stop controls.',
-        'Selection stays in AGENTS. Use the separate below-prompt picker for main.',
-        '[ ] also choose · PgUp/PgDn scroll · c close/open readers · r rediscover · q quit',
+    return [this.details ? agentDetail(children)[0] : `${counts.live} live · ${counts.done} finished${children.removed ? ` · lost/evicted ${children.removed}` : ''}${children.open ? '' : ' · readers closed'}`,
+      ...(this.help ? ['Recent agent messages and provider reasoning summaries.',
+        'Selection stays in this pane. Use the picker below Pi’s prompt for main.',
+        '↑↓ or [ ] choose · PgUp/PgDn scroll · c reader · r rediscover · q exit',
         `Primary ${clean(children.session)}`, children.notice] : []),
-      ...(this.details ? agentDetail(children).slice(1) : children.sources.size ? agentList(children) : ['IDLE — no eligible agents; unregistered/unsupported children unavailable']),
-      children.notice].join('\n');
+      ...(this.details ? agentDetail(children).slice(1) : children.sources.size ? agentList(children) : ['Waiting for agents'])].join('\n');
+  }
+  status() {
+    if (!this.valid) return this.notice;
+    const notice = this.children.notice;
+    if (this.help || /^(Trusted-local child association verified|No eligible monitor association)/.test(notice)) return '';
+    return notice;
   }
   close() { this.closed = true; this.valid = false; this.children?.close(); }
 }

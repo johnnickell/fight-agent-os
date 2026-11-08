@@ -97,8 +97,9 @@ chosen completed SDK output stays selected when live siblings arrive, without re
 source stays visibly disconnected but loses log authority. Retention may evict older unselected terminal attempts;
 capacity refuses new observations rather than evicting live work or the existing retained selection/pin.
 A reader reports previously observed lost/evicted attempts without guessing their cause or claiming a complete
-upstream history; it cannot count events that preceded observation. No full
-transcript, reasoning or tool bodies are collected. Assignment text, when available, is bounded upstream description
+upstream history; it cannot count events that preceded observation. AGENTS shows recent assistant messages with
+provider-supplied reasoning summaries in a separate color. The bridge uses finalized live SDK output.
+Assignment text, when available, is bounded upstream description
 metadata, not stage authority. Monitor completion without an eligible retained SDK attempt still returns to idle.
 
 Initial/recomputed choice uses newest trusted start time, admission order within

@@ -8,6 +8,11 @@ import { fileURLToPath } from 'node:url';
 
 export const custodianScript = fileURLToPath(new URL('./custodian.mjs', import.meta.url));
 export const limits = Object.freeze({ brokers: 8, children: 8, records: 100, units: 32768, frame: 2 * 1024 * 1024, lifetime: 24 * 60 * 60 * 1000, retention: 10 * 60 * 1000 });
+export const sdkOutputLimit = 4000;
+export function appendSdkOutput(previous, next) {
+  const output = previous && next ? `${previous}\n\n${next}` : previous || next || '';
+  return output.length > sdkOutputLimit ? `…\n${output.slice(2 - sdkOutputLimit).toWellFormed()}` : output;
+}
 export const sessionKey = session => createHash('sha256').update(session).digest('hex').slice(0, 24);
 export const directory = (cwd, session) => join(realpathSync(cwd), 'var/terminal/children', sessionKey(session));
 // Keep relative cross-worktree paths below AF_UNIX limits without changing any agent cwd.

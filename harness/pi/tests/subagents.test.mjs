@@ -21,9 +21,10 @@ function fixture() {
 
 test('live assistant activity is bounded and safe; completion removes only the reader', () => {
   const f = fixture(); f.observer.started({ id: f.id });
-  f.event({ type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: '\u001b[31m' + 'a'.repeat(10000) } });
+  f.event({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text: 'a'.repeat(10000) + '\u001b[31mEND' }] } });
   f.observer.tick();
-  assert.ok(f.messages.at(-1).text.length <= 600);
+  assert.match(f.messages.at(-1).text, /^…\na+\[31mEND$/);
+  assert.ok(f.messages.at(-1).text.length <= 4000);
   assert.ok(!f.messages.at(-1).text.includes('\u001b'));
   f.record.status = 'completed'; f.record.result = 'Done'; f.observer.tick();
   assert.equal(f.messages.at(-1).lifecycle, 'completed'); assert.equal(f.unsubscribed(), 1);
@@ -70,12 +71,31 @@ test('foreground resume without an upstream started event waits for the actual r
   assert.equal(f.unsubscribed(), 1);
 });
 
-test('early assistant text is not overwritten by a tool start in the same sample', () => {
-  const f = fixture(); f.observer.started({ id: f.id });
-  f.event({ type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: 'EARLY_PROSE' } });
-  f.event({ type: 'tool_execution_start', toolName: 'bash', args: { secret: 'never forward' } });
-  f.observer.tick(); assert.match(f.messages.at(-1).text, /EARLY_PROSE/); assert.match(f.messages.at(-1).text, /Tool: bash/);
-  assert.doesNotMatch(f.messages.at(-1).text, /never forward/);
+test('agent history retains messages and provider summaries without tool events or heartbeats', () => {
+  const f = fixture(), children = new Map();
+  const custody = { parent: f.parent, generation: randomUUID(), children, order: 1, registrations: cwd => `worktree ${cwd}\0` };
+  f.observer.send = frame => admitSubagent(frame, custody);
+  f.observer.started({ id: f.id });
+  const child = [...children.values()][0];
+  const first = { role: 'assistant', content: [{ type: 'text', text: 'I found the cause.\nI will check the caller.' }] };
+  const final = { role: 'assistant', api: 'openai-codex-responses', content: [
+    { type: 'thinking', thinking: 'private', thinkingSignature: JSON.stringify({ type: 'reasoning',
+      summary: [{ type: 'summary_text', text: 'The caller batches reads.' }], content: [{ type: 'reasoning_text', text: 'private' }] }) },
+    { type: 'text', text: 'Fixed the caller.' },
+  ] };
+  f.event({ type: 'message_end', message: first });
+  f.event({ type: 'tool_execution_start', toolName: 'read' });
+  f.event({ type: 'tool_execution_end', toolName: 'read' });
+  f.event({ type: 'message_end', message: final });
+  f.session.messages = [first, final];
+  f.observer.tick();
+  assert.deepEqual(child.history, ['I found the cause.\nI will check the caller.\n\nReasoning summary · The caller batches reads.\n\nFixed the caller.']);
+  const previous = child.sequence;
+  f.observer.tick();
+  assert.equal(child.sequence, previous + 1);
+  f.record.status = 'completed'; f.observer.tick();
+  assert.equal(child.lifecycle, 'completed');
+  assert.equal(child.history.length, 1);
 });
 
 test('early finalized text and final completion are recovered from the live SDK session', () => {
@@ -111,10 +131,11 @@ test('final progress waits for native readiness and survives per-child backpress
   const native = Object.create(NativeObservation.prototype), sent = [], callbacks = [];
   Object.assign(native, { ready: false, parentFile: {}, child: { connected: true,
     send(message, done) { sent.push(message); callbacks.push(done); } } });
-  const id = randomUUID(); native.observeSubagent({ id, sequence: 1, lifecycle: 'running' });
-  native.observeSubagent({ id, sequence: 2, lifecycle: 'completed' });
+  const id = randomUUID(); native.observeSubagent({ id, sequence: 1, lifecycle: 'running', text: 'Output before readiness' });
+  native.observeSubagent({ id, sequence: 2, lifecycle: 'completed', text: '' });
   native.ready = true; native.flushSubagents();
-  assert.equal(sent.at(-1).lifecycle, 'completed'); callbacks.shift()();
+  assert.equal(sent.at(-1).lifecycle, 'completed');
+  assert.equal(sent.at(-1).text, 'Output before readiness'); callbacks.shift()();
   native.observeSubagent({ id, sequence: 3, lifecycle: 'running' });
   native.observeSubagent({ id, sequence: 4, lifecycle: 'completed' });
   callbacks.shift()(); assert.equal(sent.at(-1).sequence, 4);

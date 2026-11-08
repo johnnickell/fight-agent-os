@@ -1,13 +1,14 @@
 import { constants, closeSync, fstatSync, ftruncateSync, openSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import { candidates, challenge, directory, privateDirectory, privateFile, sessionFileIdentity, sameSessionFile, limits } from '../observation/custody.mjs';
+import { candidates, challenge, directory, privateDirectory, privateFile, sessionFileIdentity, sameSessionFile, limits, sdkOutputLimit } from '../observation/custody.mjs';
 import { clean } from './presentation.mjs';
 
 const activeStates = new Set(['starting', 'running', 'settled-awaiting-exit']);
 const keys = ['task', 'role', 'provider', 'model', 'thinking', 'worktree', 'attempt'];
 const sourceKey = item => `${item.generation}:${item.id}`;
 function admitted(value, witness) {
+  const sdk = value?.source === 'pi-subagents';
   if (!value || value.parent !== witness.parent || value.generation !== witness.generation || !/^[a-f0-9-]{36}$/.test(value.id) ||
       !Number.isSafeInteger(value.started) || value.started > witness.at || !Number.isSafeInteger(value.order) || value.order < 1 ||
       !Number.isSafeInteger(value.sequence) || value.sequence < 0 || !Number.isSafeInteger(value.receivedAt) || value.receivedAt > witness.at ||
@@ -15,16 +16,16 @@ function admitted(value, witness) {
       !Number.isFinite(value.heartbeatSeconds) || value.heartbeatSeconds < 1 || value.heartbeatSeconds > 60 ||
       (value.identity?.assignment !== undefined && (typeof value.identity.assignment !== 'string' || value.identity.assignment.length > 600)) ||
       !keys.every(key => typeof value.identity?.[key] === 'string' && value.identity[key].length > 0 && value.identity[key].length <= 2200) ||
-      !Array.isArray(value.history) || value.history.length > limits.records || value.history.some(text => typeof text !== 'string' || text.length > 1200) ||
+      !Array.isArray(value.history) || value.history.length > limits.records || value.history.some(text => typeof text !== 'string' || text.length > (sdk ? sdkOutputLimit : 1200)) ||
       value.history.reduce((sum, text) => sum + text.length, 0) > limits.units ||
       !Number.isSafeInteger(value.omitted) || value.omitted < 0 ||
       (value.gaps !== undefined && (!Number.isSafeInteger(value.gaps) || value.gaps < 0)) ||
-      (value.source === 'pi-subagents'
+      (sdk
         ? value.exitCode !== null || !['running', 'completed', 'steered', 'aborted', 'stopped', 'error'].includes(value.upstreamStatus) ||
           value.lifecycle !== (value.upstreamStatus === 'running' ? 'running' : ['completed', 'steered'].includes(value.upstreamStatus) ? 'completed' : 'failed')
         : (['completed', 'failed'].includes(value.lifecycle) ? !Number.isInteger(value.exitCode) || value.exitCode < 0 || value.exitCode > 255 || (value.lifecycle === 'completed') !== (value.exitCode === 0) : value.exitCode !== null))) throw new Error('Invalid admitted child');
   if (clean(value.identity.worktree) !== value.identity.worktree || realpathSync(value.identity.worktree) !== value.identity.worktree) throw new Error('Noncanonical admitted worktree');
-  return { ...value, identity: Object.fromEntries([...keys, ...(value.identity.assignment === undefined ? [] : ['assignment'])].map(key => [key, clean(value.identity[key]).replace(/\n/g, ' ')])), history: value.history.map(text => clean(text).replace(/\n/g, ' ')), verified: true };
+  return { ...value, identity: Object.fromEntries([...keys, ...(value.identity.assignment === undefined ? [] : ['assignment'])].map(key => [key, clean(value.identity[key]).replace(/\n/g, ' ')])), history: value.history.map(text => sdk ? clean(text) : clean(text).replace(/\n/g, ' ')), verified: true };
 }
 export class RegisteredChildren {
   constructor(cwd, changed = () => {}, { discover = candidates, verify = challenge, now = Date.now, preferences = true, retention = false } = {}) {
