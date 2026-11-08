@@ -53,6 +53,14 @@ describe('InviteUserPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Invite another user' }));
     expect(emailInput()).toHaveValue('');
   });
+  it('submits a supported address literal by paste and keyboard for server admission', async () => {
+    const d = await setup();
+    await submitEmail(' Person@[IPv6:2001:db8::1] ');
+    expect(d.submit).toHaveBeenCalledExactlyOnceWith('person@[ipv6:2001:db8::1]');
+    expect(await screen.findByRole('heading', { name: 'Invitation accepted' })).toHaveFocus();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
   it.each([
     ['INVITE_USERS'],
     ['INVITE_USERS', 'MANAGE_USER_INVITATIONS'],

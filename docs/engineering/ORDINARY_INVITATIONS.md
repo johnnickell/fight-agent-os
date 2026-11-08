@@ -10,8 +10,11 @@ creation.
 
 The form has one email field, with autocomplete, paste, keyboard submission, associated instructions/errors,
 visible focus and pending duplicate suppression. It trims surrounding whitespace and lowercases on submission,
-checks a 254-character usability bound and basic syntax, and leaves semantic email/conflict policy to the
-server/package. Unsupported Unicode addresses receive controlled rejection, never an invented identity.
+checks a 254-character usability bound, rejects controls and checks basic syntax without requiring a dotted
+domain. Qualified Common v1.4.1 `IsEmail`/`EmailAddress` accept `person@[IPv6:2001:db8::1]` and canonicalize it
+to `person@[ipv6:2001:db8::1]`; that address can reach server admission. This is not a second full email
+validator: semantic email/conflict policy remains server/package-owned. Unsupported Unicode addresses receive
+controlled rejection, never an invented identity.
 Input remains volatile; it never enters history, storage, diagnostics or analytics.
 
 `OrdinaryInvitationService` sends exactly `POST /api/v1/invitations` with JSON `email` and fixed

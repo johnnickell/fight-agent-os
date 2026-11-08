@@ -56,6 +56,18 @@ describe('OrdinaryInvitationService', () => {
     });
     expect(d.lifecycle.invalidated).toHaveBeenCalledWith(data.user_id);
   });
+  it('dispatches a supported address literal as canonical email with fixed ordinary mode', async () => {
+    const d = await setup();
+    expect((await d.service.submit(' Person@[IPv6:2001:db8::1] ')).kind).toBe('accepted');
+    expect(d.fetch).toHaveBeenCalledOnce();
+    const [url, init] = d.fetch.mock.calls[0]!;
+    expect(url).toBe('/api/v1/invitations');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({
+      email: 'person@[ipv6:2001:db8::1]',
+      mode: 'ordinary'
+    });
+  });
   it.each(
     [[], ['READ_USERS'], ['MANAGE_USER_INVITATIONS'], ['ASSIGN_SUPER_ADMIN']].map(
       (permissions) => ({ permissions })

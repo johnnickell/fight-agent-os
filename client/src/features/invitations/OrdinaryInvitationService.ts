@@ -21,7 +21,7 @@ export type OrdinaryInvitationOutcome =
 export function canonicalInvitationEmail(value: string): string | null {
   const email = value.trim().toLowerCase();
   return email.length <= 254 &&
-    /^(?:"(?:[^"\\]|\\.)+"|[^\s@"\\]+)@[^\s@]+\.[^\s@]+$/.test(email) &&
+    /^(?:"(?:[^"\\]|\\.)+"|[^\s@"\\]+)@[^\s@]+$/.test(email) &&
     ![...email].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)
     ? email
     : null;
