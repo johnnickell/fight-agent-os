@@ -1,8 +1,9 @@
 # Initial Workspace bootstrap ownership
 
 **Existing implementation source:** `973744f32649a14d28aebc79bf96cd6489d25190` (TASK-00574).
-The final documentation commit may follow this revision; its PHP/configuration/test source must remain unchanged
-for this view to apply. Retrieve evidence with `git show 973744f32649a14d28aebc79bf96cd6489d25190:PATH`.
+This remains a historical TASK-00574 ownership view. TASK-00575 changes the bootstrap audit's nullable target
+column to `project_id` and the reference input mapper to Project vocabulary; its depicted bootstrap ownership and
+coordination edges are unchanged. The original source revision remains the retrieval authority, not today's HEAD. Retrieve evidence with `git show 973744f32649a14d28aebc79bf96cd6489d25190:PATH`.
 
 ![Existing initial Workspace bootstrap ownership](bootstrap-ownership.png)
 
@@ -49,7 +50,7 @@ serializes only bounded actor/window/attempt metadata, then Common's `Uuid::comb
 The [Responder](../../../src/Adapter/Http/Responder/Api/V1/References/GenerateExceptionalReferenceResponder.php)
 owns safe HTTP representation. There is no reference business command/aggregate, Application forwarder, access grant,
 import authority or generated-ID persistence. [Composition](../../../config/application/exceptional_references.php)
-keeps this technical owner separate from the remaining registration module.
+keeps this technical owner separate from Project command/query composition.
 
 ## Omitted flow and limitations
 
@@ -58,8 +59,8 @@ keeps this technical owner separate from the remaining registration module.
 - State and audit commit together. Required audit failure rolls state back; a presentation/lookup failure after
   commit is uncertain, not rollback. Competing initial-slot commands can conflict; a subsequent explicit invocation
   reads current state, never an immutable replay response. No success event is invented for symmetry.
-- The preserved database invariant, independent audit migration and retained registration history are described in
-  the runbook. Remaining registration Store/replay/admission paths belong to TASK-00575, not an alias for Workspace.
+- The preserved database invariant, independent audit migration and historical facts are described in the current
+  runbook. TASK-00575 replaces the former registration Store/replay/admission paths; Workspace remains separate.
 - Static source tracing establishes these references/bindings, not measured execution, correctness, security,
   concurrency safety, independent acceptance, production deployment or future supplier compatibility. Actual
   behavioral evidence and warnings belong in TASK-00574 and its ignored Engineer handoff.
