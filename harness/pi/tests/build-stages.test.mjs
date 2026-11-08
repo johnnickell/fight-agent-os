@@ -38,7 +38,7 @@ function fixture(t, role = 'engineer') {
   const options = { registry };
   publishWorkflow(parent, new WorkflowAccess('build', { taskId: request.task, checkout: root }));
   const child = () => {
-    const sessionDir = join(root, '.runs/tasks/TASK-00561/runs/sessions'); mkdirSync(sessionDir, { recursive: true });
+    const sessionDir = join(attempt, 'sessions'); mkdirSync(sessionDir, { recursive: true });
     const id = randomUUID();
     return { messages: [], model, thinkingLevel: 'high', systemPrompt: 'Controlled governing instructions',
       isStreaming: false, subscribe() { return () => {}; }, extensionRunner: { hasHandlers: () => true },
@@ -48,7 +48,7 @@ function fixture(t, role = 'engineer') {
   };
   const assignment = { parent: 'actual-parent', task: request.task, role, skill: stageDefinitions[role].skill,
     effects: stageDefinitions[role].effects, checkout: root, attempt, provider: model.provider, model: model.id,
-    thinking: 'high', requiredExtensions: [], instructions: ['Controlled governing instructions'], sessionRoots: [join(root, '.runs/tasks/TASK-00561/runs')] };
+    thinking: 'high', requiredExtensions: [], instructions: ['Controlled governing instructions'], sessionDir: join(attempt, 'sessions') };
   return { root, ctx, request, options, child, assignment, registry, entries };
 }
 

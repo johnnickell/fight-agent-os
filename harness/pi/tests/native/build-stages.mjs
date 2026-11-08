@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const modules = resolve(process.argv[2]), evidence = resolve(process.argv[3]), harness = realpathSync(resolve(process.argv[4]));
@@ -13,6 +13,7 @@ mkdirSync(evidence, { recursive: true });
 const fixture = realpathSync(mkdtempSync(join(evidence, 'stages-'))), root = join(fixture, 'target'), agentDir = join(fixture, 'agent');
 for (const path of [root, agentDir, join(fixture, 'home')]) mkdirSync(path, { mode: 0o700 });
 process.env.HOME = join(fixture, 'home'); process.env.PI_CODING_AGENT_DIR = agentDir; process.env.PI_OFFLINE = '1';
+delete process.env.PI_CODING_AGENT_SESSION_DIR;
 // Controlled trusted-launch fixture only. Never synthesize interactive input.
 process.env.FIGHT_WORKFLOW_PHASE = 'build'; process.env.FIGHT_WORKFLOW_TASK = 'TASK-00561'; process.env.FIGHT_WORKFLOW_CHECKOUT = root;
 for (const key of Object.keys(process.env).filter(key => /^(HERDR_|FIGHT_WORKSPACE)/.test(key))) delete process.env[key];
@@ -28,7 +29,7 @@ git('init', '--initial-branch=topic/controlled-consumer');
 writeFileSync(join(root, 'CLAUDE.md'), 'Controlled fixture. No genuine Work, acceptance, provider or publication effects.');
 mkdirSync(join(root, 'work-items')); writeFileSync(join(root, 'work-items/assigned.md'), '# TASK-00561\nState: approved-to-code (fixture only).\n');
 git('add', '.'); git('-c', 'user.name=Harness fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Controlled fixture');
-const settingsData = { packages: [harness], sessionDir: join(root, '.runs/tasks/TASK-00561/runs/sessions'),
+const settingsData = { packages: [harness], sessionDir: join(agentDir, 'sessions'),
   compaction: { enabled: false }, retry: { enabled: false } };
 writeFileSync(join(agentDir, 'settings.json'), JSON.stringify(settingsData)); process.chdir(root);
 const roles = ['engineer', 'reviewer', 'qa', 'land'];
@@ -110,6 +111,7 @@ try {
     const responses = [() => {
       requests++;
       const child = registry.getRecord(currentId).session, binding = stageBinding(child.sessionManager);
+      assert.equal(dirname(child.sessionManager.getSessionFile()), join(request.attempt, 'sessions'));
       assert.equal(binding.role, role); assert.equal(binding.skill, skills[role]);
       assert.equal(sessionWorkflow(child.sessionManager).skill, skills[role]); assert.equal(binding.head, request.head);
       assert.equal(child.model.id, role); assert.equal(child.thinkingLevel, 'high');

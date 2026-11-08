@@ -74,8 +74,8 @@ npm install --prefix "$private_prefix" --install-links --ignore-scripts --legacy
 
 Inspect that `$private_prefix/node_modules/@fight/agent-os-pi` is a real copy. Prepare the private Pi directory
 with `settings.json` containing `packages: ["/absolute/private-prefix/node_modules/@fight/agent-os-pi"]`, the actual
-provider skill directory in `skills`, and an absolute task-owned `sessionDir` at the canonical base or selected
-checkout. Resolve provider authentication
+provider skill directory in `skills`. Build stores each worker session under its stage attempt’s `sessions/`
+directory. The coordinator uses its normal Pi session settings. Resolve provider authentication
 through the existing supported operator/SDK path; never copy credential files into the private directory or logs.
 Unavailable auth holds real qualification, not permission to use a faux provider as real acceptance.
 

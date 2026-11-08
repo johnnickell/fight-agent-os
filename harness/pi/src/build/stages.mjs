@@ -96,8 +96,7 @@ export async function runStage(pi, ctx, request, options) {
     head: request.head, base: prepared.base, report: prepared.report, role: prepared.role,
     skill: prepared.definition.skill, effects: prepared.definition.effects, provider: request.provider, model: request.model,
     thinking: request.thinking, instructions: prepared.instructions, requiredExtensions: prepared.requiredExtensions,
-    sessionRoots: [...new Set([prepared.base, request.checkout])].flatMap(root =>
-      [join(root, '.runs/tasks', request.task, 'runs'), join(root, '.runs/build', request.task)]) };
+    sessionDir: join(request.attempt, 'sessions') };
   const identity = { route: 'upstream-sdk-stage', parent, task: request.task, attempt: request.attempt,
     role: prepared.role, checkout: request.checkout, base: prepared.base, head: request.head,
     provider: request.provider, model: request.model, thinking: request.thinking,
@@ -129,12 +128,13 @@ export async function runStage(pi, ctx, request, options) {
   try {
     if (options.signal?.aborted) cancel('abort');
     controller.signal.throwIfAborted();
+    mkdirSync(assignment.sessionDir, { mode: 0o700 });
     options.dispatched?.(identity);
     spawnCalled = true;
     id = registry.spawn(pi, ctx, prepared.definition.agent,
       `You are assigned the actual Build ${prepared.role}/${prepared.definition.skill} stage. Only the trusted binding grants this stage. Never inherit another worker's conversation or self-accept.\n\n${prepared.prompt}`, {
         description: `${request.task} ${prepared.role} — actual ${prepared.definition.skill} stage`, model: prepared.model, thinkingLevel: request.thinking,
-        cwd: request.checkout, inheritContext: false, isBackground: true, signal: controller.signal,
+        cwd: request.checkout, sessionDir: assignment.sessionDir, inheritContext: false, isBackground: true, signal: controller.signal,
         beforeSessionStart: (child, signal) => {
           signal?.throwIfAborted();
           const record = registry.getRecord(id);
