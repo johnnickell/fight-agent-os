@@ -93,7 +93,7 @@ export class InvitationService {
     this.#listeners.add(notify);
     return () => this.#listeners.delete(notify);
   }
-  #invalidate(userId: string): void {
+  invalidate(userId: string): void {
     for (const listener of this.#listeners) listener(userId);
   }
 
@@ -184,12 +184,12 @@ export class InvitationService {
     if (!isUserId(userId) || (operation === 'correct' && !email)) return apiFailure('protocol');
     if (this.#pending) return apiFailure('conflict');
     this.#pending = true;
-    this.#invalidate(userId);
+    this.invalidate(userId);
     let timer: ReturnType<typeof setTimeout> | undefined;
     let timedOut = false;
     const invalidateOutcome = () => {
       this.#lifecycle.invalidated();
-      this.#invalidate(userId);
+      this.invalidate(userId);
     };
     const result = await Promise.race([
       this.#api

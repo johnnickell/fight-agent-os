@@ -136,11 +136,16 @@ request-idempotent or exactly once; another deliberate resend can create another
 
 Historical TASK-00042 qualification used Access Control v0.6.0 at dc4621d13851dd08cdf85ed9715ead24b1051e80;
 v0.5.0 failures remain historical in that TASK. Current unchanged lock: Access Control **v0.8.0** at
-319738255e682d587642b67856039f882b9588d6 and Common **v1.3.0** at 7de6cad6e8a9752973ad9f8e27e285b0c1510582.
+319738255e682d587642b67856039f882b9588d6 and Common **v1.4.1** at a482c220d312d2ef7762c3f0d85d9fb76a7021fa.
 
 ## Browser convergence and privacy
 
-The page uses the sole AuthorityCache, strict codecs and memory-only presentation. Each load deliberately reads
+The [ordinary issuance form](ORDINARY_INVITATIONS.md) at `/app/admin/invite` sends only canonical email and
+fixed ordinary mode under INVITE_USERS. It retains only a strictly decoded safe target ID, distinguishes
+accepted/rejected/unconfirmed work and offers status only with READ_USERS. It does not change the existing
+issuance sequencing or implement TASK-00577's architecture cutover.
+
+The status page uses the sole AuthorityCache, strict codecs and memory-only presentation. Each load deliberately reads
 invitation delivery then safe user detail. They are separately authorized committed observations, not one atomic
 cross-request snapshot. Neither uses a directory scan or route/form email as authority. Failed, refused or retired
 reads yield no partial identity/status presentation. The existing detail decoder is shared, not copied.

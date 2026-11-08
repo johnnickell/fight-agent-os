@@ -328,6 +328,12 @@ final class InvitationApiTest extends TestCase
             'unknown'              => '{"email":"a@example.test","mode":"ordinary","actor_id":"private-marker"}',
             'role'                 => '{"email":"a@example.test","mode":"ordinary","role":"ROLE_SUPER_ADMIN"}',
             'permissions'          => '{"email":"a@example.test","mode":"ordinary","permissions":"ASSIGN_SUPER_ADMIN"}',
+            'role-id'              => '{"email":"a@example.test","mode":"ordinary","role_id":"private-marker"}',
+            'elevated'             => '{"email":"a@example.test","mode":"ordinary","elevated":true}',
+            'password'             => '{"email":"a@example.test","mode":"ordinary","password":"private-marker"}',
+            'provider'             => '{"email":"a@example.test","mode":"ordinary","provider":"private-marker"}',
+            'lifetime'             => '{"email":"a@example.test","mode":"ordinary","lifetime":1}',
+            'redirect'             => '{"email":"a@example.test","mode":"ordinary","return_url":"private-marker"}',
             'missing-email'        => '{"mode":"ordinary"}',
             'wrong-email-type'     => '{"email":123,"mode":"ordinary"}',
             'bad-email'            => '{"email":"private-marker","mode":"ordinary"}',
@@ -423,6 +429,58 @@ final class InvitationApiTest extends TestCase
         foreach ([false, true] as $status) {
             foreach (['permission', 'anonymous', 'revoked', 'stale'] as $case) {
                 yield [$case, $status, $case === 'permission' ? 403 : 401];
+            }
+        }
+    }
+
+    /**
+     * Refuses missing issuance permission and reports managed-policy drift without partial success
+     */
+    #[DataProvider('ordinaryPermissionCombinations')]
+    public function testOrdinaryPermissionCombinations(bool $invite, bool $read, bool $manage): void
+    {
+        $permissions = ['INVITE_USERS' => $invite, 'READ_USERS' => $read, 'MANAGE_USER_INVITATIONS' => $manage];
+        foreach ($permissions as $name => $keep) {
+            if (!$keep) {
+                $this->connection->executeStatement(
+                    'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+                    [$name]
+                );
+            }
+        }
+        $response = $this->issue(['email' => 'ordinary@example.test', 'mode' => 'ordinary']);
+        // These protected permissions currently belong only to the exact managed Super Admin role.
+        // Removing a managed membership is policy drift, not a newly supported custom delegation.
+        $status = !$invite ? 403 : ((!$read || !$manage) ? 409 : 201);
+        $data = $this->assertResponse($response, $status)['data'];
+        if ($status !== 201) {
+            $this->assertNoOrigin();
+
+            return;
+        }
+        self::assertSame([InstallationManagedPolicy::USER_ROLE_ID], $this->connection->fetchFirstColumn(
+            'SELECT role_id FROM user_role_assignments WHERE user_id = ?',
+            [$data['user_id']]
+        ));
+        $this->assertResponse($this->request('GET', '/api/v1/invitations/'.$data['user_id']), $read ? 200 : 403, false);
+        self::assertSame(
+            $read ? 200 : 403,
+            $this->request('GET', '/api/v1/users/'.$data['user_id'])->getStatusCode()
+        );
+    }
+
+    /**
+     * Supplies the full independent issuance/read/management permission matrix
+     *
+     * @return iterable<array{bool, bool, bool}>
+     */
+    public static function ordinaryPermissionCombinations(): iterable
+    {
+        foreach ([false, true] as $invite) {
+            foreach ([false, true] as $read) {
+                foreach ([false, true] as $manage) {
+                    yield [$invite, $read, $manage];
+                }
             }
         }
     }

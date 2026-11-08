@@ -24,6 +24,7 @@ const PasswordChangePage = lazy(() => import('@/pages/PasswordChangePage'));
 const OwnedSessionsPage = lazy(() => import('@/pages/OwnedSessionsPage'));
 const UsersPage = lazy(() => import('@/pages/UsersPage'));
 const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
+const InviteUserPage = lazy(() => import('@/pages/InviteUserPage'));
 
 export function ApplicationJourney({
   runtime,
@@ -265,6 +266,8 @@ export function ApplicationView({
               <PasswordChangePage service={session.passwordChange} schemas={session.schemas} />
             ) : route.destination === 'users' ? (
               <UsersPage service={session.users} cache={session.authority} />
+            ) : route.destination === 'invite-user' ? (
+              <InviteUserPage service={session.ordinaryInvitations} cache={session.authority} />
             ) : route.destination === 'invitation' && route.targetUserId ? (
               <InvitationPage
                 key={route.targetUserId}

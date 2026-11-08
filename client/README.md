@@ -371,8 +371,12 @@ Page management needs READ_USERS plus MANAGE_USER_INVITATIONS; the mutation tran
 and returns an empty acknowledgement, never user/status data. Outcomes trigger authoritative reads and retire
 local directory/detail generations without adopting form/response identity. Cancel-first confirmations,
 volatile correction values, stale-response fences and no automatic mutation replay remain. No new endpoint
-or command is introduced. Ordinary/elevated issuance remains unavailable under TASK-00061/00062; this bounded
-maintainer revision awaits fresh independent acceptance.
+or command is introduced. `OrdinaryInvitationService` and `/app/admin/invite` now issue only canonical email plus fixed
+`mode: ordinary` through the existing API, using exact INVITE_USERS and the same sole graph. Strict issuance
+validation projects only a safe target ID; partial/system/network/protocol outcomes remain unconfirmed and
+are never automatically retried. Every completion retires directory/status generations, including late work.
+Status links additionally require exact READ_USERS. See [ordinary invitations](../docs/engineering/ORDINARY_INVITATIONS.md).
+Elevated issuance remains unavailable under TASK-00062. Independent acceptance remains separate.
 
 `features/authority/CatalogService` supplies protected role/permission page and get reads with exact safe
 snake_case-to-camelCase codecs, bounded pagination, current Bearer transport and no retained catalog cache.
@@ -526,8 +530,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **189** named examples across twenty-two story files, including four shared public/error-shell,
-seven user-detail and fifteen pending-invitation status/recovery examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+`stories/` holds **201** named examples across twenty-three story files, including four shared public/error-shell,
+seven user-detail, fifteen pending-invitation status/recovery and twelve ordinary invitation examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
 7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples, six confirmed-revocation examples and twelve production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
@@ -561,7 +565,7 @@ not only its tokens, so held Light/Dark and OS-following System remain coherent 
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 189 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 201 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases
