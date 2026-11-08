@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Middleware\Api;
 
-use App\Adapter\Http\Api\Failure\RegistrationInputFailure;
-use App\Domain\Workspace\RegistrationConflict;
-use App\Domain\Workspace\RegistrationInputRejected;
+use App\Adapter\Http\Api\Failure\ProjectInputFailure;
+use App\Domain\Workspace\Project\ProjectConflict;
+use App\Domain\Workspace\Project\ProjectInputRejected;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\LoginRejectedException;
 use Fight\Common\Adapter\Http\Error\SafeHttpFailure;
@@ -63,8 +63,8 @@ final readonly class NativeApiFailures implements MiddlewareInterface
                 $failure instanceof LoginRejectedException => new AuthenticationRequired(previous: $failure),
                 $failure instanceof InvitationAdministrationAuthorizationException =>
                     new PermissionDenied(previous: $failure),
-                $failure instanceof RegistrationInputRejected => new RegistrationInputFailure(previous: $failure),
-                $failure instanceof RegistrationConflict,
+                $failure instanceof ProjectInputRejected => new ProjectInputFailure(previous: $failure),
+                $failure instanceof ProjectConflict,
                 $failure instanceof OptimisticConcurrencyException => new StateConflict(previous: $failure),
                 $failure instanceof ValidationException => new InvalidInput(previous: $failure),
                 default => $failure,

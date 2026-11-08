@@ -12,12 +12,14 @@ const home = join(fixture, 'home'), root = join(fixture, 'project'), agentDir = 
 for (const path of [home, root, agentDir]) mkdirSync(path, { recursive: true, mode: 0o700 });
 // Select the disposable HOME before importing any SDK or harness module with default operator paths.
 process.env.HOME = home; process.env.PI_CODING_AGENT_DIR = agentDir; process.env.PI_OFFLINE = '1';
+process.chdir(root);
 for (const key of ['FIGHT_SCREENING_PHASE', 'FIGHT_SCREENING_TASK', 'FIGHT_SCREENING_CHECKOUT', 'FIGHT_PI_HEADER', 'NO_COLOR', 'HERDR_ENV', 'HERDR_SOCKET_PATH', 'HERDR_PANE_ID', 'HERDR_TAB_ID', 'HERDR_WORKSPACE_ID']) delete process.env[key];
 process.env.TERM = 'xterm-256color';
 const provider = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const harness = process.env.FIGHT_QUALIFICATION_HARNESS ? resolve(process.env.FIGHT_QUALIFICATION_HARNESS) : join(provider, 'harness/pi');
 const manifest = JSON.parse(readFileSync(join(harness, 'package.json'), 'utf8'));
 const entries = manifest.pi.extensions.map(path => resolve(harness, path));
+const packagedDefaults = JSON.parse(readFileSync(join(harness, 'profiles/subagents.json'), 'utf8'));
 const sdk = await import(pathToFileURL(join(modules, '@earendil-works/pi-coding-agent/dist/index.js')));
 const { visibleWidth } = await import(pathToFileURL(join(modules, '@earendil-works/pi-tui/dist/index.js')));
 const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.json'), modelsPath: null,
@@ -32,11 +34,14 @@ const scenarios = [], headers = {};
 let outcomes = 0;
 async function load(paths) {
   const settings = sdk.SettingsManager.inMemory({ compaction: { enabled: false }, retry: { enabled: false } });
-  const loader = new sdk.DefaultResourceLoader({ cwd: root, agentDir, settingsManager: settings,
+  const eventBus = sdk.createEventBus();
+  const loader = new sdk.DefaultResourceLoader({ cwd: root, agentDir, settingsManager: settings, eventBus,
     noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true,
     additionalExtensionPaths: paths });
+  const defaults = [];
+  eventBus.on('subagents:settings_loaded', payload => defaults.push(payload.settings));
   await loader.reload();
-  return { settings, loader, loaded: loader.getExtensions() };
+  return { settings, loader, loaded: loader.getExtensions(), defaults };
 }
 for (const [name, paths, mode] of [
   ['package', [harness], 'tui'], ['explicit', entries, 'tui'],
@@ -44,10 +49,14 @@ for (const [name, paths, mode] of [
   ['header-only', [entries.find(path => path.endsWith('/src/header-extension.ts'))], 'tui'], ['package-json', [harness], 'json'],
   ['package-no-tools', [harness], 'json'],
 ]) {
-  const { settings, loader, loaded } = await load(paths);
+  const { settings, loader, loaded, defaults } = await load(paths);
   assert.deepEqual(loaded.errors, []); assert.deepEqual(loaded.warnings ?? [], []);
   const headerOnly = name === 'header-only';
   assert.equal(loaded.extensions.length, headerOnly ? 1 : entries.length);
+  assert.deepEqual(defaults, headerOnly ? [] : [packagedDefaults]);
+  assert.equal(existsSync(join(agentDir, 'subagents.json')), false);
+  assert.equal(existsSync(join(root, '.pi/subagents.json')), false);
+  outcomes += 3;
   // Upstream owns its own registration inventory; qualify Fight's contract and
   // one bundled engine without pinning the supplier's unrelated commands.
   assert.equal(loaded.extensions.filter(extension => extension.path.endsWith('/src/subagents-extension.ts')).length, headerOnly ? 0 : 1);
