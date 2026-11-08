@@ -18,7 +18,6 @@ const provider = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const harness = process.env.FIGHT_QUALIFICATION_HARNESS ? resolve(process.env.FIGHT_QUALIFICATION_HARNESS) : join(provider, 'harness/pi');
 const manifest = JSON.parse(readFileSync(join(harness, 'package.json'), 'utf8'));
 const entries = manifest.pi.extensions.map(path => resolve(harness, path));
-writeFileSync(join(agentDir, 'subagents.json'), readFileSync(join(harness, 'profiles/subagents.json')));
 const sdk = await import(pathToFileURL(join(modules, '@earendil-works/pi-coding-agent/dist/index.js')));
 const { visibleWidth } = await import(pathToFileURL(join(modules, '@earendil-works/pi-tui/dist/index.js')));
 const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.json'), modelsPath: null,
@@ -51,8 +50,8 @@ for (const [name, paths, mode] of [
   assert.equal(loaded.extensions.length, headerOnly ? 1 : entries.length);
   // Upstream owns its own registration inventory; qualify Fight's contract and
   // one bundled engine without pinning the supplier's unrelated commands.
-  assert.equal(loaded.extensions.filter(extension => extension.path.endsWith('/vendor/pi-subagents/src/index.ts')).length, headerOnly ? 0 : 1);
-  const registrations = key => loaded.extensions.filter(extension => !extension.path.includes('/vendor/pi-subagents/'))
+  assert.equal(loaded.extensions.filter(extension => extension.path.endsWith('/src/subagents-extension.ts')).length, headerOnly ? 0 : 1);
+  const registrations = key => loaded.extensions.filter(extension => !extension.path.endsWith('/src/subagents-extension.ts'))
     .flatMap(extension => [...extension[key].keys()]).sort();
   assert.deepEqual(registrations('commands'), headerOnly ? ['fight-header'] : expectedCommands);
   assert.deepEqual(registrations('flags'), headerOnly ? ['fight-header'] : expectedFlags);

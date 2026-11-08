@@ -4,6 +4,7 @@ description: Offer read-only technical counterchecks to a parent, never a canoni
 tools: read, grep, find, ls, ext:agent-os-pi
 extensions: ["agent-os-pi"]
 skills: true
+thinking: medium
 prompt_mode: append
 inherit_context: false
 persist_session: true
