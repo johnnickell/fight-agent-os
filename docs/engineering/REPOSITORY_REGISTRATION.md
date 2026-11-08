@@ -4,6 +4,8 @@ TASK-00575 cuts creation, inspection and conflict preview over together to Proje
 keeps its existing documentation URL; no legacy HTTP route, PHP facade or replay endpoint remains. Independent
 Review/QA are separate from implementation. Follow [the architecture contract](STANDARDS.md#architecture)
 and [ADR 0005's amendments](../../planning/adr/0005-repository-identity-and-link-consistency.md).
+The maintained [Project creation ownership view](project-registration/README.md) provides revision-linked source
+and arrow traces; it is not independent acceptance.
 
 ## Explicit installation setup
 
