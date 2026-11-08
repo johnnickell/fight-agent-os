@@ -16,7 +16,10 @@ const skillRole = skill => ({ work: 'engineer', review: 'reviewer', qa: 'qa', la
 const subject = value => typeof value === 'string' && /^(TASK|TICKET|EPIC|WF)-\d{3,5}$/.test(value);
 const releaseVersion = value => typeof value === 'string' && value.length <= 96 ?
   /^v?((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)$/.exec(value)?.[1] ?? null : null;
-const scopedSubject = (skill, value) => skill === 'sync' ? typeof value === 'string' && /^TASK-\d{5}$/.test(value) : skill === 'release' ? releaseVersion(value) !== null : subject(value) || (!['work', 'review', 'qa', 'land', 'build'].includes(skill) &&
+const releaseAssessor = skill => skill === 'review' || skill === 'qa';
+const scopedSubject = (skill, value) => skill === 'sync' ? typeof value === 'string' && /^TASK-\d{5}$/.test(value) : skill === 'release' ? releaseVersion(value) !== null :
+  (releaseAssessor(skill) && typeof value === 'string' && value.startsWith('release ') && releaseVersion(value.slice(8)) !== null) ||
+  subject(value) || (!['work', 'review', 'qa', 'land', 'build'].includes(skill) &&
   typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$/.test(value));
 /** Bind workflow responsibilities to a launcher or explicit operator, never model-authored input */
 export class WorkflowAccess {
@@ -84,12 +87,13 @@ export class WorkflowAccess {
     const sync = selected[1] === 'sync';
     const syncInput = sync ? /^\s*(TASK-\d{5})(?:\s+--checkout\s+("[^"\r\n]+"|'[^'\r\n]+'|\/[^\s"']+))?\s*$/.exec(selected[2]) : null;
     if (sync && !syncInput) throw new Unavailable('workflow-subject-required');
-    const taskId = sync ? syncInput[1] : selected[1] === 'release' ? (() => {
-      const version = selected[2].trim().split(/\s+/)[0];
-      if (!version) return null;
+    const releaseAssessment = releaseAssessor(selected[1]) && /^\s*release(?:\s|$)/.test(selected[2]);
+    const taskId = sync ? syncInput[1] : selected[1] === 'release' || releaseAssessment ? (() => {
+      const version = selected[2].trim().split(/\s+/)[releaseAssessment ? 1 : 0];
+      if (!version && !releaseAssessment) return null;
       const normalized = releaseVersion(version);
       if (!normalized) throw new Unavailable('workflow-subject-required');
-      return normalized;
+      return releaseAssessment ? 'release ' + normalized : normalized;
     })() : selected[2].match(/\b(?:TASK|TICKET|EPIC|WF)-\d{3,5}\b/)?.[0] ??
       (/^[A-Za-z0-9][A-Za-z0-9._-]{0,95}(?:\s|$)/.exec(selected[2])?.[0].trim() ?? null);
     if (taskId !== null && !scopedSubject(selected[1], taskId)) throw new Unavailable('workflow-subject-required');
