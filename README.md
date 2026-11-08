@@ -232,10 +232,12 @@ pi install ./harness/pi
 
 TASK-00560's [opt-in SDK Engineer journey](harness/pi/SUBAGENTS.md#opt-in-build-engineer) has independent Review
 and QA acceptance; its delivery results remain in `.runs/tasks/TASK-00560/runs/land/receipt.md`. Current source
-extends that boundary with an incomplete [all-role Build bootstrap](harness/pi/SUBAGENTS.md#all-role-build-bootstrap),
-requiring a deliberately prepared fresh native host and genuine Build selection. Controlled copied-install checks
-are not the required real all-role journey or a qualified default cutover. Active Builds/shared installations stay
-untouched; demonstrated process callers remain until replacement qualification.
+extends that boundary with the [sole all-role SDK Build default](harness/pi/SUBAGENTS.md#all-role-build-default),
+requiring a deliberately prepared fresh host and genuine Build/TASK/checkout selection, not a route flag.
+Missing supported capabilities/profile holds execution without process fallback. Explicit Sync retains its
+process Engineer/Land path and shared native custody. Final independent assessment and actual same-TASK delivery
+remain separate; source default cutover is not acceptance, publication or everyday rollout. Active hosts/shared
+installations remain untouched until deliberate safe-boundary adoption.
 
 Restart only the intended session at a safe boundary, then use `/fight-header` to choose a presentation or `off` to restore its default header.
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.

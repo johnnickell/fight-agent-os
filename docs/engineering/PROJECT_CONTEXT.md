@@ -47,12 +47,14 @@ identity in its working directory and applies the same substitutions to nested r
 binding or requirements require reconciling the context and evidence before continuing. Do not switch targets
 mid-run or reuse another repository's ledger, reports or revision allowance merely because the TASK ID matches.
 
-For the explicitly selected SDK stage route, pass the resolved target `base`, current exact `branch`, absolute
+For Build's sole default SDK stage route, pass the resolved target `base`, current exact `branch`, absolute
 selected `record` and this `context` path alongside role/checkout/head/attempt/model pins and original shared
 repair usage. The coordinator verifies
 target approval, branch/base policy and required resources before dispatch; the runtime verifies actual target
 membership/fresh identity, not provider-specific planning paths or status words. Context is target fact transport,
 not a way to select Build/stage authority. Native process stages use the same context in their fresh request.
-Keep demonstrated active process callers, including Sync, until real replacement qualification supports retirement.
+Explicit Sync retains its demonstrated process Engineer/Land caller under its own protocol; it cannot use the
+Build-only SDK tool. No process fallback serves fresh Build. Active hosts retain loaded code until deliberate
+safe-boundary adoption; source changes never silently migrate them.
 
 This is context resolution, not installation, runtime provisioning, a permission grant or independent acceptance.

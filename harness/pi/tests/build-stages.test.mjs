@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prepareStage, runStage } from '../src/build/stages.mjs';
 import { bindStageSession, closeWorkflow, stageDefinitions, stageIdentity, isSdkSession,
-  publishWorkflow, sessionWorkflow, stageBinding, selectStageRoute, stageRouteSelected, rememberSdkSession } from '../src/build/authority.mjs';
+  publishWorkflow, sessionWorkflow, stageBinding, rememberSdkSession } from '../src/build/authority.mjs';
 import { stageHistory } from '../src/build/history.mjs';
 import { WorkflowAccess } from '../src/workflow/access.mjs';
 import { SubagentObserver } from '../src/observation/subagents.mjs';
@@ -36,7 +36,7 @@ function fixture(t, role = 'engineer') {
   const profile = JSON.parse(readFileSync(new URL('../profiles/subagents.json', import.meta.url)));
   const registry = { capabilities: { beforeSessionStart: true, boundRootSession: true }, hasRunning: () => false,
     spawn() { throw new Error('possibly-started'); }, getRecord() {} };
-  const options = { selected: true, registry, profile };
+  const options = { registry, profile };
   publishWorkflow(parent, new WorkflowAccess('build', { taskId: request.task, checkout: root }));
   const child = () => {
     const sessionDir = join(root, '.runs/tasks/TASK-00561/runs/sessions'); mkdirSync(sessionDir, { recursive: true });
@@ -53,19 +53,22 @@ function fixture(t, role = 'engineer') {
   return { root, ctx, request, options, child, assignment, registry, profile, entries };
 }
 
-test('route readiness is exact-session-local and never supplies Build authority', () => {
-  let id = 'original'; const manager = { getSessionId: () => id }, sibling = { getSessionId: () => id };
-  selectStageRoute(manager, true); assert.equal(stageRouteSelected(manager), true);
-  assert.equal(stageRouteSelected(sibling), false); assert.equal(sessionWorkflow(manager), undefined);
-  id = 'replacement'; assert.equal(stageRouteSelected(manager), false);
-  selectStageRoute(manager, true); rememberSdkSession(manager); assert.equal(stageRouteSelected(manager), false);
-  closeWorkflow(manager); assert.equal(stageRouteSelected(manager), false);
+test('default route requires actual session-local Build authority and excludes SDK subordinates', t => {
+  const f = fixture(t), sibling = { getSessionId: f.ctx.sessionManager.getSessionId, getEntries: () => [] };
+  assert.equal(sessionWorkflow(sibling), undefined);
+  assert.throws(() => prepareStage({ ...f.ctx, sessionManager: sibling }, f.request, f.options), /build-authority-required/);
+  // Even a Build-shaped workflow cannot turn an SDK subordinate into a coordinator.
+  publishWorkflow(sibling, sessionWorkflow(f.ctx.sessionManager)); rememberSdkSession(sibling);
+  assert.throws(() => prepareStage({ ...f.ctx, sessionManager: sibling }, f.request, f.options), /build-authority-required/);
+  closeWorkflow(f.ctx.sessionManager);
+  assert.throws(() => prepareStage(f.ctx, f.request, f.options), /build-authority-required/);
+  publishWorkflow(f.ctx.sessionManager, new WorkflowAccess('build', { taskId: f.request.task, checkout: f.root }));
+  assert.equal(prepareStage(f.ctx, f.request, f.options).role, 'engineer');
 });
 
 for (const role of Object.keys(stageDefinitions)) {
   test(`${role} requires real Build authority, exact target and a fresh attempt`, t => {
     const f = fixture(t, role);
-    assert.throws(() => prepareStage(f.ctx, f.request, { ...f.options, selected: false }), /not-selected/);
     for (const skill of ['work', 'review', 'qa', 'land', 'sync']) {
       publishWorkflow(f.ctx.sessionManager, new WorkflowAccess(skill, { taskId: f.request.task, checkout: f.root }));
       assert.throws(() => prepareStage(f.ctx, f.request, f.options), /build-authority-required/);

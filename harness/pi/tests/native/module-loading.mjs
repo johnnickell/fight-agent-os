@@ -27,7 +27,7 @@ let credentialReads = 0;
 runtime.getApiKeyForProvider = async () => { credentialReads++; throw new Error('Unexpected credential resolution'); };
 const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
 const expectedCommands = ['fight-agents', 'fight-header', 'fight-policy', 'fight-subagents', 'fight-workflow', 'fight-workspace'];
-const expectedFlags = ['fight-build-stages', 'fight-header', 'fight-tool-policy'];
+const expectedFlags = ['fight-header', 'fight-tool-policy'];
 const expectedTools = ['fight_build_stage', 'fight_workflow_status'];
 const scenarios = [], headers = {};
 let outcomes = 0;

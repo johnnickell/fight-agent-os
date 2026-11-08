@@ -24,7 +24,8 @@ OPEN PR remain required by its owning skill. With no explicit checkout, Sync rep
 resolves an isolated worktree under its owning skill. Only interactive operator input or a trusted host binding changes
 authority. RPC, model prompts, stage labels, fixtures and profiles cannot promote a role. `/fight-workflow role engineer|reviewer|qa|land`
 is an explicit native-TUI alternative. SDK subordinates remain Reviewer unless the trusted host binds the actual
-fresh stage session through the explicitly selected Build route. Advice-only assistants cannot become canonical
+fresh stage session through the sole SDK Build route. Actual Build selection is required; no route flag, profile
+or tool visibility supplies authority, and SDK subordinates cannot dispatch nested Build stages. Advice-only assistants cannot become canonical
 Review/QA owners by profile or prompt. An execution status is never independent acceptance.
 
 - Engineer (`work`): edit assigned normal project files, including `.env.example` and project `.pi/skills`.
@@ -35,7 +36,7 @@ Review/QA owners by profile or prompt. An execution status is never independent 
 - Land: perform assigned project edits and separately authorized delivery work.
 - Sync: write `.runs/build/<TASK-ID>/` coordination evidence and task-owned scratch, not source or independent
   reports. Delegate accepted-work integration and same-PR delivery through the existing process-stage path;
-  the explicitly selected SDK stage route still requires actual Build selection.
+  the sole SDK stage route requires actual Build selection and is unavailable to Sync.
 
 Other installed skills retain their owning instructions and effect shown by `fight_workflow_status`.
 For an explicitly assigned release assessment, the provider's release protocol uses version-owned reports and

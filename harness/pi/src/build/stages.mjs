@@ -4,7 +4,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFile
 import { dirname, isAbsolute, join, sep } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
-import { bindStageSession, stageDefinitions, stageIdentity, sessionWorkflow } from './authority.mjs';
+import { bindStageSession, isSdkSession, stageDefinitions, stageIdentity, sessionWorkflow } from './authority.mjs';
 import { stageHistory } from './history.mjs';
 import { stageRole } from '../stage-roles.mjs';
 
@@ -25,7 +25,7 @@ const profileKeys = { worktreeIsolation: false, workflowsEnabled: false, schedul
   maxSubagentDepth: 1, disableDefaultAgents: true, fallbackSubagent: 'none', packageWorkflows: false, strictAgentFiles: true };
 const authorized = (ctx, request) => {
   const workflow = sessionWorkflow(ctx.sessionManager);
-  if (workflow?.skill !== 'build' || workflow.role !== 'qa' || workflow.mode !== 'default' ||
+  if (isSdkSession(ctx.sessionManager) || workflow?.skill !== 'build' || workflow.role !== 'qa' || workflow.mode !== 'default' ||
       workflow.taskId !== request.task || workflow.checkout !== request.checkout) fail('build-authority-required');
 };
 const candidate = request => {
@@ -34,8 +34,7 @@ const candidate = request => {
 };
 
 /** Preflight a fresh stage, never choose the next stage or accept its evidence */
-export function prepareStage(ctx, request, { selected, registry, profile }) {
-  if (!selected) fail('sdk-stages-not-selected');
+export function prepareStage(ctx, request, { registry, profile }) {
   authorized(ctx, request);
   const role = stageRole(request.role), definition = stageDefinitions[role];
   if (!/^TASK-\d{5}$/.test(request.task) || !definition) fail('stage-assignment-invalid');

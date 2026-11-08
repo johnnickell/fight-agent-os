@@ -14,7 +14,7 @@ Act as Team Lead, not implementer or independent acceptor. Resolve
 ## Bound one delivery
 
 Accepted-work synchronization uses explicit [Sync](../sync/SKILL.md), not a shortened Build or an Engineer
-promoted by prompt. Sync reuses this process launch/model/observation protocol and the same subject lock;
+promoted by prompt. Sync owns its retained process protocol, shares the model rules below and the subject lock;
 ordinary Build keeps Engineer → independent Review → applicable QA → Land for new implementation.
 
 `/skill:build TASK-NNNNN` delegates Work, independent Review, applicable QA and Land, including owned commits,
@@ -56,42 +56,26 @@ provider/model/thinking per role for repairs/resume; an explicit human change pr
 configured identity separately from unavailable provider attestation. Check installed `pi --version`, `--help`
 and `--list-models`; versions are evidence, not equality gates. No global install/settings/trust changes.
 
-Launch **one child at a time**. A fresh native host explicitly prepared with `--fight-build-stages sdk` uses
-[`fight_build_stage` for every role](../../../harness/pi/SUBAGENTS.md#all-role-build-bootstrap), including repairs
-and cleanup-only Land. Actual Build/coordination authority must name the same TASK and checkout. A subordinate
-Agent, profile, request or pane label cannot grant it. Never inherit Engineer conversation into assessors, resume
-an old assessor as a fresh verdict, or dispatch an SDK demonstration in place of the assigned Work.
+Launch **one child at a time** through
+[`fight_build_stage` for every role](../../../harness/pi/SUBAGENTS.md#all-role-build-default), including repairs
+and cleanup-only Land. This is the default and sole fresh Build route; no execution-selector flag is required.
+Actual Build/coordination authority must name the same TASK and checkout in default mode. SDK subordinates cannot
+coordinate nested stages even if a tool is visible. An Agent, profile, request or pane label cannot grant authority.
+Never inherit Engineer conversation into assessors, resume an old assessor as a fresh verdict, or dispatch an SDK
+demonstration in place of the assigned Work.
 
-TASK-00561 is a bootstrap, not a qualified default cutover. Existing active hosts without this tool continue their
-original provider-owned `scripts/run-stage.py` route; Sync still has that demonstrated process caller. Do not
-update/reload this active host or shared installation implicitly. The owning Build must deliberately prepare a
-fresh native host and select Build interactively to qualify the required real journey. Once an SDK attempt has
-been dispatched, no process fallback is permitted, including after display loss. Reconcile its actual execution
-and external effects before replacement. Source/controlled checks do not complete TASK-00561 or authorize retiring
-its still-live process callers.
+Missing tool, supported engine capabilities or qualified profile means hold for deliberate safe-boundary adoption,
+not process fallback. Active hosts keep their original loaded implementation; do not update/reload them or shared
+installations implicitly. Reconcile original execution and external effects before adoption or any replacement.
+Explicit Sync retains its demonstrated process Engineer/Land route under its own
+[process protocol](../sync/SKILL.md#process-stage-protocol), not a Build alternative. Shared native session-file,
+ancestry/custody and passive observation remain; display loss never authorizes relaunch or executor substitution.
+Read installed Pi [CLI/skills documentation](../../../harness/pi/README.md) before integration changes.
 
-For process stages, resolve the launcher's absolute path
-beside this skill, never from an unrelated target. The launcher uses the running Pi's exported native resource
-resolver offline to inspect configured packages and direct/auto-discovered extensions. One complete Harness
-selects its canonical package directory. With no configured Harness, it selects the trusted provider checkout's
-`harness/pi`.
-Multiple owners, filtered/disabled/incomplete resources, unavailable inventory or monitor support hold before
-dispatch. Project Harness configuration requires established native project trust; conservative inspection never
-grants execution authority. Offline native registration then checks the selected package's actual injection;
-diagnostics hold even when Pi exits successfully. Inspect native package/extension settings and report the
-prerequisite; do not install/remove packages, change settings/trust or disable discovery to bypass it.
-No user-specific installation path is required. An explicit `--harness-package` remains available for a separately
-trusted package, but must match any configured Harness. These checks apply to every stage, repair and cleanup-only
-launch, including resumed deliveries.
-Native Pi trust/resource discovery remains active; selecting a package does not grant project access.
-Read installed Pi [CLI/skills documentation](../../../harness/pi/README.md) as needed before integration changes.
-Native session-file birthtime, ancestry/custody and independent role admission remain unchanged. Observation is
-human-only/best-effort; missing visibility never authorizes relaunch or executor substitution.
-
-Use canonical stage inputs `--role engineer`, `reviewer`, `qa` and `land`. Owning skills remain `work`,
-`review`, `qa` and `land`; never rename them to match stage labels. The process owner normalizes existing workflow
-aliases using the Harness's single `src/stage-roles.json` vocabulary before launch, persistence and observation.
-Legacy `work`/`review` callers remain supported; unknown roles and coordinator names refuse. Normalization never
+Use canonical stage roles `engineer`, `reviewer`, `qa` and `land`. Owning skills remain `work`,
+`review`, `qa` and `land`; never rename them to match stage labels. The Harness normalizes existing workflow
+aliases using its single `src/stage-roles.json` vocabulary before dispatch, persistence and observation.
+Unknown roles and coordinator names refuse. Normalization never
 replaces native custody or actual workflow admission. Build's `phase: qa` / `skill: build` / coordination effect
 is not a QA worker. AGENTS displays verified canonical stage identity, not a prompt-derived authority claim.
 
@@ -115,23 +99,6 @@ and unresolved execution across reloads; fresh host creation does not reset the 
 writer provenance. Missing/unchanged/wrong-candidate reports, negative verdicts and SDK completed/steered/error
 states cannot substitute for the report inspection below. Do not dispatch Land without current independent
 acceptance and the original invocation's publication scope. Cleanup-only scope remains narrower than Land's tools.
-
-For an existing process host, use its original launch path:
-
-```sh
-cd "$task_checkout"
-python3 -u "$build_skill_dir/scripts/run-stage.py" \
-  --attempt "$attempt" --task "$task_id" --role "$role" \
-  --provider "$stage_provider" --model "$stage_model" --thinking "$stage_thinking" \
-  --timeout "$stage_timeout_seconds"
-```
-
-Use actual pinned variables and a finite stage timeout; shell timeout exceeds it plus termination grace. Keep
-stdout visible, relay meaningful progress at least every 60 seconds, inspect bounded `progress.log` if buffered.
-Do not detach, pipeline away exits, infer percentages or echo private source/thinking/credentials. Observe the
-original child through exit. Inspect monitor/Pi exits, provider errors, session model/thinking and reports;
-exit zero is not acceptance. Timeout/cancel/uncertain liveness needs reconciliation before another child.
-Never arbitrarily signal a reused/unknown PID or assume remote effects stopped with the CLI.
 
 ## Advance by evidence
 

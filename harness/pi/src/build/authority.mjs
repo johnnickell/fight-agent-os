@@ -4,7 +4,7 @@ import { sep } from 'node:path';
 // Actual SessionManager objects share authority across Pi's module loaders. No
 // process.env mutation, transcript entry, profile or agent name grants a role.
 const key = Symbol.for('fight:session-workflow-authority');
-const state = globalThis[key] ??= { workflows: new WeakMap(), stages: new WeakMap(), sdk: new WeakSet(), stageRoutes: new WeakMap() };
+const state = globalThis[key] ??= { workflows: new WeakMap(), stages: new WeakMap(), sdk: new WeakSet() };
 export const stageDefinitions = Object.freeze(Object.fromEntries(Object.entries({
   engineer: { skill: 'work', agent: 'fight-engineer', effects: ['source', 'checks', 'commit', 'task-handoff'] },
   reviewer: { skill: 'review', agent: 'fight-reviewer', effects: ['inspect', 'checks', 'review-report'] },
@@ -17,16 +17,9 @@ export function rememberSdkSession(manager) { state.sdk.add(manager); }
 export function isSdkSession(manager) { return state.sdk.has(manager); }
 export function publishWorkflow(manager, workflow) { state.workflows.set(manager, workflow); }
 export function sessionWorkflow(manager) { return state.workflows.get(manager); }
-export function selectStageRoute(manager, selected) {
-  if (selected) state.stageRoutes.set(manager, manager.getSessionId());
-  else state.stageRoutes.delete(manager);
-}
-export function stageRouteSelected(manager) {
-  return !isSdkSession(manager) && state.stageRoutes.has(manager) && state.stageRoutes.get(manager) === manager.getSessionId();
-}
 export function stageBinding(manager) { return state.stages.get(manager); }
 export function closeWorkflow(manager) {
-  state.workflows.delete(manager); state.stageRoutes.delete(manager);
+  state.workflows.delete(manager);
   const stage = state.stages.get(manager);
   if (stage) stage.live = false;
 }

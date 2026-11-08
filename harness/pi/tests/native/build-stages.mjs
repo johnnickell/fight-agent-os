@@ -48,22 +48,17 @@ const fresh = (name, role = 'engineer', repairsUsed = 0, repair = false, timeout
     record: join(root, 'work-items/assigned.md'), head: git('rev-parse', 'HEAD'), attempt,
     provider: 'faux', model: role, thinking: 'high', timeout, repair, repairsUsed, repairLimit: 5 };
 };
-async function create(selected) {
-  const settings = sdk.SettingsManager.create(root, agentDir, { projectTrusted: true }), events = sdk.createEventBus(), diagnostics = [];
+async function create() {
+  const settings = sdk.SettingsManager.create(root, agentDir, { projectTrusted: true }), events = sdk.createEventBus();
   const loader = new sdk.DefaultResourceLoader({ cwd: root, agentDir, settingsManager: settings, eventBus: events,
-    noSkills: true, noThemes: true, noPromptTemplates: true,
-    extensionFactories: [pi => {
-      pi.on('session_start', () => diagnostics.push(pi.getFlag('fight-build-stages')));
-    }] });
+    noSkills: true, noThemes: true, noPromptTemplates: true });
   await loader.reload(); assert.deepEqual(loader.getExtensions().errors, []);
   const { session } = await sdk.createAgentSession({ cwd: root, agentDir, modelRuntime: runtime,
     model: faux.getModel('coordinator'), thinkingLevel: 'medium', settingsManager: settings, resourceLoader: loader,
     sessionManager: sdk.SessionManager.create(root, settingsData.sessionDir) });
-  if (selected) session.extensionRunner.setFlagValue('fight-build-stages', 'sdk');
   events.on('subagents:started', event => { starts++; currentId = event.id; });
   await session.bindExtensions({ onError: error => errors.push(error.message) });
-  assert.deepEqual(diagnostics, [undefined]); // Separate real extension API, no shared flag stub.
-  assert.equal(loader.getExtensions().extensions.filter(extension => extension.flags.has('fight-build-stages')).length, 1);
+  assert.equal(loader.getExtensions().extensions.filter(extension => extension.flags.has('fight-build-stages')).length, 0);
   assert.equal(loader.getExtensions().extensions.filter(extension => extension.path.endsWith('/vendor/pi-subagents/src/index.ts')).length, 1);
   return { session, events };
 }
@@ -80,7 +75,7 @@ async function refused(session, request, reason, label) {
   assert.equal(result.isError, true, label); assert.match(text(result), reason, label); assert.equal(starts, before, label);
   assert.equal(existsSync(join(request.attempt, 'dispatch.lock')), false, label); cases.push({ refused: label });
 }
-let { session, events } = await create(true);
+let { session, events } = await create();
 try {
   const status = JSON.parse(text(await call(session, 'fight_workflow_status', {})));
   assert.equal(status.workflow.skill, 'build');
@@ -99,6 +94,11 @@ try {
     ['foreign-base', { base: harness }, /base-mismatch/], ['foreign-record', { record: join(harness, 'README.md') }, /target-context-mismatch/],
   ]) await refused(session, { ...fresh(label), ...patch }, reason, label);
   const registry = globalThis[Symbol.for('pi-subagents:manager')];
+  const capabilities = registry.capabilities;
+  try {
+    registry.capabilities = {};
+    await refused(session, fresh('missing-capability'), /capability-unavailable/, 'missing supported hooks, no fallback');
+  } finally { registry.capabilities = capabilities; }
   const observer = new SubagentObserver(session.sessionManager.getSessionId(), frame => frames.push(frame));
   const unstarted = events.on('subagents:started', event => observer.started(event));
   const ticker = setInterval(() => observer.tick(), 10); ticker.unref();
@@ -114,6 +114,7 @@ try {
       assert.equal(binding.role, role); assert.equal(binding.skill, skills[role]);
       assert.equal(sessionWorkflow(child.sessionManager).skill, skills[role]); assert.equal(binding.head, request.head);
       assert.equal(child.model.id, role); assert.equal(child.thinkingLevel, 'high');
+      assert.ok(!child.getActiveToolNames().includes('fight_build_stage'), 'stage owners cannot coordinate nested Build');
       for (const tool of ['read', 'bash', 'write', 'edit', 'fight_workflow_status']) assert.ok(child.getActiveToolNames().includes(tool), `${role} needs ${tool}`);
       assert.ok(!sessions.has(child.sessionId)); sessions.add(child.sessionId);
       assert.equal(child.messages.filter(message => message.role === 'user').length, 1);
@@ -128,7 +129,10 @@ try {
     responses.push(() => { requests++; return ai.fauxAssistantMessage(`Controlled ${role} terminal result; not acceptance.`); });
     let outcome;
     if (index === 0) {
-      faux.setResponses([() => { requests++; return ai.fauxAssistantMessage([ai.fauxToolCall('fight_build_stage', request)], { stopReason: 'toolUse' }); },
+      faux.setResponses([() => {
+        requests++; assert.ok(session.getActiveToolNames().includes('fight_build_stage'), 'Build default is active without a flag');
+        return ai.fauxAssistantMessage([ai.fauxToolCall('fight_build_stage', request)], { stopReason: 'toolUse' });
+      },
         ...responses, () => { requests++; return ai.fauxAssistantMessage('Controlled coordinator return, not acceptance.'); }]);
       await session.prompt('Exercise the controlled pipeline, not a real assignment.');
       const result = session.messages.find(message => message.role === 'toolResult' && message.toolName === 'fight_build_stage');
@@ -152,7 +156,11 @@ try {
   const siblingId = registry.spawn(null, null, 'fight-explorer', 'Controlled unbound sibling.', { isBackground: true });
   await registry.waitForAll(); const sibling = registry.getRecord(siblingId).session;
   assert.equal(sessionWorkflow(sibling.sessionManager).skill, 'review');
-  await refused(sibling, fresh('sibling', 'engineer', 1), /not-selected|build-authority-required/, 'unbound sibling');
+  await refused(sibling, fresh('sibling', 'engineer', 1), /build-authority-required/, 'unbound sibling');
+  const siblingWorkflow = sessionWorkflow(sibling.sessionManager);
+  publishWorkflow(sibling.sessionManager, original);
+  try { await refused(sibling, fresh('nested-build', 'engineer', 1), /build-authority-required/, 'SDK subordinate even with Build-shaped selection'); }
+  finally { publishWorkflow(sibling.sessionManager, siblingWorkflow); }
   const failure = fresh('provider-error', 'engineer', 1);
   faux.setResponses([() => { requests++; return ai.fauxAssistantMessage([], { stopReason: 'error', errorMessage: 'Controlled provider failure' }); }]);
   const failed = await call(session, 'fight_build_stage', failure); assert.equal(failed.isError, true);
@@ -188,6 +196,7 @@ try {
     engineStarts: starts, scriptedRequests: requests, externalRequests: 0 }, null, 2) + '\n');
   console.log(`PASS: 7 fresh role/repair sessions; ${cases.length} boundary cases; ${frames.length} passive frames; controlled only`);
 } finally { await session.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' }); session.dispose(); }
-({ session } = await create(false));
-try { await refused(session, fresh('without-opt-in'), /not-selected/, 'missing explicit route'); }
+for (const key of ['FIGHT_WORKFLOW_PHASE', 'FIGHT_WORKFLOW_TASK', 'FIGHT_WORKFLOW_CHECKOUT']) delete process.env[key];
+({ session } = await create());
+try { await refused(session, fresh('without-build'), /build-authority-required/, 'ordinary unassigned parent cannot dispatch'); }
 finally { await session.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' }); session.dispose(); }

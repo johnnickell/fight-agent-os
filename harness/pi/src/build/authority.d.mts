@@ -13,8 +13,6 @@ export declare function rememberSdkSession(manager: object): void;
 export declare function isSdkSession(manager: object): boolean;
 export declare function publishWorkflow(manager: object, workflow: WorkflowAccess): void;
 export declare function sessionWorkflow(manager: object): WorkflowAccess | undefined;
-export declare function selectStageRoute(manager: Pick<ExtensionContext['sessionManager'], 'getSessionId'>, selected: boolean): void;
-export declare function stageRouteSelected(manager: Pick<ExtensionContext['sessionManager'], 'getSessionId'>): boolean;
 export declare function stageBinding(manager: object): StageBinding | undefined;
 export declare function closeWorkflow(manager: object): void;
 export declare function bindStageSession(session: AgentSession, assignment: StageAssignment): StageBinding;

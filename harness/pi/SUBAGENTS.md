@@ -9,10 +9,11 @@ workflow policy and observation; the engine owns SDK execution. Automatic worktr
 workflows and nesting stay disabled in the supported profile.
 
 TASK-00560's real Engineer/Herdr journey has independent acceptance recorded in its TASK. TASK-00561 extends that
-source boundary to all four roles and corrects demonstrated follower gaps. **This is an incomplete bootstrap:**
-controlled copied-install checks do not establish the required real all-role delivery/repair journey or default
-cutover. Existing active Build and Sync process callers stay live. No global package/settings/trust or active
-session is changed by this source update. Full TASK-00561 acceptance and process-launch retirement remain held.
+boundary to all four roles and makes SDK execution the sole fresh Build default after bounded independent
+bootstrap Review/native QA. Final source still requires fresh independent complete-implementation Review/QA;
+actual authorized Land of that same accepted TASK supplies delivery evidence, not a circular precondition.
+Controlled copied-install checks alone are not that journey. Explicit Sync retains its demonstrated process path.
+No global package/settings/trust or active session is changed by this source update.
 
 ## Select the supported profile
 
@@ -44,16 +45,24 @@ All profiles use the engine's unscoped extension selector `agent-os-pi`, append 
 contexts and disable raw transcript output. The deterministic tool policy, if separately selected, refuses
 Agent delegation at its tool boundary; SDK/extension OS calls are not sandboxed by that policy.
 
-## All-role Build bootstrap
+<a id="all-role-build-bootstrap"></a>
 
-The candidate provides **`--fight-build-stages sdk`** and **`fight_build_stage`** for fresh Engineer, Reviewer,
-QA and Land owners through the same engine. It replaces the Engineer-only source entry/tool/flag, not an active
-installed host. There is no compatibility alias or silent fallback. Existing copied installations retain their
-original Engineer route until explicitly updated. The default process Build route remains until replacement evidence supports cutover under
-[TASK-00561's approved staged qualification](../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07).
-That same TASK receives bounded bootstrap Review then native/installed QA, final cutover then fresh final
-Review/QA, and only then authorized Land as the actual delivery observation. Bounded acceptance is not
-complete-TASK acceptance or Land authority; never claim that retaining the process Build default completes it.
+## All-role Build default
+
+**`fight_build_stage`** is the default and sole fresh Build execution route for Engineer, Reviewer, QA and Land
+owners through the same engine. No execution-selector flag or process fallback remains; the bootstrap
+`--fight-build-stages sdk` flag and route-readiness state are removed, without a compatibility alias.
+The historical bootstrap anchor above preserves evidence links, not old runnable instructions.
+Actual default-mode Build authority must name the TASK and checkout. Missing supported capabilities or qualified
+profile holds dispatch, never selects another executor. SDK subordinates are excluded even with a visible tool
+or Build-shaped label.
+
+[TASK-00561's approved staged qualification](../../planning/tasks/00561-TASK.md#approved-staged-qualification--2026-11-07)
+separates bounded bootstrap acceptance, this final source cutover, fresh complete-implementation Review/QA and
+actual authorized same-TASK Land delivery. Bounded ACCEPT/PASS cannot authorize ordinary Land or TASK closure.
+Active copied hosts retain their original loaded implementation until deliberate safe-boundary adoption;
+source changes do not migrate them. Explicit Sync's demonstrated process Engineer/Land path remains under
+[its owning protocol](../../.pi/skills/sync/SKILL.md#process-stage-protocol), not a second Build engine.
 
 ### Prepare a fresh native host
 
@@ -75,16 +84,16 @@ Unavailable auth holds real qualification, not permission to use a faux provider
 Start native Pi in an owned Herdr terminal, in the operator-selected registered checkout:
 
 ```sh
-PI_CODING_AGENT_DIR="$private_agent_dir" pi --fight-build-stages sdk \
+PI_CODING_AGENT_DIR="$private_agent_dir" pi \
   --provider "$coordinator_provider" --model "$coordinator_model" --thinking "$coordinator_thinking"
 ```
 
 The **operator** must genuinely select `/skill:build TASK-NNNNN --checkout /absolute/selected/checkout` with the
-actual TASK. Inspect `fight_workflow_status`: Build/coordination, same TASK/checkout, default mode. The flag only
-selects route readiness; it does not select Build authority. An Engineer, profile, RPC prompt or programmatic
+actual TASK. Inspect `fight_workflow_status`: Build/coordination, same TASK/checkout, default mode. Package/tool
+availability does not select Build authority. An Engineer, profile, RPC prompt or programmatic
 interactive-input fixture cannot promote itself. No automatic active-host `/reload`, user-input synthesis or
 shared installation update is allowed. If this session cannot express that genuine selection, commit the
-bootstrap incomplete and return this precise preparation/continuation to its owning Build.
+work incomplete and return this precise preparation/continuation to its owning Build.
 
 Before continuing an earlier journey, reconcile its original worker liveness and remote/local effects; a fresh
 host is not proof that old effects stopped. Carry the original authorization, reports, pinned identities, single
@@ -111,8 +120,8 @@ Call `fight_build_stage` with:
 [PROJECT_CONTEXT](../../docs/engineering/PROJECT_CONTEXT.md) resolves target facts; the host does not impose Agent
 OS planning paths/status words/branch prefixes on another target. It requires matching registered repository,
 base/checkout, exact branch/head/context/record, actual Build authority and the engine's real
-`beforeSessionStart`/`boundRootSession` capabilities. The actual SessionManager owns route readiness; SDK siblings
-cannot borrow it or a native parent's launcher environment. Concurrent sessions never mutate shared `process.env`
+`beforeSessionStart`/`boundRootSession` capabilities. The actual SessionManager owns initialized workflow authority;
+SDK siblings cannot borrow it or a native parent's launcher environment. Concurrent sessions never mutate shared `process.env`
 to impersonate role authority.
 
 The tool claims `dispatch.lock` before calling the one upstream manager. Its awaited setup runs after factories
@@ -149,7 +158,7 @@ Reader closure remains passive; upstream runtime shutdown/reload can abort/dispo
 
 This anchor preserves existing links to TASK-00560's historical Engineer-only qualification. Its accepted real
 journey and original receipts remain in [TASK-00560](../../planning/tasks/00560-TASK.md). The current copied source
-uses the all-role bootstrap above; do not pass its removed Engineer-only flag/tool to the new package. Earlier
+uses the all-role default above; do not pass its removed Engineer-only flag/tool to the new package. Earlier
 0.22.1/source `fc089c4b7ab0f1185453b2e53027997c1f637e38`, Pi 1.4.0 and Herdr 0.9.5 are historical observation receipts.
 The original 0.23.0/Pi 1.5.0 missing-hook probe remains evidence in TASK-00560, not a current API limitation or
 version gate. John approved the bundled component on 2026-11-04; its supported local setup/root hooks are in
@@ -160,8 +169,8 @@ version gate. John approved the bundled component on 2026-11-04; its supported l
 Historical locator for TASK-00560's 2026-11-03 missing-capability evidence: read the
 [original hold at revision 03241436](https://github.com/johnnickell/fight-agent-os/blob/0324143618496c3cf26bdd3e315243a47934dbc9/harness/pi/SUBAGENTS.md#build-engineer-prerequisite--task-00560-held).
 The later bundled hooks and accepted Engineer journey superseded that hold. Its old setup instructions are
-not current commands; use the all-role bootstrap above for this candidate. This reference does not clear
-TASK-00561's remaining qualification or default-cutover requirements.
+not current commands; use the all-role default above for this candidate. This reference does not clear
+TASK-00561's remaining final-assessment or actual-delivery requirements.
 
 ## Supported observation boundary
 
@@ -203,19 +212,23 @@ sessions, a normal model/tool pipeline, canonical negative/incomplete fixture re
 siblings, provider errors, timeout and reload holds. It never writes real TASK acceptance or performs publication.
 Controlled launcher fixtures are **not** genuine operator selection, real provider Work, independent Review/QA,
 Herdr capture or the required all-role delivery journey. Record source/install/model identity and limitations.
-Use real native/installed interaction and inspected comparable captures for the remaining qualification, then
-normal `./bin/build` and independent Review/applicable QA. Missing evidence leaves TASK-00561 incomplete.
+Use real native/installed interaction and inspected comparable captures for applicable changed boundaries, then
+normal `./bin/build` and independent Review/applicable QA. Bootstrap native captures retain their original subject;
+changed final defaults/admission need final-source qualification. Missing evidence leaves TASK-00561 incomplete.
 
 | Path | Actual current caller / retirement decision |
 |---|---|
-| `src/build-stages-extension.ts`, `src/build/{stages,authority,history}.mjs` | Manifest and Build's explicit all-role route; one engine, no scheduling/acceptance replacement |
+| `src/build-stages-extension.ts`, `src/build/{stages,authority,history}.mjs` | Manifest and sole fresh Build default; one engine, no scheduling/acceptance replacement |
 | Former Engineer-only extension/module and two native probes | Replaced by qualified copied all-role source/probe; removed, without compatibility wrappers |
-| Provider `.pi/skills/build/scripts/run-stage.py` | This active pre-bootstrap Build and explicit Sync still use it; retained until real replacement qualification |
-| `src/observation/run-stage.py`, `automatic_observation.py`, `observation.py`, birth helpers | Same live process callers plus their native qualification; retain, not hypothetical fallback for an SDK attempt |
+| Bootstrap flag, `stageRoutes`, `selectStageRoute` / `stageRouteSelected`, `selected` dispatch option and opt-in checks/docs | Superseded Build-only selector removed; default/unbound/subordinate/capability checks replace it |
+| Provider `.pi/skills/build/scripts/run-stage.py` and `harness-inventory.ts` | Explicit Sync's actual Engineer/Land launcher and native resource inventory; retained in place, no new wrapper or Build fallback |
+| `src/observation/run-stage.py`, `automatic_observation.py`, `observation.py`, process-birth/custodian/stage-presentation and owning checks | Sync's same live process path plus native qualification; role/alias fixtures retain shared vocabulary contracts |
+| `session-file-birth.py` and native session custody | Shared native parent/session-file witness, not process-only launch code |
 | Native custody/observer and `workspace/registered-children.mjs`, Herdr activity/logs | Shared passive path for both routes, not replaced launchers |
 
 No release-version dispatch is added: the release protocol explicitly uses independent standalone sessions when
 its version-owned dispatcher is unavailable. The TASK-only tool cannot supply release authority. Prior explicit-socket
 JavaScript readers were retired by TASK-00554; its historical 657/657 observation run and later recovery/repair
-receipts remain with that TASK, not fresh all-role qualification. Full default cutover, the required real
-journey/repair, inspected native captures and evidence-backed process retirement remain continuation work.
+receipts remain with that TASK, not fresh all-role qualification. Final complete-implementation assessment and
+actual same-TASK delivery remain separate obligations. Ordinary installation/adoption is always explicit;
+retaining Sync/shared custody does not retain a permanent Build process alternative.
