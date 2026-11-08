@@ -176,9 +176,10 @@ bounds, **not measured clicks, implementation estimates or promises**. A and B a
 | Removal | **2 actions**: remove/disable package feature, restart; remove proposed key state explicitly if created | At least **3 actions**: disable origin integration, revoke/remove broker binding/key state, uninstall/unregister broker; privileged variant may require admin. Never delete transcripts as implicit removal |
 
 **Measured assessment burden:** **0** installs, **0** privilege elevations/admin dialogs, **0** operational native
-session launches/resumes, **0** child launches, **0** origin keys and **0** prototypes. Compose prerequisite
-resolution generated isolated application settings (including application keys), overrides and empty cache/output
-mount directories through the owning wrapper; these are not an origin issuer or a measured hardening setup.
+session launches/resumes, **0** child launches, **0** origin keys and **0** prototypes for the investigation.
+Separate mandatory gate preparation generated isolated application settings (including application keys), overrides,
+locked Composer/client/Harness installations and build/export output through owning wrappers. These are verification
+prerequisites, not an origin issuer, global installation or measured hardening setup.
 Source fetches and read-only metadata commands do not measure either operational UX. Retaining today's accepted boundary adds **0** setup,
 per-session, per-child or removal actions, but deliberately retains malicious-local impersonation risk. The
 low-recurring-friction targets above cannot be traded for silently weaker origin admission.
@@ -189,7 +190,7 @@ bugs or load hostile code; a legitimate permitted process may act as a confused 
 filesystem tampering, root/kernel compromise, injection and delegated tools are not solved by this note. No
 OS-sandbox, universal hostile-local-process protection or provider attestation is claimed.
 
-## Direct validation and remaining gate
+## Direct validation and gate provenance
 
 - `python3 E/collect.py` and `python3 E/extract.py`: exit **0**; bounded read-only collection and text extraction.
   Collection made **8** publisher HTTP requests, **6 HTTP 200 / 2 HTTP 404**. The two guessed audit-token documentation
@@ -205,16 +206,25 @@ OS-sandbox, universal hostile-local-process protection or provider attestation i
   tests or a proof of secure origin. Installed-source reading supplies the interpretation, not string counts.
 - `./bin/planning-check --write` and read-only `./bin/planning-check`: exit **0**, **749 records / 513 active**;
   generated views current. `git diff --check`: exit **0**.
-- Normal canonical `./bin/build`: exit **1**, **“The Compose web service is not running. Start it with ./bin/up.”**
-  No application phase ran, no application receipt was reused, and no full-gate success is claimed. The separate
-  planning commands above are fresh; the build wrapper stopped before its own planning/application pipeline.
-  Verification is **incomplete** pending explicit isolated-runtime/dependency/artifact preparation through the
-  owning procedure and a successful canonical build. No main runtime, full application/ingress startup or global
-  trust change was performed to turn research into a green gate. `E/gates.json` and logs retain exact exits;
-  final runtime inspection still reports zero containers/volumes/networks. Generated settings/locator remain at
-  canonical `var/worktrees/fight-wt-4116abea7eff/` for the same task's gate continuation, with empty output/cache
-  directories, not a running stack. Do not expose `task.env`. Teardown uses canonical `bin/down --worktree`
-  with the exact selected checkout path; no main or foreign resources may be retired. The TASK/handoff own continuation.
+- **Historical initial gate:** normal `./bin/build` exits **1** because Compose web was absent, before its own
+  planning/application pipeline; no application phase or receipt reuse. `E/gates.json` and logs preserve that
+  failure. Evidence-only recovery subsequently prepared the isolated tooling project and passed **16 phases**,
+  then failed unchanged vendored engine import ordering (**193 files / 1 error**, exit **1**). Its retained failed
+  receipt is canonical `.runs/compose/fight-wt-4116abea7eff/build/20261108T164322Z-19/receipt.json`; it is not success.
+  The recovery runtime/dependencies/output were retired, preserving source, private settings and needed evidence.
+- **Owner-approved repair, 2026-11-08:** John explicitly authorized only the small existing import-order fix,
+  rerun verification and independent Review/QA. In `harness/pi/vendor/pi-subagents/src/index.ts`, `node:url` now
+  follows `node:fs` and `node:path`; bindings, runtime behavior/API, vendored version and locks are unchanged.
+  Direct owning Biome lint reproduced **193 files / 1 error**, exit **1**, before the edit and passes **193 files /
+  0 errors**, exit **0**, afterwards; no formatter or product test of tooling was added. New evidence is canonical
+  `.runs/tasks/TASK-00507/runs/repair-1-20261108T1844Z/`. Gate-only prerequisites were restored in the **same**
+  project `fight-wt-4116abea7eff`, starting only web and its postgres/postgres_test dependencies. No full app,
+  TLS/FPM/mail/ingress/trust, installed-host update or main data import. This does not expand the two approaches
+  or supply origin proof. The final normal gate result, exact tested snapshot, counts/warnings and commit bridge
+  belong to [TASK-00507's completion notes](../../planning/tasks/00507-TASK.md#completion-notes) and canonical
+  `.runs/tasks/TASK-00507/runs/work-handoff.md`; earlier failures remain historical, never relabeled passes.
+  Config/teardown locator is canonical `var/worktrees/fight-wt-4116abea7eff/locator.json`; do not expose `task.env`.
+  Teardown uses canonical `bin/down --worktree` with the exact selected checkout path, not main or foreign resources.
 
 A future authorized scope must qualify the issuer rather than merely add signatures, and supply the real
 counterexample/lifetime/UX evidence before implementation adoption. This bounded assessment stops here; it does
