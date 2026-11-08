@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -630,6 +630,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | done | — | [PR #195](https://github.com/johnnickell/fight-agent-os/pull/195) |
 | — | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | — (standalone bug) | done | — | [PR #196](https://github.com/johnnickell/fight-agent-os/pull/196) |
 | — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #214](https://github.com/johnnickell/fight-agent-os/pull/214) |
+| — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | — |
 | — | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #207](https://github.com/johnnickell/fight-agent-os/pull/207) |
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #212](https://github.com/johnnickell/fight-agent-os/pull/212) |
 | — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | done | — | [PR #211](https://github.com/johnnickell/fight-agent-os/pull/211) |

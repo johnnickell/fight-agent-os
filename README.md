@@ -235,9 +235,9 @@ and QA acceptance; its delivery results remain in `.runs/tasks/TASK-00560/runs/l
 extends that boundary with the [sole all-role SDK Build default](harness/pi/SUBAGENTS.md#all-role-build-default),
 requiring a deliberately prepared fresh host and genuine Build/TASK/checkout selection, not a route flag.
 Missing supported capabilities/profile holds execution without process fallback. Explicit Sync retains its
-process Engineer/Land path and shared native custody. Final independent assessment and actual same-TASK delivery
-remain separate; source default cutover is not acceptance, publication or everyday rollout. Active hosts/shared
-installations remain untouched until deliberate safe-boundary adoption.
+process Engineer/Land path and shared native custody. Complete implementation has independent technical and
+applicable QA acceptance; actual same-TASK delivery remains separate from acceptance and everyday rollout.
+Active hosts/shared installations remain untouched until deliberate safe-boundary adoption.
 
 Restart only the intended session at a safe boundary, then use `/fight-header` to choose a presentation or `off` to restore its default header.
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.

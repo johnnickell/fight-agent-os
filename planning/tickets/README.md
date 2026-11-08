@@ -132,7 +132,7 @@
 | [TICKET-00127](00127-TICKET.md) | Review material architecture changes with diagrams in pull requests | done | [EPIC-00022](../epics/00022-EPIC.md) |
 | [TICKET-00128](00128-TICKET.md) | Show feature architecture on demand in Pi | done | [EPIC-00022](../epics/00022-EPIC.md) |
 | [TICKET-00129](00129-TICKET.md) | Adopt upstream Pi subagents with Fight observation | done | [EPIC-00006](../epics/00006-EPIC.md) |
-| [TICKET-00130](00130-TICKET.md) | Run local Build through upstream agents with browsable activity and stack logs | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00130](00130-TICKET.md) | Run local Build through upstream agents with browsable activity and stack logs | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00131](00131-TICKET.md) | Establish one authoritative architecture contract | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00132](00132-TICKET.md) | Reconcile every unfinished product plan | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00133](00133-TICKET.md) | Adopt canonical transaction and audit contracts | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
