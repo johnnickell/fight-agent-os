@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Workspace;
 
 use App\Domain\Workspace\RegistrationInputRejected;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 

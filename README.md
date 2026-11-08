@@ -15,9 +15,11 @@ API validation/error handling, public-safe form metadata and local engineering s
 present. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
 HTTP boundary with strict matching client contracts, protocol metadata and preserved session-cookie recovery;
 scoped independent HTTP/browser/security QA covers the cutover, not production deployment or unrelated use cases.
-Explicit initial Workspace bootstrap and protected Repository registration/inspection are implemented under
-[TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending fresh independent Review/QA after repair. They add no
-checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
+Explicit initial Workspace bootstrap has independent technical and behavioral acceptance under
+[TASK-00574](planning/tasks/00574-TASK.md#accepted-implementation-checkpoint--2026-11-08), including its separately
+owned exceptional-reference admission and factory. Protected Repository registration/inspection remains implemented
+under [TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending its own fresh independent
+Review/QA and TASK-00575's Project cutover. These capabilities add no checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
 canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
 TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
 pending independent Review/QA, at `/`, `/app` and registered protected destinations. Local system/light/dark

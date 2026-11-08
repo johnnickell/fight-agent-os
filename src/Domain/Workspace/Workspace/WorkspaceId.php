@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Workspace;
+namespace App\Domain\Workspace\Workspace;
 
 use Fight\Common\Domain\Identity\UniqueId;
 

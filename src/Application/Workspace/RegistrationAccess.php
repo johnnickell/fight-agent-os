@@ -6,7 +6,8 @@ namespace App\Application\Workspace;
 
 use App\Application\Authorization\AuthenticatedPermissions;
 use App\Domain\Authorization\InstallationManagedPolicy;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\Query\FindInitialWorkspace;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
@@ -14,6 +15,7 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 
 /**
  * Class RegistrationAccess
@@ -24,14 +26,13 @@ final readonly class RegistrationAccess
 {
     public const string VIEW = 'READ_REPOSITORY_REGISTRATIONS';
     public const string REGISTER = 'REGISTER_REPOSITORIES';
-    public const string GENERATE = 'GENERATE_REFERENCE_IDS';
 
     /**
      * Constructs RegistrationAccess
      */
     public function __construct(
         private AuthenticatedPermissions $permissions,
-        private RegistrationStore $store,
+        private QueryBus $queryBus,
         private UserRepository $users,
         private RoleRepository $roles
     ) {
@@ -48,7 +49,7 @@ final readonly class RegistrationAccess
         string $permission
     ): UserId {
         $actor = $this->permissions->require($authentication, [PermissionName::fromString($permission)]);
-        $initial = $this->store->initialWorkspace();
+        $initial = $this->queryBus->fetch(new FindInitialWorkspace());
         $roleId = RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID);
         $role = $this->roles->getById($roleId);
         $user = $this->users->getById($actor);

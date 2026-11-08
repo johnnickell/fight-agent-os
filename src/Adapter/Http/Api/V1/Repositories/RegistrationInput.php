@@ -8,7 +8,7 @@ use App\Domain\Workspace\RegistrationInputRejected;
 use App\Domain\Workspace\RegistrationSources;
 use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\SourceDescriptor;
-use App\Domain\Workspace\WorkspaceId;
+use App\Domain\Workspace\Workspace\WorkspaceId;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Psr\Http\Message\ServerRequestInterface;

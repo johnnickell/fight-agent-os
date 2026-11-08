@@ -2,13 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Console\BootstrapWorkspaceCommand;
-use App\Adapter\Http\Action\Api\V1\Repositories\GenerateExceptionalReferenceAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\GetRepositoryRegistrationAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\ListRepositoryRegistrationsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\PreviewRepositoryConflictsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\RegisterRepositoryAction;
-use App\Adapter\Http\Responder\Api\V1\Repositories\GenerateExceptionalReferenceResponder;
 use App\Adapter\Http\Responder\Api\V1\Repositories\GetRepositoryRegistrationResponder;
 use App\Adapter\Http\Responder\Api\V1\Repositories\ListRepositoryRegistrationsResponder;
 use App\Adapter\Http\Responder\Api\V1\Repositories\PreviewRepositoryConflictsResponder;
@@ -18,8 +15,6 @@ use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Workspace\PostgresRegistrationFences;
 use App\Adapter\Persistence\Workspace\PostgresRegistrationStore;
 use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Workspace\BootstrapWorkspace;
-use App\Application\Workspace\GenerateExceptionalReference;
 use App\Application\Workspace\GetRepositoryRegistration;
 use App\Application\Workspace\ListRepositoryRegistrations;
 use App\Application\Workspace\PreviewRepositoryConflicts;
@@ -33,6 +28,7 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
@@ -47,17 +43,10 @@ return static function (Container $container): void {
         ));
     $container->set(RegistrationAccess::class, static fn(Container $c): RegistrationAccess => new RegistrationAccess(
         $c->get(AuthenticatedPermissions::class),
-        $c->get(RegistrationStore::class),
+        $c->get(QueryBus::class),
         $c->get(UserRepository::class),
         $c->get(RoleRepository::class)
     ));
-    $container->set(BootstrapWorkspace::class, static fn(Container $c): BootstrapWorkspace => new BootstrapWorkspace(
-        $c->get(RegistrationStore::class),
-        $c->get(TransactionalUnitOfWork::class),
-        $c->get(Clock::class)
-    ));
-    $container->set(BootstrapWorkspaceCommand::class, static fn(Container $c): BootstrapWorkspaceCommand =>
-        new BootstrapWorkspaceCommand($c->get(BootstrapWorkspace::class)));
     $container->set(RegisterRepository::class, static fn(Container $c): RegisterRepository => new RegisterRepository(
         $c->get(RegistrationStore::class),
         $c->get(RegistrationFences::class),
@@ -78,21 +67,12 @@ return static function (Container $container): void {
             $c->get(TransactionalUnitOfWork::class)
         ));
     }
-    $container->set(GenerateExceptionalReference::class, static fn(Container $c): GenerateExceptionalReference =>
-        new GenerateExceptionalReference(
-            $c->get(RegistrationStore::class),
-            $c->get(RegistrationFences::class),
-            $c->get(RegistrationAccess::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(Clock::class)
-        ));
     foreach (
         [
         RegisterRepositoryResponder::class,
         GetRepositoryRegistrationResponder::class,
         ListRepositoryRegistrationsResponder::class,
-        PreviewRepositoryConflictsResponder::class,
-        GenerateExceptionalReferenceResponder::class
+        PreviewRepositoryConflictsResponder::class
         ] as $responder
     ) {
         $container->set($responder, static fn(Container $c) => new $responder($c->get(JSendResponseFactory::class)));
@@ -104,9 +84,7 @@ return static function (Container $container): void {
         [ListRepositoryRegistrationsAction::class, ListRepositoryRegistrations::class,
             ListRepositoryRegistrationsResponder::class],
         [PreviewRepositoryConflictsAction::class, PreviewRepositoryConflicts::class,
-            PreviewRepositoryConflictsResponder::class],
-        [GenerateExceptionalReferenceAction::class, GenerateExceptionalReference::class,
-            GenerateExceptionalReferenceResponder::class]
+            PreviewRepositoryConflictsResponder::class]
     ];
     foreach ($interactions as [$action, $operation, $responder]) {
         $container->set($action, static fn(Container $c) => new $action($c->get($operation), $c->get($responder)));
