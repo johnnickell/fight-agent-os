@@ -509,7 +509,7 @@
 | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | done | — |
 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | done | — |
 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | done | — |
-| [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | done | — |
 | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | done | — |
 | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
