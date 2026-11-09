@@ -31,6 +31,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -95,6 +96,89 @@ SQL
         self::assertNull($this->users->getById(UserId::generate()));
         self::assertTrue($this->users->hasRoleAssignment($roleId));
         self::assertSame(1, $this->users->getAll(new Pagination())->totalRecords());
+    }
+
+    /**
+     * Verifies transactional lifecycle reads wait for an unrelated email writer before taking their snapshot
+     */
+    #[DataProvider('emailWriterOperations')]
+    public function testLifecycleSnapshotWaitsForConcurrentEmailChange(bool $confirm): void
+    {
+        $user = $this->activeUser('lifecycle-email@example.test');
+        $this->commitAdd($user);
+        $emailChange = clone $user;
+        $emailChange->requestEmailChange(
+            EmailAddress::fromString('lifecycle-destination@example.test'),
+            $this->clock('2026-10-01T12:00:05+00:00')
+        );
+        if ($confirm) {
+            self::assertTrue($this->unitOfWork->commitTransactional(
+                fn(): bool => $this->users->replaceEmailChangeReservation($user, $emailChange)
+            ));
+            $user = clone $emailChange;
+            $emailChange->confirmEmailChange($this->clock('2026-10-01T12:00:05+00:00'));
+            $emailChange->advanceAuthenticationAuthorityRevision();
+        }
+        $other = $this->connection();
+        $otherUsers = new PostgresUserRepository(
+            $other,
+            new AuthorizationReferenceFences($other),
+            new AuthenticationAuthorityFences($other),
+            lockLifecycleSnapshot: true
+        );
+        try {
+            $this->connection->beginTransaction();
+            if ($confirm) {
+                $replaced = $this->users->replaceEmailChangeConfirmation($user, $emailChange);
+            } else {
+                $replaced = $this->users->replaceEmailChangeReservation($user, $emailChange);
+            }
+            self::assertTrue($replaced);
+            $other->beginTransaction();
+            $other->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            try {
+                $otherUsers->getById($user->getId());
+                self::fail('A lifecycle snapshot must wait for the in-flight email writer.');
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
+            }
+            $other->rollBack();
+            $this->connection->commit();
+            $other->transactional(function () use ($otherUsers, $user, $emailChange): void {
+                $current = $otherUsers->getById($user->getId());
+                self::assertNotNull($current);
+                self::assertEquals($emailChange->getPendingEmailChange(), $current->getPendingEmailChange());
+                $disabled = clone $current;
+                $disabled->disable($this->clock('2026-10-01T12:00:06+00:00'));
+                self::assertTrue($otherUsers->replaceLifecycleState($current, $disabled));
+            });
+            $stored = $this->users->getById($user->getId());
+            self::assertNotNull($stored);
+            self::assertSame(UserState::DISABLED, $stored->getState());
+            self::assertEquals($emailChange->getPendingEmailChange(), $stored->getPendingEmailChange());
+            self::assertEquals($emailChange->getEmail(), $stored->getEmail());
+            self::assertSame($emailChange->getCanonicalEmailRevision(), $stored->getCanonicalEmailRevision());
+            self::assertSame($emailChange->getAuthenticationVersion() + 1, $stored->getAuthenticationVersion());
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($other->isTransactionActive()) {
+                $other->rollBack();
+            }
+            $other->close();
+        }
+    }
+
+    /**
+     * Supplies reservation and canonical-email promotion writers
+     *
+     * @return iterable<array{bool}>
+     */
+    public static function emailWriterOperations(): iterable
+    {
+        yield 'reservation' => [false];
+        yield 'canonical promotion' => [true];
     }
 
     /**
