@@ -1,6 +1,6 @@
 ---
 name: land
-description: Publish an accepted TASK, obtain required hosted evidence, resume an ended handoff, or finish ownership-proven local cleanup without republishing.
+description: Publish an accepted TASK, obtain required hosted evidence, resume an ended handoff, and automatically finish eligible owned cleanup; cleanup-only never republishes.
 ---
 
 # Land
@@ -59,10 +59,16 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    failed outcomes remain holds. After config retirement, repeats use only the original absolute path, never
    branch-based redirection or fabricated publication.
    No mandatory source copies or permanent local archive. Keep active-role evidence until outcomes reach TASK/PR.
-   If this worker consumes source, Build continues source removal from the safe checkout after actual exits;
-   that source hold cannot block explicit Docker teardown. No second cleanup helper or resource ledger.
+   If this worker consumes source, hand the exact remaining effects to its owning coordinator, which follows
+   [automatic cleanup continuation](../../../docs/engineering/LANDING.md#automatic-cleanup-continuation)
+   after actual exit. A `stage-target-changed` refusal of a relocated worker is not itself a source hold:
+   use the already-authorized coordinator cleanup path when available, without changing stage identity or
+   requesting another cleanup prompt. That source hold cannot block explicit Docker teardown.
+   No second cleanup helper or resource ledger.
 5. **Report and stop.** Return actual publication state separately from removed/absent/held/failed resource counts,
-   exact remaining identities/reasons, fresh/reused evidence and finite next action. Verify postconditions yourself;
+   exact remaining identities/reasons, fresh/reused evidence and finite next action. Preserve scoped dependency
+   warnings: distinguish temporary minimum-lane advisories from ordinary dependency results using actual evidence;
+   neither a disclosure nor cleanup implies an advisory was fixed. Verify postconditions yourself;
    a helper exit, successful PR or technical acceptance is not complete cleanup. No tracked cleanup-result loop,
    persistent delivery queue, routine post-merge maintenance, remote-ref deletion, archive, release or deployment.
 

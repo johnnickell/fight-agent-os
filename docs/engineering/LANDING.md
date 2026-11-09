@@ -505,6 +505,33 @@ hold; successful publication with cleanup held is **not complete Land**. Do not 
 for effects already within Land authority. Never delete the main checkout or a current/active branch, terminate
 an unrequested session, delete a remote branch, prune globally, stop a shared stack/VM or erase durable data.
 
+### Automatic cleanup continuation
+
+Continue eligible remaining cleanup within the original Land/Build/Sync authorization; do not end with a
+manual `cleanup-only` recommendation when the current owner can complete it. Keep the exact target repository,
+TASK, original removal path, published head/PR, surviving outcome record and remaining effects in the existing
+handoff. The safe execution checkout is distinct from the worktree being removed. Reconcile current native
+state and publication proof under [cleanup-only intake](#cleanup-only-intake); never republish for cleanup.
+
+If the Land worker consumes the removal candidate, it records remaining effects and exits. Its coordinator
+observes actual settled exit, rechecks other consumers and continues from the canonical safe checkout. Prefer
+the target's existing guarded `bin/runtime finish` operation under the [resource procedure](RESOURCE_LIFECYCLE.md#retire-runtime-then-finish-the-task)
+when coordinator cleanup is authorized and available. This is resource retirement, not implementation or
+acceptance. Docker teardown still precedes source/config retirement; keep every ownership, hook and data guard.
+
+Use a fresh cleanup-only Land worker only when delegation is required and the owning stage route admits its
+checkout. Build's `stage-target-changed` means its recorded stage checkout/base differs from the new request;
+do not retry the same request, reset history, relabel the target, switch executors or launch an unbound worker.
+After confirming the rejected attempt started no worker and prior execution is settled, the authorized
+coordinator should complete cleanup directly through the same guarded operation above. The dispatch refusal
+alone does not prove that source/config removal is unsafe. If role/tool restrictions prevent that operation,
+retain the affected resources and report the exact missing capability and recovery owner. Never bypass a denial.
+
+Verify filesystem, worktree registration, runtime/config and deleted-or-retained ref postconditions before
+reporting completion. Preserve dependency-warning scope in the existing handoff: temporary minimum-lane
+advisories and ordinary dependency results are separate evidence, not an extra cleanup gate or a claim of repair.
+Only genuine unresolved holds warrant a finite recovery command; unchanged holds do not warrant repeated attempts.
+
 ### Inventory and preserve
 
 Preview candidates before publication; carry the inventory in the existing Work → Build → Land handoff and
@@ -580,9 +607,9 @@ quietly delete the older branch. Keep publication proof separate from merge proo
 
 From a separate verified safe checkout, recheck registered worktrees, status, branch/OID, sessions and mounts
 under [consumer qualification](#qualify-live-consumers). If the Land worker itself uses the candidate, return its
-exact remaining effects to the owning coordinator. After observing worker exit, that coordinator must continue
-cleanup from the canonical safe checkout within existing authority, using a cleanup-only Land worker there when
-its role requires delegation. Do not dispatch that continuation from the removal candidate, terminate the active
+exact remaining effects to the owning coordinator. After observing worker exit, that coordinator must follow
+[automatic cleanup continuation](#automatic-cleanup-continuation) from the canonical safe checkout within
+existing authority. Do not dispatch that continuation from the removal candidate, terminate the active
 coordinator, or return an already-ended worker-cwd hold as a human prerequisite.
 Record exact publication/cancellation disposition in the existing TASK/PR and handoff, not a lifecycle ledger.
 Use the [shared resource procedure](RESOURCE_LIFECYCLE.md#retire-runtime-then-finish-the-task): task down first,
