@@ -100,7 +100,7 @@ it('uses the sole session graph, retires outstanding directory detail/status and
     d.owner.coordinator.authorityChanged();
   });
   await waitFor(() => expect(screen.queryByLabelText('Email (required)')).not.toBeInTheDocument());
-  expect(await d.owner.ordinaryInvitations.submit('later@example.test')).toEqual({
+  expect(await d.owner.invitationIssuance.submit('later@example.test')).toEqual({
     kind: 'rejected',
     reason: 'authorization'
   });
