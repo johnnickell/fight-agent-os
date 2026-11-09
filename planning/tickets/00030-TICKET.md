@@ -48,7 +48,7 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00118](../tasks/00118-TASK.md) | Expose a safe authorized user detail | done |
-| [TASK-00119](../tasks/00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent |
+| [TASK-00119](../tasks/00119-TASK.md) | Guard user disable and enable transitions | needs-info |
 | [TASK-00120](../tasks/00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent |
 | [TASK-00121](../tasks/00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent |
 | [TASK-00122](../tasks/00122-TASK.md) | Authorize cross-user session inspection and revocation | ready-for-agent |
