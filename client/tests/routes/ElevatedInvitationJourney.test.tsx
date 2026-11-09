@@ -18,10 +18,11 @@ afterEach(() => {
     owner.authority.dispose();
     owner.schemas.clear();
   });
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
-async function mount(response?: Response) {
+async function mount(response?: Response | Promise<Response>) {
   const data = issuanceData();
   const identity = crypto.randomUUID();
   const detail = deferred<Response>();
@@ -97,6 +98,45 @@ it('uses the sole graph and retires pending directory detail and known-target in
   });
   stop();
 });
+it.each(['late response', 'lost response'] as const)(
+  'keeps investigation-only disposition through foreground verification of pending %s issuance',
+  async (completion) => {
+    const work = deferred<Response>();
+    const d = await mount(work.promise);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    fireEvent.change(screen.getByLabelText('Email (required)'), {
+      target: { value: 'elevated@example.test' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Review Super Admin invitation' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Super Admin invitation' }));
+    await act(async () => {
+      await Promise.resolve();
+      d.owner.authority.resume();
+      await d.owner.authority.load();
+    });
+    expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('elevated@example.test');
+    await act(async () => {
+      if (completion === 'late response') {
+        work.resolve(issuanceResponse(d.data));
+        await work.promise;
+      } else await vi.advanceTimersByTimeAsync(8_001);
+    });
+    await act(async () => {
+      d.owner.authority.resume();
+      await d.owner.authority.load();
+    });
+    expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /invitation|resend|retry/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Read invitation status' })).not.toBeInTheDocument();
+    expect(d.fetch.mock.calls.filter(([url]) => url.endsWith('/invitations'))).toHaveLength(1);
+  }
+);
 it('discards injected credential, provider, SQL and stack fields from uncertain browser state and never stores or logs input', async () => {
   const markers = [
     'grant-private-marker',
@@ -116,6 +156,11 @@ it('discards injected credential, provider, SQL and stack fields from uncertain 
   const error = vi.spyOn(console, 'error');
   await submit();
   await screen.findByRole('heading', { name: /stop and investigate/ });
+  await act(async () => {
+    d.owner.authority.resume();
+    await d.owner.authority.load();
+  });
+  expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
   for (const marker of [...markers, 'elevated@example.test'])
     expect(document.body.textContent).not.toContain(marker);
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();

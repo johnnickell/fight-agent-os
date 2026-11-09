@@ -2,12 +2,13 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import InviteSuperAdminPage from '@/pages/InviteSuperAdminPage';
 
 import { deferred } from '../apiFixtures';
 import { authenticatedCache, principal } from '../authorityFixtures';
 
-import type { AuthorityCache } from '@/features/authority/AuthorityCache';
+import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
 import type { InvitationIssuanceOutcome } from '@/features/invitations/InvitationIssuanceService';
 
 const caches: AuthorityCache[] = [];
@@ -140,6 +141,175 @@ describe('InviteSuperAdminPage', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Read invitation status' })).toBeVisible();
   });
+  it.each([null, crypto.randomUUID()])(
+    'retains unresolved investigation through repeated same-principal foreground verification (%s)',
+    async (userId) => {
+      const d = await setup(undefined, { kind: 'unconfirmed', userId });
+      await review();
+      await confirm();
+      await screen.findByRole('heading', { name: /stop and investigate/ });
+      for (let verification = 0; verification < 2; ++verification) {
+        await act(async () => {
+          d.cache.resume();
+          expect(d.cache.getSnapshot().status).not.toBe('authenticated');
+          await d.cache.load();
+        });
+        expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
+        expect(screen.getByText(/Retry or resend is not assignment repair/)).toBeVisible();
+        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+        expect(document.body.textContent).not.toContain('person@example.test');
+        expect(d.submitElevated).toHaveBeenCalledOnce();
+      }
+    }
+  );
+  it.each(['accepted', 'unconfirmed', 'cancelled'] as const)(
+    'retires pending target to investigation during verification without adopting late %s',
+    async (kind) => {
+      const d = await setup();
+      const work = deferred<InvitationIssuanceOutcome>();
+      d.submitElevated.mockImplementation(() => work.promise);
+      await review();
+      await confirm();
+      await act(async () => {
+        d.cache.resume();
+        await d.cache.load();
+      });
+      expect(screen.getByRole('heading', { name: /stop and investigate/ })).toHaveFocus();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(document.body.textContent).not.toContain('person@example.test');
+      await act(async () => {
+        work.resolve(kind === 'cancelled' ? { kind } : { kind, userId: crypto.randomUUID() });
+        await work.promise;
+      });
+      expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Read invitation status' })
+      ).not.toBeInTheDocument();
+      expect(d.submitElevated).toHaveBeenCalledOnce();
+    }
+  );
+  it('retires an unsubmitted target on verification without inventing an unresolved operation', async () => {
+    const d = await setup();
+    await review();
+    await act(async () => {
+      d.cache.resume();
+      await d.cache.load();
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /stop and investigate/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Email (required)')).toHaveValue('');
+    expect(d.submitElevated).not.toHaveBeenCalled();
+  });
+  it('clears unresolved state on logout rather than lending it to a new authentication', async () => {
+    const d = await setup(undefined, { kind: 'unconfirmed', userId: crypto.randomUUID() });
+    await review();
+    await confirm();
+    await screen.findByRole('heading', { name: /stop and investigate/ });
+    await act(() => d.cache.signal('logout'));
+    expect(screen.queryByRole('heading', { name: /stop and investigate/ })).not.toBeInTheDocument();
+    await act(() => d.cache.beginAuthentication().acceptCredentials());
+    expect(screen.getByLabelText('Email (required)')).toHaveValue('');
+    expect(screen.queryByRole('link', { name: 'Read invitation status' })).not.toBeInTheDocument();
+  });
+  it.each(['foreground', 'freshness expiry'] as const)(
+    'retains only safe investigation during delayed %s verification and gates status by fresh READ_USERS',
+    async (verification) => {
+      let now = 0;
+      const actor = {
+        ...principal,
+        permissions: ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN', 'READ_USERS']
+      };
+      const refresh = deferred<PrincipalLoadResult>();
+      const loader = vi
+        .fn()
+        .mockResolvedValueOnce({ status: 'principal', principal: actor })
+        .mockImplementation(() => refresh.promise);
+      const cache = new AuthorityCache(loader, () => now);
+      caches.push(cache);
+      await cache.load();
+      const submitElevated = vi.fn(() =>
+        Promise.resolve({ kind: 'unconfirmed' as const, userId: crypto.randomUUID() })
+      );
+      render(<InviteSuperAdminPage service={{ submitElevated }} cache={cache} />);
+      await review();
+      await confirm();
+      await screen.findByRole('heading', { name: /stop and investigate/ });
+      await act(async () => {
+        if (verification === 'foreground') cache.resume();
+        else {
+          now = 60_001;
+          cache.getSnapshot();
+        }
+        await Promise.resolve();
+      });
+      expect(cache.getSnapshot().status).toBe('loading');
+      expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Read invitation status' })
+      ).not.toBeInTheDocument();
+      await act(async () => {
+        refresh.resolve({ status: 'principal', principal: actor });
+        await cache.load();
+      });
+      expect(screen.getByRole('heading', { name: /stop and investigate/ })).toBeVisible();
+      expect(screen.getByRole('link', { name: 'Read invitation status' })).toBeVisible();
+      expect(submitElevated).toHaveBeenCalledOnce();
+    }
+  );
+  it.each(['identity', 'permission'] as const)(
+    'clears unresolved target on verified %s replacement and does not resurrect it on regrant',
+    async (change) => {
+      const initial = {
+        ...principal,
+        permissions: ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN', 'READ_USERS']
+      };
+      let current = initial;
+      const cache = new AuthorityCache(() =>
+        Promise.resolve({ status: 'principal', principal: current })
+      );
+      caches.push(cache);
+      await cache.load();
+      const submitElevated = vi.fn(() =>
+        Promise.resolve({ kind: 'unconfirmed' as const, userId: crypto.randomUUID() })
+      );
+      render(<InviteSuperAdminPage service={{ submitElevated }} cache={cache} />);
+      await review();
+      await confirm();
+      await screen.findByRole('heading', { name: /stop and investigate/ });
+      current =
+        change === 'identity'
+          ? { ...initial, userId: crypto.randomUUID() }
+          : { ...initial, permissions: ['INVITE_USERS'] };
+      await act(async () => {
+        cache.resume();
+        await cache.load();
+      });
+      expect(
+        screen.queryByRole('heading', { name: /stop and investigate/ })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Read invitation status' })
+      ).not.toBeInTheDocument();
+      if (change === 'permission') {
+        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+        current = initial;
+        await act(async () => {
+          cache.resume();
+          await cache.load();
+        });
+      }
+      expect(screen.getByLabelText('Email (required)')).toHaveValue('');
+      expect(
+        screen.queryByRole('heading', { name: /stop and investigate/ })
+      ).not.toBeInTheDocument();
+      expect(submitElevated).toHaveBeenCalledOnce();
+    }
+  );
   it.each(['conflict', 'rate-limited', 'authorization', 'validation'] as const)(
     'keeps safe rejected %s input but never replays',
     async (reason) => {

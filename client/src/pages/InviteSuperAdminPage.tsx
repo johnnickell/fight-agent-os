@@ -45,25 +45,55 @@ export default function InviteSuperAdminPage({
   const returnFocus = useRef(false);
   const focusEmail = useRef(false);
   useEffect(() => {
-    const scope = cache.captureScope();
-    const retire = () => {
+    let isCurrentAuthentication = cache.captureAuthenticationContext();
+    let scope = cache.captureScope();
+    const retire = (preserveUnresolved: boolean) => {
+      const submitted = busy.current;
       ++generation.current;
       busy.current = false;
       setEmail('');
       setInvalid(false);
       setConfirmation(null);
       setPending(false);
-      setOutcome(null);
+      // Freshness cannot resolve submitted work. Keep only its safe investigation
+      // disposition, never the target form or a late response from the retired scope.
+      setOutcome((previous) =>
+        preserveUnresolved && (submitted || previous?.kind === 'unconfirmed')
+          ? {
+              kind: 'unconfirmed',
+              userId: previous?.kind === 'unconfirmed' ? previous.userId : null
+            }
+          : null
+      );
     };
-    scope.signal.addEventListener('abort', retire, { once: true });
+    const retireScope = () => retire(isCurrentAuthentication());
+    scope.signal.addEventListener('abort', retireScope, { once: true });
+    const unsubscribe = cache.subscribe(() => {
+      const state = cache.getSnapshot();
+      if (
+        !isCurrentAuthentication() ||
+        (state.status === 'authenticated' &&
+          evaluateAccess(state, elevatedInvitationAccess) !== 'allowed')
+      ) {
+        retire(false);
+        isCurrentAuthentication = cache.captureAuthenticationContext();
+      }
+      const current = cache.captureScope();
+      if (current !== scope) {
+        scope.signal.removeEventListener('abort', retireScope);
+        scope = current;
+        scope.signal.addEventListener('abort', retireScope, { once: true });
+      }
+    });
     const invalidate = () => {
       ++generation.current;
     };
     return () => {
       invalidate();
-      scope.signal.removeEventListener('abort', retire);
+      unsubscribe();
+      scope.signal.removeEventListener('abort', retireScope);
     };
-  }, [cache, allowed]);
+  }, [cache]);
   useEffect(() => {
     if (outcome) heading.current?.focus({ preventScroll: true });
     else if (focusEmail.current) {
@@ -102,7 +132,7 @@ export default function InviteSuperAdminPage({
             does not promote an existing active user or bypass bootstrap restrictions.
           </p>
         </Notice>
-        {!allowed ? (
+        {!allowed && outcome?.kind !== 'unconfirmed' ? (
           <ContentState
             kind="error"
             title="Elevated invitation unavailable"
@@ -173,7 +203,7 @@ export default function InviteSuperAdminPage({
                 )}
               </div>
             )}
-            {!complete && (
+            {allowed && !complete && (
               <form
                 noValidate
                 aria-busy={pending}

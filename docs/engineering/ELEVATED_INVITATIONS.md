@@ -35,6 +35,12 @@ confirmation; no operation is replayed automatically.
 Partial 503, network/system/protocol/unavailable outcomes and the eight-second deadline are terminal
 **unconfirmed** browser results: clear form/confirmation, stop issuance, invalidate stale directory/detail
 observations and known-target status. Late completions invalidate again but cannot replace retired UI.
+Routine same-authentication-context freshness/foreground verification clears sensitive form and
+confirmation values and forbids fresh dispatch, but cannot resolve an elevated operation. The safe
+unconfirmed investigation disposition survives verification; a pending submission whose scope retires
+becomes unconfirmed immediately. Its late result cannot restore issuance or claim success. Safe status
+links require freshly verified READ_USERS again. Logout, authentication/identity replacement and verified
+loss of an elevated permission clear the old context's disposition; no state is persisted or replayed.
 A local deadline/unmount cannot cancel a server commit. There is no reinvite, compensation or browser
 assignment-repair control. Trusted operators must investigate identity, membership, required audit and
 package delivery using the [invitation runbook](INVITATION_API.md#independent-issuance-commits).
