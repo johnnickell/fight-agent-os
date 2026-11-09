@@ -15,6 +15,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
@@ -65,11 +66,15 @@ final readonly class SessionRevocationRaceWorker implements RefreshSessionReposi
                 }
             );
             try {
+                $reason = null;
+                if ($input['administrative'] ?? false) {
+                    $reason = SessionRevocationReason::fromString('Concurrent investigation');
+                }
                 $container->get(CommandBus::class)->execute(new RevokeSession(
                     UserId::fromString($input['actor']),
                     RefreshSessionId::fromString($input['current']),
                     RefreshSessionId::fromString($input['target']),
-                    null
+                    $reason
                 ));
                 $status = 200;
             } catch (RefreshSessionConflictException) {

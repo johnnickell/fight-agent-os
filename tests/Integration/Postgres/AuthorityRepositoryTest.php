@@ -371,7 +371,6 @@ final class AuthorityRepositoryTest extends TestCase
         $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
         $readCallback = SessionAdministrationDecision::forRead($authority);
         $revokeCallback = SessionAdministrationDecision::forRevocation($authority);
-        $sharedCallback = SessionAdministrationDecision::forSharedFallback($authority);
         $emailCallback = new UnavailableEmailChangeAdministration();
 
         $this->connection->beginTransaction();
@@ -390,12 +389,6 @@ final class AuthorityRepositoryTest extends TestCase
                 self::assertTrue($role->hasPermission($sessionRead->getId()));
             }
             try {
-                $sharedCallback->assertCanManageSessions($actorId, $target->getId());
-                self::fail('A shared session port must require read and revoke authority together.');
-            } catch (SessionAdministrationAuthorizationException) {
-                self::assertTrue($role->hasPermission($sessionRead->getId()));
-            }
-            try {
                 $emailCallback->assertCanManageEmailChange($actorId, $target->getId());
                 self::fail('No cross-user email-change permission has been approved.');
             } catch (EmailChangeAdministrationAuthorizationException) {
@@ -409,7 +402,6 @@ final class AuthorityRepositoryTest extends TestCase
             );
             self::assertTrue($this->roles->replace($role, $roleWithDelete));
             $revokeCallback->assertCanManageSessions($actorId, $target->getId());
-            $sharedCallback->assertCanManageSessions($actorId, $target->getId());
             $updated = clone $actor;
             $updated->removeRole($role->getId(), $at->modify('+1 second'));
             self::assertTrue($users->replaceRoleAssignments($actor, $updated));

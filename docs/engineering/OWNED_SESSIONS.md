@@ -101,9 +101,11 @@ Chromium and inspected captures are not screen-reader, other-engine, physical-de
 (`{}`), with no query parameters. Bearer authentication and exact current `DELETE_OWN_SESSIONS` are required
 both at the early route gate and in `RevokeOwnedSession`. The sole request-scoped principal supplies actor and
 current session; no body identity, reason, Role or administrative permission is accepted. The configured command
-bus dispatches package `RevokeSession(actor, current, target, null)`. A dedicated `DenySessionAdministration`
-callback is composed into that handler, including trusted raw dispatch: all cross-user management is denied,
-regardless of `DELETE_SESSIONS`, Super Admin or a supplied reason. The pre-existing read callback is unchanged.
+bus dispatches package `RevokeSession(actor, current, target, null)`. Cross-user requests cannot mutate through
+this endpoint: the package requires an administrative reason, which this entry cannot accept or dispatch.
+TASK-00122 replaces the former deny-all handler composition with distinct operation-sensitive actor/target
+callbacks for the separate [administrative API](SESSION_ADMINISTRATION.md). Its trusted raw bus can now perform
+reasoned authorized administration; it is not a public entry. Self-service still grants no administration.
 
 The qualified latest tag is Fight Access Control v0.8.0, source/Composer lock reference
 `319738255e682d587642b67856039f882b9588d6`; no dependency update was needed. The package owns usability,

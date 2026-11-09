@@ -6,7 +6,6 @@ namespace Tests\Unit\Sessions;
 
 use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Sessions\DenySessionAdministration;
 use App\Application\Sessions\RevokeOwnedSession;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
@@ -17,7 +16,6 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Command\RevokeSession;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -105,14 +103,5 @@ final class RevokeOwnedSessionTest extends TestCase
         yield ['DELETE_OWN_SESSIONS'];
         yield ['DELETE_SESSIONS'];
         yield ['READ_OWN_SESSIONS'];
-    }
-
-    /**
-     * Denies cross-user management independently of actor and target identity
-     */
-    public function testDenyCrossUser(): void
-    {
-        $this->expectException(SessionAdministrationAuthorizationException::class);
-        new DenySessionAdministration()->assertCanManageSessions(UserId::generate(), UserId::generate());
     }
 }

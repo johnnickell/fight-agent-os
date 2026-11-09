@@ -22,8 +22,7 @@ final readonly class SessionAdministrationDecision implements SessionAdministrat
      */
     private function __construct(
         private InstallationAuthority $authority,
-        private PermissionName $required,
-        private ?PermissionName $additional = null
+        private PermissionName $required
     ) {
     }
 
@@ -44,27 +43,12 @@ final readonly class SessionAdministrationDecision implements SessionAdministrat
     }
 
     /**
-     * Creates a safe shared-port fallback until the read and revoke handlers have separate composition
-     */
-    public static function forSharedFallback(InstallationAuthority $authority): self
-    {
-        return new self(
-            $authority,
-            PermissionName::fromString('READ_SESSIONS'),
-            PermissionName::fromString('DELETE_SESSIONS')
-        );
-    }
-
-    /**
      * @inheritDoc
      */
     public function assertCanManageSessions(UserId $actorId, UserId $userId): void
     {
         try {
             $this->authority->assertInstallationPermission($actorId, $this->required, $userId);
-            if ($this->additional !== null) {
-                $this->authority->assertInstallationPermission($actorId, $this->additional, $userId);
-            }
         } catch (PermissionDenied) {
             throw new SessionAdministrationAuthorizationException('Session administration is not authorized.');
         }

@@ -9,6 +9,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\CurrentRef
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionRevocationReasonRequiredException;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -75,6 +76,7 @@ final class SessionRevocationResponderTest extends TestCase
         yield [RefreshSessionConflictException::class];
         yield [RefreshSessionNotFoundException::class];
         yield [SessionAdministrationAuthorizationException::class];
+        yield [SessionRevocationReasonRequiredException::class];
     }
 
     /**
