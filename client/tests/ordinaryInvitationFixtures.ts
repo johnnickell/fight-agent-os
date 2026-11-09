@@ -1,5 +1,5 @@
 import { ApiClient } from '@/api/ApiClient';
-import { OrdinaryInvitationService } from '@/features/invitations/OrdinaryInvitationService';
+import { InvitationIssuanceService } from '@/features/invitations/InvitationIssuanceService';
 
 import { configuration, jsonResponse } from './apiFixtures';
 import { authenticatedCache, principal } from './authorityFixtures';
@@ -33,7 +33,7 @@ export function ordinaryInvitationDependencies(
   return {
     cache,
     api,
-    create: (lifecycle: ConstructorParameters<typeof OrdinaryInvitationService>[2]) =>
-      new OrdinaryInvitationService(api, cache, lifecycle)
+    create: (lifecycle: ConstructorParameters<typeof InvitationIssuanceService>[2]) =>
+      new InvitationIssuanceService(api, cache, lifecycle)
   };
 }

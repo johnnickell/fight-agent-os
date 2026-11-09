@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { canonicalInvitationEmail } from '@/features/invitations/OrdinaryInvitationService';
+import { canonicalInvitationEmail } from '@/features/invitations/InvitationIssuanceService';
 
 import { deferred, jsonResponse } from '../../apiFixtures';
 import {
@@ -29,7 +29,90 @@ async function setup(
   return { ...d, lifecycle, service: d.create(lifecycle), fetch };
 }
 
-describe('OrdinaryInvitationService', () => {
+describe('InvitationIssuanceService', () => {
+  it.each(
+    [[], ['INVITE_USERS'], ['ASSIGN_SUPER_ADMIN'], ['ROLE_SUPER_ADMIN']].map((permissions) => ({
+      permissions
+    }))
+  )('refuses incomplete elevated permission matrix $permissions', async ({ permissions }) => {
+    const d = await setup(undefined, permissions);
+    expect(
+      await d.service.submitElevated('person@example.test', {
+        email: 'person@example.test',
+        confirmed: true
+      })
+    ).toEqual({ kind: 'rejected', reason: 'authorization' });
+    expect(d.fetch).not.toHaveBeenCalled();
+  });
+  it('sends exactly typed elevated mode and boolean confirmation with both permissions, projecting only safe ID', async () => {
+    const d = await setup(undefined, ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN']);
+    expect(
+      (
+        await d.service.submitElevated(' Person@EXAMPLE.test ', {
+          email: 'person@example.test',
+          confirmed: true
+        })
+      ).kind
+    ).toBe('accepted');
+    expect(JSON.parse(d.fetch.mock.calls[0]![1].body as string)).toEqual({
+      email: 'person@example.test',
+      mode: 'super_admin',
+      confirm_super_admin: true
+    });
+    await d.cache.signal('refresh-started');
+    expect(
+      (
+        await d.service.submitElevated('person@example.test', {
+          email: 'person@example.test',
+          confirmed: true
+        })
+      ).kind
+    ).toBe('rejected');
+    expect(d.fetch).toHaveBeenCalledOnce();
+  });
+  it.each([
+    undefined,
+    null,
+    false,
+    { email: 'person@example.test', confirmed: false },
+    { email: 'person@example.test', confirmed: 'true' },
+    { email: 'old@example.test', confirmed: true }
+  ])(
+    'refuses absent, ambiguous or stale elevated confirmation %j before transport',
+    async (confirmation) => {
+      const d = await setup(undefined, ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN']);
+      expect(await d.service.submitElevated('person@example.test', confirmation as never)).toEqual({
+        kind: 'rejected',
+        reason: 'validation'
+      });
+      expect(d.fetch).not.toHaveBeenCalled();
+    }
+  );
+  it('bounds a lost elevated response, invalidates at deadline and again at late completion without replay', async () => {
+    vi.useFakeTimers();
+    const pending = deferred<Response>();
+    const d = await setup(
+      vi.fn(() => pending.promise),
+      ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN']
+    );
+    const first = d.service.submitElevated('person@example.test', {
+      email: 'person@example.test',
+      confirmed: true
+    });
+    await vi.advanceTimersByTimeAsync(8_000);
+    expect(await first).toEqual({ kind: 'unconfirmed', userId: null });
+    expect(
+      await d.service.submitElevated('person@example.test', {
+        email: 'person@example.test',
+        confirmed: true
+      })
+    ).toEqual({ kind: 'cancelled' });
+    const data = issuanceData();
+    pending.resolve(issuanceResponse(data));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(d.lifecycle.invalidated.mock.calls).toEqual([[null], [data.user_id]]);
+    expect(d.fetch).toHaveBeenCalledOnce();
+  });
   it('sends only canonical email and fixed ordinary mode through current Bearer transport, retaining only the safe ID', async () => {
     const data = issuanceData();
     const fetch = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(() =>

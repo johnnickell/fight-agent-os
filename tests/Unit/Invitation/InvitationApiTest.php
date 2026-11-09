@@ -166,7 +166,7 @@ final class InvitationApiTest extends TestCase
      * Preserves committed-step uncertainty without retries or arbitrary private exception output
      */
     #[DataProvider('failures')]
-    public function testRetainedOutcomes(string $fault, string $assignment, bool $known): void
+    public function testRetainedOutcomes(string $fault, string $assignment, bool $known, InvitationMode $mode): void
     {
         $this->fault = $fault;
         $issuer = $this->issuer();
@@ -174,8 +174,8 @@ final class InvitationApiTest extends TestCase
             $issuer->issue(
                 $this->authentication,
                 EmailAddress::fromString('new@example.test'),
-                InvitationMode::ORDINARY,
-                false
+                $mode,
+                true
             );
             self::fail('Incomplete issuance was reported as complete.');
         } catch (IncompleteInvitation $failure) {
@@ -190,7 +190,7 @@ final class InvitationApiTest extends TestCase
     /**
      * Supplies precommit, postcommit and inspection uncertainty boundaries
      *
-     * @return iterable<string, array{string, string, bool}>
+     * @return iterable<string, array{string, string, bool, InvitationMode}>
      */
     public static function failures(): iterable
     {
@@ -205,7 +205,9 @@ final class InvitationApiTest extends TestCase
             ['veto-assignment', 'unconfirmed', true], ['revoke', 'unconfirmed', true]
             ] as $case
         ) {
-            yield $case[0] => $case;
+            foreach ([InvitationMode::ORDINARY, InvitationMode::SUPER_ADMIN] as $mode) {
+                yield $case[0].$mode->value => [...$case, $mode];
+            }
         }
     }
 

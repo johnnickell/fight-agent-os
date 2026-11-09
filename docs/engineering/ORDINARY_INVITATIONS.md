@@ -17,11 +17,11 @@ validator: semantic email/conflict policy remains server/package-owned. Unsuppor
 controlled rejection, never an invented identity.
 Input remains volatile; it never enters history, storage, diagnostics or analytics.
 
-`OrdinaryInvitationService` sends exactly `POST /api/v1/invitations` with JSON `email` and fixed
+`InvitationIssuanceService.submit()` sends exactly `POST /api/v1/invitations` with JSON `email` and fixed
 `mode: ordinary`, using current memory-only Bearer transport. There is no role, actor, elevation, permission,
 password, provider, lifetime, template, confirmation or redirect input. The server chooses stable managed
-`ROLE_USER`; UI copy is explanatory, not assignment authority. Elevated issuance remains a separate unavailable
-route owned by TASK-00062.
+`ROLE_USER`; UI copy is explanatory, not assignment authority. [Elevated issuance](ELEVATED_INVITATIONS.md) has a separate confirmed route and explicit typed operation
+owned by TASK-00062; the ordinary operation has no elevation input.
 
 The strict existing issuance codec checks exact keys, UUIDs, assignment/audit categories and nullable package
 delivery fields. A 201 is accepted only with known safe target ID, confirmed assignment/audit and a valid
