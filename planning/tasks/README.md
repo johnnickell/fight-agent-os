@@ -64,7 +64,7 @@
 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | done | [TICKET-00021](../tickets/00021-TICKET.md) |
-| [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | in-progress | [TICKET-00021](../tickets/00021-TICKET.md) |
+| [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |

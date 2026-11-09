@@ -67,7 +67,8 @@ a current human merge action. Other capability states are unchanged.
   [confirmed elevated route](docs/engineering/ELEVATED_INVITATIONS.md) using the same issuance transport
   and existing API, both exact invitation/elevation permissions, a canonical-target Cancel-first dialog,
   independent-commit uncertainty and operator investigation without browser assignment repair.
-  Independent Review/QA remain separate.
+  Independent technical Review and behavioral QA accepted this bounded journey, including retained
+  uncertainty through routine authority verification; production/inbox qualification remains separate.
   TASK-00060's invitation page deliberately reads safe user detail and package delivery status under READ_USERS.
   Mutation Actions admit MANAGE_USER_INVITATIONS and dispatch package commands with no data response; manage-only
   grants no reading. Page management requires both permissions. This maintainer revision awaits independent acceptance;
