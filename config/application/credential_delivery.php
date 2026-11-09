@@ -16,6 +16,7 @@ use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\Invita
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
@@ -71,7 +72,7 @@ return static function (Container $container): void {
             $c->get('credential-delivery.activation-link'),
             $c->get(TemplateEngine::class),
             $c->get(MailDelivery::class),
-            $c->get(\Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository::class)
+            $c->get(ActivationGrantRepository::class)
         ));
     $container->set(PasswordResetMailProvider::class, static fn(Container $c): PasswordResetMailProvider =>
         new PasswordResetMailProvider(

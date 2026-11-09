@@ -17,9 +17,11 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Messaging\Query\QueryHandler;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
+    /** @var string|QueryHandler $handler */
     foreach ([ListRolesHandler::class, GetRoleByIdHandler::class] as $handler) {
         $container->set($handler, static fn(Container $c) => new $handler($c->get(RoleRepository::class)));
         $container->get('messaging.query.router')->registerHandlers([$handler::queryRegistration() => $handler]);

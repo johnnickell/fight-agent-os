@@ -21,6 +21,8 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
+use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
+use Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Service\Container;
 
@@ -36,8 +38,8 @@ return static function (Container $container): void {
         new SessionLifecycleResponder(
             $c->get(SessionResponder::class),
             $c->get(JSendResponseFactory::class),
-            $c->get(\Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics::class),
-            $c->get(\Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy::class)
+            $c->get(SafeHttpDiagnostics::class),
+            $c->get(SafeHttpErrorPolicy::class)
         ));
     foreach ([RefreshAction::class, LogoutAction::class] as $action) {
         $container->set($action, static fn(Container $c): RefreshAction|LogoutAction => new $action(

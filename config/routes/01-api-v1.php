@@ -28,6 +28,10 @@ use App\Adapter\Http\Action\Api\V1\Projects\ListProjectsAction;
 use App\Adapter\Http\Action\Api\V1\Projects\PreviewProjectConflictsAction;
 use App\Adapter\Http\Action\Api\V1\Projects\RegisterProjectAction;
 use App\Adapter\Http\Action\Api\V1\References\GenerateExceptionalReferenceAction;
+use App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction;
+use App\Adapter\Http\Action\Api\V1\Sessions\ListUserSessionsAction;
+use App\Adapter\Http\Action\Api\V1\Sessions\RevokeOwnedSessionAction;
+use App\Adapter\Http\Action\Api\V1\Sessions\RevokeUserSessionAction;
 use App\Adapter\Http\Action\Api\V1\Users\DisableUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\EnableUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
@@ -106,17 +110,17 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     $api->get('/permissions/{permissionId}', GetPermissionAction::class.':handle')->setName('api.v1.permissions.get');
     $api->delete(
         '/me/sessions/{sessionId}',
-        \App\Adapter\Http\Action\Api\V1\Sessions\RevokeOwnedSessionAction::class.':handle'
+        RevokeOwnedSessionAction::class.':handle'
     )->setName('api.v1.me.sessions.revoke');
-    $api->get('/me/sessions', \App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction::class.':handle')
+    $api->get('/me/sessions', ListOwnedSessionsAction::class.':handle')
         ->setName('api.v1.me.sessions');
     $api->get(
         '/users/{userId}/sessions',
-        \App\Adapter\Http\Action\Api\V1\Sessions\ListUserSessionsAction::class.':handle'
+        ListUserSessionsAction::class.':handle'
     )->setName('api.v1.users.sessions.list');
     $api->delete(
         '/users/{userId}/sessions/{sessionId}',
-        \App\Adapter\Http\Action\Api\V1\Sessions\RevokeUserSessionAction::class.':handle'
+        RevokeUserSessionAction::class.':handle'
     )->setName('api.v1.users.sessions.revoke');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
     $api->get('/users/{userId}', GetUserAction::class.':handle')->setName('api.v1.users.get');
@@ -126,5 +130,6 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
         ->setName('api.v1.me');
     $api->get('/validations/{form_name}', ReadValidationAction::class.':handle')
         ->setName('api.v1.validations.read');
-})->add($container->get(ApiInputValidation::class))
+})
+    ->add($container->get(ApiInputValidation::class))
     ->add($container->get(ApiActionSecurity::class));

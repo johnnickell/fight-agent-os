@@ -36,10 +36,10 @@ use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
     $container->set(Connection::class, static function (Container $container): Connection {
-        return DriverManager::getConnection((new DsnParser([
+        return DriverManager::getConnection(new DsnParser([
             'postgres'   => 'pdo_pgsql',
             'postgresql' => 'pdo_pgsql'
-        ]))->parse($container['app.database_url']));
+        ])->parse($container['app.database_url']));
     });
     $container->set(EntityManagerInterface::class, static function (Container $container): EntityManagerInterface {
         $configuration = ORMSetup::createAttributeMetadataConfiguration([], getenv('APP_ENV') !== 'production');
