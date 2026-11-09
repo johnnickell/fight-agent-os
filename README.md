@@ -360,8 +360,11 @@ under READ_USERS; READ_USERS-only viewers receive read-only presentation. Page m
 MANAGE_USER_INVITATIONS. Mutation APIs need only that operation permission and return no user/status data;
 manage-only grants no reading. The maintainer revision has independent Review/QA acceptance; publication and
 final checks were pending at closeout. Current delivery is in [PR #204](https://github.com/johnnickell/fight-agent-os/pull/204)
-and `.runs/tasks/TASK-00060/runs/land-delivery.md`; earlier acceptance/delivery is historical. Ordinary/elevated
-invitation issuance UI remains unavailable.
+and `.runs/tasks/TASK-00060/runs/land-delivery.md`; earlier acceptance/delivery is historical.
+[Ordinary invitation](docs/engineering/ORDINARY_INVITATIONS.md) at `/app/admin/invite` now uses exact INVITE_USERS,
+a canonical email-only form and the existing API, with truthful accepted/unconfirmed outcomes and READ_USERS-only
+status continuation. Independent technical Review and behavioral QA accepted this ordinary journey;
+elevated issuance remains unavailable. The owning TASK records evidence and verification limits.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
 before upgrading an existing database: historical reset authority is never guessed or discarded.

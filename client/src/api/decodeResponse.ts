@@ -80,7 +80,7 @@ const uuid = (value: unknown): value is string =>
   /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
 
 /** Retains only the closed, secretless partial-outcome contract, never retry authority. */
-function decodeInvitationPartial(value: unknown): InvitationPartial | null {
+export function decodeInvitationPartial(value: unknown): InvitationPartial | null {
   if (
     !hasExactKeys(value, ['user_id', 'assignment', 'audit', 'delivery']) ||
     !(value.user_id === null || uuid(value.user_id)) ||

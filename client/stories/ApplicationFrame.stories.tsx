@@ -9,6 +9,7 @@ import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { InvitationService } from '@/features/invitations/InvitationService';
+import { OrdinaryInvitationService } from '@/features/invitations/OrdinaryInvitationService';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
@@ -105,6 +106,16 @@ function FrameExample({
         }),
         authority,
         coordinator.terminal
+      ),
+      ordinaryInvitations: new OrdinaryInvitationService(
+        new ApiClient({
+          schemaVersion: 2,
+          apiBasePath: '/api/v1',
+          appDebug: false,
+          swaggerAvailable: false
+        }),
+        authority,
+        { invalidated: () => {}, accessRejected: () => {}, authorityRejected: () => {} }
       ),
       invitations: new InvitationService(
         new ApiClient({

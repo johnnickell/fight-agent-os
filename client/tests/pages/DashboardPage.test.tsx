@@ -85,6 +85,8 @@ describe('honest Dashboard permission and destination contracts', () => {
         expect(route.availability).toBe(
           'Read the installation-wide user directory and current role assignments.'
         );
+      else if (route?.destination === 'invite-user')
+        expect(route.availability).toMatch(/Invite one ordinary user/);
       else if (route?.pathname === '/app/admin/invitations')
         expect(route.availability).toMatch(/Choose a pending user/);
       else expect(route?.availability).toMatch(/not available/);

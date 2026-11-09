@@ -74,7 +74,8 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
           Sign in, session restoration, current-access checks, appearance preferences and
           current-session sign out are available. Account destinations provide password change and
           owned-session visibility. The Users directory is available with current read access;
-          invitation shortcuts explain workflows still unavailable.
+          ordinary invitation and pending-invitation status are available with their separate
+          permissions.
         </p>
       </ContentPanel>
       <div className="dashboard-grid">
@@ -90,7 +91,8 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
           <ContentPanel title="Administration">
             <p>
               Each shortcut is shown only for its own permission. Users opens the read-only
-              directory; invitation destinations explain workflows that are not available yet.
+              directory; Invite User issues an ordinary invitation. Invitation Admin explains how to
+              open a pending user's status. Elevated issuance remains unavailable.
             </p>
             <DestinationLinks
               cache={cache}

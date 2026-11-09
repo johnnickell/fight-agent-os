@@ -50,7 +50,7 @@ Canonical email, target lifecycle, managed role, confirmation, stale version, an
 |---|---|---|
 | [TASK-00059](../tasks/00059-TASK.md) | Deliver the permission-controlled user directory | done |
 | [TASK-00060](../tasks/00060-TASK.md) | Deliver pending-invitation status and recovery | done |
-| [TASK-00061](../tasks/00061-TASK.md) | Deliver the ordinary web invitation journey | ready-for-agent |
+| [TASK-00061](../tasks/00061-TASK.md) | Deliver the ordinary web invitation journey | done |
 | [TASK-00062](../tasks/00062-TASK.md) | Deliver the confirmed elevated invitation journey | ready-for-agent |
 <!-- /planning:children -->
 

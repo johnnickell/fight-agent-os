@@ -16,6 +16,7 @@ export type ApplicationRoute = RegisteredRoute &
       | 'sessions'
       | 'users'
       | 'invitation'
+      | 'invite-user'
       | 'landing'
       | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
@@ -136,9 +137,9 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     icon: 'invite',
     access: 'protected',
     requirements: permission('INVITE_USERS'),
-    destination: 'landing',
+    destination: 'invite-user',
     group: 'Administration',
-    availability: 'Invitation issuance is not available here yet.'
+    availability: 'Invite one ordinary user. The server assigns only the managed User role.'
   },
   {
     pathname: '/app/admin/invite-super-admin',
