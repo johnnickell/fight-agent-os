@@ -9,6 +9,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\CurrentRef
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionRevocationReasonRequiredException;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -69,6 +70,7 @@ final readonly class SessionRevocationResponder
                 !$failure instanceof RefreshSessionNotFoundException
                 && !$failure instanceof RefreshSessionConflictException
                 && !$failure instanceof SessionAdministrationAuthorizationException
+                && !$failure instanceof SessionRevocationReasonRequiredException
             ) {
                 throw $failure;
             }

@@ -110,6 +110,14 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     )->setName('api.v1.me.sessions.revoke');
     $api->get('/me/sessions', \App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction::class.':handle')
         ->setName('api.v1.me.sessions');
+    $api->get(
+        '/users/{userId}/sessions',
+        \App\Adapter\Http\Action\Api\V1\Sessions\ListUserSessionsAction::class.':handle'
+    )->setName('api.v1.users.sessions.list');
+    $api->delete(
+        '/users/{userId}/sessions/{sessionId}',
+        \App\Adapter\Http\Action\Api\V1\Sessions\RevokeUserSessionAction::class.':handle'
+    )->setName('api.v1.users.sessions.revoke');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
     $api->get('/users/{userId}', GetUserAction::class.':handle')->setName('api.v1.users.get');
     $api->post('/users/{userId}/disable', DisableUserAction::class.':handle')->setName('api.v1.users.disable');

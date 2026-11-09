@@ -18,6 +18,7 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
@@ -273,18 +274,31 @@ SQL);
     }
 
     /**
-     * Refuses even trusted package cross-user dispatch despite all administrative permissions and a reason
+     * Qualifies the released package's reasoned audit in the real shared transaction
      */
-    public function testPackageCrossUserCompositionAlwaysDenies(): void
+    public function testPackageAdministrativeAudit(): void
     {
         $target = $this->session($this->user('other@example.test'));
-        $this->expectException(SessionAdministrationAuthorizationException::class);
         $this->container->get(CommandBus::class)->execute(new RevokeSession(
             $this->actor->getId(),
             $this->current->getId(),
             $target->getId(),
             SessionRevocationReason::fromString('Explicit test reason')
         ));
+        self::assertTrue($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
+            $target->getId()->toString()
+        ]));
+        $audit = $this->connection->fetchAssociative(
+            "SELECT * FROM audit_evidence WHERE action = 'refresh_session.administratively_revoked'"
+        );
+        self::assertIsArray($audit);
+        self::assertSame($this->actor->getId()->toString(), $audit['actor_id']);
+        self::assertSame($target->getUserId()->toString(), $audit['subject_id']);
+        self::assertNotEmpty($audit['recorded_at']);
+        self::assertStringNotContainsString($target->getCredentialDigest(), $audit['context']);
+        self::assertSame([
+            'reason' => 'Explicit test reason', 'refresh_session_id' => $target->getId()->toString()
+        ], json_decode($audit['context'], true));
     }
 
     /**
@@ -322,9 +336,9 @@ SQL);
      * Proves competing revoke, rotation, logout and expiry cannot be overwritten from an older snapshot
      */
     #[DataProvider('raceWinners')]
-    public function testSnapshotRaces(string $winner): void
+    public function testSnapshotRaces(string $winner, bool $administrative): void
     {
-        $target = $this->session($this->actor);
+        $target = $this->session($administrative ? $this->user('other@example.test') : $this->actor);
         $pipes = [];
         $process = proc_open(
             [PHP_BINARY, '-r', 'require "vendor/autoload.php"; Tests\\Support\\SessionRevocationRaceWorker::run();'],
@@ -336,16 +350,21 @@ SQL);
         try {
             stream_set_timeout($pipes[1], 15);
             fwrite($pipes[0], json_encode([
-                'actor'   => $this->actor->getId()->toString(),
-                'current' => $this->current->getId()->toString(),
-                'target'  => $target->getId()->toString(),
-                'time'    => $this->tokens->clock->now()->format('c')
+                'actor'          => $this->actor->getId()->toString(),
+                'current'        => $this->current->getId()->toString(),
+                'target'         => $target->getId()->toString(),
+                'time'           => $this->tokens->clock->now()->format('c'),
+                'administrative' => $administrative
             ], JSON_THROW_ON_ERROR)."\n");
             fflush($pipes[0]);
             self::assertSame('ready', trim((string) fgets($pipes[1])));
             $authentication = $this->container->get(AuthenticationService::class);
             if ($winner === 'revoke') {
-                $this->check($this->request($target->getId()->toString()), 200);
+                if ($administrative) {
+                    self::assertSame(200, $this->adminRequest($target)->getStatusCode());
+                } else {
+                    $this->check($this->request($target->getId()->toString()), 200);
+                }
             } elseif ($winner === 'refresh') {
                 $authentication->refresh($this->credentials[$target->getId()->toString()]);
             } elseif ($winner === 'logout') {
@@ -372,7 +391,18 @@ SQL);
                 [$this->current->getId()->toString()]
             ));
             // A fresh decision can revoke the rotated winner; no stale snapshot can do so.
-            $this->check($this->request($target->getId()->toString()), $winner === 'refresh' ? 200 : 409);
+            $status = $winner === 'refresh' ? 200 : 409;
+            if ($administrative) {
+                self::assertSame($status, $this->adminRequest($target)->getStatusCode());
+            } else {
+                $this->check($this->request($target->getId()->toString()), $status);
+            }
+            self::assertSame(
+                $administrative && in_array($winner, ['refresh', 'revoke'], true) ? 1 : 0,
+                (int) $this->connection->fetchOne(
+                    "SELECT count(*) FROM audit_evidence WHERE action = 'refresh_session.administratively_revoked'"
+                )
+            );
         } finally {
             if (proc_get_status($process)['running']) {
                 proc_terminate($process);
@@ -387,13 +417,258 @@ SQL);
     /**
      * Supplies committed concurrent lifecycle winners
      *
-     * @return iterable<array{string}>
+     * @return iterable<array{string, bool}>
      */
     public static function raceWinners(): iterable
     {
         foreach (['revoke', 'refresh', 'logout', 'expiry'] as $winner) {
-            yield [$winner];
+            yield [$winner, false];
+            yield [$winner, true];
         }
+    }
+
+    /**
+     * Exercises exact administrative permissions, scoped pages and committed target-only invalidation
+     */
+    public function testAdministrativeHttpAndImmediateAuthority(): void
+    {
+        $target = $this->session($this->user('other@example.test'));
+        $other = $this->session($this->user('unrelated@example.test'));
+        $response = $this->adminRequest($target, 'GET');
+        $this->checkAdmin($response, 200, 'get');
+        self::assertSame(
+            [$target->getId()->toString()],
+            array_column($this->body($response)['data']['records'], 'session_id')
+        );
+        $privateValues = [
+            $target->getCredentialDigest(), $other->getId()->toString(), $target->getUserId()->toString()
+        ];
+        foreach ($privateValues as $private) {
+            self::assertStringNotContainsString($private, (string) $response->getBody());
+        }
+        $this->removePermission('READ_SESSIONS');
+        $this->checkAdmin($this->adminRequest($target, 'GET'), 403, 'get');
+        // DELETE does not accidentally require READ; old signed claims cannot retain removed reading authority.
+        $this->checkAdmin($this->adminRequest($target), 200, 'delete');
+        self::assertSame(1, $this->events);
+        $this->checkAdmin($this->adminRequest($target), 409, 'delete');
+        foreach ([$target, $other, $this->current] as $session) {
+            $request = new ServerRequestFactory()->createServerRequest('GET', 'https://agent-os.test/api/v1/me')
+                ->withHeader('Authorization', 'Bearer '.$this->token($session));
+            self::assertSame($session === $target ? 401 : 200, $this->app->handle($request)->getStatusCode());
+        }
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM audit_evidence WHERE action = 'refresh_session.administratively_revoked'"
+        ));
+        $this->expectException(RefreshSessionNotFoundException::class);
+        $this->container->get(AuthenticationService::class)->refresh($this->credentials[$target->getId()->toString()]);
+    }
+
+    /**
+     * Keeps reading independent of deletion and self-service permission without trusting role labels
+     */
+    public function testAdministrativeReadOnlyAndAnonymous(): void
+    {
+        $user = $this->user('other@example.test');
+        $target = $this->session($user);
+        $second = $this->session($user);
+        $ids = [$target->getId()->toString(), $second->getId()->toString()];
+        sort($ids);
+        $page = $this->adminRequest($target, 'GET', query: '?page=2&per_page=1');
+        $this->checkAdmin($page, 200, 'get');
+        self::assertSame([$ids[1]], array_column($this->body($page)['data']['records'], 'session_id'));
+        $this->checkAdmin($this->adminRequest($target, 'GET', query: '?per_page=101'), 400, 'get');
+        $this->checkAdmin($this->adminRequest($target, 'GET', query: '?actor_id=private-marker'), 400, 'get');
+        $this->removePermission('DELETE_SESSIONS');
+        $this->checkAdmin($this->adminRequest($target, 'GET'), 200, 'get');
+        $this->checkAdmin($this->adminRequest($target), 403, 'delete');
+        $request = new ServerRequestFactory()->createServerRequest(
+            'GET',
+            'https://agent-os.test/api/v1/users/'.$target->getUserId()->toString().'/sessions'
+        );
+        $this->checkAdmin($this->app->handle($request), 401, 'get');
+        $this->removePermission('READ_SESSIONS');
+        $this->checkAdmin($this->adminRequest($target, 'GET'), 403, 'get');
+        self::assertSame(0, $this->events);
+    }
+
+    /**
+     * Rejects caller overrides and unsafe reasons before any mutation or evidence leakage
+     */
+    #[DataProvider('administrativeInputs')]
+    public function testAdministrativeInput(string $body): void
+    {
+        $target = $this->session($this->user('other@example.test'));
+        $response = $this->adminRequest($target, body: $body);
+        // The existing credential-transport boundary rejects Bearer material before input validation.
+        $this->checkAdmin($response, str_contains($body, 'Bearer ') ? 401 : 400, 'delete');
+        self::assertStringNotContainsString('private-marker', (string) $response->getBody());
+        self::assertSame(0, $this->events);
+        self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
+            $target->getId()->toString()
+        ]));
+    }
+
+    /**
+     * Supplies missing, excessive, malicious and caller-selected authority input
+     *
+     * @return iterable<array{string}>
+     */
+    public static function administrativeInputs(): iterable
+    {
+        foreach (
+            ['{}', '[]', '{"reason":""}', '{"reason":"   "}', '{"reason":"Bearer private-marker"}',
+            '{"reason":"https://private-marker.test"}', '{"reason":"Investigation\\nprivate-marker"}',
+            '{"reason":"Investigation","actor_id":"private-marker"}',
+            '{"reason":"Investigation","current_session_id":"private-marker"}',
+            json_encode(['reason' => str_repeat('x', 501)], JSON_THROW_ON_ERROR),
+            json_encode(['reason' => "\u{00a0}"], JSON_THROW_ON_ERROR)] as $body
+        ) {
+            yield [$body];
+        }
+    }
+
+    /**
+     * Collapses wrong-owner, missing, expired and revoked sessions without broadening own endpoints
+     */
+    public function testAdministrativeTargetBoundaries(): void
+    {
+        $target = $this->session($this->user('other@example.test'));
+        $wrong = $this->user('wrong@example.test');
+        $missing = $this->session($wrong);
+        $this->connection->executeStatement('DELETE FROM refresh_sessions WHERE id = ?', [
+            $missing->getId()->toString()
+        ]);
+        $this->checkAdmin($this->adminRequest($missing), 409, 'delete');
+        $this->checkAdmin($this->adminRequest($target, user: $wrong->getId()), 409, 'delete');
+        $this->checkAdmin($this->adminRequest($target, user: UserId::generate()), 409, 'delete');
+        $this->checkAdmin($this->adminRequest($target, user: UserId::generate(), method: 'GET'), 403, 'get');
+        $this->checkAdmin($this->adminRequest($this->current, 'GET'), 403, 'get');
+        $this->checkAdmin($this->adminRequest($this->current), 403, 'delete');
+        // Even a fully authorized administrator cannot supply the required reason through a self endpoint.
+        $this->check($this->request($target->getId()->toString()), 409);
+        $this->connection->executeStatement('UPDATE refresh_sessions SET idle_expires_at = ? WHERE id = ?', [
+            RefreshSessionRecords::date($this->tokens->clock->now()), $target->getId()->toString()
+        ]);
+        $this->checkAdmin($this->adminRequest($target), 409, 'delete');
+        self::assertSame([], $this->body($this->adminRequest($target, 'GET'))['data']['records']);
+        self::assertSame(0, $this->events);
+    }
+
+    /**
+     * Retains the package actor/target decision independently of successful HTTP permission admission
+     */
+    public function testPackageCallbackDenial(): void
+    {
+        $target = $this->session($this->user('other@example.test'));
+        $decision = new class (
+            $this->actor->getId(),
+            $target->getUserId()
+        ) implements SessionAdministrationAuthorization {
+            public int $calls = 0;
+
+            /**
+             * Constructs the target-scoped denial probe
+             */
+            public function __construct(private readonly UserId $actor, private readonly UserId $target)
+            {
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function assertCanManageSessions(UserId $actorId, UserId $userId): void
+            {
+                TestCase::assertTrue($this->actor->equals($actorId));
+                TestCase::assertTrue($this->target->equals($userId));
+                ++$this->calls;
+                throw new SessionAdministrationAuthorizationException();
+            }
+        };
+        $this->container->set('sessions.authorization.read', static fn() => $decision);
+        $this->container->set('sessions.authorization.revoke', static fn() => $decision);
+        $this->checkAdmin($this->adminRequest($target, 'GET'), 403, 'get');
+        $this->checkAdmin($this->adminRequest($target), 409, 'delete');
+        self::assertSame(2, $decision->calls);
+        self::assertSame(0, $this->events);
+        self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
+            $target->getId()->toString()
+        ]));
+    }
+
+    /**
+     * Rolls back session replacement when the required administrative audit cannot persist
+     */
+    public function testAdministrativeAuditFailureRollsBack(): void
+    {
+        $target = $this->session($this->user('other@example.test'));
+        $this->connection->executeStatement(<<<'SQL'
+ALTER TABLE audit_evidence ADD CONSTRAINT admin_audit_abort
+CHECK (action <> 'refresh_session.administratively_revoked') NOT VALID
+SQL);
+        try {
+            $response = $this->adminRequest($target);
+            $this->checkAdmin($response, 500, 'delete');
+            self::assertSame(['status' => 'error', 'message' => 'Internal server error.'], $this->body($response));
+            self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
+                $target->getId()->toString()
+            ]));
+            self::assertSame(0, $this->events);
+            self::assertStringNotContainsString('admin_audit_abort', (string) $response->getBody());
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT admin_audit_abort');
+        }
+    }
+
+    /**
+     * Removes one real grant so the next request must observe fresh authority
+     */
+    private function removePermission(string $name): void
+    {
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+            [$name]
+        );
+    }
+
+    /**
+     * Invokes the explicit target API with only safe reason input
+     */
+    private function adminRequest(
+        RefreshSession $target,
+        string $method = 'DELETE',
+        string $body = '{"reason":"Security investigation"}',
+        ?UserId $user = null,
+        string $query = ''
+    ): ResponseInterface {
+        $path = '/api/v1/users/'.($user ?? $target->getUserId())->toString().'/sessions';
+        if ($method === 'DELETE') {
+            $path .= '/'.$target->getId()->toString();
+        }
+        $request = new ServerRequestFactory()->createServerRequest($method, 'https://agent-os.test'.$path.$query)
+            ->withHeader('Authorization', 'Bearer '.$this->token($this->current));
+        if ($method === 'DELETE') {
+            $request = $request->withHeader('Content-Type', 'application/json');
+            $request->getBody()->write($body);
+        }
+
+        return $this->app->handle($request);
+    }
+
+    /**
+     * Checks administrative OpenAPI and no-store on success and failure
+     */
+    private function checkAdmin(ResponseInterface $response, int $status, string $method): void
+    {
+        self::assertSame($status, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        (new ValidatorBuilder())->fromJson(Document::generate())->getResponseValidator()->validate(
+            new OperationAddress(
+                '/api/v1/users/{userId}/sessions'.($method === 'delete' ? '/{sessionId}' : ''),
+                $method
+            ),
+            $response
+        );
     }
 
     /**
