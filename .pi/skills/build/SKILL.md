@@ -144,8 +144,12 @@ observe its actual exit, then continue source-qualified Worktrunk cleanup from t
 Verify task ingress retirement through that same runbook: app down removes its route; only scoped owned
 front-door blocks are unloaded with a full test/graceful reload before referenced leaf removal. Preserve peers
 and the shared supplier; report exact loaded/pending names and privilege holds separately from Docker/source.
-Use a fresh cleanup-only Land worker when required, with the same pinned model/ledger and ordinary trusted
-stage entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator,
+Follow [automatic cleanup continuation](../../../docs/engineering/LANDING.md#automatic-cleanup-continuation):
+finish through the target's guarded resource operation when coordinator cleanup is authorized and available.
+Use a fresh cleanup-only Land worker only when required and admitted, with the same pinned model/ledger and
+ordinary trusted stage entry. A `stage-target-changed` refusal does not require another user cleanup prompt
+when direct coordinator cleanup remains available; never reset stage history or switch executors to evade it.
+No publication, new runtime or tracked edits in that continuation. Preserve active coordinator,
 unique source and real protections; never stop shared services/VMs. Report Docker and source holds separately.
 For the shared remover's qualified `retained_unmerged` outcome, verify eligible source/runtime/registration/
 config retirement and report the exact unchanged local ref intentionally retained pending integration. Do not
