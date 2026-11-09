@@ -64,7 +64,7 @@
 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | done | [TICKET-00021](../tickets/00021-TICKET.md) |
-| [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | ready-for-agent | [TICKET-00021](../tickets/00021-TICKET.md) |
+| [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
@@ -121,7 +121,7 @@
 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | done | — |
 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | done | [TICKET-00030](../tickets/00030-TICKET.md) |
-| [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | done | [TICKET-00030](../tickets/00030-TICKET.md) |

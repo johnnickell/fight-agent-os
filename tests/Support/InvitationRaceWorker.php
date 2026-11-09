@@ -109,7 +109,7 @@ final class InvitationRaceWorker
                         UserId::fromString($input['actor']),
                         RefreshSessionId::fromString($input['session']),
                         $input['version']
-                    ), EmailAddress::fromString('race@example.test'), InvitationMode::ORDINARY, false);
+                    ), EmailAddress::fromString('race@example.test'), InvitationMode::from($input['mode']), true);
                     echo "issued\n";
                 } catch (StateConflict) {
                     echo "conflict\n";

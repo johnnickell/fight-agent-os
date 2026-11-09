@@ -11,8 +11,8 @@ import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
+import { InvitationIssuanceService } from '@/features/invitations/InvitationIssuanceService';
 import { InvitationService } from '@/features/invitations/InvitationService';
-import { OrdinaryInvitationService } from '@/features/invitations/OrdinaryInvitationService';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { UserDirectoryService } from '@/features/users/UserDirectoryService';
@@ -108,7 +108,7 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
     ),
     users,
     invitations,
-    ordinaryInvitations: new OrdinaryInvitationService(api, authority, {
+    invitationIssuance: new InvitationIssuanceService(api, authority, {
       invalidated: (userId) => {
         users.invalidate();
         if (userId) invitations.invalidate(userId);

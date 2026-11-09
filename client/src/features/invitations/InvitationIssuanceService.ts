@@ -9,7 +9,11 @@ export const ordinaryInvitationAccess = [
   { kind: 'authenticated' },
   { kind: 'permissions', all: ['INVITE_USERS'] }
 ] as const;
-export type OrdinaryInvitationOutcome =
+export const elevatedInvitationAccess = [
+  { kind: 'authenticated' },
+  { kind: 'permissions', all: ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN'] }
+] as const;
+export type InvitationIssuanceOutcome =
   | Readonly<{ kind: 'accepted'; userId: string }>
   | Readonly<{ kind: 'unconfirmed'; userId: string | null }>
   | Readonly<{ kind: 'rejected'; reason: ApiFailureKind }>
@@ -34,9 +38,9 @@ type InvitationLifecycle = {
 };
 
 /**
- * Issues only ordinary invitations; never retains email, delivery, audit or authority snapshots
+ * Issues fixed ordinary or explicitly confirmed elevated requests without retaining private form state
  */
-export class OrdinaryInvitationService {
+export class InvitationIssuanceService {
   readonly #api: ApiClient;
   readonly #authority: AuthorityCache;
   readonly #lifecycle: InvitationLifecycle;
@@ -49,11 +53,31 @@ export class OrdinaryInvitationService {
     this.#lifecycle = lifecycle;
   }
 
-  async submit(value: string): Promise<OrdinaryInvitationOutcome> {
+  async submit(value: string): Promise<InvitationIssuanceOutcome> {
+    return this.#issue(value, 'ordinary');
+  }
+
+  async submitElevated(
+    value: string,
+    confirmation: Readonly<{ email: string; confirmed: true }>
+  ): Promise<InvitationIssuanceOutcome> {
+    const email = canonicalInvitationEmail(value);
+    if (!email || confirmation?.confirmed !== true || confirmation.email !== email)
+      return { kind: 'rejected', reason: 'validation' };
+    return this.#issue(email, 'super_admin');
+  }
+
+  async #issue(
+    value: string,
+    mode: 'ordinary' | 'super_admin'
+  ): Promise<InvitationIssuanceOutcome> {
     const scope = this.#authority.captureScope();
     if (
       !scope.isCurrent() ||
-      evaluateAccess(this.#authority.getSnapshot(), ordinaryInvitationAccess) !== 'allowed'
+      evaluateAccess(
+        this.#authority.getSnapshot(),
+        mode === 'ordinary' ? ordinaryInvitationAccess : elevatedInvitationAccess
+      ) !== 'allowed'
     )
       return { kind: 'rejected', reason: 'authorization' };
     const email = canonicalInvitationEmail(value);
@@ -66,7 +90,7 @@ export class OrdinaryInvitationService {
       .mutate(
         'POST',
         '/invitations',
-        { email, mode: 'ordinary' },
+        mode === 'ordinary' ? { email, mode } : { email, mode, confirm_super_admin: true },
         (data) => {
           const issuance = decodeInvitationPartial(data);
           return issuance?.assignment === 'confirmed' &&
@@ -78,7 +102,7 @@ export class OrdinaryInvitationService {
         },
         201
       )
-      .then((result): OrdinaryInvitationOutcome => {
+      .then((result): InvitationIssuanceOutcome => {
         // Even a late or retired completion can have committed. Retire directory/status reads,
         // but never adopt its payload as a user/status View or automatically replay creation.
         const userId = result.ok
@@ -97,7 +121,7 @@ export class OrdinaryInvitationService {
       });
     const result = await Promise.race([
       work,
-      new Promise<OrdinaryInvitationOutcome>((resolve) => {
+      new Promise<InvitationIssuanceOutcome>((resolve) => {
         timer = setTimeout(() => {
           this.#lifecycle.invalidated(null);
           resolve({ kind: 'unconfirmed', userId: null });

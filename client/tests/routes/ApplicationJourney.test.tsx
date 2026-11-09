@@ -169,7 +169,7 @@ describe('authoritative frame transitions', () => {
         expect(screen.getByText('Documentation disabled')).toBeVisible();
       else if (route.destination === 'password-change')
         expect(await screen.findByLabelText('Current password (required)')).toBeVisible();
-      else if (route.destination === 'invite-user')
+      else if (route.destination === 'invite-user' || route.destination === 'invite-super-admin')
         expect(await screen.findByLabelText('Email (required)')).toBeVisible();
       else if (route.destination === 'sessions')
         expect(screen.getByText(/Device descriptions are approximate/)).toBeVisible();

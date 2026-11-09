@@ -28,6 +28,8 @@ use App\Adapter\Http\Action\Api\V1\Projects\ListProjectsAction;
 use App\Adapter\Http\Action\Api\V1\Projects\PreviewProjectConflictsAction;
 use App\Adapter\Http\Action\Api\V1\Projects\RegisterProjectAction;
 use App\Adapter\Http\Action\Api\V1\References\GenerateExceptionalReferenceAction;
+use App\Adapter\Http\Action\Api\V1\Users\DisableUserAction;
+use App\Adapter\Http\Action\Api\V1\Users\EnableUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
@@ -118,6 +120,8 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     )->setName('api.v1.users.sessions.revoke');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
     $api->get('/users/{userId}', GetUserAction::class.':handle')->setName('api.v1.users.get');
+    $api->post('/users/{userId}/disable', DisableUserAction::class.':handle')->setName('api.v1.users.disable');
+    $api->post('/users/{userId}/enable', EnableUserAction::class.':handle')->setName('api.v1.users.enable');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')
         ->setName('api.v1.me');
     $api->get('/validations/{form_name}', ReadValidationAction::class.':handle')

@@ -12,7 +12,9 @@ those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling, public-safe form metadata and local engineering skills are
-present. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
+present. Confirmed [user disable/enable APIs](docs/engineering/USER_LIFECYCLE.md) provide exact-permission
+lifecycle transitions, session invalidation and required audit; their last-admin safeguard is a non-atomic
+query-before-command precheck, not a cross-request final-admin guarantee. No administration UI is added. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
 HTTP boundary with strict matching client contracts, protocol metadata and preserved session-cookie recovery;
 scoped independent HTTP/browser/security QA covers the cutover, not production deployment or unrelated use cases.
 Explicit initial Workspace bootstrap has independent technical and behavioral acceptance under
@@ -364,7 +366,11 @@ and `.runs/tasks/TASK-00060/runs/land-delivery.md`; earlier acceptance/delivery 
 [Ordinary invitation](docs/engineering/ORDINARY_INVITATIONS.md) at `/app/admin/invite` now uses exact INVITE_USERS,
 a canonical email-only form and the existing API, with truthful accepted/unconfirmed outcomes and READ_USERS-only
 status continuation. Independent technical Review and behavioral QA accepted this ordinary journey;
-elevated issuance remains unavailable. The owning TASK records evidence and verification limits.
+[confirmed elevated issuance](docs/engineering/ELEVATED_INVITATIONS.md) is now implemented at the separate
+`/app/admin/invite-super-admin` route using both exact permissions, explicit canonical-target confirmation
+and truthful partial-result investigation. Independent technical Review and behavioral QA accepted the elevated journey, including retained
+uncertainty through routine authority verification. The owning TASKs record evidence and verification limits;
+acceptance does not establish real-inbox delivery or production qualification.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
 before upgrading an existing database: historical reset authority is never guessed or discarded.

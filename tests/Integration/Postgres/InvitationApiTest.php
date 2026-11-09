@@ -486,6 +486,44 @@ final class InvitationApiTest extends TestCase
     }
 
     /**
+     * Admits only both exact elevated permissions despite the actor retaining its managed Role name
+     */
+    #[DataProvider('elevatedPermissions')]
+    public function testElevatedPermissionCombinations(bool $invite, bool $assign): void
+    {
+        foreach (['INVITE_USERS' => $invite, 'ASSIGN_SUPER_ADMIN' => $assign] as $name => $present) {
+            if (!$present) {
+                $this->connection->executeStatement(
+                    'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+                    [$name]
+                );
+            }
+        }
+        $response = $this->issue([
+            'email' => 'elevated@example.test', 'mode' => 'super_admin', 'confirm_super_admin' => true
+        ]);
+        $this->assertResponse($response, $invite && $assign ? 201 : 403);
+        if (!$invite || !$assign) {
+            $this->assertNoOrigin();
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits'));
+        }
+    }
+
+    /**
+     * Supplies the complete elevated permission matrix
+     *
+     * @return iterable<array{bool, bool}>
+     */
+    public static function elevatedPermissions(): iterable
+    {
+        foreach ([false, true] as $invite) {
+            foreach ([false, true] as $assign) {
+                yield [$invite, $assign];
+            }
+        }
+    }
+
+    /**
      * Rechecks elevated authority in Application before origin dispatch
      */
     public function testMissingElevationPermission(): void
@@ -507,12 +545,14 @@ final class InvitationApiTest extends TestCase
      * Preserves invitation after assignment rollback and preserves membership after separate audit rollback
      */
     #[DataProvider('partialFailures')]
-    public function testPartialFailure(string $table, string $condition, string $assignment): void
+    public function testPartialFailure(string $table, string $condition, string $assignment, string $mode): void
     {
         $this->connection->executeStatement(
             'ALTER TABLE '.$table.' ADD CONSTRAINT invitation_api_abort CHECK ('.$condition.') NOT VALID'
         );
-        $response = $this->issue(['email' => 'new@example.test', 'mode' => 'ordinary']);
+        $response = $this->issue([
+            'email' => 'new@example.test', 'mode' => $mode, 'confirm_super_admin' => true
+        ]);
         $data = $this->assertResponse($response, 503)['data'];
         self::assertIsString($data['user_id']);
         self::assertSame($assignment, $data['assignment']);
@@ -531,12 +571,14 @@ final class InvitationApiTest extends TestCase
     /**
      * Supplies independently failing assignment and mandatory confirmation audit transactions
      *
-     * @return iterable<array{string, string, string}>
+     * @return iterable<array{string, string, string, string}>
      */
     public static function partialFailures(): iterable
     {
-        yield ['user_role_assignments', 'false', 'unconfirmed'];
-        yield ['audit_evidence', "action <> 'user.invitation_role_confirmed'", 'confirmed'];
+        foreach (['ordinary', 'super_admin'] as $mode) {
+            yield ['user_role_assignments', 'false', 'unconfirmed', $mode];
+            yield ['audit_evidence', "action <> 'user.invitation_role_confirmed'", 'confirmed', $mode];
+        }
     }
 
     /**
@@ -644,7 +686,8 @@ final class InvitationApiTest extends TestCase
     /**
      * Resolves concurrent canonical requests through separate processes after both preflight checks
      */
-    public function testConcurrentCanonicalInvitations(): void
+    #[DataProvider('successfulModes')]
+    public function testConcurrentCanonicalInvitations(string $mode, string $roleId): void
     {
         $children = [];
         $released = false;
@@ -659,6 +702,7 @@ final class InvitationApiTest extends TestCase
                 stream_set_timeout($pipes[1], 15);
                 fwrite($pipes[0], json_encode([
                     'operation' => 'issue',
+                    'mode'      => $mode,
                     'actor'     => $this->actor->getId()->toString(),
                     'session'   => $this->session->getId()->toString(),
                     'version'   => $this->actor->getAuthenticationVersion(),
@@ -680,6 +724,10 @@ final class InvitationApiTest extends TestCase
             }
             sort($results);
             self::assertSame(['conflict', 'issued'], $results);
+            self::assertSame($roleId, $this->connection->fetchOne(
+                'SELECT role_id FROM user_role_assignments WHERE user_id = (SELECT id FROM users WHERE email = ?)',
+                ['race@example.test']
+            ));
             self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
             self::assertSame(1, (int) $this->connection->fetchOne(
                 "SELECT count(*) FROM users WHERE email = 'race@example.test'"
