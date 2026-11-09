@@ -9,14 +9,14 @@ import { useAuthority } from '@/features/authority/useAuthority';
 import {
   canonicalInvitationEmail,
   ordinaryInvitationAccess
-} from '@/features/invitations/OrdinaryInvitationService';
+} from '@/features/invitations/InvitationIssuanceService';
 import { matchApplicationRoute } from '@/routes/applicationRoutes';
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type {
-  OrdinaryInvitationOutcome,
-  OrdinaryInvitationService
-} from '@/features/invitations/OrdinaryInvitationService';
+  InvitationIssuanceOutcome,
+  InvitationIssuanceService
+} from '@/features/invitations/InvitationIssuanceService';
 
 /**
  * Presents ordinary issuance only, with volatile input and generation-fenced outcomes
@@ -25,7 +25,7 @@ export default function InviteUserPage({
   service,
   cache
 }: {
-  service: Pick<OrdinaryInvitationService, 'submit'>;
+  service: Pick<InvitationIssuanceService, 'submit'>;
   cache: AuthorityCache;
 }) {
   const authority = useAuthority(cache);
@@ -33,7 +33,7 @@ export default function InviteUserPage({
   const [email, setEmail] = useState('');
   const [invalid, setInvalid] = useState(false);
   const [pending, setPending] = useState(false);
-  const [outcome, setOutcome] = useState<OrdinaryInvitationOutcome | null>(null);
+  const [outcome, setOutcome] = useState<InvitationIssuanceOutcome | null>(null);
   const generation = useRef(0);
   const busy = useRef(false);
   const focusEmail = useRef(false);

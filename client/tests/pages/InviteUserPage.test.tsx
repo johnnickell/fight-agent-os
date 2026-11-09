@@ -8,7 +8,7 @@ import { deferred } from '../apiFixtures';
 import { authenticatedCache, principal } from '../authorityFixtures';
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
-import type { OrdinaryInvitationOutcome } from '@/features/invitations/OrdinaryInvitationService';
+import type { InvitationIssuanceOutcome as OrdinaryInvitationOutcome } from '@/features/invitations/InvitationIssuanceService';
 
 const caches: AuthorityCache[] = [];
 afterEach(() => {

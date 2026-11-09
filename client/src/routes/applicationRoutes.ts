@@ -17,6 +17,7 @@ export type ApplicationRoute = RegisteredRoute &
       | 'users'
       | 'invitation'
       | 'invite-user'
+      | 'invite-super-admin'
       | 'landing'
       | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
@@ -147,9 +148,9 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     icon: 'elevatedInvite',
     access: 'protected',
     requirements: permission('INVITE_USERS', 'ASSIGN_SUPER_ADMIN'),
-    destination: 'landing',
+    destination: 'invite-super-admin',
     group: 'Administration',
-    availability: 'Elevated invitation issuance is not available here yet.'
+    availability: 'Invite a pending Super Admin only after explicit installation-wide confirmation.'
   },
   {
     pathname: '/app/admin/invitations',
