@@ -15,19 +15,19 @@ return static function (Container $container): void {
     $container->set(PrivateOpenApi::class, static fn(): PrivateOpenApi => new PrivateOpenApi(
         dirname(__DIR__, 2).'/var/openapi/openapi.json'
     ));
-    $container->set(PrivateOpenApiResponder::class, static fn(Container $c): PrivateOpenApiResponder =>
-        new PrivateOpenApiResponder($c->get(JSendResponseFactory::class)));
-    $container->set(SwaggerBootstrapResponder::class, static fn(Container $c): SwaggerBootstrapResponder =>
-        new SwaggerBootstrapResponder($c->get(JSendResponseFactory::class)));
-    $container->set(ReadSwaggerBootstrapAction::class, static fn(Container $c): ReadSwaggerBootstrapAction =>
+    $container->set(PrivateOpenApiResponder::class, static fn(Container $container): PrivateOpenApiResponder =>
+        new PrivateOpenApiResponder($container->get(JSendResponseFactory::class)));
+    $container->set(SwaggerBootstrapResponder::class, static fn(Container $container): SwaggerBootstrapResponder =>
+        new SwaggerBootstrapResponder($container->get(JSendResponseFactory::class)));
+    $container->set(ReadSwaggerBootstrapAction::class, static fn(Container $container): ReadSwaggerBootstrapAction =>
         new ReadSwaggerBootstrapAction(
-            $c->get(PublicRuntimeConfiguration::class),
-            $c->get(SwaggerBootstrapResponder::class)
+            $container->get(PublicRuntimeConfiguration::class),
+            $container->get(SwaggerBootstrapResponder::class)
         ));
-    $container->set(ReadPrivateOpenApiAction::class, static fn(Container $c): ReadPrivateOpenApiAction =>
+    $container->set(ReadPrivateOpenApiAction::class, static fn(Container $container): ReadPrivateOpenApiAction =>
         new ReadPrivateOpenApiAction(
-            $c->get(PublicRuntimeConfiguration::class),
-            $c->get(PrivateOpenApi::class),
-            $c->get(PrivateOpenApiResponder::class)
+            $container->get(PublicRuntimeConfiguration::class),
+            $container->get(PrivateOpenApi::class),
+            $container->get(PrivateOpenApiResponder::class)
         ));
 };

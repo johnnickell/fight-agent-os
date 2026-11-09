@@ -37,12 +37,12 @@ return static function (Container $container): void {
 
     $container->set(AuthenticationContextProvider::class, static fn(): AuthenticationContextProvider =>
         new UnauthenticatedContextProvider());
-    $container->set(AuthenticatedRoleAssignment::class, static fn(Container $c) =>
+    $container->set(AuthenticatedRoleAssignment::class, static fn(Container $container) =>
         new AuthenticatedRoleAssignment(
-            $c->get(AuthenticationContextProvider::class),
-            $c->get(AuthoritativePrincipalResolver::class),
-            $c->get(RoleRepository::class),
-            $c->get(CommandBus::class)
+            $container->get(AuthenticationContextProvider::class),
+            $container->get(AuthoritativePrincipalResolver::class),
+            $container->get(RoleRepository::class),
+            $container->get(CommandBus::class)
         ));
     $container->set(ValidatorInterface::class, static function (): ValidatorInterface {
         return Validation::createValidator();

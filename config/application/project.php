@@ -35,22 +35,23 @@ use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(ProjectRepository::class, static fn(Container $c): ProjectRepository =>
-        new PostgresProjectRepository($c->get(Connection::class)));
-    $container->set(ProjectRegistrationAudit::class, static fn(Container $c): ProjectRegistrationAudit =>
-        new PostgresProjectRegistrationAudit($c->get(Connection::class)));
-    $container->set(RegisterProjectHandler::class, static fn(Container $c): RegisterProjectHandler =>
+    $container->set(ProjectRepository::class, static fn(Container $container): ProjectRepository =>
+        new PostgresProjectRepository($container->get(Connection::class)));
+    $container->set(ProjectRegistrationAudit::class, static fn(Container $container): ProjectRegistrationAudit =>
+        new PostgresProjectRegistrationAudit($container->get(Connection::class)));
+    $container->set(RegisterProjectHandler::class, static fn(Container $container): RegisterProjectHandler =>
         new RegisterProjectHandler(
-            $c->get(ProjectRepository::class),
-            $c->get(ProjectRegistrationAudit::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(Clock::class),
-            $c->get(EventDispatcher::class)
+            $container->get(ProjectRepository::class),
+            $container->get(ProjectRegistrationAudit::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(Clock::class),
+            $container->get(EventDispatcher::class)
         ));
     foreach (
         [GetProjectByIdHandler::class, ListProjectsHandler::class, PreviewProjectConflictsHandler::class] as $handler
     ) {
-        $container->set($handler, static fn(Container $c) => new $handler($c->get(ProjectRepository::class)));
+        $container->set($handler, static fn(Container $container) =>
+            new $handler($container->get(ProjectRepository::class)));
     }
     $container->get('messaging.command.router')->registerHandlers([
         RegisterProject::class => RegisterProjectHandler::class
@@ -60,11 +61,11 @@ return static function (Container $container): void {
         ListProjects::class            => ListProjectsHandler::class,
         PreviewProjectConflicts::class => PreviewProjectConflictsHandler::class
     ]);
-    $container->set(ProjectWorkspaceAdmission::class, static fn(Container $c): ProjectWorkspaceAdmission =>
+    $container->set(ProjectWorkspaceAdmission::class, static fn(Container $container): ProjectWorkspaceAdmission =>
         new ProjectWorkspaceAdmission(
-            $c->get(QueryBus::class),
-            $c->get(UserRepository::class),
-            $c->get(RoleRepository::class)
+            $container->get(QueryBus::class),
+            $container->get(UserRepository::class),
+            $container->get(RoleRepository::class)
         ));
     foreach (
         [
@@ -72,13 +73,14 @@ return static function (Container $container): void {
         ListProjectsResponder::class, PreviewProjectConflictsResponder::class
         ] as $responder
     ) {
-        $container->set($responder, static fn(Container $c) => new $responder($c->get(JSendResponseFactory::class)));
+        $container->set($responder, static fn(Container $container) =>
+            new $responder($container->get(JSendResponseFactory::class)));
     }
-    $container->set(RegisterProjectAction::class, static fn(Container $c): RegisterProjectAction =>
+    $container->set(RegisterProjectAction::class, static fn(Container $container): RegisterProjectAction =>
         new RegisterProjectAction(
-            $c->get(CommandBus::class),
-            $c->get(ProjectWorkspaceAdmission::class),
-            $c->get(RegisterProjectResponder::class)
+            $container->get(CommandBus::class),
+            $container->get(ProjectWorkspaceAdmission::class),
+            $container->get(RegisterProjectResponder::class)
         ));
     foreach (
         [
@@ -87,10 +89,10 @@ return static function (Container $container): void {
         PreviewProjectConflictsAction::class => PreviewProjectConflictsResponder::class
         ] as $action => $responder
     ) {
-        $container->set($action, static fn(Container $c) => new $action(
-            $c->get(QueryBus::class),
-            $c->get(ProjectWorkspaceAdmission::class),
-            $c->get($responder)
+        $container->set($action, static fn(Container $container) => new $action(
+            $container->get(QueryBus::class),
+            $container->get(ProjectWorkspaceAdmission::class),
+            $container->get($responder)
         ));
     }
 };

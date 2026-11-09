@@ -31,63 +31,63 @@ use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set('sessions.authorization.read', static fn(Container $c) =>
-        SessionAdministrationDecision::forRead($c->get(InstallationAuthority::class)));
-    $container->set('sessions.authorization.revoke', static fn(Container $c) =>
-        SessionAdministrationDecision::forRevocation($c->get(InstallationAuthority::class)));
-    $container->set(ListUserSessionsAction::class, static fn(Container $c) => new ListUserSessionsAction(
-        $c->get(QueryBus::class),
-        $c->get(OwnedSessionsResponder::class)
+    $container->set('sessions.authorization.read', static fn(Container $container) =>
+        SessionAdministrationDecision::forRead($container->get(InstallationAuthority::class)));
+    $container->set('sessions.authorization.revoke', static fn(Container $container) =>
+        SessionAdministrationDecision::forRevocation($container->get(InstallationAuthority::class)));
+    $container->set(ListUserSessionsAction::class, static fn(Container $container) => new ListUserSessionsAction(
+        $container->get(QueryBus::class),
+        $container->get(OwnedSessionsResponder::class)
     ));
-    $container->set(RevokeUserSessionAction::class, static fn(Container $c) => new RevokeUserSessionAction(
-        $c->get(RefreshSessionRepository::class),
-        $c->get(CommandBus::class),
-        $c->get(SessionRevocationResponder::class)
+    $container->set(RevokeUserSessionAction::class, static fn(Container $container) => new RevokeUserSessionAction(
+        $container->get(RefreshSessionRepository::class),
+        $container->get(CommandBus::class),
+        $container->get(SessionRevocationResponder::class)
     ));
-    $container->set(RevokeSessionHandler::class, static fn(Container $c) => new RevokeSessionHandler(
-        $c->get(RefreshSessionRepository::class),
-        $c->get(Clock::class),
-        $c->get('sessions.authorization.revoke'),
-        $c->get(AuditEvidenceRepository::class),
-        $c->get(TransactionalUnitOfWork::class),
-        $c->get(EventDispatcher::class)
+    $container->set(RevokeSessionHandler::class, static fn(Container $container) => new RevokeSessionHandler(
+        $container->get(RefreshSessionRepository::class),
+        $container->get(Clock::class),
+        $container->get('sessions.authorization.revoke'),
+        $container->get(AuditEvidenceRepository::class),
+        $container->get(TransactionalUnitOfWork::class),
+        $container->get(EventDispatcher::class)
     ));
     $container->get('messaging.command.router')->registerHandlers([
         RevokeSessionHandler::commandRegistration() => RevokeSessionHandler::class
     ]);
-    $container->set(RevokeOwnedSession::class, static fn(Container $c) => new RevokeOwnedSession(
-        $c->get(PermissionGuard::class),
-        $c->get(CommandBus::class)
+    $container->set(RevokeOwnedSession::class, static fn(Container $container) => new RevokeOwnedSession(
+        $container->get(PermissionGuard::class),
+        $container->get(CommandBus::class)
     ));
-    $container->set(SessionRevocationResponder::class, static fn(Container $c) =>
-        new SessionRevocationResponder($c->get(JSendResponseFactory::class)));
-    $container->set(RevokeOwnedSessionAction::class, static fn(Container $c) => new RevokeOwnedSessionAction(
-        $c->get(RevokeOwnedSession::class),
-        $c->get(SessionRevocationResponder::class)
+    $container->set(SessionRevocationResponder::class, static fn(Container $container) =>
+        new SessionRevocationResponder($container->get(JSendResponseFactory::class)));
+    $container->set(RevokeOwnedSessionAction::class, static fn(Container $container) => new RevokeOwnedSessionAction(
+        $container->get(RevokeOwnedSession::class),
+        $container->get(SessionRevocationResponder::class)
     ));
-    $container->set(PruneSessionPresentationCommand::class, static fn(Container $c) =>
-        new PruneSessionPresentationCommand($c->get(SessionPresentation::class)));
-    $container->set(SessionPresentation::class, static fn(Container $c) =>
-        new PostgresSessionPresentation($c->get(Connection::class)));
-    $container->set(CaptureSessionPresentation::class, static fn(Container $c) =>
-        new CaptureSessionPresentation($c->get(SessionPresentation::class)));
-    $container->set(ListActiveSessionsHandler::class, static fn(Container $c) => new ListActiveSessionsHandler(
-        $c->get(RefreshSessionRepository::class),
-        $c->get(Clock::class),
-        $c->get('sessions.authorization.read')
+    $container->set(PruneSessionPresentationCommand::class, static fn(Container $container) =>
+        new PruneSessionPresentationCommand($container->get(SessionPresentation::class)));
+    $container->set(SessionPresentation::class, static fn(Container $container) =>
+        new PostgresSessionPresentation($container->get(Connection::class)));
+    $container->set(CaptureSessionPresentation::class, static fn(Container $container) =>
+        new CaptureSessionPresentation($container->get(SessionPresentation::class)));
+    $container->set(ListActiveSessionsHandler::class, static fn(Container $container) => new ListActiveSessionsHandler(
+        $container->get(RefreshSessionRepository::class),
+        $container->get(Clock::class),
+        $container->get('sessions.authorization.read')
     ));
     $container->get('messaging.query.router')->registerHandlers([
         ListActiveSessionsHandler::queryRegistration() => ListActiveSessionsHandler::class
     ]);
-    $container->set(ReadOwnedSessions::class, static fn(Container $c) => new ReadOwnedSessions(
-        $c->get(PermissionGuard::class),
-        $c->get(QueryBus::class),
-        $c->get(SessionPresentation::class)
+    $container->set(ReadOwnedSessions::class, static fn(Container $container) => new ReadOwnedSessions(
+        $container->get(PermissionGuard::class),
+        $container->get(QueryBus::class),
+        $container->get(SessionPresentation::class)
     ));
-    $container->set(OwnedSessionsResponder::class, static fn(Container $c) =>
-        new OwnedSessionsResponder($c->get(JSendResponseFactory::class)));
-    $container->set(ListOwnedSessionsAction::class, static fn(Container $c) => new ListOwnedSessionsAction(
-        $c->get(ReadOwnedSessions::class),
-        $c->get(OwnedSessionsResponder::class)
+    $container->set(OwnedSessionsResponder::class, static fn(Container $container) =>
+        new OwnedSessionsResponder($container->get(JSendResponseFactory::class)));
+    $container->set(ListOwnedSessionsAction::class, static fn(Container $container) => new ListOwnedSessionsAction(
+        $container->get(ReadOwnedSessions::class),
+        $container->get(OwnedSessionsResponder::class)
     ));
 };

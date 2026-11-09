@@ -18,18 +18,27 @@ use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(CompletePasswordReset::class, static fn(Container $c): CompletePasswordReset =>
-        new CompletePasswordReset($c->get(PasswordSetting::class), $c->get(AuthenticationService::class)));
-    $container->set(ResetBrowserSession::class, static fn(Container $c): ResetBrowserSession =>
-        new ResetBrowserSession($c->get(RefreshCookie::class), $c->get(RefreshSessionRepository::class)));
-    $container->set(ResetCompletionResponder::class, static fn(Container $c): ResetCompletionResponder =>
-        new ResetCompletionResponder($c->get(JSendResponseFactory::class), $c->get(BrowserSessionCookies::class)));
-    $container->set(CompletePasswordResetAction::class, static fn(Container $c): CompletePasswordResetAction =>
-        new CompletePasswordResetAction(
-            $c->get(CompletePasswordReset::class),
-            $c->get(ResetBrowserSession::class),
-            $c->get(ResetCompletionResponder::class)
+    $container->set(CompletePasswordReset::class, static fn(Container $container): CompletePasswordReset =>
+        new CompletePasswordReset(
+            $container->get(PasswordSetting::class),
+            $container->get(AuthenticationService::class)
         ));
-    $container->set(ResetCompletionGuard::class, static fn(Container $c): ResetCompletionGuard =>
-        new ResetCompletionGuard($c->get(BrowserMutationGuard::class), $c->get(AuthAdmission::class)));
+    $container->set(ResetBrowserSession::class, static fn(Container $container): ResetBrowserSession =>
+        new ResetBrowserSession(
+            $container->get(RefreshCookie::class),
+            $container->get(RefreshSessionRepository::class)
+        ));
+    $container->set(ResetCompletionResponder::class, static fn(Container $container): ResetCompletionResponder =>
+        new ResetCompletionResponder(
+            $container->get(JSendResponseFactory::class),
+            $container->get(BrowserSessionCookies::class)
+        ));
+    $container->set(CompletePasswordResetAction::class, static fn(Container $container): CompletePasswordResetAction =>
+        new CompletePasswordResetAction(
+            $container->get(CompletePasswordReset::class),
+            $container->get(ResetBrowserSession::class),
+            $container->get(ResetCompletionResponder::class)
+        ));
+    $container->set(ResetCompletionGuard::class, static fn(Container $container): ResetCompletionGuard =>
+        new ResetCompletionGuard($container->get(BrowserMutationGuard::class), $container->get(AuthAdmission::class)));
 };

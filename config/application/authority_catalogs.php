@@ -21,28 +21,29 @@ use Fight\Common\Application\Messaging\Query\QueryHandler;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    /** @var string|QueryHandler $handler */
     foreach ([ListRolesHandler::class, GetRoleByIdHandler::class] as $handler) {
-        $container->set($handler, static fn(Container $c) => new $handler($c->get(RoleRepository::class)));
+        $container->set($handler, static fn(Container $container) =>
+            new $handler($container->get(RoleRepository::class)));
+        /** @var string|QueryHandler $handler */
         $container->get('messaging.query.router')->registerHandlers([$handler::queryRegistration() => $handler]);
     }
-    $container->set(GetPermissionByIdHandler::class, static fn(Container $c) =>
-        new GetPermissionByIdHandler($c->get(PermissionRepository::class)));
+    $container->set(GetPermissionByIdHandler::class, static fn(Container $container) =>
+        new GetPermissionByIdHandler($container->get(PermissionRepository::class)));
     $container->get('messaging.query.router')->registerHandlers([
         GetPermissionByIdHandler::queryRegistration() => GetPermissionByIdHandler::class
     ]);
-    $container->set(ReadAuthorityCatalogs::class, static fn(Container $c) => new ReadAuthorityCatalogs(
-        $c->get(AuthenticatedPermissions::class),
-        $c->get(InstallationAuthority::class),
-        $c->get(QueryBus::class)
+    $container->set(ReadAuthorityCatalogs::class, static fn(Container $container) => new ReadAuthorityCatalogs(
+        $container->get(AuthenticatedPermissions::class),
+        $container->get(InstallationAuthority::class),
+        $container->get(QueryBus::class)
     ));
-    $container->set(CatalogResponder::class, static fn(Container $c) =>
-        new CatalogResponder($c->get(JSendResponseFactory::class)));
+    $container->set(CatalogResponder::class, static fn(Container $container) =>
+        new CatalogResponder($container->get(JSendResponseFactory::class)));
     $actions = [ListRolesAction::class, GetRoleAction::class, ListPermissionsAction::class, GetPermissionAction::class];
     foreach ($actions as $action) {
-        $container->set($action, static fn(Container $c) => new $action(
-            $c->get(ReadAuthorityCatalogs::class),
-            $c->get(CatalogResponder::class)
+        $container->set($action, static fn(Container $container) => new $action(
+            $container->get(ReadAuthorityCatalogs::class),
+            $container->get(CatalogResponder::class)
         ));
     }
 };

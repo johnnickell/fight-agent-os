@@ -61,43 +61,43 @@ return static function (Container $container): void {
         SynchronousCommandBus::class              => static function (Container $container): SynchronousCommandBus {
             return $container->get('messaging.command.bus');
         },
-        RetryInvitationDeliveryHandler::class     => static fn(Container $c): RetryInvitationDeliveryHandler =>
+        RetryInvitationDeliveryHandler::class     => static fn(Container $container): RetryInvitationDeliveryHandler =>
             new RetryInvitationDeliveryHandler(
-                $c->get(ActivationGrantRepository::class),
-                $c->get(AuditEvidenceRepository::class),
-                $c->get(TransactionalUnitOfWork::class),
-                $c->get(Clock::class),
-                $c->get(EventDispatcher::class)
+                $container->get(ActivationGrantRepository::class),
+                $container->get(AuditEvidenceRepository::class),
+                $container->get(TransactionalUnitOfWork::class),
+                $container->get(Clock::class),
+                $container->get(EventDispatcher::class)
             ),
-        ResendInvitationDeliveryHandler::class    => static fn(Container $c): ResendInvitationDeliveryHandler =>
+        ResendInvitationDeliveryHandler::class    => static fn(Container $container): ResendInvitationDeliveryHandler =>
             new ResendInvitationDeliveryHandler(
-                $c->get(ActivationGrantRepository::class),
-                $c->get(AuditEvidenceRepository::class),
-                $c->get(TransactionalUnitOfWork::class),
-                $c->get(ActivationCredentialGenerator::class),
-                $c->get(InvitationDeliveryCipher::class),
-                $c->get(Clock::class),
-                $c->get(EventDispatcher::class)
+                $container->get(ActivationGrantRepository::class),
+                $container->get(AuditEvidenceRepository::class),
+                $container->get(TransactionalUnitOfWork::class),
+                $container->get(ActivationCredentialGenerator::class),
+                $container->get(InvitationDeliveryCipher::class),
+                $container->get(Clock::class),
+                $container->get(EventDispatcher::class)
             ),
-        CorrectPendingInvitationHandler::class    => static fn(Container $c): CorrectPendingInvitationHandler =>
+        CorrectPendingInvitationHandler::class    => static fn(Container $container): CorrectPendingInvitationHandler =>
             new CorrectPendingInvitationHandler(
-                $c->get(UserRepository::class),
-                $c->get(ActivationGrantRepository::class),
-                $c->get(InvitationAdministrationAuthorization::class),
-                $c->get(AuditEvidenceRepository::class),
-                $c->get(TransactionalUnitOfWork::class),
-                $c->get(ActivationCredentialGenerator::class),
-                $c->get(InvitationDeliveryCipher::class),
-                $c->get(Clock::class),
-                $c->get(EventDispatcher::class)
+                $container->get(UserRepository::class),
+                $container->get(ActivationGrantRepository::class),
+                $container->get(InvitationAdministrationAuthorization::class),
+                $container->get(AuditEvidenceRepository::class),
+                $container->get(TransactionalUnitOfWork::class),
+                $container->get(ActivationCredentialGenerator::class),
+                $container->get(InvitationDeliveryCipher::class),
+                $container->get(Clock::class),
+                $container->get(EventDispatcher::class)
             ),
-        AssignRoleToUserHandler::class            => static fn(Container $c): AssignRoleToUserHandler =>
+        AssignRoleToUserHandler::class            => static fn(Container $container): AssignRoleToUserHandler =>
             new AssignRoleToUserHandler(
-                $c->get(UserRepository::class),
-                $c->get(RoleRepository::class),
-                $c->get(Clock::class),
-                $c->get(TransactionalUnitOfWork::class),
-                $c->get(EventDispatcher::class)
+                $container->get(UserRepository::class),
+                $container->get(RoleRepository::class),
+                $container->get(Clock::class),
+                $container->get(TransactionalUnitOfWork::class),
+                $container->get(EventDispatcher::class)
             ),
         ReconcileManagedPolicyHandler::class      => static function (
             Container $container
