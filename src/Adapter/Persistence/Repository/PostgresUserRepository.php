@@ -50,7 +50,8 @@ final readonly class PostgresUserRepository implements UserRepository
     public function __construct(
         private Connection $connection,
         private AuthorizationReferenceFences $referenceFences,
-        private AuthenticationAuthorityFences $authenticationFences
+        private AuthenticationAuthorityFences $authenticationFences,
+        private bool $lockLifecycleSnapshot = false
     ) {
     }
 
@@ -206,6 +207,13 @@ final readonly class PostgresUserRepository implements UserRepository
      */
     public function getById(UserId $id): ?User
     {
+        // Only the disable/enable binding locks before its package-loaded snapshot. Other package
+        // workflows retain their existing read/compare coordination. All bindings share the SAME
+        // connection, writer fence and complete-state CAS; none owns transaction completion.
+        if ($this->lockLifecycleSnapshot && $this->connection->isTransactionActive()) {
+            $this->authenticationFences->hold($id);
+        }
+
         return $this->one('id', $id->toString());
     }
 

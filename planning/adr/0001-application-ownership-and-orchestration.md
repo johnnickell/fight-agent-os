@@ -41,6 +41,19 @@ requirements above supersede it. In particular, neither the original HTTP prohib
 exceptions restrict the new all-entry rule. Current source and unavailable supplier APIs remain correction/
 qualification work under TICKET-00133 through TICKET-00136; prose does not prove conformity.
 
+## TASK-00119 lifecycle precheck amendment — 2026-11-09
+
+The operator explicitly permits an authoritative last-administrator query before package disable dispatch,
+without count/check/mutation atomicity or serialization across concurrent requests. Concurrent prechecks may
+both pass; no final-administrator guarantee follows. Owned Application policy retains self-target rejection
+and that precheck, not duplicate entry permission admission or a lifecycle forwarding service. HTTP declares
+DISABLE_USERS or ENABLE_USERS once on its respective Action. Package commands still traverse configured buses
+and own lifecycle/session/required audit atomicity and post-commit events. No displayed whole-account revision
+is required; concurrent unrelated email changes must not reject disabling or be lost. Preserve the supported
+complete-state repository contract using the shared per-user fence before transactional snapshot loading,
+not a narrowed CAS, stale authentication-version overwrite or nested transaction. This scoped amendment does
+not change delete/restore, role removal or any sibling TASK. See [TASK-00119](../tasks/00119-TASK.md).
+
 ## TASK-00060 invitation admission amendment — 2026-11-03
 
 The maintainer explicitly separated mutation from reading and rejected redundant admission/forwarding in this
