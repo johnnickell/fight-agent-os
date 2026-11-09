@@ -161,6 +161,159 @@ final class UserLifecycleApiTest extends TestCase
     }
 
     /**
+     * Serializes actual same-target public commands without partial audit or resurrected authority
+     *
+     * @phpstan-param list<string> $outcomes
+     * @phpstan-param list<string> $actions
+     */
+    #[DataProvider('competingTransitions')]
+    public function testCompetingLifecycleCommands(
+        bool $initiallyDisabled,
+        string $first,
+        string $second,
+        array $outcomes,
+        string $finalState,
+        array $actions
+    ): void {
+        $target = $this->user(false);
+        $token = $this->tokenFor($target);
+        if ($initiallyDisabled) {
+            $this->container->get(CommandBus::class)->execute(new DisableUser($this->actor->getId(), $target->getId()));
+        }
+        $before = $this->connection->fetchAssociative(
+            'SELECT * FROM users WHERE id = ?',
+            [$target->getId()->toString()]
+        );
+        self::assertIsArray($before);
+        $this->connection->executeStatement('TRUNCATE audit_evidence');
+        $children = [];
+        $firstPid = 0;
+        try {
+            foreach ([$first, $second] as $index => $operation) {
+                $pipes = [];
+                $process = proc_open(
+                    [
+                        PHP_BINARY, '-r',
+                        'require "vendor/autoload.php"; Tests\\Support\\UserLifecycleRaceWorker::run();'
+                    ],
+                    [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']],
+                    $pipes,
+                    dirname(__DIR__, 3)
+                );
+                self::assertIsResource($process);
+                $children[] = [$process, $pipes];
+                stream_set_timeout($pipes[1], 15);
+                fwrite($pipes[0], json_encode([
+                    'actor'     => $this->actor->getId()->toString(),
+                    'target'    => $target->getId()->toString(),
+                    'operation' => $operation,
+                    'time'      => $this->tokens->clock->now()->format('c'),
+                    'pause'     => $index === 0
+                ], JSON_THROW_ON_ERROR)."\n");
+                fflush($pipes[0]);
+                $pid = (int) trim((string) fgets($pipes[1]));
+                self::assertGreaterThan(0, $pid);
+                if ($index === 0) {
+                    $firstPid = $pid;
+                    self::assertSame('snapshot', trim((string) fgets($pipes[1])));
+                } else {
+                    // Observe the second executing command actually waiting on the first transaction, not a sleep.
+                    $deadline = microtime(true) + 5;
+                    do {
+                        $blocked = $this->connection->fetchOne(
+                            'SELECT ? = ANY(pg_blocking_pids(?))',
+                            [$firstPid, $pid]
+                        );
+                        if (!$blocked) {
+                            usleep(10000);
+                        }
+                    } while (!$blocked && microtime(true) < $deadline);
+                    self::assertTrue($blocked, 'The competing command must reach the held per-user fence.');
+                }
+            }
+            self::assertSame($before, $this->connection->fetchAssociative(
+                'SELECT * FROM users WHERE id = ?',
+                [$target->getId()->toString()]
+            ));
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+            fwrite($children[0][1][0], "go\n");
+            fflush($children[0][1][0]);
+            foreach ($children as $index => [$process, $pipes]) {
+                self::assertSame($outcomes[$index], trim((string) fgets($pipes[1])));
+            }
+            $stored = $this->container->get(UserRepository::class)->getById($target->getId());
+            self::assertNotNull($stored);
+            self::assertSame($finalState, $stored->getState()->value);
+            self::assertSame(
+                (int) $before['authentication_version'] + count(array_filter(
+                    $actions,
+                    static fn($action) => $action === 'user.disabled'
+                )),
+                $stored->getAuthenticationVersion()
+            );
+            self::assertSame(1, (int) $this->connection->fetchOne(
+                'SELECT count(*) FROM refresh_sessions WHERE user_id = ? AND revoked = TRUE',
+                [$target->getId()->toString()]
+            ));
+            self::assertSame(0, (int) $this->connection->fetchOne(
+                'SELECT count(*) FROM refresh_sessions WHERE user_id = ? AND revoked = FALSE',
+                [$target->getId()->toString()]
+            ));
+            $me = new ServerRequestFactory()->createServerRequest('GET', 'https://agent-os.test/api/v1/me');
+            self::assertSame(
+                401,
+                $this->app->handle($me->withHeader('Authorization', 'Bearer '.$token))->getStatusCode()
+            );
+            $audit = $this->connection->fetchAllAssociative(
+                'SELECT action, actor_id, subject_id, context FROM audit_evidence ORDER BY id'
+            );
+            self::assertSame($actions, array_column($audit, 'action'));
+            foreach ($audit as $entry) {
+                self::assertSame($this->actor->getId()->toString(), $entry['actor_id']);
+                self::assertSame($target->getId()->toString(), $entry['subject_id']);
+                self::assertSame('{}', $entry['context']);
+            }
+        } finally {
+            foreach ($children as [$process, $pipes]) {
+                if (proc_get_status($process)['running']) {
+                    proc_terminate($process);
+                }
+                foreach ($pipes as $pipe) {
+                    fclose($pipe);
+                }
+                proc_close($process);
+            }
+        }
+    }
+
+    /**
+     * Supplies opposing, duplicate and initially invalid intents in both lifecycle directions
+     *
+     * @return iterable<array{bool, string, string, list<string>, string, list<string>}>
+     */
+    public static function competingTransitions(): iterable
+    {
+        yield 'disable then enable' => [
+            false, 'disable', 'enable', ['success', 'success'], 'active', ['user.disabled', 'user.enabled']
+        ];
+        yield 'enable then disable' => [
+            true, 'enable', 'disable', ['success', 'success'], 'disabled', ['user.enabled', 'user.disabled']
+        ];
+        yield 'duplicate disable' => [
+            false, 'disable', 'disable', ['success', 'conflict'], 'disabled', ['user.disabled']
+        ];
+        yield 'duplicate enable' => [
+            true, 'enable', 'enable', ['success', 'conflict'], 'active', ['user.enabled']
+        ];
+        yield 'invalid enable first' => [
+            false, 'enable', 'disable', ['conflict', 'success'], 'disabled', ['user.disabled']
+        ];
+        yield 'invalid disable first' => [
+            true, 'disable', 'enable', ['conflict', 'success'], 'active', ['user.enabled']
+        ];
+    }
+
+    /**
      * Rolls back lifecycle and session invalidation when required package audit cannot persist
      */
     public function testRequiredAuditFailureRollsBack(): void
