@@ -19,13 +19,14 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 62 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
+| 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
@@ -91,7 +92,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 108 | [TASK-00111](00111-TASK.md) | Operate the canonical Roadmap and work queue | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00108](00108-TASK.md) | — |
 | 109 | [TASK-00112](00112-TASK.md) | Operate migration and Planning authority | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00107](00107-TASK.md) | — |
 | 110 | [TASK-00113](00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00110](00110-TASK.md), [TASK-00111](00111-TASK.md), [TASK-00112](00112-TASK.md) | — |
-| 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00119](00119-TASK.md) | — |
 | 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md) | — |
 | 117 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00121](00121-TASK.md), [TASK-00122](00122-TASK.md), [TASK-00062](00062-TASK.md) | — |
 | 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
@@ -561,6 +561,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
 | 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #130](https://github.com/johnnickell/fight-agent-os/pull/130) |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | done | — | [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200) |
+| 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | done | — | — |
 | 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #133](https://github.com/johnnickell/fight-agent-os/pull/133) |
 | 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #141](https://github.com/johnnickell/fight-agent-os/pull/141) |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #79](https://github.com/johnnickell/fight-agent-os/pull/79) |
