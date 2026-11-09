@@ -94,8 +94,8 @@ their own prerequisites are satisfied; this TICKET does not imply a monolithic r
 - Existing credential/session/password/activation/invitation/bootstrap behavior, partial outcomes, required audit,
   business atomicity and real recovery hold through corrected entry paths. No new grant, endpoint, provider or
   feature is smuggled into a cleanup, and no generic retry guarantee replaces the approved ordinary-create contract.
-- Safe typed reads and adapter presentation agree with current callers/docs and shared failure intent. Known
-  upstream typing gaps remain explicit suppliers, not new ignores, unchecked assertions or local bus copies.
+- Safe typed reads and adapter presentation agree with current callers/docs and shared failure intent. Callers
+  document known query-handler results with accurate `@var` annotations; no new ignores or local bus copies.
 - Each correction slice owns meaningful behavioral coverage, affected docs, focused checks, canonical gate with
   honest fresh/reused receipts and warnings, independent Review and applicable QA. Validate static architecture,
   composition and generated/tooling concerns with their owning tools, not product tests of source/configuration.
@@ -134,23 +134,37 @@ portfolio/upstream gate; orders do not add unstated technical dependencies or ch
 
 ### Precise supplier holds
 
-The inspected baseline locks Common v1.3.0 at `7de6cad6e8a9752973ad9f8e27e285b0c1510582` and Access Control v0.8.0
-at `319738255e682d587642b67856039f882b9588d6`. QueryBus exposes mixed, required User/Role/Permission handlers return
-nullable Views, and activation/correction use generic LogicException for some expected transitions. Sibling typing/
-failure plans and local tags do not supply qualified replacements or prove distribution/consumer behavior.
+The current lock selects Common v1.4.1 (`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`) and Access Control v0.8.0
+(`319738255e682d587642b67856039f882b9588d6`). Common v1.5.0 is the released capability baseline to qualify;
+its local tag resolves to `06fb5cd3720af9cf8295198f74040d95b64c5155`. This planning update changes no dependency.
 
-- TASK-00576: relevant Common message/result typing and package managed-policy/User/Role/Permission result,
-  identity, absence and intentional-failure guarantees.
-- TASK-00577: relevant dispatch/results plus exact invitation status/recovery/correction outcomes and actual
-  supported authorization integration; never broad LogicException-to-conflict or a no-op required port.
-- TASK-00578: catalog/directory/managed-policy result typing, required lookup-or-intentional-failure and exact
-  page/identity contracts; retain current required Role audit pending TASK-00573, without assuming release coupling.
-- TASK-00579: Common result relationships, including GetCsrfProof, and qualified active-session owner/current-session/
-  page/result and supported authorization contracts. Sensitive synchronous authentication remains appropriate.
-- TASK-00580: intentional activation refusal versus internal-fault contracts with preserved synchronous security
-  semantics. Qualify other actually consumed password/reset failures as needed, not all query-generics work.
-- TASK-00581: typed due/expired/status discovery, exact purpose/generation/progress/absence and intentional
-  transition/contention contracts with real recovery behavior preserved.
+John selected Common's existing error categories and safe boundary as the shared approach, with only genuinely
+application-specific additions. Remove superseded local workarounds rather than retain parallel classifiers.
+TASK-00582 already adopted the HTTP boundary; these slices integrate their feature failures with it, not replace it.
+Common's QueryBus intentionally returns `mixed`. Callers use the known query-to-handler result contract and accurate
+`@var` annotations, including generic element types. Neither a generic bus redesign nor removal of `mixed` is a
+supplier prerequisite. An annotation documents a qualified contract; it does not establish the handler's behavior.
+
+Access Control develop `0878fc24e616a4b777e211b1c237ff720d64403c` contains breaking changes and accepted unfinished
+plans. John intends to complete its planned work before the next release; no future version number is selected.
+Use these existing supplier owners, then qualify the actual tagged release and consumer behavior:
+
+- TASK-00576: managed-policy and required User/Role/Permission reads; AC TASK-00131/00135/00140.
+- TASK-00577: explicit invitation status absence, generation/address/recovery outcomes and intentional failures;
+  AC TASK-00133/00137/00138 and related audit work. Resolve the invitation-correction permission-timing mismatch
+  described in TASK-00577 before adoption; never satisfy a required port with a no-op.
+- TASK-00578: required detail reads, exact page/identity contracts and Role mutations; AC TASK-00131/00132/00140.
+  TASK-00573 owns explicit Role audit. Preserve unavailable Agent operation behavior while updating moved contracts.
+- TASK-00579: session owner/current-session/page contracts and direct synchronous authentication/session operations;
+  AC TASK-00132/00139 and audit TASK-00127. GetCsrfProof needs no upstream bus redesign.
+- TASK-00580: intentional activation/password refusal versus internal faults, synchronous secret handling and atomic
+  security effects; AC TASK-00139 and related audit work.
+- TASK-00581: exact due/expired/status purpose/generation/progress/absence and worker/provider failures;
+  AC TASK-00133/00138 and related audit work.
+
+AC TASK-00132's older Common result-validation hold must be reassessed against released `ResultSet::strict()`.
+It validates construction-time bounds; AC still owns request/page agreement, exact elements and session scope.
+The shared mutable list is not a snapshot. No additional Common feature requirement was demonstrated by this sample.
 
 Each affected TASK owns selection and qualification of actual supported tagged APIs, source/signatures, transitive
 requirements, deliberate manifest/lock changes and real Agent OS composition. Recheck supplier availability before
@@ -185,6 +199,25 @@ limiting to TASK-00577, installation/catalog/reference to TASK-00578, request-pr
 password/activation/reset/validation to TASK-00580 and grant-delivery/provider/worker to TASK-00581. Coordinate shared
 manifest/lock/composition deltas against the actual selected baseline; first real adoption owns its required change,
 not a separate upgrade-only TASK. Do not create parallel service graphs, generic facades or silent feature expansion.
+
+The first adoption of the breaking Access Control release must update every existing affected caller in the same
+working candidate, not just the feature that first needs the dependency. Before changing manifest/lock, inventory
+removed classes, moved imports, named arguments, repository methods, result/absence shapes, audit bindings and
+failure catches across all live entries and fixtures. Allocate necessary edits to the owners above; coordinate
+TASK-00573 where its audit contract changes. Include the minimum required compatibility corrections in that adoption
+and verify all affected existing features together. Do not leave login, workers or another entry broken until its
+later cleanup TASK. This permits only required release adoption changes across owners, not unrelated feature work.
+
+In particular, replace AuthenticationService with the package's direct authentication/session/password owners,
+update AgentCredentialOperation imports/contracts, handle explicit CredentialDeliveryAbsent and origin-bearing
+status Views, and update error handling together with service calls. Expired/invalid credentials must remain a
+sign-in-required outcome rather than a server error; unknown faults remain server failures. Commit/publication
+uncertainty must not claim rollback or trigger automatic replay. Update owned OpenAPI/client contracts deliberately.
+
+No old/new application modes, forwarding facades or obsolete data-format support are required. Remove replaced
+code after verifying its callers. Pre-production does not authorize deleting unknown local data: record any actual
+needed-data preservation or explicitly authorized disposal separately. Later architectural cleanup remains with
+its existing TASK; release adoption does not complete those TASKs or waive independent Review/QA.
 
 Do not finish another capability merely to move a shared helper: preserve inward dependencies and an actually live
 existing path under its named correcting owner until its consumers migrate, without adding aliases or forwarding

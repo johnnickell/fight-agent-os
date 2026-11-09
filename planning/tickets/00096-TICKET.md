@@ -71,14 +71,14 @@ caller transaction, call private handlers or hide audit policy in transaction/re
 | Fact or capability | Supplier and retained consumer responsibility |
 |---|---|
 | Canonical activity and identity | Existing Common `Observation::forActivity()`, `PhaseActivity`, `RecordPhaseObservation` and admitted reads; reuse directly, without mirrored raw observations or parallel package values. |
-| Optional safe target/timing/result | [Common TASK-00205](https://github.com/johnnickell/fight-common/blob/8f69f701102f246c0f77000d46bd4238f8f56455/planning/tasks/00205-TASK.md) plans `PhaseActivity::execution()` with `ActivityExecution`, `ActivityTarget`, `ActivityTiming` and `ActivityResult`; reuse existing `ObservationOccurrence`/`Duration`. `activity.execution` remains planned, not available in the inspected source or installed lock. |
+| Optional safe target/timing/result | Common v1.5.0 supplies `PhaseActivity::execution()` with `ActivityExecution`, `ActivityTarget`, `ActivityTiming` and `ActivityResult`; reuse `ObservationOccurrence`/`Duration` directly. Qualify released aggregate-owned `Domain\Mcp`/`Application\Mcp` contracts; these facts are not in Agent OS's current installed lock. |
 | Workflow/process attribution and target revision | TASK-00386 binds trusted application relationships; a safe capability/name is not a raw URI/path or proof of lineage. Do not duplicate Common target/time/result types or encode missing structured facts in summary prose. |
 | Evidence links, required audit and restrictions | Existing TASK-00378/00379/00380 owners and TASK-00388 integration; a post-commit subscriber cannot manufacture atomic holds, required references or safe disclosure/removal fences. |
 | Stable history/search | TASK-00387 owns the application snapshot/cursor projection. Common's live offset pages may repeat/skip under change and do not supply a response-wide snapshot or durable catch-up checkpoint. |
 | Usage and known timing categories | TASK-00396/00397 and original accounting owners retain normalization, corrections, overlap/category policy and durable totals; typed observed return/throw/exit is not business success. |
 | Privacy and live delivery | TASK-00388 owns actual copy/restriction participation; Common protected-body removal is not safe-metadata purge, tombstones or full retention/redaction. Mercure and durable application queries remain separate from MCP subscriptions. |
 
-Planned nested `activity.execution` facts leave activity Observation top-level start/end null and outcome unknown;
+Released nested `activity.execution` facts leave activity Observation top-level start/end null and outcome unknown;
 they do not change latest session/phase state or establish Workflow success.
 
 Use stable producer/source observation identities and exact-content retry semantics; source start and terminal
@@ -100,14 +100,15 @@ reference/hold and safe-metadata purge integration remains an implementation dec
 something TASK-00205 or a subscriber supplies. Stable projection catch-up/rebuild enumeration also needs a qualified
 source contract; Common's live page/offset bounds and post-commit events alone do not prove complete rebuild.
 
-Supplier inspection: remote Common develop is `8f69f701102f246c0f77000d46bd4238f8f56455`; its changes since
-`60d66b30` are planning only, with the existing recorder/read implementation unchanged. The latest observed remote
-Common tag is v1.4.1 (`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`), without execution Tools/scoped-read ports.
-Agent OS still locks Common v1.3.0 and Access Control v0.8.0. Implementation requires actually qualified,
-independently accepted, tagged contracts and supported-minimum/source/lock evidence; this inspection is not runtime
-qualification or permission to update dependencies. TASK-00205 adds no transaction participation or automatic
-capture. Preserve statuses, orders and local dependency edges; neither Agent OS nor AccessControl adoption is a
-Common release prerequisite. [TASK-00245](../tasks/00245-TASK.md#external-tool-supplier-and-scope) owns binding/scoped-read adoption.
+Supplier refresh: Common v1.5.0's local tag resolves to `06fb5cd3720af9cf8295198f74040d95b64c5155`. It supplies
+execution recording/reads, optional structured activity facts and safe inspection Tools, including separately
+opted-in protected Detail Tools. Its release replaces the earlier planning-only availability observation; it does
+not supply Agent OS reference/hold participation, snapshot history, automatic capture or Workflow authority.
+Agent OS currently locks Common v1.4.1 (`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`) and Access Control v0.8.0.
+Qualify actual tagged contracts, canonical namespaces, independent current admissions and source/lock integration
+before exposing them. Coarse Tool permission is not reference/body permission. Local inspection is not runtime
+qualification or permission to update dependencies. Preserve statuses, orders and local dependency edges; neither
+Agent OS nor AccessControl adoption is a Common release prerequisite. [TASK-00245](../tasks/00245-TASK.md#external-tool-supplier-and-scope) owns binding/scoped-read adoption.
 
 ## Use cases
 

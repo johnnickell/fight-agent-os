@@ -108,18 +108,21 @@ John approved this third requirement area under EPIC-00023 and the two complete 
   actual protected entry/bus/persistence behavior, preserve needed evidence/history and remove RoleMutationUnitOfWork
   and superseded local contracts/tests only after replacement proof.
 
-Both are `kind: chore`, have TASK-00564 as their sole local blocker, and are written as `needs-info` for their
-separate external capability holds. Common's DBAL implementation is still planned in the inspected checkout;
-Access Control's inspected handlers lack explicit audit and its AuditEvidence lacks Role subjects. These are
-bounded local observations, not remote-release qualification or fixed future version requirements. Supplier APIs
-and optional-injection decisions belong to their owners; Agent OS's required audit cannot become optional/no-op.
+Both are `kind: chore`, have TASK-00564 as their sole local blocker and retain `needs-info` pending qualification.
+Common v1.5.0 now supplies the DBAL boundary; TASK-00572 owns its deliberate adoption and actual PostgreSQL proof.
+Access Control develop still lacks explicit Role audit, but existing upstream TASK-00122/00153/00167/00168 cover
+its evidence, handlers and conformance/composition. TASK-00573 owns tagged consumer adoption, not another supplier
+feature plan. Agent OS's required audit must be explicitly enabled and cannot become optional/no-op. Local tag and
+plan inspection do not establish installed consumer behavior or independent acceptance.
 
 Neither TASK depends on the other or all seven portfolio corrections. Role audit can use the existing qualified
 Doctrine transaction implementation until DBAL adoption, and DBAL adoption may retain the existing required-audit
 decorator pending its separate replacement. Both consume the same generic TransactionalUnitOfWork; actual release
 coupling and overlapping manifest/composition edits must be coordinated from evidence. Each slice owns its exact
 dependency change and complete consumer qualification, without a package-upgrade-only prerequisite or a generic
-imitation layer. Source/capability owners retain broader use-case and safe-error corrections.
+imitation layer. Apply TICKET-00135's first-release-adoption rule to actual AC coupling: update every affected live
+caller with the breaking release, while keeping unrelated cleanup with its existing owner. Source/capability owners
+retain broader use-case and safe-error corrections.
 
 TICKET-00133's TASK decomposition is complete; the supplier holds are not cleared by requirements acceptance.
 No source refactor, dependency update, upstream mutation, runtime qualification, implementation verification,
