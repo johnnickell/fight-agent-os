@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Adapter\HttpClient\Guzzle\GuzzleClient;
 use Fight\Common\Adapter\ServiceContainer\Fight\ContainerCapabilityRegistrar;
-use Fight\Common\Application\HttpClient\Transport\HttpClient;
 use Fight\Common\Application\Service\Container;
 use GuzzleHttp\Client;
 use Psr\Http\Message\ResponseFactoryInterface;

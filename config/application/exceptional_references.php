@@ -14,20 +14,20 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(ExceptionalReferences::class, static fn(Container $c): ExceptionalReferences =>
-        new ExceptionalReferences($c->get(Connection::class), $c->get(Clock::class)));
+    $container->set(ExceptionalReferences::class, static fn(Container $container): ExceptionalReferences =>
+        new ExceptionalReferences($container->get(Connection::class), $container->get(Clock::class)));
     $container->set(GenerateExceptionalReferenceResponder::class, static fn(
-        Container $c
+        Container $container
     ): GenerateExceptionalReferenceResponder =>
-        new GenerateExceptionalReferenceResponder($c->get(JSendResponseFactory::class)));
+        new GenerateExceptionalReferenceResponder($container->get(JSendResponseFactory::class)));
     $container->set(GenerateExceptionalReferenceAction::class, static fn(
-        Container $c
+        Container $container
     ): GenerateExceptionalReferenceAction =>
         new GenerateExceptionalReferenceAction(
-            $c->get(ExceptionalReferences::class),
-            $c->get(QueryBus::class),
-            $c->get(UserRepository::class),
-            $c->get(RoleRepository::class),
-            $c->get(GenerateExceptionalReferenceResponder::class)
+            $container->get(ExceptionalReferences::class),
+            $container->get(QueryBus::class),
+            $container->get(UserRepository::class),
+            $container->get(RoleRepository::class),
+            $container->get(GenerateExceptionalReferenceResponder::class)
         ));
 };

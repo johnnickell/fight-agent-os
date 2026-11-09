@@ -23,7 +23,7 @@ return static function (Container $container): void {
         $container->get(PasswordHasher::class)
     ));
 
-    // Mandatory in all environments and entrypoints before any password-setting consumer can run.
+    // Mandatory in all environments and entry-points before any password-setting consumer can run.
     $container->get(LocalCompromisedPasswords::class);
     $container->get(Argon2idPasswords::class);
 };

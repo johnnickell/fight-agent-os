@@ -21,23 +21,23 @@ use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(WorkspaceRepository::class, static fn(Container $c): WorkspaceRepository =>
-        new PostgresWorkspaceRepository($c->get(Connection::class)));
-    $container->set(WorkspaceBootstrapAudit::class, static fn(Container $c): WorkspaceBootstrapAudit =>
-        new PostgresWorkspaceBootstrapAudit($c->get(Connection::class)));
-    $container->set(BootstrapWorkspaceHandler::class, static fn(Container $c): BootstrapWorkspaceHandler =>
+    $container->set(WorkspaceRepository::class, static fn(Container $container): WorkspaceRepository =>
+        new PostgresWorkspaceRepository($container->get(Connection::class)));
+    $container->set(WorkspaceBootstrapAudit::class, static fn(Container $container): WorkspaceBootstrapAudit =>
+        new PostgresWorkspaceBootstrapAudit($container->get(Connection::class)));
+    $container->set(BootstrapWorkspaceHandler::class, static fn(Container $container): BootstrapWorkspaceHandler =>
         new BootstrapWorkspaceHandler(
-            $c->get(WorkspaceRepository::class),
-            $c->get(WorkspaceBootstrapAudit::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(Clock::class)
+            $container->get(WorkspaceRepository::class),
+            $container->get(WorkspaceBootstrapAudit::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(Clock::class)
         ));
-    $container->set(FindInitialWorkspaceHandler::class, static fn(Container $c): FindInitialWorkspaceHandler =>
-        new FindInitialWorkspaceHandler($c->get(WorkspaceRepository::class)));
-    $container->set(GetWorkspaceByIdHandler::class, static fn(Container $c): GetWorkspaceByIdHandler =>
-        new GetWorkspaceByIdHandler($c->get(WorkspaceRepository::class)));
-    $container->set(BootstrapWorkspaceCommand::class, static fn(Container $c): BootstrapWorkspaceCommand =>
-        new BootstrapWorkspaceCommand($c->get(CommandBus::class), $c->get(QueryBus::class)));
+    $container->set(FindInitialWorkspaceHandler::class, static fn(Container $container): FindInitialWorkspaceHandler =>
+        new FindInitialWorkspaceHandler($container->get(WorkspaceRepository::class)));
+    $container->set(GetWorkspaceByIdHandler::class, static fn(Container $container): GetWorkspaceByIdHandler =>
+        new GetWorkspaceByIdHandler($container->get(WorkspaceRepository::class)));
+    $container->set(BootstrapWorkspaceCommand::class, static fn(Container $container): BootstrapWorkspaceCommand =>
+        new BootstrapWorkspaceCommand($container->get(CommandBus::class), $container->get(QueryBus::class)));
     $container->get('messaging.command.router')->registerHandlers([
         BootstrapWorkspace::class => BootstrapWorkspaceHandler::class
     ]);

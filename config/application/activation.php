@@ -48,46 +48,49 @@ return static function (Container $container): void {
         ));
     $container->set(RefreshCredentialGenerator::class, static fn(): RefreshCredentialGenerator =>
         new RandomRefreshCredentials());
-    $container->set(SessionRevocationService::class, static fn(Container $c): SessionRevocationService =>
-        new SessionRevocationService($c->get(RefreshSessionRepository::class)));
-    $container->set(AuthenticationEvents::class, static fn(Container $c): AuthenticationEvents =>
-        new AuthenticationEvents($c->get(EventDispatcher::class)));
-    $container->set(AuthenticationService::class, static fn(Container $c): AuthenticationService =>
+    $container->set(SessionRevocationService::class, static fn(Container $container): SessionRevocationService =>
+        new SessionRevocationService($container->get(RefreshSessionRepository::class)));
+    $container->set(AuthenticationEvents::class, static fn(Container $container): AuthenticationEvents =>
+        new AuthenticationEvents($container->get(EventDispatcher::class)));
+    $container->set(AuthenticationService::class, static fn(Container $container): AuthenticationService =>
         new AuthenticationService(
-            $c->get(UserRepository::class),
-            $c->get(ActivationGrantRepository::class),
-            $c->get(RefreshSessionRepository::class),
-            $c->get(SessionRevocationService::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(Clock::class),
-            $c->get(LoginThrottle::class),
-            $c->get(RefreshCredentialGenerator::class),
-            $c->get(PasswordHasher::class),
-            $c->get(PasswordValidator::class),
-            $c->get(TokenEncoder::class),
-            $c->get(AuthenticationTokenPolicy::class),
-            PasswordHash::fromString($c->get(PasswordHasher::class)->hash(bin2hex(random_bytes(32)))),
-            $c->get(AuthenticationEvents::class),
-            $c->get(PasswordResetGrantRepository::class),
-            $c->get(AuditEvidenceRepository::class),
-            $c->get(EmailChangeGrantRepository::class)
+            $container->get(UserRepository::class),
+            $container->get(ActivationGrantRepository::class),
+            $container->get(RefreshSessionRepository::class),
+            $container->get(SessionRevocationService::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(Clock::class),
+            $container->get(LoginThrottle::class),
+            $container->get(RefreshCredentialGenerator::class),
+            $container->get(PasswordHasher::class),
+            $container->get(PasswordValidator::class),
+            $container->get(TokenEncoder::class),
+            $container->get(AuthenticationTokenPolicy::class),
+            PasswordHash::fromString($container->get(PasswordHasher::class)->hash(bin2hex(random_bytes(32)))),
+            $container->get(AuthenticationEvents::class),
+            $container->get(PasswordResetGrantRepository::class),
+            $container->get(AuditEvidenceRepository::class),
+            $container->get(EmailChangeGrantRepository::class)
         ));
-    $container->set(ActivateInvitation::class, static fn(Container $c): ActivateInvitation =>
-        new ActivateInvitation($c->get(PasswordSetting::class), $c->get(AuthenticationService::class)));
-    $container->set(SessionResponder::class, static fn(Container $c): SessionResponder =>
-        new SessionResponder($c->get(JSendResponseFactory::class), $c->get(BrowserSessionCookies::class)));
-    $container->set(ActivateInvitationAction::class, static fn(Container $c): ActivateInvitationAction =>
+    $container->set(ActivateInvitation::class, static fn(Container $container): ActivateInvitation =>
+        new ActivateInvitation($container->get(PasswordSetting::class), $container->get(AuthenticationService::class)));
+    $container->set(SessionResponder::class, static fn(Container $container): SessionResponder =>
+        new SessionResponder(
+            $container->get(JSendResponseFactory::class),
+            $container->get(BrowserSessionCookies::class)
+        ));
+    $container->set(ActivateInvitationAction::class, static fn(Container $container): ActivateInvitationAction =>
         new ActivateInvitationAction(
-            $c->get(ActivateInvitation::class),
-            $c->get(SessionResponder::class),
-            $c->get(CaptureSessionPresentation::class)
+            $container->get(ActivateInvitation::class),
+            $container->get(SessionResponder::class),
+            $container->get(CaptureSessionPresentation::class)
         ));
-    $container->set(BrowserMutationGuard::class, static fn(Container $c): BrowserMutationGuard =>
-        new BrowserMutationGuard($c->get(HmacCsrfProofs::class), $c->get(CsrfClock::class)));
-    $container->set(ActivationAdmission::class, static fn(Container $c): ActivationAdmission =>
+    $container->set(BrowserMutationGuard::class, static fn(Container $container): BrowserMutationGuard =>
+        new BrowserMutationGuard($container->get(HmacCsrfProofs::class), $container->get(CsrfClock::class)));
+    $container->set(ActivationAdmission::class, static fn(Container $container): ActivationAdmission =>
         new ActivationAdmission(
-            $c->get(Connection::class),
-            $c->get(Clock::class),
+            $container->get(Connection::class),
+            $container->get(Clock::class),
             getenv('APP_ACTIVATION_RATE_KEY') ?: ''
         ));
 };

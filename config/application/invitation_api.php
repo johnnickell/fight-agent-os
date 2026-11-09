@@ -31,14 +31,17 @@ use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(FindInvitationDeliveryStatusHandler::class, static fn(Container $c) =>
-        new FindInvitationDeliveryStatusHandler($c->get(ActivationGrantRepository::class)));
+    $container->set(FindInvitationDeliveryStatusHandler::class, static fn(Container $container) =>
+        new FindInvitationDeliveryStatusHandler($container->get(ActivationGrantRepository::class)));
     $container->get('messaging.query.router')->registerHandlers([
         FindInvitationDeliveryStatusHandler::queryRegistration() => FindInvitationDeliveryStatusHandler::class
     ]);
     $container->set(PermissionGuard::class, static fn(): PermissionGuard => new PermissionGuard());
-    $container->set(AuthenticatedPermissions::class, static fn(Container $c): AuthenticatedPermissions =>
-        new AuthenticatedPermissions($c->get(AuthoritativePrincipalResolver::class), $c->get(PermissionGuard::class)));
+    $container->set(AuthenticatedPermissions::class, static fn(Container $container): AuthenticatedPermissions =>
+        new AuthenticatedPermissions(
+            $container->get(AuthoritativePrincipalResolver::class),
+            $container->get(PermissionGuard::class)
+        ));
     $container->set(InvitationRatePolicy::class, static function (): InvitationRatePolicy {
         $integer = static function (string $name, int $default): int {
             $raw = getenv($name);
@@ -62,43 +65,48 @@ return static function (Container $container): void {
             $integer('APP_INVITATION_RATE_CORRECT_LIMIT', 3)
         );
     });
-    $container->set(InvitationRateLimiter::class, static fn(Container $c): InvitationRateLimiter =>
+    $container->set(InvitationRateLimiter::class, static fn(Container $container): InvitationRateLimiter =>
         new PostgresInvitationRateLimiter(
-            $c->get(Connection::class),
-            $c->get(Clock::class),
-            $c->get(InvitationRatePolicy::class)
+            $container->get(Connection::class),
+            $container->get(Clock::class),
+            $container->get(InvitationRatePolicy::class)
         ));
-    $container->set(InvitationMutationResponder::class, static fn(Container $c): InvitationMutationResponder =>
-        new InvitationMutationResponder($c->get(JSendResponseFactory::class)));
+    $container->set(InvitationMutationResponder::class, static fn(Container $container): InvitationMutationResponder =>
+        new InvitationMutationResponder($container->get(JSendResponseFactory::class)));
     foreach ([RetryInvitationAction::class, ResendInvitationAction::class, CorrectInvitationAction::class] as $action) {
-        $container->set($action, static fn(Container $c) => new $action(
-            $c->get(CommandBus::class),
-            $c->get(UserRepository::class),
-            $c->get(InvitationRateLimiter::class),
-            $c->get(InvitationMutationResponder::class)
+        $container->set($action, static fn(Container $container) => new $action(
+            $container->get(CommandBus::class),
+            $container->get(UserRepository::class),
+            $container->get(InvitationRateLimiter::class),
+            $container->get(InvitationMutationResponder::class)
         ));
     }
-    $container->set(IssueInvitation::class, static fn(Container $c): IssueInvitation => new IssueInvitation(
-        $c->get(AuthenticatedPermissions::class),
-        $c->get(InvitationRateLimiter::class),
-        $c->get(ConsoleAssignmentPolicy::class),
-        $c->get(UserRepository::class),
-        $c->get(CommandBus::class),
-        $c->get(QueryBus::class),
-        $c->get(TransactionalUnitOfWork::class),
-        $c->get(AuditEvidenceRepository::class)
+    $container->set(IssueInvitation::class, static fn(Container $container): IssueInvitation => new IssueInvitation(
+        $container->get(AuthenticatedPermissions::class),
+        $container->get(InvitationRateLimiter::class),
+        $container->get(ConsoleAssignmentPolicy::class),
+        $container->get(UserRepository::class),
+        $container->get(CommandBus::class),
+        $container->get(QueryBus::class),
+        $container->get(TransactionalUnitOfWork::class),
+        $container->get(AuditEvidenceRepository::class)
     ));
-    $container->set(IssueInvitationResponder::class, static fn(Container $c): IssueInvitationResponder =>
-        new IssueInvitationResponder($c->get(JSendResponseFactory::class)));
-    $container->set(ReadInvitationStatusResponder::class, static fn(Container $c): ReadInvitationStatusResponder =>
-        new ReadInvitationStatusResponder($c->get(JSendResponseFactory::class)));
-    $container->set(IssueInvitationAction::class, static fn(Container $c): IssueInvitationAction =>
-        new IssueInvitationAction($c->get(IssueInvitation::class), $c->get(IssueInvitationResponder::class)));
-    $container->set(ReadInvitationStatusAction::class, static fn(Container $c): ReadInvitationStatusAction =>
+    $container->set(IssueInvitationResponder::class, static fn(Container $container): IssueInvitationResponder =>
+        new IssueInvitationResponder($container->get(JSendResponseFactory::class)));
+    $container->set(ReadInvitationStatusResponder::class, static fn(
+        Container $container
+    ): ReadInvitationStatusResponder =>
+        new ReadInvitationStatusResponder($container->get(JSendResponseFactory::class)));
+    $container->set(IssueInvitationAction::class, static fn(Container $container): IssueInvitationAction =>
+        new IssueInvitationAction(
+            $container->get(IssueInvitation::class),
+            $container->get(IssueInvitationResponder::class)
+        ));
+    $container->set(ReadInvitationStatusAction::class, static fn(Container $container): ReadInvitationStatusAction =>
         new ReadInvitationStatusAction(
-            $c->get(QueryBus::class),
-            $c->get(UserRepository::class),
-            $c->get(InvitationRateLimiter::class),
-            $c->get(ReadInvitationStatusResponder::class)
+            $container->get(QueryBus::class),
+            $container->get(UserRepository::class),
+            $container->get(InvitationRateLimiter::class),
+            $container->get(ReadInvitationStatusResponder::class)
         ));
 };

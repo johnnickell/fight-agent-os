@@ -21,41 +21,43 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
+use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
+use Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(LoginAction::class, static fn(Container $c): LoginAction =>
+    $container->set(LoginAction::class, static fn(Container $container): LoginAction =>
         new LoginAction(
-            $c->get(AuthenticationService::class),
-            $c->get(SessionResponder::class),
-            $c->get(CaptureSessionPresentation::class)
+            $container->get(AuthenticationService::class),
+            $container->get(SessionResponder::class),
+            $container->get(CaptureSessionPresentation::class)
         ));
     $container->set(RefreshCookie::class, static fn(): RefreshCookie => new RefreshCookie());
-    $container->set(SessionLifecycleResponder::class, static fn(Container $c): SessionLifecycleResponder =>
+    $container->set(SessionLifecycleResponder::class, static fn(Container $container): SessionLifecycleResponder =>
         new SessionLifecycleResponder(
-            $c->get(SessionResponder::class),
-            $c->get(JSendResponseFactory::class),
-            $c->get(\Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics::class),
-            $c->get(\Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy::class)
+            $container->get(SessionResponder::class),
+            $container->get(JSendResponseFactory::class),
+            $container->get(SafeHttpDiagnostics::class),
+            $container->get(SafeHttpErrorPolicy::class)
         ));
     foreach ([RefreshAction::class, LogoutAction::class] as $action) {
-        $container->set($action, static fn(Container $c): RefreshAction|LogoutAction => new $action(
-            $c->get(AuthenticationService::class),
-            $c->get(RefreshCookie::class),
-            $c->get(SessionLifecycleResponder::class)
+        $container->set($action, static fn(Container $container): RefreshAction|LogoutAction => new $action(
+            $container->get(AuthenticationService::class),
+            $container->get(RefreshCookie::class),
+            $container->get(SessionLifecycleResponder::class)
         ));
     }
-    $container->set(BrowserSessionCookies::class, static fn(Container $c): BrowserSessionCookies =>
-        new BrowserSessionCookies($c->get(Clock::class)));
+    $container->set(BrowserSessionCookies::class, static fn(Container $container): BrowserSessionCookies =>
+        new BrowserSessionCookies($container->get(Clock::class)));
     // A dedicated connection prevents a package login transaction from rolling back consumed attempts.
-    $container->set('auth.admission.connection', static fn(Container $c): Connection =>
+    $container->set('auth.admission.connection', static fn(Container $container): Connection =>
         DriverManager::getConnection(new DsnParser([
             'postgres' => 'pdo_pgsql', 'postgresql' => 'pdo_pgsql'
-        ])->parse($c['app.database_url'])));
-    $container->set(PostgresAuthAttempts::class, static fn(Container $c): PostgresAuthAttempts =>
-        new PostgresAuthAttempts($c->get('auth.admission.connection'), $c->get(Clock::class)));
-    $container->set(AuthAdmission::class, static function (Container $c): AuthAdmission {
+        ])->parse($container['app.database_url'])));
+    $container->set(PostgresAuthAttempts::class, static fn(Container $container): PostgresAuthAttempts =>
+        new PostgresAuthAttempts($container->get('auth.admission.connection'), $container->get(Clock::class)));
+    $container->set(AuthAdmission::class, static function (Container $container): AuthAdmission {
         $key = getenv('APP_AUTH_RATE_KEY') ?: '';
         $signing = json_decode(getenv('APP_ACCESS_TOKEN_CONFIG') ?: '{}', true);
         $otherKeys = [getenv('APP_CSRF_MAC_KEY'), getenv('APP_ACTIVATION_RATE_KEY')];
@@ -74,11 +76,16 @@ return static function (Container $container): void {
             $limits[] = $value === false ? $default : (int) $value;
         }
 
-        return new AuthAdmission($c->get(PostgresAuthAttempts::class), $key, ...$limits);
+        return new AuthAdmission($container->get(PostgresAuthAttempts::class), $key, ...$limits);
     });
-    $container->set(LoginThrottle::class, static fn(Container $c): LoginThrottle => $c->get(AuthAdmission::class));
+    $container->set(LoginThrottle::class, static fn(Container $container): LoginThrottle =>
+        $container->get(AuthAdmission::class));
     foreach (AuthOperation::cases() as $operation) {
-        $container->set('auth.guard.'.$operation->value, static fn(Container $c): AuthEndpointGuard =>
-            new AuthEndpointGuard($c->get(BrowserMutationGuard::class), $c->get(AuthAdmission::class), $operation));
+        $container->set('auth.guard.'.$operation->value, static fn(Container $container): AuthEndpointGuard =>
+            new AuthEndpointGuard(
+                $container->get(BrowserMutationGuard::class),
+                $container->get(AuthAdmission::class),
+                $operation
+            ));
     }
 };

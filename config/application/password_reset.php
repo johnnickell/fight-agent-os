@@ -26,16 +26,16 @@ use Fight\Common\Application\Service\Container;
 return static function (Container $container): void {
     $container->set(PasswordResetCredentialGenerator::class, static fn(): PasswordResetCredentialGenerator =>
         new RandomPasswordResetCredentialGenerator());
-    $container->set(RequestPasswordResetHandler::class, static fn(Container $c): RequestPasswordResetHandler =>
+    $container->set(RequestPasswordResetHandler::class, static fn(Container $container): RequestPasswordResetHandler =>
         new RequestPasswordResetHandler(
-            $c->get(UserRepository::class),
-            $c->get(PasswordResetGrantRepository::class),
-            $c->get(AuditEvidenceRepository::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(PasswordResetCredentialGenerator::class),
-            $c->get(PasswordResetDeliveryCipher::class),
-            $c->get(Clock::class),
-            $c->get(AuthenticationEvents::class)
+            $container->get(UserRepository::class),
+            $container->get(PasswordResetGrantRepository::class),
+            $container->get(AuditEvidenceRepository::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(PasswordResetCredentialGenerator::class),
+            $container->get(PasswordResetDeliveryCipher::class),
+            $container->get(Clock::class),
+            $container->get(AuthenticationEvents::class)
         ));
     $container->get('messaging.command.router')->registerHandlers([
         RequestPasswordReset::class => RequestPasswordResetHandler::class
@@ -47,14 +47,14 @@ return static function (Container $container): void {
             time_nanosleep(0, $nanoseconds);
         }
     ));
-    $container->set(ResetRequestResponder::class, static fn(Container $c): ResetRequestResponder =>
-        new ResetRequestResponder($c->get(JSendResponseFactory::class)));
-    $container->set(RequestPasswordResetAction::class, static fn(Container $c): RequestPasswordResetAction =>
+    $container->set(ResetRequestResponder::class, static fn(Container $container): ResetRequestResponder =>
+        new ResetRequestResponder($container->get(JSendResponseFactory::class)));
+    $container->set(RequestPasswordResetAction::class, static fn(Container $container): RequestPasswordResetAction =>
         new RequestPasswordResetAction(
-            $c->get(CommandBus::class),
-            $c->get(ResetResponseTiming::class),
-            $c->get(ResetRequestResponder::class)
+            $container->get(CommandBus::class),
+            $container->get(ResetResponseTiming::class),
+            $container->get(ResetRequestResponder::class)
         ));
-    $container->set(ResetRequestGuard::class, static fn(Container $c): ResetRequestGuard =>
-        new ResetRequestGuard($c->get(BrowserMutationGuard::class), $c->get(AuthAdmission::class)));
+    $container->set(ResetRequestGuard::class, static fn(Container $container): ResetRequestGuard =>
+        new ResetRequestGuard($container->get(BrowserMutationGuard::class), $container->get(AuthAdmission::class)));
 };

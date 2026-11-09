@@ -13,21 +13,21 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(ListUsersHandler::class, static fn(Container $c) =>
-        new ListUsersHandler($c->get(UserRepository::class)));
+    $container->set(ListUsersHandler::class, static fn(Container $container) =>
+        new ListUsersHandler($container->get(UserRepository::class)));
     $container->get('messaging.query.router')->registerHandlers([
         ListUsersHandler::queryRegistration() => ListUsersHandler::class
     ]);
-    $container->set(UserDetailResponder::class, static fn(Container $c) =>
-        new UserDetailResponder($c->get(JSendResponseFactory::class)));
-    $container->set(GetUserAction::class, static fn(Container $c) => new GetUserAction(
-        $c->get(QueryBus::class),
-        $c->get(UserDetailResponder::class)
+    $container->set(UserDetailResponder::class, static fn(Container $container) =>
+        new UserDetailResponder($container->get(JSendResponseFactory::class)));
+    $container->set(GetUserAction::class, static fn(Container $container) => new GetUserAction(
+        $container->get(QueryBus::class),
+        $container->get(UserDetailResponder::class)
     ));
-    $container->set(UserDirectoryResponder::class, static fn(Container $c) =>
-        new UserDirectoryResponder($c->get(JSendResponseFactory::class)));
-    $container->set(ListUsersAction::class, static fn(Container $c) => new ListUsersAction(
-        $c->get(QueryBus::class),
-        $c->get(UserDirectoryResponder::class)
+    $container->set(UserDirectoryResponder::class, static fn(Container $container) =>
+        new UserDirectoryResponder($container->get(JSendResponseFactory::class)));
+    $container->set(ListUsersAction::class, static fn(Container $container) => new ListUsersAction(
+        $container->get(QueryBus::class),
+        $container->get(UserDirectoryResponder::class)
     ));
 };

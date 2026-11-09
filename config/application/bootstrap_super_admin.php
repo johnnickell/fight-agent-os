@@ -15,20 +15,21 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set('bootstrap.inspection.connection', static fn(Container $c): Connection =>
-        DriverManager::getConnection($c->get(Connection::class)->getParams()));
-    $container->set(BootstrapProgress::class, static fn(Container $c): BootstrapProgress =>
+    $container->set('bootstrap.inspection.connection', static fn(Container $container): Connection =>
+        DriverManager::getConnection($container->get(Connection::class)->getParams()));
+    $container->set(BootstrapProgress::class, static fn(Container $container): BootstrapProgress =>
         new PostgresBootstrapProgress(
-            $c->get(Connection::class),
-            $c->get('bootstrap.inspection.connection'),
-            $c->get(AuditEvidenceRepository::class)
+            $container->get(Connection::class),
+            $container->get('bootstrap.inspection.connection'),
+            $container->get(AuditEvidenceRepository::class)
         ));
-    $container->set(BootstrapOperation::class, static fn(Container $c): BootstrapOperation => new BootstrapOperation(
-        $c->get(CommandBus::class),
-        $c->get(QueryBus::class),
-        $c->get(UserRepository::class),
-        $c->get(BootstrapProgress::class)
-    ));
-    $container->set(BootstrapSuperAdminCommand::class, static fn(Container $c): BootstrapSuperAdminCommand =>
-        new BootstrapSuperAdminCommand($c->get(BootstrapOperation::class)));
+    $container->set(BootstrapOperation::class, static fn(Container $container): BootstrapOperation =>
+        new BootstrapOperation(
+            $container->get(CommandBus::class),
+            $container->get(QueryBus::class),
+            $container->get(UserRepository::class),
+            $container->get(BootstrapProgress::class)
+        ));
+    $container->set(BootstrapSuperAdminCommand::class, static fn(Container $container): BootstrapSuperAdminCommand =>
+        new BootstrapSuperAdminCommand($container->get(BootstrapOperation::class)));
 };

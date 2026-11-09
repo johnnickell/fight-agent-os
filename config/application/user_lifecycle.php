@@ -29,32 +29,31 @@ use Fight\Common\Application\Service\Container;
 return static function (Container $container): void {
     // A shared binding of the SAME adapter/connection; only these handlers load under the User fence.
     // No policy interception, transaction wrapper or changes to sibling package read coordination.
-    $container->set('user_lifecycle.repository', static fn(Container $c) => new PostgresUserRepository(
-        $c->get(Connection::class),
-        $c->get(AuthorizationReferenceFences::class),
-        $c->get(AuthenticationAuthorityFences::class),
+    $container->set('user_lifecycle.repository', static fn(Container $container) => new PostgresUserRepository(
+        $container->get(Connection::class),
+        $container->get(AuthorizationReferenceFences::class),
+        $container->get(AuthenticationAuthorityFences::class),
         lockLifecycleSnapshot: true
     ));
-    $container->set(EffectiveAdministrators::class, static fn(Container $c) =>
-        new PostgresEffectiveAdministrators($c->get(Connection::class)));
-    $container->set(PreventAdministratorLockout::class, static fn(Container $c) => new PreventAdministratorLockout(
-        $c->get(EffectiveAdministrators::class)
-    ));
-    $container->set(UserLifecycleResponder::class, static fn(Container $c) =>
-        new UserLifecycleResponder($c->get(JSendResponseFactory::class)));
+    $container->set(EffectiveAdministrators::class, static fn(Container $container) =>
+        new PostgresEffectiveAdministrators($container->get(Connection::class)));
+    $container->set(PreventAdministratorLockout::class, static fn(Container $container) =>
+        new PreventAdministratorLockout($container->get(EffectiveAdministrators::class)));
+    $container->set(UserLifecycleResponder::class, static fn(Container $container) =>
+        new UserLifecycleResponder($container->get(JSendResponseFactory::class)));
     foreach ([DisableUserAction::class, EnableUserAction::class] as $action) {
-        $container->set($action, static fn(Container $c) => new $action(
-            $c->get(PreventAdministratorLockout::class),
-            $c->get(CommandBus::class),
-            $c->get(UserLifecycleResponder::class)
+        $container->set($action, static fn(Container $container) => new $action(
+            $container->get(PreventAdministratorLockout::class),
+            $container->get(CommandBus::class),
+            $container->get(UserLifecycleResponder::class)
         ));
     }
-    $container->set(EnableUserHandler::class, static fn(Container $c) => new EnableUserHandler(
-        $c->get('user_lifecycle.repository'),
-        $c->get(AuditEvidenceRepository::class),
-        $c->get(TransactionalUnitOfWork::class),
-        $c->get(EventDispatcher::class),
-        $c->get(Clock::class)
+    $container->set(EnableUserHandler::class, static fn(Container $container) => new EnableUserHandler(
+        $container->get('user_lifecycle.repository'),
+        $container->get(AuditEvidenceRepository::class),
+        $container->get(TransactionalUnitOfWork::class),
+        $container->get(EventDispatcher::class),
+        $container->get(Clock::class)
     ));
     $container->get('messaging.command.router')->registerHandlers([
         EnableUserHandler::commandRegistration() => EnableUserHandler::class
@@ -64,14 +63,14 @@ return static function (Container $container): void {
         if ($handler === DisableUserHandler::class) {
             $repository = 'user_lifecycle.repository';
         }
-        $container->set($handler, static fn(Container $c) => new $handler(
-            $c->get($repository),
-            $c->get(SessionRevocationService::class),
-            $c->get(Clock::class),
-            $c->get(AuditEvidenceRepository::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(EventDispatcher::class),
-            $c->get(PasswordResetGrantRepository::class)
+        $container->set($handler, static fn(Container $container) => new $handler(
+            $container->get($repository),
+            $container->get(SessionRevocationService::class),
+            $container->get(Clock::class),
+            $container->get(AuditEvidenceRepository::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(EventDispatcher::class),
+            $container->get(PasswordResetGrantRepository::class)
         ));
         $container->get('messaging.command.router')->registerHandlers([$handler::commandRegistration() => $handler]);
     }

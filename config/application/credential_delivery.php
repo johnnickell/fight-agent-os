@@ -16,6 +16,7 @@ use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\Invita
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
@@ -62,45 +63,45 @@ return static function (Container $container): void {
 
         return $transport;
     });
-    $container->set(MailDelivery::class, static fn(Container $c): MailDelivery => new CatcherMailDelivery(
-        $c->get(SmtpTransport::class),
+    $container->set(MailDelivery::class, static fn(Container $container): MailDelivery => new CatcherMailDelivery(
+        $container->get(SmtpTransport::class),
         $environment === false ? '' : $environment
     ));
-    $container->set(InvitationMailProvider::class, static fn(Container $c): InvitationMailProvider =>
+    $container->set(InvitationMailProvider::class, static fn(Container $container): InvitationMailProvider =>
         new InvitationMailProvider(
-            $c->get('credential-delivery.activation-link'),
-            $c->get(TemplateEngine::class),
-            $c->get(MailDelivery::class),
-            $c->get(\Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository::class)
+            $container->get('credential-delivery.activation-link'),
+            $container->get(TemplateEngine::class),
+            $container->get(MailDelivery::class),
+            $container->get(ActivationGrantRepository::class)
         ));
-    $container->set(PasswordResetMailProvider::class, static fn(Container $c): PasswordResetMailProvider =>
+    $container->set(PasswordResetMailProvider::class, static fn(Container $container): PasswordResetMailProvider =>
         new PasswordResetMailProvider(
-            $c->get(QueryBus::class),
-            $c->get('credential-delivery.password-reset-link'),
-            $c->get(TemplateEngine::class),
-            $c->get(MailDelivery::class)
+            $container->get(QueryBus::class),
+            $container->get('credential-delivery.password-reset-link'),
+            $container->get(TemplateEngine::class),
+            $container->get(MailDelivery::class)
         ));
-    $container->set(CredentialMailProvider::class, static fn(Container $c): CredentialMailProvider =>
+    $container->set(CredentialMailProvider::class, static fn(Container $container): CredentialMailProvider =>
         new CredentialMailProvider(
-            $c->get(InvitationMailProvider::class),
-            $c->get(PasswordResetMailProvider::class)
+            $container->get(InvitationMailProvider::class),
+            $container->get(PasswordResetMailProvider::class)
         ));
-    $container->set(CredentialDeliveryProvider::class, static function (Container $c) use (
+    $container->set(CredentialDeliveryProvider::class, static function (Container $container) use (
         $environment,
         $selection
     ): CredentialDeliveryProvider {
         if (!in_array($environment, ['test', 'development', 'local'], true) || $selection === 'catcher') {
             // Validate required secure inputs before a delivery-enabled runtime can mutate work.
-            $c->get(InvitationDeliveryCipher::class);
-            $c->get('credential-delivery.activation-link');
-            $c->get('credential-delivery.password-reset-link');
+            $container->get(InvitationDeliveryCipher::class);
+            $container->get('credential-delivery.activation-link');
+            $container->get('credential-delivery.password-reset-link');
         }
         if (!in_array($environment, ['test', 'development', 'local'], true)) {
             throw new RuntimeException('A real credential delivery provider is required in this environment.');
         }
 
         return match ($selection) {
-            'catcher' => $c->get(CredentialMailProvider::class),
+            'catcher' => $container->get(CredentialMailProvider::class),
             'null' => new NullCredentialDeliveryProvider(),
             'memory' => new InMemoryCredentialDeliveryProvider(),
             default => throw new RuntimeException('Unsupported local credential delivery adapter.')
