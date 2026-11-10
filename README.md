@@ -12,9 +12,12 @@ those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling, public-safe form metadata and local engineering skills are
-present. Confirmed [user disable/enable APIs](docs/engineering/USER_LIFECYCLE.md) provide exact-permission
-lifecycle transitions, session invalidation and required audit; their last-admin safeguard is a non-atomic
-query-before-command precheck, not a cross-request final-admin guarantee. No administration UI is added. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
+present. Confirmed [user lifecycle APIs](docs/engineering/USER_LIFECYCLE.md) provide exact-permission
+disable/enable and reversible delete/restore, session invalidation and required audit. Disable's last-admin
+safeguard is a non-atomic query-before-command precheck, not a cross-request final-admin guarantee.
+Delete/restore use current-state confirmation without a revision/count prerequisite; self-deletion rejects,
+concurrent cross-admin deletion is accepted, and restore never revives sessions. Pending restoration requires
+a terminal invitation predecessor and issues internal activation authority without disclosure. No administration UI is added. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
 HTTP boundary with strict matching client contracts, protocol metadata and preserved session-cookie recovery;
 scoped independent HTTP/browser/security QA covers the cutover, not production deployment or unrelated use cases.
 Explicit initial Workspace bootstrap has independent technical and behavioral acceptance under

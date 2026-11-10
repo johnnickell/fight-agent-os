@@ -59,6 +59,13 @@ a current human merge action. Other capability states are unchanged.
   [installation session administration](docs/engineering/SESSION_ADMINISTRATION.md) now composes separate
   read/revoke package actor/target callbacks, with exact HTTP permission metadata, explicit immutable owner
   admission and package-handler-owned revocation/audit on the shared transaction; self-service remains owner-only;
+  confirmed [user lifecycle APIs](docs/engineering/USER_LIFECYCLE.md) map exact centrally enforced operation
+  permissions and principal-only actors to public package commands through the configured bus. Package handlers
+  retain shared lifecycle/session/required-audit transactions and after-commit events. Disable retains its
+  non-atomic last-admin precheck; delete/restore use current-state confirmation without a revision/count
+  prerequisite, prohibit self-deletion and accept cross-admin races. Restore never revives sessions;
+  pending restoration requires terminal invitation authority and issues fresh internal activation authority
+  without disclosure. No browser administration UI is added;
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/app/admin/users` and
   `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
   complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,

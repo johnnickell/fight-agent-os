@@ -8,6 +8,7 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\User\Command\DeleteUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\DisableUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\EnableUser;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\UserLifecycleException;
@@ -55,12 +56,22 @@ final class UserLifecycleRaceWorker implements Clock
             try {
                 if ($input['operation'] === 'disable') {
                     $command = new DisableUser($actor, $target);
+                } elseif ($input['operation'] === 'delete') {
+                    $command = new DeleteUser($actor, $target);
                 } else {
                     $command = new EnableUser($actor, $target);
                 }
                 $container->get(CommandBus::class)->execute($command);
                 echo "success\n";
             } catch (UserLifecycleException) {
+                echo "conflict\n";
+            } catch (\LogicException $failure) {
+                if (
+                    $failure::class !== \LogicException::class
+                    || $failure->getMessage() !== 'The user lifecycle state changed concurrently.'
+                ) {
+                    throw $failure;
+                }
                 echo "conflict\n";
             }
             $connection->close();
