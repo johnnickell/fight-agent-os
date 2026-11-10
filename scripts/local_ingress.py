@@ -91,10 +91,22 @@ def listener_options(safe):
     model = json.loads(path.read_text()) if path.exists() else {}
     front = model.get('x-fight-front-door', 'independent')
     port = model.get('x-fight-https-port', 443)
-    require(front in ('independent', 'herd') and type(port) is int and
-            ((front == 'independent' and port == 443) or (front == 'herd' and 1024 <= port <= 65535)),
-            'Invalid explicit ingress listener selection')
+    validate_listener_options(front, port)
     return front, port
+
+
+def validate_listener_options(front, port):
+    require((front == 'external' and port is None) or
+            (type(port) is int and ((front == 'independent' and port == 443) or
+                                   (front == 'herd' and 1024 <= port <= 65535))),
+            'Independent ingress uses 443; Herd requires a high HTTPS port; external mode publishes no ports')
+
+
+def published_ports(front, port):
+    validate_listener_options(front, port)
+    if front == 'external':
+        return []
+    return (['127.0.0.1:80:80'] if front == 'independent' else []) + ['127.0.0.1:' + str(port) + ':443']
 
 
 def configuration(safe, front=None, port=None):
@@ -112,11 +124,11 @@ def configuration(safe, front=None, port=None):
 
     limits = {'read_only': True, 'tmpfs': ['/tmp:rw,nosuid,noexec,size=32m'], 'cap_drop': ['ALL'],
               'security_opt': ['no-new-privileges:true'], 'mem_limit': '128m', 'cpus': 0.5,
-              'pids_limit': 64, 'restart': 'on-failure:3', 'labels': {OWNER: str(safe)}}
+              'pids_limit': 64, 'restart': 'unless-stopped', 'labels': {OWNER: str(safe)}}
     model = {'x-fight-owner': str(safe), 'x-fight-front-door': front, 'x-fight-https-port': port, 'services': {
         'nginx': {**limits, 'image': NGINX, 'user': '0:0', 'cap_add': ['CHOWN', 'SETUID', 'SETGID'],
             'entrypoint': ['nginx'], 'command': ['-g', 'daemon off;'],
-            'ports': (['127.0.0.1:80:80'] if front == 'independent' else []) + ['127.0.0.1:' + str(port) + ':443'],
+            'ports': published_ports(front, port),
             'networks': ['ingress'], 'volumes': [mount(path / 'nginx.conf', '/etc/nginx/nginx.conf'),
                 mount(path / 'routes', '/etc/nginx/routes'), mount(path / 'certs', '/etc/nginx/certs'),
                 mount(path / 'proxy-headers.conf', '/etc/nginx/proxy-headers.conf')],
@@ -150,8 +162,7 @@ def setup(safe, front='independent', port=443):
             json.loads((path / 'compose.json').read_text()).get('x-fight-owner') == str(safe),
             'Unknown ingress configuration; inspect it before setup')
     network_exists = owned(safe)
-    require((front == 'independent' and port == 443) or (front == 'herd' and 1024 <= port <= 65535),
-            'Independent ingress uses 443; Herd mode requires an explicit high HTTPS port')
+    validate_listener_options(front, port)
     model = configuration(safe, front, port)
     for name in ('routes', 'certs'):
         target = path / name
@@ -248,7 +259,8 @@ def operate(safe, action, bind_ports=False):
         running = text(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.project=' + PROJECT], safe)
         if not running:
             front, https_port = listener_options(safe)
-            for port in ((80, https_port) if front == 'independent' else (https_port,)):
+            for binding in published_ports(front, https_port):
+                port = int(binding.split(':')[1])
                 with socket.socket() as probe:
                     probe.settimeout(1)
                     require(probe.connect_ex(('127.0.0.1', port)) == errno.ECONNREFUSED,
@@ -356,7 +368,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['setup', 'up', 'down', 'status', 'remove', 'certificate', 'herd-config', 'preview'])
     parser.add_argument('--bind-ports', action='store_true')
-    parser.add_argument('--front-door', choices=['independent', 'herd'], default='independent', help='setup only; Herd is optional')
+    parser.add_argument('--front-door', choices=['independent', 'herd', 'external'], default='independent',
+                        help='setup only; external uses an independently operated proxy on the ingress network')
     parser.add_argument('--https-port', type=int, help='setup only; explicit loopback high port in Herd mode')
     parser.add_argument('--certificate-action', choices=['setup', 'status', 'remove'])
     parser.add_argument('--worktree')
@@ -383,7 +396,8 @@ def main():
         require(not args.worktree, 'Ingress is shared, not a worktree service')
         safe, _, _, _ = resolve(ROOT)
         if args.action == 'setup':
-            setup(safe, args.front_door, args.https_port if args.https_port is not None else 443)
+            port = args.https_port if args.https_port is not None else (None if args.front_door == 'external' else 443)
+            setup(safe, args.front_door, port)
         elif args.action == 'herd-config':
             herd_config(safe, args.include_worktree, args.consumer_root)
         else:
