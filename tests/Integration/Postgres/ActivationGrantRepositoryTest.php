@@ -17,8 +17,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
@@ -28,7 +26,7 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDelive
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 use PHPUnit\Framework\TestCase;
@@ -40,7 +38,7 @@ use RuntimeException;
 final class ActivationGrantRepositoryTest extends TestCase
 {
     private Connection $connection;
-    private DoctrineTransactionalUnitOfWork $unitOfWork;
+    private DbalTransactionalUnitOfWork $unitOfWork;
     private PostgresActivationGrantRepository $grants;
     private PostgresUserRepository $users;
     private DateTimeImmutable $issuedAt;
@@ -58,9 +56,7 @@ final class ActivationGrantRepositoryTest extends TestCase
             new AuthorizationReferenceFences($this->connection),
             new AuthenticationAuthorityFences($this->connection)
         );
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $configuration));
+        $this->unitOfWork = new DbalTransactionalUnitOfWork($this->connection);
         $this->issuedAt = new DateTimeImmutable('2026-09-26T12:00:00+00:00');
     }
 
@@ -285,9 +281,6 @@ final class ActivationGrantRepositoryTest extends TestCase
         } catch (RuntimeException $exception) {
             self::assertSame('Injected caller rollback', $exception->getMessage());
         }
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $configuration));
         self::assertTrue(ActivationGrantRecords::same($first, $this->grants->getById($first->getId())));
         self::assertNull($this->grants->getById($successor->getId()));
         self::assertTrue($this->transaction(

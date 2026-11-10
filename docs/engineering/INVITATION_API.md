@@ -94,7 +94,9 @@ encrypted recoverable delivery and user.invited audit commit first; delivery can
 A later failure retains the invitation and possibly sent mail. Separate confirmation audit records safe actor,
 target, Role ID and membership_confirmed result. Crash/acknowledgement loss can leave committed membership without
 confirmed audit. An exception is not proof of rollback; no compensation, transparent retry or all-step atomicity
-is promised. Safe queries inspect current state, including after the write manager closes.
+is promised. Safe queries inspect current state, including after an uncertain write closes the transaction
+boundary. Confirmed rollback leaves the [shared DBAL boundary](TRANSACTIONS.md) usable; it no longer requires
+EntityManager reconstruction.
 
 The [shared safe-error contract](SAFE_HTTP_ERRORS.md) owns exact category messages, headers, diagnostics and
 strict client decoding. For 503 issuance, retain correlation/known ID and stop automatic issuance. A trusted operator inspects identity,

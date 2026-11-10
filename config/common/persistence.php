@@ -17,9 +17,6 @@ use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
@@ -30,7 +27,7 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
@@ -40,12 +37,6 @@ return static function (Container $container): void {
             'postgres'   => 'pdo_pgsql',
             'postgresql' => 'pdo_pgsql'
         ])->parse($container['app.database_url']));
-    });
-    $container->set(EntityManagerInterface::class, static function (Container $container): EntityManagerInterface {
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], getenv('APP_ENV') !== 'production');
-        $configuration->enableNativeLazyObjects(true);
-
-        return new EntityManager($container->get(Connection::class), $configuration);
     });
     $container->set(AuthorizationReferenceFences::class, static function (
         Container $container
@@ -115,6 +106,6 @@ return static function (Container $container): void {
     $container->set(TransactionalUnitOfWork::class, static function (
         Container $container
     ): TransactionalUnitOfWork {
-        return new DoctrineTransactionalUnitOfWork($container->get(EntityManagerInterface::class));
+        return new DbalTransactionalUnitOfWork($container->get(Connection::class));
     });
 };

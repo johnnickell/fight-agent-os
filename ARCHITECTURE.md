@@ -21,8 +21,9 @@ aggregate creation or reservation. [The runbook](docs/engineering/REPOSITORY_REG
 paths from Project creation/inspection, which TASK-00575 now cuts over to aggregate-owned registered commands/queries,
 entry-generated IDs, independent adapter admission and conflict/fresh-query recovery. The Project handler coordinates
 state/source claims and explicit required audit in one shared transaction, then dispatches ProjectRegistered after
-commit; safe typed Views cross into HTTP Data/Responders. The Role audit transaction decorator still exists; DBAL-only
-transactions need actual supplier/consumer qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
+commit; safe typed Views cross into HTTP Data/Responders. Common v1.5.0's canonical DBAL transaction boundary
+now uses the shared Connection directly, without an unused EntityManager; see [persistence composition](docs/engineering/TRANSACTIONS.md).
+The Role audit transaction decorator still exists pending TASK-00573's separate supplier qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
 the local generic classifier and updates actual client/error contracts, with scoped independent technical and
 HTTP/browser/security QA acceptance. This does not qualify the remaining capability-specific corrections or
 production deployment. [Ownership guidance](docs/engineering/OWNERSHIP.md)

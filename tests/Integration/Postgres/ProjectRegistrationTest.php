@@ -209,6 +209,49 @@ final class ProjectRegistrationTest extends TestCase
     }
 
     /**
+     * Keeps committed Project and audit discoverable after a lost commit acknowledgement
+     */
+    public function testLostCommitAcknowledgementRetainsStateWithoutPublishingSuccess(): void
+    {
+        $connection = $this->container->get(Connection::class);
+        $uncertainConnection = new class (
+            $connection->getParams(),
+            $connection->getDriver(),
+            $connection->getConfiguration()
+        ) extends Connection {
+            /**
+             * Loses the acknowledgement only after PostgreSQL completes the real commit
+             */
+            public function commit(): void
+            {
+                parent::commit();
+                throw new RuntimeException('private-commit-acknowledgement');
+            }
+        };
+        try {
+            $response = $this->request(
+                'POST',
+                '',
+                $this->input('lost-acknowledgement'),
+                connection: $uncertainConnection
+            );
+            $this->assertResponse($response, 500, 'register');
+            self::assertStringNotContainsString('private-commit-acknowledgement', (string) $response->getBody());
+            self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->isClosed());
+            self::assertFalse($uncertainConnection->isTransactionActive());
+            self::assertSame([1, 1, 0, 2, 0], $this->counts());
+            self::assertSame([], $this->events);
+        } finally {
+            $uncertainConnection->close();
+        }
+        $this->freshApplication();
+        $page = $this->assertResponse($this->request('GET'), 200, 'list')['data'];
+        self::assertSame('lost-acknowledgement', $page['items'][0]['slug']);
+        $this->assertResponse($this->request('POST', '', $this->input('lost-acknowledgement')), 409, 'register');
+        self::assertSame([1, 1, 0, 2, 0], $this->counts());
+    }
+
+    /**
      * Rolls back the complete Project and source set when required audit fails
      */
     public function testRequiredAuditRollback(): void
@@ -692,9 +735,10 @@ JSON);
         string $suffix = '',
         ?array $body = null,
         ?WorkspaceId $workspace = null,
-        bool $authenticated = true
+        bool $authenticated = true,
+        ?Connection $connection = null
     ): ResponseInterface {
-        $this->freshApplication();
+        $this->freshApplication($connection);
         $path = '/api/v1/workspaces/'.($workspace ?? $this->workspace)->toString();
         $path .= $suffix === '/references' ? $suffix : '/projects'.$suffix;
         $request = (new ServerRequestFactory())->createServerRequest($method, 'https://localhost'.$path);
@@ -756,9 +800,9 @@ JSON);
     /**
      * Boots fresh request state after successful or failed handler transactions
      */
-    private function freshApplication(): void
+    private function freshApplication(?Connection $connection = null): void
     {
-        $this->app = WorkspaceTestClock::application($this->time);
+        $this->app = WorkspaceTestClock::application($this->time, $connection);
         $this->container = $this->app->getContainer();
         $this->container->get('http.failure.logger')->setHandlers([$this->logs]);
         $this->container->get(EventDispatcher::class)->addHandler(

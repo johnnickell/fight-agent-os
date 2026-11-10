@@ -8,6 +8,12 @@ remain unchanged for this picture to apply. Retrieve the cited source with `git 
 
 [Editable Python](project-ownership.py) · [operational runbook](../REPOSITORY_REGISTRATION.md)
 
+This is a retained historical ownership view. TASK-00572 subsequently replaces only S5's concrete transaction
+composition with Common v1.5.0 `DbalTransactionalUnitOfWork` on the same shared Connection, removing the unused
+EntityManager. The depicted generic ports, handler coordination and event ordering remain unchanged;
+[the current transaction runbook](../TRANSACTIONS.md) owns that implementation/failure contract. The image does
+not claim to depict current concrete transaction internals.
+
 ## Question and scope
 
 Who owns Project creation, state/source claims, required audit and publication after replacing the registration

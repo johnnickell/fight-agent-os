@@ -21,8 +21,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\DeliverUserInvitationHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
@@ -51,7 +49,6 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGra
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
@@ -679,13 +676,9 @@ final class DirectCredentialDeliveryTest extends TestCase
         } finally {
             $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT delivery_test_abort');
         }
-        // Doctrine closes its manager on rollback; a recovered worker uses a new one.
+        // A confirmed rollback leaves the shared DBAL boundary usable for recovery.
         $clock = $this->container->get(Clock::class);
         $clock->time = $this->now->modify('+5 minutes');
-        $config = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $config->enableNativeLazyObjects(true);
-        $this->container->set(TransactionalUnitOfWork::class, fn(): TransactionalUnitOfWork =>
-            new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $config)));
         $this->container->set(DeliverUserInvitationHandler::class, fn(): DeliverUserInvitationHandler =>
             new DeliverUserInvitationHandler(
                 $this->container->get(ActivationGrantRepository::class),

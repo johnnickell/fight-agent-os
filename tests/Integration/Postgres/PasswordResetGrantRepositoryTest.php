@@ -12,8 +12,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
@@ -23,7 +21,7 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDel
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -35,7 +33,7 @@ final class PasswordResetGrantRepositoryTest extends TestCase
 {
     private Connection $connection;
     private PostgresPasswordResetGrantRepository $grants;
-    private DoctrineTransactionalUnitOfWork $unitOfWork;
+    private DbalTransactionalUnitOfWork $unitOfWork;
     private UserId $userId;
     private DateTimeImmutable $now;
 
@@ -67,9 +65,7 @@ SQL
             'updated_at'                        => $this->now->format('Y-m-d H:i:s.uP')
         ]);
         $this->grants = new PostgresPasswordResetGrantRepository($this->connection);
-        $config = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $config->enableNativeLazyObjects(true);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $config));
+        $this->unitOfWork = new DbalTransactionalUnitOfWork($this->connection);
     }
 
     /**
@@ -256,10 +252,6 @@ SQL, [$otherUser->toString(), $this->userId->toString()]);
         }
         self::assertSame(0, $this->grants->getById($first->getId())?->getRevision());
         self::assertNull($this->grants->getById($successor->getId()));
-        $config = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $config->enableNativeLazyObjects(true);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $config));
-
         // An FK failure after the predecessor update rolls back the repository savepoint.
         $missingUser = UserId::generate();
         [$other] = $this->grant(userId: $missingUser);
