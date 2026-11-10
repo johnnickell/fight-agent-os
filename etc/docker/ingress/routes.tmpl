@@ -13,6 +13,7 @@ server {
     server_name {{ $host }};
     if ($request !~ "^[^ ]+ /") { return 421; }
     if ($http_host != "{{ $host }}") { return 421; }
+    if ($request_method !~ "^(GET|HEAD)$") { return 421; }
     return 308 https://{{ $host }}$request_uri;
 }
 server {

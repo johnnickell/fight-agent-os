@@ -16,5 +16,17 @@ if (ini_get('zend.exception_ignore_args') !== '1') {
     return;
 }
 
-$app = require sprintf('%s/bootstrap/app.php', dirname(__DIR__));
-$app->run();
+try {
+    $app = require sprintf('%s/bootstrap/app.php', dirname(__DIR__));
+    $app->run();
+} catch (Throwable) {
+    // Startup diagnostics can contain DSNs, provider inputs or exception arguments.
+    // Never render or log the throwable; configuration qualification is operator-owned.
+    http_response_code(503);
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    header('Referrer-Policy: no-referrer');
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+    echo 'Application unavailable.';
+}

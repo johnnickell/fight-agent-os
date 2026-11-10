@@ -143,4 +143,14 @@ final readonly class AccessKeyring
             && ($key['last_issued_at'] === null || $issuedAt <= $key['last_issued_at'])
             && hash_equals(hash_hmac('sha256', $message, $key['secret'], true), $signature);
     }
+
+    /**
+     * Redacts signing material from diagnostic snapshots
+     *
+     * @return array{configuration: string}
+     */
+    public function __debugInfo(): array
+    {
+        return ['configuration' => '[redacted]'];
+    }
 }

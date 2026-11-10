@@ -6,6 +6,7 @@ namespace App\Adapter\Security;
 
 use App\Application\Security\Csrf\Service\CsrfProofs;
 use InvalidArgumentException;
+use SensitiveParameter;
 
 /**
  * Class HmacCsrfProofs
@@ -20,7 +21,7 @@ final readonly class HmacCsrfProofs implements CsrfProofs
     /**
      * Constructs HmacCsrfProofs
      */
-    public function __construct(string $hexKey, string $origin)
+    public function __construct(#[SensitiveParameter] string $hexKey, string $origin)
     {
         if (!preg_match('/\A[0-9a-f]{64,}\z/D', $hexKey) || strlen($hexKey) % 2 !== 0) {
             throw new InvalidArgumentException('Invalid CSRF MAC key configuration.');

@@ -6,6 +6,7 @@ server {
     error_log /dev/null;
     if ($request !~ "^[^ ]+ /") { return 421; }
     if ($http_host != "@HOST@") { return 421; }
+    if ($request_method !~ "^(GET|HEAD)$") { return 421; }
     return 308 https://@HOST@$request_uri;
 }
 server {
