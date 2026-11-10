@@ -122,7 +122,7 @@
 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | done | [TICKET-00030](../tickets/00030-TICKET.md) |
-| [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
@@ -524,7 +524,7 @@
 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | done | [TICKET-00120](../tickets/00120-TICKET.md) |
 | [TASK-00520](00520-TASK.md) | Manage your protected OpenRouter connections | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
 | [TASK-00521](00521-TASK.md) | Inspect optional allowance in connection settings | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
-| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
+| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | needs-info | [TICKET-00121](../tickets/00121-TICKET.md) |
 | [TASK-00523](00523-TASK.md) | Build and deliver the exact production candidate through GitHub CI | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
 | [TASK-00524](00524-TASK.md) | Run the staging application behind real HTTPS | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
 | [TASK-00525](00525-TASK.md) | Operate staging's protected services and diagnosis | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
@@ -574,7 +574,7 @@
 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | done | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
+| [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | done | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | done | [TICKET-00134](../tickets/00134-TICKET.md) |

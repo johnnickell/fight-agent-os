@@ -141,6 +141,23 @@ when the accepted policy permits that split. A literal-final-head acceptance pre
 owner amendment, not a silent exemption. Record independent review, delivery, merge, release, and deployment
 separately; done does not grant approval for those actions.
 
+### Needs-info hold categories
+
+A `needs-info` TASK records one primary `hold_category` and a concise single-line `hold_reason` in its own
+frontmatter. The Board projects that reason into the corresponding section; it is not a separate backlog.
+
+| `hold_category` | Board section | Remaining input |
+|---|---|---|
+| `owner-decision` | Owner decision needed | Product necessity, scope, target, assignment or authority needs an owner decision |
+| `supplier-contract` | Supplier contract/release needed | A supported public capability, cross-owner contract or qualifying tagged release is missing |
+| `engineering-qualification` | Engineering qualification needed | An allocated capability needs implementation, enrollment or real integration/runtime evidence |
+
+Choose the primary unresolved hold by the next action, not by package version or the presence of a local blocker.
+Keep additional holds and their owners in the TASK body. A supplier allocation is not runtime qualification;
+ordinary implementation details are not a new approval phase. Reclassify when the primary hold changes, and remove
+hold metadata when leaving `needs-info`. Classification alone changes no scope, priority, dependencies or acceptance.
+Generic Common primitives do not establish Access Control guarantees, product authority or deployed behavior.
+
 ## Publication closeout
 
 Land records independently accepted implementation and required verification in the TASK, closes eligible
@@ -179,8 +196,9 @@ retains its own rules.
 
 ## Board and generated views
 
-`tasks/BOARD.md` shows Active Work, Ready Frontier, Waiting, Needs Info, Human Action, Needs Triage, and Recently
-Closed. Every section shows Order, TASK ID, Title, Parent TICKET, Status, Blocked by, and PR. Parent cells show ID
+`tasks/BOARD.md` shows Active Work, Ready Frontier, Waiting, the three [needs-info categories](#needs-info-hold-categories),
+Human Action, Needs Triage, and Recently Closed. Every section shows Order, TASK ID, Title, Parent TICKET, Status,
+Blocked by, and PR; hold sections also show the record's needed input or evidence. Parent cells show ID
 and title. Artifact and blocker IDs are visible links. Archives have separate indexes.
 
 For "What's next?" or `/ask-matt`, return the current human decision/question and active TASK; otherwise return

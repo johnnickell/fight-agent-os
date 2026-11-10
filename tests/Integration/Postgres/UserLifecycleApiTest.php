@@ -26,12 +26,15 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\Command\DeleteUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\DisableUser;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use League\OpenAPIValidation\PSR7\OperationAddress;
@@ -66,7 +69,7 @@ final class UserLifecycleApiTest extends TestCase
      */
     protected function setUp(): void
     {
-        foreach (['DATABASE_URL', 'APP_ACCESS_TOKEN_CONFIG'] as $name) {
+        foreach (['DATABASE_URL', 'APP_ACCESS_TOKEN_CONFIG', 'APP_CREDENTIAL_DELIVERY_KEY'] as $name) {
             $this->environment[$name] = getenv($name);
         }
         $url = (string) getenv('TEST_DATABASE_URL');
@@ -79,6 +82,8 @@ final class UserLifecycleApiTest extends TestCase
         $tokens->clock->time = new DateTimeImmutable('2026-11-09T12:00:00Z');
         putenv('DATABASE_URL='.$url);
         putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($tokens->configuration, JSON_THROW_ON_ERROR));
+        // Own the fixture cipher key; independent race workers inherit this ephemeral value.
+        putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
         $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
@@ -346,6 +351,8 @@ final class UserLifecycleApiTest extends TestCase
         $target = $this->user(false);
         if ($operation === 'enable') {
             $this->container->get(CommandBus::class)->execute(new DisableUser($this->actor->getId(), $target->getId()));
+        } elseif ($operation === 'restore') {
+            $this->container->get(CommandBus::class)->execute(new DeleteUser($this->actor->getId(), $target->getId()));
         }
         $this->connection->executeStatement(
             'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name <> ?)',
@@ -366,7 +373,7 @@ final class UserLifecycleApiTest extends TestCase
     public function testInvalidInput(string $body): void
     {
         $target = $this->user(false);
-        foreach (['disable', 'enable'] as $operation) {
+        foreach (['disable', 'enable', 'delete', 'restore'] as $operation) {
             $this->check($this->request($target->getId(), $operation, $body), 400, $operation);
         }
         $stored = $this->container->get(UserRepository::class)->getById($target->getId());
@@ -401,6 +408,8 @@ final class UserLifecycleApiTest extends TestCase
     {
         yield ['disable', 'DISABLE_USERS'];
         yield ['enable', 'ENABLE_USERS'];
+        yield ['delete', 'DELETE_USERS'];
+        yield ['restore', 'RESTORE_USERS'];
     }
 
     /**
@@ -463,6 +472,315 @@ final class UserLifecycleApiTest extends TestCase
     }
 
     /**
+     * Deletes and restores under package ownership while keeping identity claims and retired sessions
+     */
+    public function testDeleteRestoreRetainsIdentityWithoutSessionRevival(): void
+    {
+        $target = $this->user(false);
+        $token = $this->tokenFor($target);
+        $this->check($this->request($target->getId(), 'delete'), 200, 'delete');
+        $deleted = $this->container->get(UserRepository::class)->getById($target->getId());
+        self::assertNotNull($deleted);
+        self::assertSame(UserState::DELETED, $deleted->getState());
+        self::assertSame($target->getAuthenticationVersion() + 1, $deleted->getAuthenticationVersion());
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM user_email_claims WHERE user_id = ? AND email = ?',
+            [$target->getId()->toString(), $target->getEmail()->canonical()]
+        ));
+        $this->check($this->request($target->getId(), 'restore'), 200, 'restore');
+        $restored = $this->container->get(UserRepository::class)->getById($target->getId());
+        self::assertNotNull($restored);
+        self::assertSame(UserState::ACTIVE, $restored->getState());
+        self::assertSame($deleted->getAuthenticationVersion(), $restored->getAuthenticationVersion());
+        self::assertSame($target->getPasswordHash()?->toString(), $restored->getPasswordHash()?->toString());
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM refresh_sessions WHERE user_id = ? AND revoked = FALSE',
+            [$target->getId()->toString()]
+        ));
+        $me = new ServerRequestFactory()->createServerRequest('GET', 'https://agent-os.test/api/v1/me');
+        self::assertSame(401, $this->app->handle($me->withHeader('Authorization', 'Bearer '.$token))->getStatusCode());
+        $audit = $this->connection->fetchAllAssociative(
+            <<<'SQL'
+                SELECT actor_id, subject_id, action, context FROM audit_evidence
+                WHERE action IN ('user.deleted', 'user.restored') ORDER BY id
+                SQL
+        );
+        self::assertSame(['user.deleted', 'user.restored'], array_column($audit, 'action'));
+        foreach ($audit as $entry) {
+            self::assertSame($this->actor->getId()->toString(), $entry['actor_id']);
+            self::assertSame($target->getId()->toString(), $entry['subject_id']);
+            self::assertSame('{}', $entry['context']);
+        }
+    }
+
+    /**
+     * Rejects self deletion and unsupported restoration input without mutation
+     */
+    public function testDeleteRestoreEligibilityAndStrictInput(): void
+    {
+        $this->check($this->request($this->actor->getId(), 'delete'), 409, 'delete');
+        $target = $this->user(false);
+        $this->container->get(CommandBus::class)->execute(new DisableUser($this->actor->getId(), $target->getId()));
+        $this->check($this->request($target->getId(), 'delete'), 200, 'delete');
+        foreach (
+            [
+            '{"confirm":true}', '{"confirm":true,"restoration_state":"disabled"}',
+            '{"confirm":true,"restoration_state":null}',
+            '{"confirm":false,"restoration_state":"active"}',
+            '{"confirm":true,"restoration_state":"active","actor_id":"private"}',
+            '{"confirm":true,"restoration_state":"active","expected_revision":"private"}'
+            ] as $body
+        ) {
+            $this->check($this->request($target->getId(), 'restore', $body), 400, 'restore');
+        }
+        $stored = $this->container->get(UserRepository::class)->getById($target->getId());
+        self::assertNotNull($stored);
+        self::assertSame(UserState::DELETED, $stored->getState());
+    }
+
+    /**
+     * Issues fresh internal pending activation authority without disclosing it or issuing sessions
+     */
+    public function testPendingRestoration(): void
+    {
+        $target = $this->user(false);
+        $this->tokenFor($target);
+        $this->check($this->request($target->getId(), 'delete'), 200, 'delete');
+        $this->terminalActivation($target);
+        $this->check($this->request(
+            $target->getId(),
+            'restore',
+            '{"confirm":true,"restoration_state":"pending_activation"}'
+        ), 200, 'restore');
+        $stored = $this->container->get(UserRepository::class)->getById($target->getId());
+        self::assertNotNull($stored);
+        self::assertSame(UserState::PENDING_ACTIVATION, $stored->getState());
+        self::assertNull($stored->getPasswordHash());
+        self::assertSame(2, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM activation_grants WHERE user_id = ?',
+            [$target->getId()->toString()]
+        ));
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM refresh_sessions WHERE user_id = ? AND revoked = FALSE',
+            [$target->getId()->toString()]
+        ));
+    }
+
+    /**
+     * Rejects malformed route IDs and query selectors before lifecycle execution
+     */
+    #[DataProvider('deletionOperations')]
+    public function testDeletionRouteAndQueryAdmission(string $operation): void
+    {
+        foreach (['private', UserId::generate()->toString().'?actor_id=private'] as $target) {
+            $path = '/api/v1/users/'.$target;
+            if ($operation === 'restore') {
+                $path = '/api/v1/users/'.explode('?', $target)[0].'/restore';
+                if (str_contains($target, '?')) {
+                    $path .= '?actor_id=private';
+                }
+            }
+            $request = new ServerRequestFactory()->createServerRequest(
+                $operation === 'delete' ? 'DELETE' : 'POST',
+                'https://agent-os.test'.$path,
+                ['REQUEST_URI' => $path]
+            );
+            $request = $request->withHeader('Content-Type', 'application/json')
+                ->withHeader('Authorization', 'Bearer '.$this->token);
+            $body = $operation === 'delete' ? '{"confirm":true}' : '{"confirm":true,"restoration_state":"active"}';
+            $request->getBody()->write($body);
+            $this->check($this->app->handle($request), 400, $operation);
+        }
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM audit_evidence WHERE action IN ('user.deleted', 'user.restored')"
+        ));
+    }
+
+    /**
+     * Rolls back required deletion and pending restoration audit failures on the shared connection
+     */
+    #[DataProvider('deletionOperations')]
+    public function testDeletionAuditRollback(string $operation): void
+    {
+        $target = $this->user(false);
+        $this->tokenFor($target);
+        if ($operation === 'restore') {
+            $this->check($this->request($target->getId(), 'delete'), 200, 'delete');
+        }
+        $this->terminalActivation($target);
+        $before = $this->connection->fetchAssociative(
+            'SELECT * FROM users WHERE id = ?',
+            [$target->getId()->toString()]
+        );
+        $audit = $this->createStub(AuditEvidenceRepository::class);
+        $audit->method('add')->willThrowException(new \RuntimeException('private-audit-failure'));
+        $this->container->set(AuditEvidenceRepository::class, static fn() => $audit);
+        $body = $operation === 'restore' ? '{"confirm":true,"restoration_state":"pending_activation"}' : null;
+        $this->check($this->request($target->getId(), $operation, $body), 500, $operation);
+        self::assertSame($before, $this->connection->fetchAssociative(
+            'SELECT * FROM users WHERE id = ?',
+            [$target->getId()->toString()]
+        ));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
+        self::assertSame($operation === 'delete' ? 1 : 0, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM refresh_sessions WHERE user_id = ? AND revoked = FALSE',
+            [$target->getId()->toString()]
+        ));
+    }
+
+    /**
+     * Preserves committed lifecycle and audit when post-commit notification fails
+     */
+    #[DataProvider('deletionOperations')]
+    public function testDeletionPostCommitUncertainty(string $operation): void
+    {
+        $target = $this->user(false);
+        if ($operation === 'restore') {
+            $this->check($this->request($target->getId(), 'delete'), 200, 'delete');
+        }
+        $events = $this->createStub(EventDispatcher::class);
+        $events->method('trigger')->willThrowException(new \RuntimeException('private-event-failure'));
+        $this->container->set(EventDispatcher::class, static fn() => $events);
+        $this->check($this->request($target->getId(), $operation), 500, $operation);
+        self::assertSame($operation === 'delete' ? 'deleted' : 'active', $this->connection->fetchOne(
+            'SELECT state FROM users WHERE id = ?',
+            [$target->getId()->toString()]
+        ));
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM audit_evidence WHERE action = ?',
+            ['user.'.($operation === 'delete' ? 'deleted' : 'restored')]
+        ));
+    }
+
+    /**
+     * Rejects a stale package-loaded deletion snapshot after a competing HTTP deletion commits
+     */
+    public function testCompetingDeletionPreservesCasAndSingleAudit(): void
+    {
+        $target = $this->user(false);
+        $pipes = [];
+        $process = proc_open(
+            [PHP_BINARY, '-r', 'require "vendor/autoload.php"; Tests\\Support\\UserLifecycleRaceWorker::run();'],
+            [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']],
+            $pipes,
+            dirname(__DIR__, 3)
+        );
+        self::assertIsResource($process);
+        try {
+            stream_set_timeout($pipes[1], 15);
+            fwrite($pipes[0], json_encode([
+                'actor'     => $this->actor->getId()->toString(),
+                'target'    => $target->getId()->toString(),
+                'operation' => 'delete',
+                'time'      => $this->tokens->clock->now()->format('c'),
+                'pause'     => true
+            ], JSON_THROW_ON_ERROR)."\n");
+            fflush($pipes[0]);
+            self::assertGreaterThan(0, (int) fgets($pipes[1]));
+            self::assertSame('snapshot', trim((string) fgets($pipes[1])));
+            $this->check($this->request($target->getId(), 'delete'), 200, 'delete');
+            fwrite($pipes[0], "go\n");
+            fflush($pipes[0]);
+            self::assertSame('conflict', trim((string) fgets($pipes[1])));
+            self::assertSame(1, (int) $this->connection->fetchOne(
+                "SELECT count(*) FROM audit_evidence WHERE action = 'user.deleted'"
+            ));
+            self::assertSame($target->getAuthenticationVersion() + 1, (int) $this->connection->fetchOne(
+                'SELECT authentication_version FROM users WHERE id = ?',
+                [$target->getId()->toString()]
+            ));
+        } finally {
+            if (proc_get_status($process)['running']) {
+                proc_terminate($process);
+            }
+            foreach ($pipes as $pipe) {
+                fclose($pipe);
+            }
+            proc_close($process);
+        }
+    }
+
+    /**
+     * Seeds the consumed invitation authority that precedes a real activated identity
+     */
+    private function terminalActivation(User $user): void
+    {
+        $now = $this->tokens->clock->now();
+        $credential = $this->container->get(
+            \Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator::class
+        )->generate();
+        $grant = \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
+            $user->getId(),
+            $credential,
+            $now,
+            $now->modify('+7 days'),
+            $user->getEmail(),
+            $this->container->get(
+                \Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher::class
+            )->encrypt($credential->toString())
+        );
+        $repository = $this->container->get(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository::class
+        );
+        $this->container->get(Connection::class)->transactional(function () use ($repository, $grant, $now): void {
+            self::assertTrue($repository->add($grant));
+            self::assertTrue($repository->replace($grant, $grant->consume($now)));
+        });
+    }
+
+    /**
+     * Rejects package-ineligible targets without claiming rollback errors are reusable request containers
+     */
+    #[DataProvider('ineligibleDeletionTargets')]
+    public function testIneligibleDeletionTarget(string $operation, string $state): void
+    {
+        $target = $this->user(false);
+        $id = $target->getId();
+        if ($state === 'missing') {
+            $id = UserId::generate();
+        } elseif ($state === 'pending') {
+            $id = UserId::generate();
+            $pending = User::invite($id, EmailAddress::fromString('pending@example.test'), $this->tokens->clock->now());
+            $this->container->get(Connection::class)->transactional(
+                fn() => $this->container->get(UserRepository::class)->add($pending)
+            );
+        } elseif ($state === 'deleted') {
+            $this->check($this->request($id, 'delete'), 200, 'delete');
+        }
+        $before = $this->connection->fetchAllAssociative('SELECT * FROM users ORDER BY id');
+        $auditCount = (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence');
+        $this->check($this->request($id, $operation), 409, $operation);
+        self::assertSame($before, $this->connection->fetchAllAssociative('SELECT * FROM users ORDER BY id'));
+        self::assertSame($auditCount, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Supplies unsupported current-state transitions and unknown identities
+     *
+     * @return iterable<array{string, string}>
+     */
+    public static function ineligibleDeletionTargets(): iterable
+    {
+        yield ['delete', 'pending'];
+        yield ['delete', 'deleted'];
+        yield ['delete', 'missing'];
+        yield ['restore', 'active'];
+        yield ['restore', 'missing'];
+    }
+
+    /**
+     * Supplies the soft deletion and restoration operations
+     *
+     * @return iterable<array{string}>
+     */
+    public static function deletionOperations(): iterable
+    {
+        yield ['delete'];
+        yield ['restore'];
+    }
+
+    /**
      * Creates a real eligible identity with an optional managed administrator assignment
      */
     private function user(bool $administrator): User
@@ -517,12 +835,13 @@ final class UserLifecycleApiTest extends TestCase
     private function request(
         UserId $targetId,
         string $operation,
-        string $body = '{"confirm":true}',
+        ?string $body = null,
         ?string $token = null
     ): ResponseInterface {
-        $path = '/api/v1/users/'.$targetId->toString().'/'.$operation;
+        $path = '/api/v1/users/'.$targetId->toString().($operation === 'delete' ? '' : '/'.$operation);
+        $body ??= $operation === 'restore' ? '{"confirm":true,"restoration_state":"active"}' : '{"confirm":true}';
         $request = new ServerRequestFactory()->createServerRequest(
-            'POST',
+            $operation === 'delete' ? 'DELETE' : 'POST',
             'https://agent-os.test'.$path,
             ['REQUEST_URI' => $path]
         );
@@ -549,7 +868,10 @@ final class UserLifecycleApiTest extends TestCase
         static $spec = null;
         $spec ??= Document::generate();
         (new ValidatorBuilder())->fromJson($spec)->getResponseValidator()->validate(
-            new OperationAddress('/api/v1/users/{userId}/'.$operation, 'post'),
+            new OperationAddress(
+                '/api/v1/users/{userId}'.($operation === 'delete' ? '' : '/'.$operation),
+                $operation === 'delete' ? 'delete' : 'post'
+            ),
             $response
         );
     }

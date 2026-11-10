@@ -15,8 +15,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -28,7 +26,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -41,7 +39,7 @@ use RuntimeException;
 final class IdentityRepositoryTest extends TestCase
 {
     private Connection $connection;
-    private DoctrineTransactionalUnitOfWork $unitOfWork;
+    private DbalTransactionalUnitOfWork $unitOfWork;
     private PostgresUserRepository $users;
     private PostgresRoleRepository $roles;
 
@@ -65,10 +63,7 @@ SQL
             $this->connection,
             new AuthorizationReferenceFences($this->connection)
         );
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $entityManager = new EntityManager($this->connection, $configuration);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
+        $this->unitOfWork = new DbalTransactionalUnitOfWork($this->connection);
     }
 
     /**
@@ -193,7 +188,7 @@ SQL
             self::fail('A canonical email claim must be rejected.');
         } catch (DuplicateEmailException $exception) {
             self::assertSame('The email address is already reserved.', $exception->getMessage());
-            $this->rebuildUnitOfWork();
+            self::assertFalse($this->connection->isTransactionActive());
         }
 
         $reserving = $this->activeUser('reserving@example.test');
@@ -213,7 +208,7 @@ SQL
             self::fail('A live reservation claim must be rejected.');
         } catch (DuplicateEmailException $exception) {
             self::assertSame('The email address is already reserved.', $exception->getMessage());
-            $this->rebuildUnitOfWork();
+            self::assertFalse($this->connection->isTransactionActive());
         }
     }
 
@@ -844,17 +839,6 @@ SQL
     private function commitAdd(User $user): void
     {
         $this->unitOfWork->commitTransactional(fn() => $this->users->add($user));
-    }
-
-    /**
-     * Rebuilds the test transaction boundary
-     */
-    private function rebuildUnitOfWork(): void
-    {
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $entityManager = new EntityManager($this->connection, $configuration);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
     }
 
     /**

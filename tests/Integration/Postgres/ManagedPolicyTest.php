@@ -19,8 +19,6 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\CommandHandler\ReconcileManagedPolicyHandler;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\QueryHandler\PreviewManagedPolicyHandler;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\Service\ManagedPolicyPlanner;
@@ -49,7 +47,7 @@ use Fight\Common\Adapter\Messaging\Command\Sync\Routing\InMemoryCommandRouter;
 use Fight\Common\Adapter\Messaging\Command\Sync\RoutingCommandBus;
 use Fight\Common\Adapter\Messaging\Query\Routing\InMemoryQueryRouter;
 use Fight\Common\Adapter\Messaging\Query\RoutingQueryBus;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Messaging\Event\CommandFailedEvent;
 use Fight\Common\Domain\Messaging\Event\Event;
@@ -67,7 +65,7 @@ final class ManagedPolicyTest extends TestCase
     private PostgresRoleRepository $roles;
     private PostgresUserRepository $users;
     private PostgresAgentRepository $agents;
-    private DoctrineTransactionalUnitOfWork $unitOfWork;
+    private DbalTransactionalUnitOfWork $unitOfWork;
     /** @var list<Event> */
     private array $events = [];
 
@@ -87,9 +85,7 @@ final class ManagedPolicyTest extends TestCase
             new AuthenticationAuthorityFences($this->connection)
         );
         $this->agents = new PostgresAgentRepository($this->connection, $fences);
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $configuration));
+        $this->unitOfWork = new DbalTransactionalUnitOfWork($this->connection);
     }
 
     /**
@@ -459,15 +455,13 @@ final class ManagedPolicyTest extends TestCase
 
             return $this->now();
         });
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $unitOfWork = new DoctrineTransactionalUnitOfWork(new EntityManager($connection, $configuration));
+        $transactionalUnitOfWork = new DbalTransactionalUnitOfWork($connection);
         $commands = new InMemoryCommandRouter();
         $commands->registerHandler(ReconcileManagedPolicy::class, new ReconcileManagedPolicyHandler(
             $permissions,
             $roles,
             $planner,
-            $unitOfWork,
+            $transactionalUnitOfWork,
             $events,
             $clock
         ));

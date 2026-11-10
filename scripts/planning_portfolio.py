@@ -17,6 +17,11 @@ VALID_STATUSES = {
     "in-progress", "done", "wontfix",
 }
 TERMINAL = {"done", "wontfix"}
+HOLD_CATEGORIES = {
+    "owner-decision": "Owner decision needed",
+    "supplier-contract": "Supplier contract/release needed",
+    "engineering-qualification": "Engineering qualification needed",
+}
 KINDS = {"epics": "EPIC", "tickets": "TICKET", "tasks": "TASK"}
 LINK = re.compile(r"\!?\[[^\]]*\]\(([^\s)]+)\)")
 BLOCK = re.compile(r"<!-- planning:([a-z-]+) -->\n[\s\S]*?<!-- /planning:\1 -->")
@@ -83,6 +88,11 @@ def load_records() -> tuple[dict, list[str]]:
                     raise ValueError("order must be a positive integer")
                 if data.get("pr") and not re.fullmatch(r"https://[^\s|)]+/pull/\d+", data["pr"]):
                     raise ValueError("pr must be a pull-request URL")
+                if data.get("hold_category") and data["hold_category"] not in HOLD_CATEGORIES:
+                    raise ValueError("invalid hold_category")
+                if kind == "TASK" and data["status"] == "needs-info":
+                    if data.get("hold_category") not in HOLD_CATEGORIES or not data.get("hold_reason"):
+                        raise ValueError("needs-info TASK requires hold_category and hold_reason")
                 if "archive" in path.parts and data["status"] not in TERMINAL:
                     raise ValueError("archived record is not terminal")
                 records[identifier] = (path, data)
@@ -165,21 +175,28 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
     tasks = [(key, path, data) for key, (path, data) in records.items()
              if key.startswith("TASK-") and "archive" not in path.parts]
     tasks.sort(key=lambda row: (int(row[2].get("order") or 999999), row[0]))
-    groups = {name: [] for name in ("Active Work", "Ready Frontier", "Waiting", "Needs Info", "Human Action", "Needs Triage", "Recently Closed")}
+    groups = {name: [] for name in (
+        "Active Work", "Ready Frontier", "Waiting", *HOLD_CATEGORIES.values(),
+        "Human Action", "Needs Triage", "Recently Closed",
+    )}
     for identifier, path, data in tasks:
         blockers = [key for key in dependencies(data) if records[key][1]["status"] not in TERMINAL]
         status = data["status"]
-        group = {"in-progress": "Active Work", "needs-info": "Needs Info", "ready-for-human": "Human Action", "needs-triage": "Needs Triage"}.get(status)
+        group = {"in-progress": "Active Work", "ready-for-human": "Human Action", "needs-triage": "Needs Triage"}.get(status)
+        if status == "needs-info":
+            group = HOLD_CATEGORIES[data["hold_category"]]
         group = group or ("Recently Closed" if status in TERMINAL else "Waiting" if blockers else "Ready Frontier")
         parent = data.get("ticket")
         parent_label = linked(board, records[parent][0], f'{parent} — {records[parent][1]["title"]}') if parent else "— (standalone " + data.get("kind", "task") + ")"
         groups[group].append([
             cell(data.get("order", "")), linked(board, path, identifier), cell(data["title"]), parent_label,
             cell(status), ", ".join(linked(board, records[key][0], key) for key in blockers) or "—",
+            *([cell(data["hold_reason"])] if status == "needs-info" else []),
             f'[PR #{data["pr"].rsplit("/", 1)[1]}]({data["pr"]})' if data.get("pr") else "—",
         ])
     views[board, "board"] = "\n\n".join(f"## {name}\n\n" + table(
-        ["Order", "TASK ID", "Title", "Parent TICKET", "Status", "Blocked by", "PR"], rows
+        ["Order", "TASK ID", "Title", "Parent TICKET", "Status", "Blocked by",
+         *(["Needed input or evidence"] if name in HOLD_CATEGORIES.values() else []), "PR"], rows
     ) for name, rows in groups.items())
 
     for directory, kind in KINDS.items():
