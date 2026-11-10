@@ -23,6 +23,9 @@ The diagram compresses Common/Slim internals and route-specific middleware; it d
 uses the same guards or a bus (sensitive synchronous package operations retain their contract). Static dependency
 direction, TLS gateways, provider delivery and transactions are deliberately not represented. Production boot
 success is unavailable without the separately qualified real provider. Local main retains its HTTP development
-root; production transport rejection is not a claim that local HTTP redirects. Normal canonical browser ingress
-is held on the current host even though diagnostic supplier-port HTTPS works. Source-arrow inspection is not
-proof of those operational effects.
+root; production transport rejection is not a claim that local HTTP redirects. At the initial 2026-11-10
+source checkpoint, normal canonical browser ingress was held while diagnostic supplier-port HTTPS worked.
+The later TASK-00063 external-front-door recovery and independent QA qualified ordinary port-443 journeys;
+the subsequently retained minimal tooling runtime is not current browser readiness. See the
+[accepted implementation checkpoint](../../../planning/tasks/00063-TASK.md#accepted-implementation-closeout--2026-11-10)
+for that bounded evidence and remaining limits. Source-arrow inspection is not proof of operational effects.

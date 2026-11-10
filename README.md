@@ -395,8 +395,12 @@ The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. 
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup` once, then `./bin/up` for every startup or configuration refresh, and `./bin/https status` to inspect it. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`
-for the separate HTTP listener. Neither local TLS nor the inherited HTTP port is a complete authenticated browser
-deployment; integrated security and production enrollment remain separate work.
+for the separate HTTP listener. The [integrated security envelope](docs/engineering/SECURITY_ENVELOPE.md)
+adds fail-closed production-like configuration/transport admission, same-origin deny-CORS and outer CSP/security/
+cache/referrer headers. Independent technical and behavioral acceptance covers bounded ordinary-443 local
+journeys and the finite coverage-tool budget; see [scope and evidence](planning/tasks/00063-TASK.md#accepted-implementation-closeout--2026-11-10).
+This is not current full-app readiness, a complete authenticated deployment, real-provider enrollment or
+production-artifact certification. Trust and runtime preparation remain explicit.
 For PHP error logs, process limits and opt-in IDE debugging, see [local PHP diagnostics](docs/engineering/LOCAL_PHP.md).
 Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`

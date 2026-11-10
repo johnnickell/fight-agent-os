@@ -55,7 +55,7 @@ Security checks include anonymous, ordinary user, Super Admin, stale authority, 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00063](../tasks/00063-TASK.md) | Establish the production-like HTTPS security envelope | in-progress |
+| [TASK-00063](../tasks/00063-TASK.md) | Establish the production-like HTTPS security envelope | done |
 | [TASK-00064](../tasks/00064-TASK.md) | Prove integrated authorization throttling and secret safety | ready-for-agent |
 | [TASK-00065](../tasks/00065-TASK.md) | Prove the integrated accessibility and responsive baseline | ready-for-agent |
 | [TASK-00066](../tasks/00066-TASK.md) | Prove critical browser continuity and close the foundation gate | ready-for-agent |
