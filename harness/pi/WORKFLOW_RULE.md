@@ -45,6 +45,34 @@ For an explicitly assigned release assessment, the provider's release protocol u
 runs under `.runs/handoffs/release-<version>/`; only the independent stage owner writes its report. This adds no
 release support to a TASK-only dispatcher and grants no source repair, self-acceptance or publication authority.
 
+## Compaction and verified continuation
+
+Leave native automatic compaction enabled. Keep required recovery facts explicit in ordinary session messages:
+objective, accepted constraints and decisions, completed/pending work, exact unanswered questions, source revisions
+and evidence references, uncertain operation outcomes, and the next safe action. Native summaries are lossy;
+long tool output and thinking are not reliable places to retain the only copy of a required fact.
+
+After compaction or resume, before dependent work:
+
+1. Inspect `fight_workflow_status` for current skill/effect/TASK/checkout and live stage binding. A historical
+   assignment or summary grants nothing. A held, expired or mismatched selection pauses the affected action;
+   do not restore authority by repeating a skill command from history.
+2. Read current governing and selected-skill instructions directly. Confirm the objective/source boundary against
+   the current assigned record, permissions and any applicable claim, approval and operation owner. Local sessions
+   do not invent managed grants, claims or leases. Recheck operation-specific authority at its normal admission.
+3. Reconcile retained facts with current authorized evidence. Keep exact unanswered questions unresolved until an
+   authenticated answer is associated with that question; a concurrent or ambiguous answer is not a decision.
+   Missing/stale evidence and revoked approval pause dependent work. Name the missing fact and its owner rather
+   than guessing. Use only bounded authorized native reads; do not bulk-load history or another role's context.
+4. An interrupted or timed-out tool call has an uncertain outcome, not permission to replay. Inspect its original
+   operation/result through its owner before any dependent action or retry. If that cannot establish safe
+   continuation, preserve the pause and request the precise missing evidence or authority.
+
+Use native session history and `/compact` or exact-session resume; never copy a coordinator/reviewer transcript
+into a fresh independent worker. Do not add a parallel checkpoint store without a demonstrated missing required
+fact and approved ownership/retention. Keep summaries/transcripts out of ordinary logs and hand off only authorized
+facts and evidence references. See the package's `COMPACTION.md` for qualified capabilities and limitations.
+
 These responsibilities do not intercept native file tools or shell. Pi and OS permissions still apply; extension
 code, subprocesses and SDK OS calls are not confined. The independent deterministic tool policy requires explicit
 operator selection and qualifies only its documented shell routes. Native tool availability never expands task,

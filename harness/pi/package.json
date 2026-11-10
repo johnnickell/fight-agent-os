@@ -8,7 +8,7 @@
   "keywords": ["pi-package"],
   "engines": {"node": ">=22"},
   "bin": {"fight-workspace": "bin/fight-workspace"},
-  "files": ["bin/", "src/", "agents/", "profiles/", "vendor/pi-subagents/src/", "vendor/pi-subagents/package.json", "vendor/pi-subagents/LICENSE", "vendor/pi-subagents/README.md", "vendor/pi-subagents/docs/",  "SUBAGENTS.md", "README.md", "WORKSPACE.md", "WORKFLOW.md", "WORKFLOW_RULE.md", "TOOL_POLICY.md", "LICENSE"],
+  "files": ["bin/", "src/", "agents/", "profiles/", "vendor/pi-subagents/src/", "vendor/pi-subagents/package.json", "vendor/pi-subagents/LICENSE", "vendor/pi-subagents/README.md", "vendor/pi-subagents/docs/",  "SUBAGENTS.md", "README.md", "WORKSPACE.md", "WORKFLOW.md", "WORKFLOW_RULE.md", "COMPACTION.md", "TOOL_POLICY.md", "LICENSE"],
   "scripts": {"test": "node --test tests/*.test.mjs"},
   "dependencies": {
     "croner": "^10.0.1",
