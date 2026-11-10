@@ -28,7 +28,8 @@ return static function (Container $container): void {
             $container->get(CommandBus::class),
             $container->get(QueryBus::class),
             $container->get(UserRepository::class),
-            $container->get(BootstrapProgress::class)
+            $container->get(BootstrapProgress::class),
+            $container->get(\App\Domain\Authorization\ManagedPolicyCatalog::class)
         ));
     $container->set(BootstrapSuperAdminCommand::class, static fn(Container $container): BootstrapSuperAdminCommand =>
         new BootstrapSuperAdminCommand($container->get(BootstrapOperation::class)));

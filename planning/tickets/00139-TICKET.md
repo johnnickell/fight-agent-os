@@ -108,7 +108,7 @@ internals, patch vendor or call private handlers. Follow the shared architecture
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00591](../tasks/00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | ready-for-agent |
+| [TASK-00591](../tasks/00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

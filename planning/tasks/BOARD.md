@@ -22,6 +22,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | — | [TASK-00589](00589-TASK.md) | Register local project and task domains across installed harness consumers | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | in-progress | — | — |
+| — | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | [TICKET-00139 — Reconcile JSON-managed authority and access defaults](../tickets/00139-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -43,7 +44,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | [TICKET-00138 — Serve browser journeys from root URLs](../tickets/00138-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | [TICKET-00139 — Reconcile JSON-managed authority and access defaults](../tickets/00139-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 

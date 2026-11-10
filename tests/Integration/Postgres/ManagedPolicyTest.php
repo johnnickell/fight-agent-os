@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Authorization\JsonManagedPolicy;
 use App\Adapter\Console\ManagedPolicyConsole;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
@@ -126,6 +127,55 @@ final class ManagedPolicyTest extends TestCase
     }
 
     /**
+     * Reconciles a disposable future definition into Super Admin without expanding other grants
+     */
+    public function testFutureCatalogConvergence(): void
+    {
+        $this->runConsole($this->console(), 'apply');
+        $baseline = (new JsonManagedPolicy())->load();
+        $permissions = $baseline->toArray()['permissions'];
+        $future = PermissionId::generate();
+        $permissions[] = ['id' => $future->toString(), 'name' => 'FUTURE_CAPABILITY', 'tier' => 'ADMIN_SAFE'];
+        $roles = [
+            [
+                'id'          => InstallationManagedPolicy::USER_ROLE_ID,
+                'name'        => 'ROLE_USER',
+                'permissions' => ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS']
+            ],
+            ['id' => InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID, 'name' => 'ROLE_SUPER_ADMIN', 'permissions' => '*']
+        ];
+        $custom = Role::define(RoleId::generate(), RoleName::fromString('ROLE_CUSTOM'), [], $this->now());
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('future-fixture'),
+            AgentCredentialId::generate(),
+            'synthetic-envelope',
+            $this->now()
+        );
+        $this->unitOfWork->commitTransactional(function () use ($custom, $agent): void {
+            $this->roles->add($custom);
+            $this->agents->add($agent);
+        });
+        $console = $this->console(InstallationManagedPolicy::create($permissions, $roles));
+        $this->runConsole($console, 'apply');
+        $super = $this->roles->getById(RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID));
+        self::assertCount(26, $super->getPermissionIds());
+        self::assertTrue($super->hasPermission($future));
+        self::assertCount(3, $this->roles->getById(RoleId::fromString(
+            InstallationManagedPolicy::USER_ROLE_ID
+        ))->getPermissionIds());
+        self::assertEquals($custom, $this->roles->getById($custom->getId()));
+        self::assertEquals($agent, $this->agents->getById($agent->getId()));
+        $state = $this->snapshot();
+        $this->runConsole($console, 'apply');
+        self::assertSame($state, $this->snapshot());
+        self::assertSame(['UNCHANGED', 'UNCHANGED'], array_column(
+            $this->runConsole($console, 'preview')['plan']['roles'],
+            'action'
+        ));
+    }
+
+    /**
      * Repairs supported managed drift while preserving unrelated custom authority
      */
     public function testDriftRepairAndObsoleteRemoval(): void
@@ -187,7 +237,7 @@ final class ManagedPolicyTest extends TestCase
     #[DataProvider('collisions')]
     public function testUnmanagedConflict(string $collision): void
     {
-        $policy = InstallationManagedPolicy::create();
+        $policy = (new JsonManagedPolicy())->load();
         $definition = $policy->getPermissions()[0];
         $this->permissions->add(Permission::define(
             $collision === 'identity' ? $definition->getId() : PermissionId::generate(),
@@ -209,7 +259,7 @@ final class ManagedPolicyTest extends TestCase
     public function testRemovalFences(string $reference): void
     {
         $permission = $this->obsoletePermission();
-        $policy = InstallationManagedPolicy::create();
+        $policy = (new JsonManagedPolicy())->load();
         $role = Role::defineManaged(RoleId::generate(), RoleName::fromString('ROLE_OLD'), [], $this->now());
         $this->unitOfWork->commitTransactional(function () use ($reference, $permission, $role): void {
             $this->permissions->add($permission);
@@ -321,7 +371,7 @@ final class ManagedPolicyTest extends TestCase
     public function testCompetingUncommittedCreate(): void
     {
         $other = $this->connection();
-        $definition = InstallationManagedPolicy::create()->getPermissions()[0];
+        $definition = (new JsonManagedPolicy())->load()->getPermissions()[0];
         $otherPermissions = new PostgresPermissionRepository($other, new AuthorizationReferenceFences($other));
         try {
             $other->beginTransaction();
@@ -469,7 +519,7 @@ final class ManagedPolicyTest extends TestCase
         $queries->registerHandler(PreviewManagedPolicy::class, new PreviewManagedPolicyHandler($planner));
 
         return new ManagedPolicyConsole(
-            $policy ?? InstallationManagedPolicy::create(),
+            $policy ?? (new JsonManagedPolicy())->load(),
             new RoutingQueryBus($queries),
             new RoutingCommandBus($commands)
         );
@@ -506,7 +556,7 @@ final class ManagedPolicyTest extends TestCase
      */
     private function assertExactPolicy(): void
     {
-        $policy = InstallationManagedPolicy::create();
+        $policy = (new JsonManagedPolicy())->load();
         self::assertCount(25, $this->permissions->getManaged());
         self::assertCount(2, $this->roles->getManaged());
         foreach ($policy->getPermissions() as $definition) {

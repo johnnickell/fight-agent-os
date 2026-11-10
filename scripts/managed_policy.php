@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Adapter\Console\ManagedPolicyConsole;
-use App\Domain\Authorization\InstallationManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 
@@ -22,7 +22,7 @@ try {
     }
     $container = require dirname(__DIR__).'/config/services.php';
     $console = new ManagedPolicyConsole(
-        InstallationManagedPolicy::create(),
+        $container->get(ManagedPolicy::class),
         $container->get(QueryBus::class),
         $container->get(SynchronousCommandBus::class)
     );

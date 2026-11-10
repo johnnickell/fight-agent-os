@@ -51,7 +51,10 @@ return static function (Container $container): void {
             $container->get(ConsoleAssignmentPolicy::class)
         ));
     $container->set(ConsoleAssignmentPolicy::class, static fn(Container $container): ConsoleAssignmentPolicy =>
-        new ConsoleAssignmentPolicy($container->get(QueryBus::class)));
+        new ConsoleAssignmentPolicy(
+            $container->get(QueryBus::class),
+            $container->get(\App\Domain\Authorization\ManagedPolicyCatalog::class)
+        ));
     $container->get('messaging.command.router')->registerHandlers([
         InvitePendingUserHandler::commandRegistration() => InvitePendingUserHandler::class
     ]);

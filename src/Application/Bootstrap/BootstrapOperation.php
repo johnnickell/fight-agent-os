@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Bootstrap;
 
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\ManagedPolicyCatalog;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
@@ -35,7 +36,8 @@ final readonly class BootstrapOperation
         private CommandBus $commands,
         private QueryBus $queries,
         private UserRepository $users,
-        private BootstrapProgress $progress
+        private BootstrapProgress $progress,
+        private ManagedPolicyCatalog $managedPolicyCatalog
     ) {
     }
 
@@ -53,10 +55,11 @@ final readonly class BootstrapOperation
             return new BootstrapState('unknown');
         }
         try {
-            $this->commands->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
+            $policy = $this->managedPolicyCatalog->load();
+            $this->commands->execute(new ReconcileManagedPolicy($policy));
             InstallationManagedPolicy::requireReconciled($this->queries->fetch(
-                new PreviewManagedPolicy(InstallationManagedPolicy::create())
-            ));
+                new PreviewManagedPolicy($policy)
+            ), $policy);
             $role = $this->queries->fetch(new GetRoleById($roleId));
             if (!$role instanceof RoleView || !$role->getRoleId()->equals($roleId) || !$role->isManaged()) {
                 throw new LogicException('Managed bootstrap authority is unavailable.');

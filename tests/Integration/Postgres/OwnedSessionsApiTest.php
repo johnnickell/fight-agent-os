@@ -117,7 +117,9 @@ final class OwnedSessionsApiTest extends TestCase
         require dirname(__DIR__, 3).'/config/routes.php';
         require dirname(__DIR__, 3).'/config/middleware.php';
         $this->app = $app;
-        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
+        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(
+            $container->get(\Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class)
+        ));
         $this->actor = $this->user('owner@example.test');
         $this->session = $this->addSession($this->actor, $this->tokens->clock->now()->modify('-1 hour'));
         $claims = $this->tokens->claims();

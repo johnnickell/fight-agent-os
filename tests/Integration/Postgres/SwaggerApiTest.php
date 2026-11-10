@@ -121,7 +121,9 @@ final class SwaggerApiTest extends TestCase
         $this->container = require dirname(__DIR__, 3).'/config/services.php';
         $this->container->set(SystemAccessClock::class, fn(): AccessClock => $this->tokens->clock);
         $this->container->get(SynchronousCommandBus::class)->execute(
-            new ReconcileManagedPolicy(InstallationManagedPolicy::create())
+            new ReconcileManagedPolicy($this->container->get(
+                \Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class
+            ))
         );
         $this->directory = dirname(__DIR__, 3).'/var/tests/swagger-'.bin2hex(random_bytes(8));
         mkdir($this->directory, 0700, true);

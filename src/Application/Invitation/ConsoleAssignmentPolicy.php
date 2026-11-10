@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Invitation;
 
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\ManagedPolicyCatalog;
 use App\Domain\Invitation\ConsoleRoleInput;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
@@ -27,7 +28,7 @@ final readonly class ConsoleAssignmentPolicy
     /**
      * Constructs ConsoleAssignmentPolicy
      */
-    public function __construct(private QueryBus $queries)
+    public function __construct(private QueryBus $queries, private ManagedPolicyCatalog $managedPolicyCatalog)
     {
     }
 
@@ -36,9 +37,10 @@ final readonly class ConsoleAssignmentPolicy
      */
     public function requireInstallation(): void
     {
+        $policy = $this->managedPolicyCatalog->load();
         InstallationManagedPolicy::requireReconciled($this->queries->fetch(
-            new PreviewManagedPolicy(InstallationManagedPolicy::create())
-        ));
+            new PreviewManagedPolicy($policy)
+        ), $policy);
     }
 
     /**

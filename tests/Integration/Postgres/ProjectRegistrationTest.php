@@ -108,7 +108,9 @@ final class ProjectRegistrationTest extends TestCase
         $this->logs = new TestHandler();
         $this->freshApplication();
         $c = $this->container;
-        $c->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
+        $c->get(CommandBus::class)->execute(new ReconcileManagedPolicy(
+            $c->get(\Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class)
+        ));
         $permissionIds = [];
         foreach (['READ_PROJECTS', 'REGISTER_PROJECTS', 'GENERATE_REFERENCE_IDS'] as $name) {
             $permissionIds[] = $c->get(PermissionRepository::class)
@@ -831,9 +833,23 @@ JSON);
         $expected = $roles->getById($this->operationRole->getId());
         $permission = $this->container->get(PermissionRepository::class)->getByName(PermissionName::fromString($name));
         $replacement = $expected->revokePermissionFromCustom($permission->getId(), $this->time);
-        self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
-            fn(): bool => $roles->replace($expected, $replacement)
-        ));
+        // The approved complete-catalog default now grants this through Super Admin too.
+        // Revoke every fixture grant to exercise actual operation denial, not just custom-role removal.
+        $super = $roles->getById(RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID));
+        $superReplacement = $super->reconcileManaged(
+            $super->getName(),
+            array_values(array_filter(
+                $super->getPermissionIds(),
+                static fn($id): bool => !$id->equals($permission->getId())
+            )),
+            $this->time
+        );
+        $this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+            function () use ($roles, $expected, $replacement, $super, $superReplacement): void {
+                self::assertTrue($roles->replace($expected, $replacement));
+                self::assertTrue($roles->replace($super, $superReplacement));
+            }
+        );
     }
 
     /**

@@ -116,7 +116,9 @@ final class UserDirectoryApiTest extends TestCase
         require dirname(__DIR__, 3).'/config/routes.php';
         require dirname(__DIR__, 3).'/config/middleware.php';
         $this->app = $app;
-        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
+        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(
+            $container->get(\Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class)
+        ));
         $now = $tokens->clock->now()->modify('-1 minute');
         $this->actor = User::invite(UserId::generate(), EmailAddress::fromString('directory@example.test'), $now);
         $this->actor->activate(

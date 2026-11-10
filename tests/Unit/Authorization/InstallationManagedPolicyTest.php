@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Authorization;
 
-use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Adapter\Authorization\JsonManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +18,7 @@ final class InstallationManagedPolicyTest extends TestCase
      */
     public function testExactCatalogAndMemberships(): void
     {
-        $policy = InstallationManagedPolicy::create();
+        $policy = (new JsonManagedPolicy())->load();
         $names = [];
         $tiers = [];
         foreach ($policy->getPermissions() as $permission) {
@@ -50,12 +50,12 @@ final class InstallationManagedPolicyTest extends TestCase
             ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS'],
             array_map($toName, $roles[0]->getPermissionIds())
         );
-        self::assertSame($expected, array_map($toName, $roles[1]->getPermissionIds()));
+        self::assertSame($catalog, array_map($toName, $roles[1]->getPermissionIds()));
         self::assertSame($catalog, array_map($toName, $policy->getReferencedPermissionIds()));
-        self::assertSame($policy->toArray(), InstallationManagedPolicy::create()->toArray());
+        self::assertSame($policy->toArray(), (new JsonManagedPolicy())->load()->toArray());
         // Freeze the once-generated identity mapping as well as the separately asserted authority rules.
         self::assertSame(
-            '36c258416583b448910c72ff2c588b7c63e4d3e742e146cdf2152f90dfe4c252',
+            '6ca2bfcf0eb36dd5f089153df489a1e4af480802f34010ba78fa4a0a1369681d',
             hash('sha256', json_encode($policy->toArray(), JSON_THROW_ON_ERROR))
         );
     }

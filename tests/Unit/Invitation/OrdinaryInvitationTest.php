@@ -470,7 +470,7 @@ final class OrdinaryInvitationTest extends TestCase
         $audit->method('add')->willReturnCallback(function (AuditEvidence $evidence): void {
             $this->evidence[] = $evidence;
         });
-        $policy = new ConsoleAssignmentPolicy($queries);
+        $policy = new ConsoleAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy());
         $router = $this->createStub(SynchronousCommandBus::class);
         $bus = new CommandPipeline($router);
         $operation = new ConsoleUserOperation($bus, $queries, $transactions, $audit, $policy);
@@ -548,7 +548,7 @@ final class OrdinaryInvitationTest extends TestCase
      */
     private function plan(): ManagedPolicyPlan
     {
-        $policy = InstallationManagedPolicy::create();
+        $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
 
         return new ManagedPolicyPlan(
             array_map(
