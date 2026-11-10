@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Security\Authentication\AuthAdmission;
+use App\Adapter\Security\HttpSecurityConfiguration;
+use App\Domain\Invitation\InvitationRatePolicy;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\Common\Application\Service\Container;
 use Slim\Factory\AppFactory;
@@ -14,18 +17,11 @@ require sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 /** @var Container $container */
 $container = require sprintf('%s/config/services.php', dirname(__DIR__));
 
-// Only direct TLS/server authority is supported. Forwarded headers never promote HTTP to HTTPS.
-$production = !in_array(getenv('APP_ENV'), ['test', 'development', 'local'], true);
-$transport = getenv('APP_AUTH_TRANSPORT');
-$proxies = getenv('APP_AUTH_TRUSTED_PROXIES');
-if (
-    ($production && $transport !== 'direct')
-    || ($transport !== false && $transport !== 'direct')
-    || ($proxies !== false && $proxies !== '[]')
-) {
-    throw new LogicException('Invalid browser authentication transport configuration.');
-}
+// Validate the complete HTTP security graph before any route can serve a request.
+$production = $container->get(HttpSecurityConfiguration::class)->production;
 $container->get(AuthAdmission::class);
+$container->get(ActivationAdmission::class);
+$container->get(InvitationRatePolicy::class);
 if ($production) {
     $container->get(PostgresAuthAttempts::class)->check();
 }

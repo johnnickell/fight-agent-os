@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Web;
 
+use App\Adapter\Http\Middleware\SecurityHeaders;
 use Fight\Common\Application\Templating\TemplateEngine;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -64,12 +65,6 @@ final class ClientShellResponder
             ->withHeader('Cache-Control', 'no-store')
             ->withHeader('X-Content-Type-Options', 'nosniff')
             ->withHeader('Referrer-Policy', 'no-referrer')
-            ->withHeader(
-                'Content-Security-Policy',
-                implode(' ', [
-                    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:;",
-                    "font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
-                ])
-            );
+            ->withHeader('Content-Security-Policy', SecurityHeaders::CSP);
     }
 }

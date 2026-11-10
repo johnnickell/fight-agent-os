@@ -1,8 +1,9 @@
 # Local HTTPS
 
 The ordinary `./bin/up` development stack includes HTTPS at **https://localhost:18443**. It serves the existing root and
-`GET /api/v1/auth/csrf`, plus the [non-product browser shell](../../client/README.md) at `/app` after
-`./bin/client setup` and `./bin/client build`; it does not implement login or complete the production security envelope.
+`GET /api/v1/auth/csrf`, plus the [browser application](../../client/README.md) at `/app` after
+`./bin/client setup` and `./bin/client build`. Journey-owned login, activation and session controls use this
+transport inside the [shared security envelope](SECURITY_ENVELOPE.md); production enrollment remains separate.
 [TASK-00145](../../planning/tasks/00145-TASK.md) owns this transport slice;
 [TASK-00063](../../planning/tasks/00063-TASK.md) retains integrated security and production runtime policy.
 
@@ -92,7 +93,8 @@ The CSRF endpoint should return JSend success with a Secure, HttpOnly, SameSite=
 `/api/v1/auth`, and a no-store proof. Do not paste cookie/proof bodies into diagnostics. Foreign origins,
 cross-site Fetch Metadata and insecure HTTP requests must remain denied; forwarding headers cannot promote
 the inherited HTTP endpoint to HTTPS. The inherited root remains accessible over HTTP and is not automatically
-redirected. Production redirect/HSTS/CSP policy is deliberately deferred; do not add persistent localhost HSTS.
+redirected. The [shared envelope](SECURITY_ENVELOPE.md) owns integrated CSP/headers, production direct-authority
+rejection and safe HSTS semantics; no persistent localhost HSTS is added.
 
 `status` checks the live root and CSRF bootstrap using the selected curl client's default trust store. On macOS, browsers using
 the system Keychain should recognize mkcert trust after a restart. Firefox/NSS and independently installed
