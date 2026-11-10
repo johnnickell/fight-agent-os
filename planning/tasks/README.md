@@ -122,7 +122,7 @@
 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | done | [TICKET-00030](../tickets/00030-TICKET.md) |
-| [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | in-progress | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |

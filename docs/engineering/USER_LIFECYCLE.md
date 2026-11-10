@@ -1,4 +1,4 @@
-# Confirmed user disable and enable
+# Confirmed user lifecycle transitions
 
 TASK-00119 adds `POST /api/v1/users/{userId}/disable` and `/enable`. Each requires Bearer authentication and
 only its own exact current `DISABLE_USERS` or `ENABLE_USERS`, declared once on the Action and enforced by
@@ -86,4 +86,6 @@ conflicts are generic 409; malformed confirmation/state/UUID and extra body/quer
 faults, including required audit or activation issuance failure, remain redacted 500. A post-commit event
 failure can also produce 500 after durable state/audit; do not blindly retry. Resolve uncertainty through a
 fresh separately authorized detail query. This API-only slice adds no browser administration UI; TASK-00123
-owns that journey. Independent Review/QA remain separate from implementation checks.
+owns that journey. Independent technical Review and behavioral QA accepted this API-only slice; the owning
+TASK and canonical reports retain the exact candidate, verification limits and historical checkpoints.
+Acceptance does not establish deployed transport, browser readiness or production delivery.
