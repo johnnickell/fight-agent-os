@@ -2,7 +2,7 @@
 id: TICKET-00139
 epic: EPIC-00025
 title: Reconcile JSON-managed authority and access defaults
-status: ready-for-agent
+status: done
 ---
 
 # Reconcile JSON-managed authority and access defaults
@@ -108,7 +108,7 @@ internals, patch vendor or call private handlers. Follow the shared architecture
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00591](../tasks/00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | in-progress |
+| [TASK-00591](../tasks/00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
