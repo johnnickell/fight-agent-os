@@ -141,5 +141,5 @@
 | [TICKET-00136](00136-TICKET.md) | Adopt shared failures and safe error presentation | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00137](00137-TICKET.md) | Coordinate accepted TASK synchronization through PR refresh | done | [EPIC-00024](../epics/00024-EPIC.md) |
 | [TICKET-00138](00138-TICKET.md) | Serve browser journeys from root URLs | ready-for-agent | [EPIC-00025](../epics/00025-EPIC.md) |
-| [TICKET-00139](00139-TICKET.md) | Reconcile JSON-managed authority and access defaults | ready-for-agent | [EPIC-00025](../epics/00025-EPIC.md) |
+| [TICKET-00139](00139-TICKET.md) | Reconcile JSON-managed authority and access defaults | done | [EPIC-00025](../epics/00025-EPIC.md) |
 <!-- /planning:records -->

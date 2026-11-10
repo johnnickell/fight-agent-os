@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Authorization;
 
+use App\Adapter\Authorization\JsonManagedPolicy;
 use App\Adapter\Console\ManagedPolicyConsole;
-use App\Domain\Authorization\InstallationManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
@@ -26,7 +26,7 @@ final class ManagedPolicyConsoleTest extends TestCase
     #[DataProvider('operations')]
     public function testOperation(string $operation): void
     {
-        $policy = InstallationManagedPolicy::create();
+        $policy = (new JsonManagedPolicy())->load();
         $queries = $this->createMock(QueryBus::class);
         $commands = $this->createMock(SynchronousCommandBus::class);
         $queries->expects($operation === 'preview' ? self::once() : self::never())
@@ -73,7 +73,7 @@ final class ManagedPolicyConsoleTest extends TestCase
         $failure = new RuntimeException('SQL password=private-token postgresql://private-host stack trace');
         $queries->method('fetch')->willThrowException($failure);
         $commands->method('execute')->willThrowException($failure);
-        $exit = (new ManagedPolicyConsole(InstallationManagedPolicy::create(), $queries, $commands))->run(
+        $exit = (new ManagedPolicyConsole((new JsonManagedPolicy())->load(), $queries, $commands))->run(
             [$operation, '--internal'],
             static function (): void {
                 self::fail('Failure must not emit a success or partial plan.');
@@ -97,7 +97,7 @@ final class ManagedPolicyConsoleTest extends TestCase
         $commands = $this->createMock(SynchronousCommandBus::class);
         $queries->expects(self::never())->method('fetch');
         $commands->expects(self::never())->method('execute');
-        self::assertSame(2, (new ManagedPolicyConsole(InstallationManagedPolicy::create(), $queries, $commands))->run(
+        self::assertSame(2, (new ManagedPolicyConsole((new JsonManagedPolicy())->load(), $queries, $commands))->run(
             $arguments,
             static function (): void {
                 self::fail('Invalid input must not emit a result.');

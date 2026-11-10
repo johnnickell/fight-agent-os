@@ -103,7 +103,9 @@ final class OrdinaryInvitationTest extends TestCase
         $this->operator = UserId::generate()->toString();
         $this->container = $this->newContainer();
         $this->container->get(SynchronousCommandBus::class)->execute(
-            new ReconcileManagedPolicy(InstallationManagedPolicy::create())
+            new ReconcileManagedPolicy($this->container->get(
+                \Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class
+            ))
         );
         $this->container->get(EventDispatcher::class)->addHandler(
             ClassName::underscore(AllEvents::class),
@@ -565,7 +567,9 @@ SQL);
             ClassName::underscore(UserInvited::class),
             function (): void {
                 $this->container->get(SynchronousCommandBus::class)->execute(
-                    new ReconcileManagedPolicy(InstallationManagedPolicy::create())
+                    new ReconcileManagedPolicy($this->container->get(
+                        \Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class
+                    ))
                 );
             }
         );

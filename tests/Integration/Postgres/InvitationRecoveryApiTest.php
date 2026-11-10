@@ -136,7 +136,9 @@ final class InvitationRecoveryApiTest extends TestCase
         require dirname(__DIR__, 3).'/config/routes.php';
         require dirname(__DIR__, 3).'/config/middleware.php';
         $this->app = $app;
-        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
+        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(
+            $container->get(\Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class)
+        ));
         $this->actor = User::invite(UserId::generate(), EmailAddress::fromString('actor@example.test'), $now);
         $this->actor->activate(PasswordHash::fromString((string) password_hash('fixture', PASSWORD_BCRYPT)), $now);
         $this->actor->assignRole(RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID), $now);

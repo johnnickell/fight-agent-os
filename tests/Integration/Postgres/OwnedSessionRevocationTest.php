@@ -118,7 +118,9 @@ final class OwnedSessionRevocationTest extends TestCase
         $container->set(App::class, static fn(): App => $app);
         require dirname(__DIR__, 3).'/config/routes.php';
         require dirname(__DIR__, 3).'/config/middleware.php';
-        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
+        $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(
+            $container->get(\Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class)
+        ));
         $this->actor = $this->user('owner@example.test');
         $this->current = $this->session($this->actor);
         $container->get(EventDispatcher::class)->addHandler(

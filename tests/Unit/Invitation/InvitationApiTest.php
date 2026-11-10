@@ -354,7 +354,7 @@ final class InvitationApiTest extends TestCase
             if ($this->fault === 'policy') {
                 throw new LogicException('private-marker');
             }
-            $policy = InstallationManagedPolicy::create();
+            $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
 
             return new ManagedPolicyPlan(
                 array_map(
@@ -411,7 +411,7 @@ final class InvitationApiTest extends TestCase
         return new IssueInvitation(
             $authority,
             $limiter,
-            new ConsoleAssignmentPolicy($queries),
+            new ConsoleAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
             $users,
             $commands,
             $queries,

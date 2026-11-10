@@ -1,0 +1,12 @@
+[
+    {
+        "id": "01a132ed-a1d6-4d5a-ba84-55c8cafc8f43",
+        "name": "ROLE_USER",
+        "permissions": ["VIEW_DASHBOARD", "READ_OWN_SESSIONS", "DELETE_OWN_SESSIONS"]
+    },
+    {
+        "id": "01a132ed-a1d6-48d4-8ab3-ee366b77ee3c",
+        "name": "ROLE_SUPER_ADMIN",
+        "permissions": "*"
+    }
+]

@@ -58,9 +58,10 @@ revocation; the next request checks fresh authority and refuses. Business claim 
 | `REGISTER_PROJECTS` | `ADMIN_SAFE` | Ordinary creation, independently of read permission |
 | `GENERATE_REFERENCE_IDS` | `ADMIN_SAFE` | Exceptional non-reserving technical reference generation |
 
-The catalog defines/references these permissions but assigns none to managed Roles, including Super Admin.
-Obtain separately authorized grants through existing assignment contracts; reconciliation alone enables no
-endpoint. TASK-00498 still owns future Workspace Admin and explicit User/Agent Project access/filtering.
+The [JSON managed catalog](MANAGED_POLICY.md#policy-ownership) defines/references these permissions. The approved
+complete-catalog Super Admin default includes them upon reconciliation; User/custom/Agent memberships do not
+expand implicitly. Other grants require existing authorized assignment operations. Endpoints still enforce their
+exact operation and target admission; membership is not an authorization bypass. TASK-00498 still owns future Workspace Admin and explicit User/Agent Project access/filtering.
 Registration grants no Project access, checkout, Planning, Agent, Runner or publication authority.
 
 ## Versioned HTTP API
