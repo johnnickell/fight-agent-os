@@ -20,7 +20,7 @@ export function ShellLayout({
       <header className={`shell-header border-bottom${publicJourney ? ' activation-header' : ''}`}>
         <div className="container shell-width shell-header-row">
           <nav aria-label="Application">
-            <a href="/app">Fight Agent OS</a>
+            <a href="/">Fight Agent OS</a>
           </nav>
           {theme && <ThemeSelector theme={theme} compact />}
         </div>

@@ -42,11 +42,11 @@ return static function (Container $container): void {
     $container->set(Clock::class, static fn(): Clock => new SystemDeliveryClock());
     $container->set('credential-delivery.activation-link', static function (): CanonicalCredentialLink {
         $origin = getenv('APP_ACTIVATION_ORIGIN') ?: '';
-        if (getenv('APP_ACTIVATION_PATH') !== '/app/activate' || $origin !== getenv('APP_BROWSER_ORIGIN')) {
+        if (getenv('APP_ACTIVATION_PATH') !== '/activate' || $origin !== getenv('APP_BROWSER_ORIGIN')) {
             throw new InvalidArgumentException('Configure activation for the trusted browser origin and public path.');
         }
 
-        return new CanonicalCredentialLink($origin, '/app/activate');
+        return new CanonicalCredentialLink($origin, '/activate');
     });
     $container->set('credential-delivery.password-reset-link', static fn(): CanonicalCredentialLink =>
         new CanonicalCredentialLink(

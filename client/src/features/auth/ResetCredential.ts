@@ -27,7 +27,7 @@ export function captureReset(
   location: Pick<Location, 'pathname' | 'hash'>,
   history: Pick<History, 'replaceState'>
 ): boolean {
-  if (location.pathname !== '/app/reset-password/complete') return true;
+  if (location.pathname !== '/reset-password/complete') return true;
   let material: Material | null = null;
   let replaced = true;
   try {
@@ -48,7 +48,7 @@ export function captureReset(
     material = null;
   }
   try {
-    history.replaceState(null, '', '/app/reset-password/complete');
+    history.replaceState(null, '', '/reset-password/complete');
   } catch {
     material = null;
     replaced = false;
@@ -74,11 +74,11 @@ export function discardResetFragment(
   location: Pick<Location, 'pathname' | 'hash'>,
   history: Pick<History, 'replaceState'>
 ): boolean {
-  if (location.pathname !== '/app/reset-password/complete' || location.hash === '') return false;
+  if (location.pathname !== '/reset-password/complete' || location.hash === '') return false;
   const retire = location.hash !== '#main-content';
   if (retire) takeReset(host).clear();
   try {
-    history.replaceState(null, '', '/app/reset-password/complete');
+    history.replaceState(null, '', '/reset-password/complete');
   } catch {
     // Bootstrap/root retirement denies further intake even when history is unavailable.
   }

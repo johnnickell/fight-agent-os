@@ -6,7 +6,6 @@ export type ApplicationRoute = RegisteredRoute &
     title: string;
     access: 'public' | 'protected';
     destination:
-      | 'root'
       | 'login'
       | 'recovery'
       | 'reset-completion'
@@ -33,43 +32,36 @@ const publicAccess = [{ kind: 'public' }] as const;
 
 /** Complete route metadata is shared by outlets, navigation and one-shot intent evaluation */
 export const applicationRoutes: readonly ApplicationRoute[] = [
-  ...['/', '/app', '/app/'].map((pathname): ApplicationRoute => ({
-    pathname,
-    title: 'Application',
-    access: 'public',
-    requirements: publicAccess,
-    destination: 'root'
-  })),
   {
-    pathname: '/app/login',
+    pathname: '/login',
     title: 'Sign in',
     access: 'public',
     requirements: publicAccess,
     destination: 'login'
   },
-  ...['/app/reset-password', '/app/login/recovery'].map((pathname): ApplicationRoute => ({
-    pathname,
+  {
+    pathname: '/reset-password',
     title: 'Reset password',
     access: 'public',
     requirements: publicAccess,
     destination: 'recovery'
-  })),
+  },
   {
-    pathname: '/app/reset-password/complete',
+    pathname: '/reset-password/complete',
     title: 'Complete password reset',
     access: 'public',
     requirements: publicAccess,
     destination: 'reset-completion'
   },
   {
-    pathname: '/app/activate',
+    pathname: '/activate',
     title: 'Activate invitation',
     access: 'public',
     requirements: publicAccess,
     destination: 'activation'
   },
   {
-    pathname: '/app/dashboard',
+    pathname: '/',
     title: 'Dashboard',
     icon: 'dashboard',
     access: 'protected',
@@ -79,7 +71,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     intendedRoute: {}
   },
   {
-    pathname: '/app/swagger',
+    pathname: '/swagger',
     title: 'API Docs',
     icon: 'apiDocs',
     access: 'protected',
@@ -89,7 +81,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     intendedRoute: {}
   },
   {
-    pathname: '/app/account',
+    pathname: '/account',
     title: 'Account & Security',
     icon: 'shield',
     access: 'protected',
@@ -101,7 +93,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
       'Change your password or review your active sessions below. Individual revocation is not available yet.'
   },
   {
-    pathname: '/app/account/password',
+    pathname: '/account/password',
     title: 'Change Password',
     icon: 'key',
     access: 'protected',
@@ -110,7 +102,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     group: 'Security'
   },
   {
-    pathname: '/app/account/sessions',
+    pathname: '/account/sessions',
     title: 'Active Sessions',
     icon: 'sessions',
     access: 'protected',
@@ -122,7 +114,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
       'Review your usable sign-ins and current session. Individual revocation is not available yet.'
   },
   {
-    pathname: '/app/admin/users',
+    pathname: '/admin/users',
     title: 'Users',
     icon: 'users',
     access: 'protected',
@@ -133,7 +125,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     availability: 'Read the installation-wide user directory and current role assignments.'
   },
   {
-    pathname: '/app/admin/invite',
+    pathname: '/admin/invite',
     title: 'Invite User',
     icon: 'invite',
     access: 'protected',
@@ -143,7 +135,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     availability: 'Invite one ordinary user. The server assigns only the managed User role.'
   },
   {
-    pathname: '/app/admin/invite-super-admin',
+    pathname: '/admin/invite-super-admin',
     title: 'Invite Super Admin',
     icon: 'elevatedInvite',
     access: 'protected',
@@ -153,7 +145,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     availability: 'Invite a pending Super Admin only after explicit installation-wide confirmation.'
   },
   {
-    pathname: '/app/admin/invitations',
+    pathname: '/admin/invitations',
     title: 'Invitation Admin',
     icon: 'invitations',
     access: 'protected',
@@ -168,7 +160,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
 
 export function matchApplicationRoute(pathname: string): ApplicationRoute | undefined {
   const target =
-    /^\/app\/admin\/invitations\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/.exec(
+    /^\/admin\/invitations\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/.exec(
       pathname
     )?.[1];
   if (target)

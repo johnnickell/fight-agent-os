@@ -232,7 +232,7 @@ export default function OwnedSessionsPage({
           : 'Reload sessions'}
       </Button>
       <p>
-        <a href="/app/account">Back to Account &amp; Security</a>
+        <a href="/account">Back to Account &amp; Security</a>
       </p>
     </section>
   );

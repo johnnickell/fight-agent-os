@@ -3,9 +3,9 @@ export function clearLoginLocation(
   location: Pick<Location, 'pathname'>,
   history: Pick<History, 'replaceState'>
 ): boolean {
-  if (location.pathname !== '/app/login') return true;
+  if (location.pathname !== '/login') return true;
   try {
-    history.replaceState(null, '', '/app/login');
+    history.replaceState(null, '', '/login');
     return true;
   } catch {
     return false;

@@ -43,7 +43,7 @@ export function ShellApplication({
   useLayoutEffect(() => {
     if (!validRuntime || route?.destination !== 'reset-completion') reset?.clear();
     if (!validRuntime) {
-      window.history.replaceState(null, '', '/app');
+      window.history.replaceState(null, '', '/');
     } else if (
       inertPublic &&
       route?.destination !== 'activation' &&
@@ -53,7 +53,7 @@ export function ShellApplication({
         window.location.pathname === pathname &&
         (!route || window.location.search || window.location.hash)
       )
-        window.history.replaceState(null, '', route ? pathname : '/app/not-found');
+        window.history.replaceState(null, '', route ? pathname : '/not-found');
     }
   }, [validRuntime, inertPublic, pathname, route, reset]);
   return (

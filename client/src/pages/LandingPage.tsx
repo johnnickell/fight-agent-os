@@ -8,10 +8,10 @@ export default function LandingPage({ route }: { route: ApplicationRoute }) {
     <section>
       <PageHeading>{route.title}</PageHeading>
       <p>{route.availability}</p>
-      {route.pathname === '/app/account' ? (
+      {route.pathname === '/account' ? (
         <p>
-          <a href="/app/account/password">Change password</a> — confirm your current password and
-          end all sessions.
+          <a href="/account/password">Change password</a> — confirm your current password and end
+          all sessions.
         </p>
       ) : (
         <p>No records or operations are provided on this destination yet.</p>

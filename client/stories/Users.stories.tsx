@@ -90,11 +90,11 @@ function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
     void d.cache.load().then(() => setReady(true));
     return () => d.cache.dispose();
   }, [d]);
-  const route = matchApplicationRoute('/app/admin/users');
+  const route = matchApplicationRoute('/admin/users');
   return ready && route ? (
     <ApplicationFrame
       cache={d.cache}
-      pathname="/app/admin/users"
+      pathname="/admin/users"
       title="Users"
       onLogout={() => {
         void d.cache.signal('logout');

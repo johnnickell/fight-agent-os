@@ -53,10 +53,7 @@ export const WithoutTheme: Story = {
   args: { withoutTheme: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('link', { name: 'Fight Agent OS' })).toHaveAttribute(
-      'href',
-      '/app'
-    );
+    await expect(canvas.getByRole('link', { name: 'Fight Agent OS' })).toHaveAttribute('href', '/');
     await expect(canvas.queryByRole('group', { name: 'Appearance' })).not.toBeInTheDocument();
     await expect(canvas.getByRole('main')).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(

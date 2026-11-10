@@ -71,7 +71,7 @@ export default function InviteUserPage({
   };
   const complete = outcome?.kind === 'accepted' || outcome?.kind === 'unconfirmed';
   const target = complete ? outcome.userId : null;
-  const statusPath = target ? `/app/admin/invitations/${target}` : null;
+  const statusPath = target ? `/admin/invitations/${target}` : null;
   const error = outcome?.kind === 'rejected' ? outcome.reason : null;
   return (
     <section className="invite-user-page" aria-labelledby="invite-user-heading">
@@ -249,12 +249,12 @@ export default function InviteUserPage({
         )}
       </div>
       <p>
-        {permitted('/app/admin/users') ? (
-          <a href="/app/admin/users">Back to Users</a>
-        ) : permitted('/app/dashboard') ? (
-          <a href="/app/dashboard">Back to Dashboard</a>
+        {permitted('/admin/users') ? (
+          <a href="/admin/users">Back to Users</a>
+        ) : permitted('/') ? (
+          <a href="/">Back to Dashboard</a>
         ) : (
-          <a href="/app/account">Back to Account &amp; Security</a>
+          <a href="/account">Back to Account &amp; Security</a>
         )}
       </p>
     </section>

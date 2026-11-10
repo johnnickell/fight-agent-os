@@ -97,7 +97,7 @@ URL matching; preserve the existing operations behind renamed destinations.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00590](../tasks/00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | ready-for-agent |
+| [TASK-00590](../tasks/00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

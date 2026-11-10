@@ -95,7 +95,7 @@ function Example({ scenario = 'ready', dark = false }: { scenario?: Scenario; da
       {ready ? (
         <ApplicationFrame
           cache={d.cache}
-          pathname="/app/admin/invite-super-admin"
+          pathname="/admin/invite-super-admin"
           title="Invite Super Admin"
           onLogout={() => {
             void d.cache.signal('logout');

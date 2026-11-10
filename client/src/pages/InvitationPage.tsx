@@ -197,7 +197,7 @@ export default function InvitationPage({
         Pending invitation
       </h1>
       <p>Canonical user identity and invitation recovery. All times are UTC.</p>
-      {allowed && <a href="/app/admin/users">Back to Users</a>}
+      {allowed && <a href="/admin/users">Back to Users</a>}
       {!allowed || !isUserId(userId) ? (
         <ContentState
           kind="error"

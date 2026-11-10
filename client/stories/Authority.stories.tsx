@@ -15,7 +15,7 @@ import type { RegisteredRoute } from '@/routes/GuardedRoute';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 const route: RegisteredRoute = {
-  pathname: '/app/example',
+  pathname: '/example',
   requirements: [{ kind: 'authenticated' }, { kind: 'permissions', all: ['VIEW_EXAMPLE'] }]
 };
 // Generated through the platform factory, not an invented UUID or an application identity.

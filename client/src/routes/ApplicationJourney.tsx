@@ -45,7 +45,7 @@ export function ApplicationJourney({
         title="Sign-in cleared"
         message="Reload this page to sign in again. Browser history does not restore credentials."
       />
-      <a href="/app/login" data-reload-application>
+      <a href="/login" data-reload-application>
         Sign in
       </a>
     </ShellLayout>
@@ -80,8 +80,8 @@ export function ApplicationView({
     if (credential.status === 'authenticated') session.passwordChange.clearCompletion();
   }, [credential.status, session]);
   useEffect(() => {
-    if (passwordChanged && credential.status === 'terminal' && pathname !== '/app/login')
-      navigate('/app/login', true);
+    if (passwordChanged && credential.status === 'terminal' && pathname !== '/login')
+      navigate('/login', true);
   }, [passwordChanged, credential.status, pathname, navigate]);
   const pendingTarget = useRef<string | null>(null);
   const capturedPath = useRef<string | null>(null);
@@ -112,7 +112,7 @@ export function ApplicationView({
       session.intent.capture(target);
     }
     if (window.location.pathname === pathname && (window.location.search || window.location.hash))
-      window.history.replaceState(null, '', route ? pathname : '/app/not-found');
+      window.history.replaceState(null, '', route ? pathname : '/not-found');
   }, [
     pathname,
     route,
@@ -132,8 +132,8 @@ export function ApplicationView({
   useEffect(() => {
     if (authority.status !== 'authenticated' || credential.status !== 'authenticated') return;
     const intended = session.intent.consume();
-    if (route?.destination === 'root' || route?.destination === 'login') {
-      const target = intended ?? '/app/dashboard';
+    if (route?.destination === 'login') {
+      const target = intended ?? '/';
       // One replace, never a redirect-to-login cycle for a resolved denied principal.
       if (pendingTarget.current !== target) {
         pendingTarget.current = target;
@@ -228,7 +228,7 @@ export function ApplicationView({
           <Button
             onClick={() => {
               session.coordinator.showLogin();
-              navigate('/app/login', true);
+              navigate('/login', true);
             }}
           >
             Sign in again
@@ -245,8 +245,8 @@ export function ApplicationView({
       />
     );
   } else if (route && authority.status === 'authenticated') {
-    if (route.destination === 'root' || route.destination === 'login') {
-      const dashboard = applicationRoutes.find((entry) => entry.pathname === '/app/dashboard');
+    if (route.destination === 'login') {
+      const dashboard = applicationRoutes.find((entry) => entry.pathname === '/');
       content =
         dashboard && evaluateAccess(authority, dashboard.requirements) === 'forbidden' ? (
           <AuthorityStatus state={authority} decision="forbidden" />
@@ -317,13 +317,12 @@ export function ApplicationView({
       credential.signOutUnconfirmed === undefined &&
       route?.destination !== 'login'
     )
-      navigate('/app/login', true);
+      navigate('/login', true);
   }, [credential, route, navigate]);
   const statusOnly =
     credential.status !== 'anonymous' &&
     ((!retained && credential.status !== 'authenticated') ||
       authority.status !== 'authenticated' ||
-      route?.destination === 'root' ||
       route?.destination === 'login' ||
       evaluateAccess(authority, route?.requirements) !== 'allowed');
   const outlet = (

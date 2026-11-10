@@ -82,7 +82,7 @@ export function ResetRequestPage({
         )}
       </div>
       <p className="activation-footnote">
-        <a href="/app/login">Return to sign in</a>
+        <a href="/login">Return to sign in</a>
       </p>
     </section>
   );

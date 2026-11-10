@@ -172,7 +172,7 @@ function LoginForm({
       <Button type="submit" busy={form.busy} busyLabel="Signing in…">
         Sign in
       </Button>
-      <a href="/app/reset-password">Forgot your password?</a>
+      <a href="/reset-password">Forgot your password?</a>
     </form>
   );
 }

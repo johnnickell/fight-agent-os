@@ -59,7 +59,7 @@ export function ResetCompletionJourney({
           title="Open a new reset link"
           message="For your security this page no longer holds a reset link. Browser history cannot restore it."
         />
-        <a href="/app/reset-password">Request a new link</a>
+        <a href="/reset-password">Request a new link</a>
       </section>
     );
   return <ResetCompletionPage {...dependencies} />;

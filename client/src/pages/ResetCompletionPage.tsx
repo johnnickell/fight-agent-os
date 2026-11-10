@@ -28,7 +28,7 @@ function LinkRecovery() {
         title="This link cannot be used"
         message="It may be expired, replaced or already used. Reload and browser history cannot restore a reset link."
       />
-      <a href="/app/reset-password">Request a new link</a>
+      <a href="/reset-password">Request a new link</a>
     </div>
   );
 }
@@ -77,7 +77,7 @@ export function ResetCompletionPage({
               All sessions for this account have ended. Your password and reset link have been
               cleared. No new session has been created.
             </Notice>
-            <a href="/app/login" data-reload-application>
+            <a href="/login" data-reload-application>
               Sign in
             </a>
           </>
@@ -105,7 +105,7 @@ export function ResetCompletionPage({
       </div>
       <p className="activation-footnote">
         Reset links expire after one hour. Need help?{' '}
-        <a href="/app/reset-password">Request a new link</a>.
+        <a href="/reset-password">Request a new link</a>.
       </p>
     </section>
   );

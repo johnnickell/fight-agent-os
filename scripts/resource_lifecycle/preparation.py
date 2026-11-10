@@ -113,8 +113,8 @@ def prepare(safe, checkout, project, entry):
     if not private.exists():
         values = {'APP_ENV': 'local', 'APP_DEBUG': 'false', 'APP_AUTH_TRANSPORT': 'direct',
                   'APP_AUTH_TRUSTED_PROXIES': '[]', 'APP_BROWSER_ORIGIN': 'https://' + host,
-                  'APP_ACTIVATION_ORIGIN': 'https://' + host, 'APP_ACTIVATION_PATH': '/app/activate',
-                  'APP_PASSWORD_RESET_ORIGIN': 'https://' + host, 'APP_PASSWORD_RESET_PATH': '/app/reset-password/complete',
+                  'APP_ACTIVATION_ORIGIN': 'https://' + host, 'APP_ACTIVATION_PATH': '/activate',
+                  'APP_PASSWORD_RESET_ORIGIN': 'https://' + host, 'APP_PASSWORD_RESET_PATH': '/reset-password/complete',
                   'APP_CREDENTIAL_DELIVERY_ADAPTER': 'null', 'POSTGRES_DB': 'agent_os',
                   'POSTGRES_USER': 'agent_os', 'POSTGRES_PASSWORD': secrets.token_hex(24),
                   'POSTGRES_TEST_DB': 'agent_os_test', 'POSTGRES_TEST_USER': 'agent_os_test',

@@ -40,7 +40,7 @@ export function CurrentSessionControls({
             ? 'Access has been cleared from this page. Other sessions are unchanged.'
             : 'Access has been cleared from this page, but server revocation could not be confirmed. Close this page if you are using a shared device.'}
         </Notice>
-        <a href="/app/login">Return to sign in</a>
+        <a href="/login">Return to sign in</a>
       </section>
     );
   return (

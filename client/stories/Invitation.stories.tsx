@@ -74,7 +74,7 @@ function Example({ scenario = 'ready', dark = false }: { scenario?: Scenario; da
   return ready ? (
     <ApplicationFrame
       cache={d.cache}
-      pathname={`/app/admin/invitations/${d.target.user_id}`}
+      pathname={`/admin/invitations/${d.target.user_id}`}
       title="Pending invitation"
       onLogout={() => {
         void d.cache.signal('logout');

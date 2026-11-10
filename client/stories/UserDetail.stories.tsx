@@ -54,7 +54,7 @@ function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
   return ready ? (
     <ApplicationFrame
       cache={d.cache}
-      pathname="/app/admin/users"
+      pathname="/admin/users"
       title="Users"
       onLogout={() => {
         void d.cache.signal('logout');

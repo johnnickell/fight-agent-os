@@ -31,7 +31,7 @@ export function captureActivation(
   location: Pick<Location, 'pathname' | 'hash'>,
   history: Pick<History, 'replaceState'>
 ): boolean {
-  if (location.pathname !== '/app/activate') return true;
+  if (location.pathname !== '/activate') return true;
   let material: Material | null = null;
   let replaced = true;
   const hash = location.hash;
@@ -53,7 +53,7 @@ export function captureActivation(
         material = { userId, credential };
       }
     }
-    history.replaceState(null, '', '/app/activate');
+    history.replaceState(null, '', '/activate');
   } catch {
     material = null;
     replaced = false;
@@ -74,11 +74,11 @@ export function discardActivationFragment(
   location: Pick<Location, 'pathname' | 'hash'>,
   history: Pick<History, 'replaceState'>
 ): boolean {
-  if (location.pathname !== '/app/activate' || location.hash === '') return false;
+  if (location.pathname !== '/activate' || location.hash === '') return false;
   const retire = location.hash !== '#main-content';
   if (retire) takeActivation(host).clear();
   try {
-    history.replaceState(null, '', '/app/activate');
+    history.replaceState(null, '', '/activate');
   } catch {
     /* Intake remains denied. */
   }

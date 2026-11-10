@@ -9,7 +9,7 @@ import { matchApplicationRoute } from '@/routes/applicationRoutes';
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type { DirectoryUser, UserDirectoryService } from '@/features/users/UserDirectoryService';
 
-const requirements = matchApplicationRoute('/app/admin/users')?.requirements;
+const requirements = matchApplicationRoute('/admin/users')?.requirements;
 type State =
   | { kind: 'loading' }
   | { kind: 'retired' }

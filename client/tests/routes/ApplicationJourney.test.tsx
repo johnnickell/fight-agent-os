@@ -30,7 +30,7 @@ afterEach(() => {
 
 function Mounted({
   owner,
-  initial = '/app',
+  initial = '/',
   changed = vi.fn()
 }: {
   owner: ReturnType<typeof applicationSession>;
@@ -51,6 +51,16 @@ function Mounted({
 }
 
 describe('authoritative frame transitions', () => {
+  it('redirects an anonymous root entry to canonical login without exposing Dashboard content', async () => {
+    const owner = session(undefined, undefined, true);
+    owner.refresh.mockResolvedValueOnce(apiFailure('authentication'));
+    const changed = vi.fn();
+    render(<Mounted owner={owner} changed={changed} />);
+    await act(() => owner.coordinator.restore());
+    expect(await screen.findByLabelText('Password (required)')).toBeVisible();
+    expect(changed).toHaveBeenCalledExactlyOnceWith('/login', true);
+    expect(screen.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument();
+  });
   it('does not replay a forbidden session read when sole-cache revalidation remounts its guard', async () => {
     const owner = session(['READ_OWN_SESSIONS']);
     const fetch = vi.fn(() =>
@@ -72,7 +82,7 @@ describe('authoritative frame transitions', () => {
         }
       }
     );
-    render(<Mounted owner={owner} initial="/app/account/sessions" />);
+    render(<Mounted owner={owner} initial="/account/sessions" />);
     await act(() => owner.coordinator.restore());
     expect(await screen.findByText('Access forbidden')).toBeVisible();
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -100,7 +110,7 @@ describe('authoritative frame transitions', () => {
         }
       }
     );
-    render(<Mounted owner={owner} initial="/app/admin/users" />);
+    render(<Mounted owner={owner} initial="/admin/users" />);
     await act(() => owner.coordinator.restore());
     expect(await screen.findByText('Access forbidden')).toBeVisible();
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -108,8 +118,8 @@ describe('authoritative frame transitions', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
   it.each([
-    ['/app/swagger', 'API Docs', 'READ_SWAGGER'],
-    ['/app/admin/invitations', 'Invitation Admin', 'READ_USERS']
+    ['/swagger', 'API Docs', 'READ_SWAGGER'],
+    ['/admin/invitations', 'Invitation Admin', 'READ_USERS']
   ])('uses the concise destination title throughout %s', async (pathname, title, permission) => {
     const owner = session([permission]);
     render(<Mounted owner={owner} initial={pathname} />);
@@ -118,7 +128,7 @@ describe('authoritative frame transitions', () => {
     expect(screen.getByRole('main', { name: title })).toBeVisible();
     expect(document.title).toBe(`${title} — Fight Agent OS`);
   });
-  it('withholds all private DOM through restoration and /me, then replaces root once', async () => {
+  it('withholds all private DOM through restoration and /me, then renders canonical root without redirect', async () => {
     const pending = deferred<PrincipalLoadResult>();
     const owner = session(undefined, () => pending.promise);
     const changed = vi.fn();
@@ -137,7 +147,7 @@ describe('authoritative frame transitions', () => {
       await pending.promise;
     });
     expect(await screen.findByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
-    expect(changed).toHaveBeenCalledExactlyOnceWith('/app/dashboard', true);
+    expect(changed).not.toHaveBeenCalled();
     expect(owner.load).toHaveBeenCalledOnce();
   });
 
@@ -150,7 +160,7 @@ describe('authoritative frame transitions', () => {
     expect(screen.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Dashboard' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Password (required)')).not.toBeInTheDocument();
-    expect(changed).toHaveBeenCalledTimes(1);
+    expect(changed).not.toHaveBeenCalled();
   });
 
   it.each(applicationRoutes.filter((route) => route.access === 'protected'))(
@@ -185,12 +195,12 @@ describe('authoritative frame transitions', () => {
   );
 
   it.each([
-    ['/app/swagger', 'READ_SWAGGER'],
-    ['/app/account/sessions', 'READ_OWN_SESSIONS'],
-    ['/app/admin/users', 'READ_USERS'],
-    ['/app/admin/invite', 'INVITE_USERS'],
-    ['/app/admin/invite-super-admin', 'ASSIGN_SUPER_ADMIN'],
-    ['/app/admin/invitations', 'READ_USERS']
+    ['/swagger', 'READ_SWAGGER'],
+    ['/account/sessions', 'READ_OWN_SESSIONS'],
+    ['/admin/users', 'READ_USERS'],
+    ['/admin/invite', 'INVITE_USERS'],
+    ['/admin/invite-super-admin', 'ASSIGN_SUPER_ADMIN'],
+    ['/admin/invitations', 'READ_USERS']
   ])('denies %s when exact %s is missing, including joint requirements', async (path, missing) => {
     const owner = session(
       [
@@ -214,7 +224,7 @@ describe('authoritative frame transitions', () => {
   it('retires page, user and controls on invalidation and adopts permission change only after fresh /me', async () => {
     const pending = deferred<PrincipalLoadResult>();
     const owner = session();
-    render(<Mounted owner={owner} initial="/app/dashboard" />);
+    render(<Mounted owner={owner} initial="/" />);
     await act(() => owner.coordinator.restore());
     await screen.findByRole('heading', { name: 'Dashboard' });
     owner.load.mockImplementationOnce(() => pending.promise);
@@ -231,10 +241,10 @@ describe('authoritative frame transitions', () => {
 
   it('removes all protected controls on terminal expiry, clears intent, and offers explicit sign in', async () => {
     const owner = session();
-    render(<Mounted owner={owner} initial="/app/dashboard" />);
+    render(<Mounted owner={owner} initial="/" />);
     await act(() => owner.coordinator.restore());
     await screen.findByRole('heading', { name: 'Dashboard' });
-    owner.intent.capture('/app/account');
+    owner.intent.capture('/account');
     act(() => owner.coordinator.terminal());
     expect(screen.getByText('Your session has expired or ended')).toBeVisible();
     expect(screen.queryByText(principal.email)).not.toBeInTheDocument();
@@ -242,7 +252,7 @@ describe('authoritative frame transitions', () => {
     expect(screen.queryByRole('button', { name: 'User Menu' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Sign in again' }));
     expect(await screen.findByLabelText('Password (required)')).toBeVisible();
-    expect(owner.intent.capture('/app/account')).toBe(true);
+    expect(owner.intent.capture('/account')).toBe(true);
   });
 
   it('keeps network recovery explicit and bounded, never displaying retained principal data', async () => {
@@ -262,7 +272,7 @@ describe('authoritative frame transitions', () => {
     'holds a %s projection failure until explicit retry',
     async (status) => {
       const owner = session(undefined, () => Promise.resolve({ status }));
-      render(<Mounted owner={owner} initial="/app/dashboard" />);
+      render(<Mounted owner={owner} initial="/" />);
       await act(() => owner.coordinator.restore());
       expect(await screen.findByText('Access check failed')).toBeVisible();
       expect(owner.load).toHaveBeenCalledOnce();
@@ -275,17 +285,17 @@ describe('authoritative frame transitions', () => {
 
   it('consumes permitted intended path once after login and discards denied intent', async () => {
     const owner = session();
-    owner.intent.capture('/app/account/sessions');
-    render(<Mounted owner={owner} initial="/app/login" />);
+    owner.intent.capture('/account/sessions');
+    render(<Mounted owner={owner} initial="/login" />);
     await act(() => owner.coordinator.restore());
     expect(await screen.findByRole('heading', { name: 'Active Sessions' })).toBeVisible();
     expect(owner.intent.consume()).toBeNull();
   });
 
   it('rejects credential-bearing direct query before sanitizing history', async () => {
-    window.history.replaceState(null, '', '/app/account?token=private-marker#cookie-marker');
+    window.history.replaceState(null, '', '/account?token=private-marker#cookie-marker');
     const owner = session();
-    render(<Mounted owner={owner} initial="/app/account" />);
+    render(<Mounted owner={owner} initial="/account" />);
     expect(window.location.search).toBe('');
     expect(window.location.hash).toBe('');
     await act(() => owner.coordinator.restore());
@@ -297,7 +307,7 @@ describe('authoritative frame transitions', () => {
   it('clears intent and displays truthful uncertain logout without further restoration', async () => {
     const owner = session();
     owner.logout.mockResolvedValueOnce(apiFailure('network'));
-    render(<Mounted owner={owner} initial="/app/dashboard" />);
+    render(<Mounted owner={owner} initial="/" />);
     await act(() => owner.coordinator.restore());
     await screen.findByRole('heading', { name: 'Dashboard' });
     fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));
