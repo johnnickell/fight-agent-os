@@ -166,7 +166,7 @@
 | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | wontfix | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done | [TICKET-00039](../tickets/00039-TICKET.md) |
-| [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | done | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
@@ -524,7 +524,7 @@
 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | done | [TICKET-00120](../tickets/00120-TICKET.md) |
 | [TASK-00520](00520-TASK.md) | Manage your protected OpenRouter connections | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
 | [TASK-00521](00521-TASK.md) | Inspect optional allowance in connection settings | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
-| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
+| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | needs-info | [TICKET-00121](../tickets/00121-TICKET.md) |
 | [TASK-00523](00523-TASK.md) | Build and deliver the exact production candidate through GitHub CI | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
 | [TASK-00524](00524-TASK.md) | Run the staging application behind real HTTPS | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
 | [TASK-00525](00525-TASK.md) | Operate staging's protected services and diagnosis | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
