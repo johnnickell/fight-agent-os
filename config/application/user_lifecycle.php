@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Action\Api\V1\Users\DeleteUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\DisableUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\EnableUserAction;
+use App\Adapter\Http\Action\Api\V1\Users\RestoreUserAction;
 use App\Adapter\Http\Responder\Api\V1\Users\UserLifecycleResponder;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
@@ -12,11 +14,15 @@ use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Application\Authorization\PreventAdministratorLockout;
 use App\Domain\Authorization\EffectiveAdministrators;
 use Doctrine\DBAL\Connection;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\CommandHandler\DeleteUserHandler;
 use Fight\AccessControl\Application\AccessControl\User\CommandHandler\DisableUserHandler;
 use Fight\AccessControl\Application\AccessControl\User\CommandHandler\EnableUserHandler;
+use Fight\AccessControl\Application\AccessControl\User\CommandHandler\RestoreUserHandler;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
@@ -48,6 +54,25 @@ return static function (Container $container): void {
             $container->get(UserLifecycleResponder::class)
         ));
     }
+    foreach ([DeleteUserAction::class, RestoreUserAction::class] as $action) {
+        $container->set($action, static fn(Container $container) => new $action(
+            $container->get(CommandBus::class),
+            $container->get(UserLifecycleResponder::class)
+        ));
+    }
+    $container->set(RestoreUserHandler::class, static fn(Container $container) => new RestoreUserHandler(
+        $container->get(UserRepository::class),
+        $container->get(ActivationGrantRepository::class),
+        $container->get(ActivationCredentialGenerator::class),
+        $container->get(InvitationDeliveryCipher::class),
+        $container->get(Clock::class),
+        $container->get(AuditEvidenceRepository::class),
+        $container->get(TransactionalUnitOfWork::class),
+        $container->get(EventDispatcher::class)
+    ));
+    $container->get('messaging.command.router')->registerHandlers([
+        RestoreUserHandler::commandRegistration() => RestoreUserHandler::class
+    ]);
     $container->set(EnableUserHandler::class, static fn(Container $container) => new EnableUserHandler(
         $container->get('user_lifecycle.repository'),
         $container->get(AuditEvidenceRepository::class),

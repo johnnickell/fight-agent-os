@@ -32,10 +32,12 @@ use App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction;
 use App\Adapter\Http\Action\Api\V1\Sessions\ListUserSessionsAction;
 use App\Adapter\Http\Action\Api\V1\Sessions\RevokeOwnedSessionAction;
 use App\Adapter\Http\Action\Api\V1\Sessions\RevokeUserSessionAction;
+use App\Adapter\Http\Action\Api\V1\Users\DeleteUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\DisableUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\EnableUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
+use App\Adapter\Http\Action\Api\V1\Users\RestoreUserAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Action\Documentation\ReadPrivateOpenApiAction;
 use App\Adapter\Http\Action\Documentation\ReadSwaggerBootstrapAction;
@@ -124,6 +126,8 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     )->setName('api.v1.users.sessions.revoke');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
     $api->get('/users/{userId}', GetUserAction::class.':handle')->setName('api.v1.users.get');
+    $api->delete('/users/{userId}', DeleteUserAction::class.':handle')->setName('api.v1.users.delete');
+    $api->post('/users/{userId}/restore', RestoreUserAction::class.':handle')->setName('api.v1.users.restore');
     $api->post('/users/{userId}/disable', DisableUserAction::class.':handle')->setName('api.v1.users.disable');
     $api->post('/users/{userId}/enable', EnableUserAction::class.':handle')->setName('api.v1.users.enable');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')
