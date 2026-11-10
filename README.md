@@ -275,8 +275,7 @@ installed-package rollout or upstream SDK Build cutover. Human merge remains sep
 
 TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
 current independent QA PASS. Its accepted-candidate closeout is published in [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162); final delivery verification and human merge remain separate. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
-The package no longer ships `fight-terminal` or its direct retirement stub; `fight-workspace` is the sole
-executable. Existing copied installations change only through an explicit owned update/removal. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
+The package no longer ships `fight-terminal` or its direct retirement stub; `fight-workspace` opens the workspace and `fight-local` supplies local-domain enrollment. Existing copied installations change only through an explicit owned update/removal. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
 [actual-file session migration](harness/pi/WORKSPACE.md#native-entry-and-existing-rpc-sessions), and
 [explicit installed-launcher adoption/removal](harness/pi/README.md#update-remove-and-recover-the-launcher).
 Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
@@ -298,9 +297,10 @@ For on-demand human testing after original task cleanup, TASK-00556's `bin/qa up
 published-revision recreation and host Chrome activation/login. Publication and merge remain separate; see the [TASK checkpoint](planning/tasks/00556-TASK.md#accepted-implementation-checkpoint--2026-11-05). See [human QA operations](docs/engineering/HUMAN_QA.md) for fixed-OID selection,
 explicit certificate/front-door prerequisites, fresh synthetic activation and mandatory end-of-session down.
 
-Ordinary `bin/up` uses the main checkout's direct TLS stack at **https://localhost:18443**, with the explicit
-`.env`/certificate prerequisites below. It does not require shared ingress or load generated task/main proxy
-overrides. TASK-00543's earlier main-startup failure was a regression, now repaired, not deferred browser testing.
+For an unenrolled main checkout, ordinary `bin/up` uses direct TLS at **https://localhost:18443**, with
+the explicit `.env`/certificate prerequisites below. Explicit [local-domain enrollment](docs/engineering/LOCAL_DOMAINS.md)
+opts main startup into its registered shared HTTPS origin and generated proxy configuration; prepare that
+supplier and certificate before startup. TASK-00543's earlier main-startup failure was a regression, now repaired, not deferred browser testing.
 
 **TASK-00543 consumer acceptance is complete** on its independently reviewed and QA-verified candidate;
 publication and final delivery checks remain separate. See the [acceptance checkpoint](planning/tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02)
@@ -329,7 +329,7 @@ canonical HTTPS, both verified proxy hops and available auth flows on two full d
 root/CSRF/UI transport was exercised without changing its inherited unprepared database. Independent Review ACCEPT and QA PASS bind the accepted TASK-00553 candidate; publication and cleanup are
 pending at this checkpoint, with actual results in `.runs/tasks/TASK-00553/runs/land/receipt.md` and the TASK PR.
 Default independent low-port runtime and other platforms/browsers remain unverified here.
-Ordinary main startup stays direct localhost TLS, independent of that supplier.
+Unenrolled main startup stays direct localhost TLS, independent of that supplier.
 
 The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open

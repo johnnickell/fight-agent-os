@@ -107,7 +107,8 @@ def prepare(safe, checkout, project, entry):
     state = safe / 'var/worktrees' / project
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     require(state.resolve() == state, 'Runtime state alias refused')
-    host = project + '.localhost'
+    from local_domain import selected_host
+    host = selected_host(safe, checkout, project + '.localhost')
     private = state / 'task.env'
     if not private.exists():
         values = {'APP_ENV': 'local', 'APP_DEBUG': 'false', 'APP_AUTH_TRANSPORT': 'direct',
@@ -166,7 +167,8 @@ def ingress(safe, checkout, project, isolated=True):
     """Consume the explicit supplier; never provision ingress, certificates or trust"""
     from local_ingress import check_leaf, ready
     ready(safe)
-    host = project + '.localhost' if isolated else 'fight-agent-os.localhost'
+    from local_domain import selected_host
+    host = selected_host(safe, checkout, project + '.localhost' if isolated else 'fight-agent-os.localhost')
     state = safe / ('var/worktrees/' + project if isolated else 'var/local-ingress/main')
     certs = check_leaf(safe, host)
     # Mount the dedicated config directory, not a file inode replaced atomically

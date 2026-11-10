@@ -78,6 +78,7 @@ upgrade, reconfigure, or repair services from a read-only check.
 | [TASK-00075](../tasks/00075-TASK.md) | Deliver the guided Planning installation journey | ready-for-agent |
 | [TASK-00076](../tasks/00076-TASK.md) | Qualify supported local Planning operation | ready-for-human |
 | [TASK-00553](../tasks/00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done |
+| [TASK-00589](../tasks/00589-TASK.md) | Register local project and task domains across installed harness consumers | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -95,3 +96,14 @@ Implements the EPIC-00005 operating boundary from
 [WF-023](../wayfinder/tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md). EPIC-00003 and
 EPIC-00004 are prerequisites; this requirement must reuse their runtime, HTTPS, authentication, and Dashboard
 foundation rather than compete with it. TICKET-00024 depends on the approved-root capability delivered here.
+
+On 2026-11-10 John authorized [TASK-00589](../tasks/00589-TASK.md) as a bounded
+optional-domain extension of the existing shared supplier: primary plus TASK/checkout
+names under `local.fight-agent.dev`. John subsequently placed the shared registry
+in the local Fight installation's `var/local-ingress/hosts.json` and authorized
+startup/worktree registration across active projects in isolated worktrees. Each
+app retains its own explicitly enrolled `local.{domain}` namespace. Fight supplies
+scoped local DNS and standalone ingress; DockerProxy is an optional external front
+door. Future local browser Project creation uses the same local operation; hosted
+creation may offer a reviewed local command. Full guided installation, product UI
+and hosted collaborator enrollment remain with their existing owners.

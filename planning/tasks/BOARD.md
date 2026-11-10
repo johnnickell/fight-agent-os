@@ -21,7 +21,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00589](00589-TASK.md) | Register local project and task domains across installed harness consumers | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 

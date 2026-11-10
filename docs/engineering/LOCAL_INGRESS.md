@@ -325,3 +325,10 @@ No prune, foreign teardown, global installation/reset, privileged port configura
 unenrollment is performed. Explicit `mkcert -uninstall` is a separate **global** human operation affecting all
 consumers; review them first. Keep required evidence only while consumed by the active workflow. Actual cleanup
 outcomes and finite holds belong in the TASK and its existing ignored handoff, not another resource ledger.
+
+## Optional project-local domain
+
+Use [optional local domains](LOCAL_DOMAINS.md) for explicit primary and TASK/checkout
+registration beneath each enrolled `local.{domain}`, automatic enrolled-checkout
+registration during startup, project base/wildcard leaves and Fight-owned scoped DNS.
+DockerProxy is optional. Unenrolled projects retain their direct/`.localhost` paths.

@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Delegate local registration to this machine's explicitly configured Fight supplier."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+try:
+    value = os.environ.get('FIGHT_INGRESS_SUPPLIER')
+    if value is None:
+        base = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home() / '.config')))
+        config = base / 'fight/local-ingress.json'
+        if not base.is_absolute() or config != config.resolve():
+            raise ValueError('Invalid local ingress configuration path')
+        value = json.loads(config.read_text())['supplier']
+    supplier = Path(value)
+    if not supplier.is_absolute() or supplier != supplier.resolve() or not (supplier / 'bin/local-domain').is_file():
+        raise ValueError('Local ingress supplier unavailable')
+    result = subprocess.run([str(supplier / 'bin/local-domain'), *sys.argv[1:]])
+    sys.exit(result.returncode)
+except (OSError, ValueError, KeyError) as error:
+    print('fight-local: ' + str(error) + '\nConfigure the reviewed local supplier with its bin/local-domain install first.', file=sys.stderr)
+    sys.exit(1)
