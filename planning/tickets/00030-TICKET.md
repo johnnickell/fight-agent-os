@@ -53,7 +53,7 @@ The operator accepted confirmation as “delete this user in their current state
 |---|---|---|
 | [TASK-00118](../tasks/00118-TASK.md) | Expose a safe authorized user detail | done |
 | [TASK-00119](../tasks/00119-TASK.md) | Guard user disable and enable transitions | done |
-| [TASK-00120](../tasks/00120-TASK.md) | Guard user soft deletion and restoration | in-progress |
+| [TASK-00120](../tasks/00120-TASK.md) | Guard user soft deletion and restoration | done |
 | [TASK-00121](../tasks/00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent |
 | [TASK-00122](../tasks/00122-TASK.md) | Authorize cross-user session inspection and revocation | done |
 | [TASK-00123](../tasks/00123-TASK.md) | Operate full user administration in the browser | ready-for-agent |
