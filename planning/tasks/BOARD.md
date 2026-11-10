@@ -26,7 +26,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 63 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | — | — |
-| 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
@@ -314,6 +313,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 16 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
 | 17 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
 | 18 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
+| 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | needs-info | — | — |
 | — | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | needs-info | [TASK-00164](00164-TASK.md) | — |
 | — | [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | needs-info | [TASK-00164](00164-TASK.md) | — |
 | — | [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | needs-info | [TASK-00168](00168-TASK.md) | — |
