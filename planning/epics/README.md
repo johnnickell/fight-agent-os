@@ -27,5 +27,5 @@
 | [EPIC-00022](00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | done | — |
 | [EPIC-00023](00023-EPIC.md) | Adopt canonical Fight contracts and refactor Agent OS around Project-owned CQRS | ready-for-agent | — |
 | [EPIC-00024](00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | done | — |
-| [EPIC-00025](00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | ready-for-agent | — |
+| [EPIC-00025](00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | done | — |
 <!-- /planning:records -->
