@@ -20,6 +20,11 @@ no copy. Inspect `/fight-workflow` or `fight_workflow_status` for skill/effect/s
 The independent [deterministic tool policy](TOOL_POLICY.md) is activated only by explicit operator selection.
 It restricts its documented shell routes, not native file access or SDK OS calls.
 
+Native automatic/manual compaction and exact-session resume use Pi's session history, not Jev or a parallel
+checkpoint store. Follow [verified continuation](COMPACTION.md) to retain required facts and revalidate current
+workflow/operation authority; missing evidence and uncertain effects pause dependent work without replay.
+The runbook records tested capabilities, separate measurements and unqualified paths, not guaranteed recall.
+
 ## Prerequisites
 
 Install only what the selected path needs. Nothing here installs tools or changes global settings automatically.

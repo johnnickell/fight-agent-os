@@ -37,7 +37,7 @@ named in their TASKs. Native qualification and bounded repair require no Jev int
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00164](../tasks/00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent |
+| [TASK-00164](../tasks/00164-TASK.md) | Preserve required context through compaction and validated resume | in-progress |
 | [TASK-00165](../tasks/00165-TASK.md) | Select optional retained context with Jev | needs-info |
 | [TASK-00166](../tasks/00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent |
 | [TASK-00167](../tasks/00167-TASK.md) | Enforce checkpoint retention and recovery holds | needs-info |
