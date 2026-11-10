@@ -71,6 +71,9 @@ application startup install/reload/stop Herd. Both verified supplier transport a
 must pass before a ready URL is printed. Only each application's TLS gateway joins
 `fight-local-ingress`, using verified HTTPS upstream on 8443; inherited publishing is stripped and private
 services remain private. Shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`.
+An independently operated router can instead use [external-proxy mode](LOCAL_INGRESS.md#external-proxy-front-door),
+which publishes no supplier host ports. Running application services restart with Docker unless manually
+stopped; maintenance jobs remain one-off. Removed task runtimes are never recreated by restart policies.
 No custom DNS, trust enrollment, leaf generation or shared infrastructure startup is implicit.
 
 The application gateway owns direct TLS authority and canonical FastCGI Host/scheme/port; arbitrary forwarded

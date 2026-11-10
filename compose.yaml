@@ -1,5 +1,6 @@
 services:
   web:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
@@ -62,6 +63,7 @@ services:
 
   # Explicit dependency maintenance inherits web limits, not its read-only source mount.
   composer:
+    restart: "no"
     profiles: [maintenance]
     extends:
       service: web
@@ -92,6 +94,7 @@ services:
     pids_limit: 64
 
   https_php:
+    restart: unless-stopped
     profiles: [https]
     init: true
     mem_limit: 2g
@@ -107,6 +110,7 @@ services:
     volumes: [".:/app:ro"]
 
   https:
+    restart: unless-stopped
     profiles: [https]
     image: nginx:1.30.6-alpine@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951
     depends_on: [https_php]
@@ -131,6 +135,7 @@ services:
 
   # Explicit opt-in; mailbox is disposable and SMTP is never published to the host.
   mailcatcher:
+    restart: unless-stopped
     profiles: [mail]
     image: axllent/mailpit:v1.27.10@sha256:b1f1be18af530d939a11ee8820b379e0c88eeec204d904bfad68862adced3a5a
     environment:
@@ -147,6 +152,7 @@ services:
     pids_limit: 64
 
   postgres:
+    restart: unless-stopped
     image: postgres:17-bookworm
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-agent_os}
@@ -161,6 +167,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   postgres_test:
+    restart: unless-stopped
     image: postgres:17-bookworm
     environment:
       POSTGRES_DB: ${POSTGRES_TEST_DB:-agent_os_test}
