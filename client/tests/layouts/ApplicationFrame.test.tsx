@@ -65,7 +65,7 @@ async function frame(narrow: boolean, permissions?: string[]) {
       <h1>Owned content</h1>
     </ApplicationFrame>
   );
-  const view = render(content('/app/dashboard'));
+  const view = render(content('/'));
   return {
     owner,
     logout,
@@ -99,12 +99,12 @@ describe('compact account controls', () => {
       if (narrow) await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
       const navigation = within(screen.getByRole('navigation', { name: 'Primary' }));
       const docs = navigation.getByRole('link', { name: 'API Docs' });
-      expect(docs).toHaveAttribute('href', '/app/swagger');
+      expect(docs).toHaveAttribute('href', '/swagger');
       expect(docs.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
       expect(docs.querySelector('svg')).toHaveAttribute('focusable', 'false');
       expect(navigation.getByRole('link', { name: 'Invitation Admin' })).toHaveAttribute(
         'href',
-        '/app/admin/invitations'
+        '/admin/invitations'
       );
       expect(navigation.queryByRole('link', { name: 'API documentation' })).not.toBeInTheDocument();
       expect(
@@ -151,7 +151,7 @@ describe('compact account controls', () => {
     await userEvent.click(screen.getByRole('button', { name: 'User Menu' }));
     changeOs(true);
     expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
-    navigate('/app/account');
+    navigate('/account');
     expect(screen.getByRole('button', { name: 'User Menu' })).toHaveAttribute(
       'aria-expanded',
       'false'
@@ -215,7 +215,7 @@ describe('compact account controls', () => {
       const banner = within(screen.getByRole('banner'));
       expect(banner.getByRole('link', { name: 'Account & Security' })).toHaveAttribute(
         'href',
-        '/app/account'
+        '/account'
       );
       expect(Boolean(banner.queryByRole('link', { name: 'Active Sessions' }))).toBe(
         permissions.length > 0

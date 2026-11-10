@@ -170,7 +170,7 @@ HTTP request. A runtime installed with `--no-dev` needs no generator to execute 
 OpenAPI attributes uninstantiated. An independently copied old artifact never substitutes for current build proof.
 
 [TASK-00154](../../planning/tasks/00154-TASK.md) implements the [private themed viewer](../engineering/SWAGGER.md)
-at `/app/swagger`, with separate Bearer-protected `/api/v1/documentation/bootstrap` and
+now at `/swagger`, with separate Bearer-protected `/api/v1/documentation/bootstrap` and
 `/api/v1/documentation/openapi` reads. Both require an exact configured environment entry and current
 authoritative `READ_SWAGGER`; a role claim, APP_DEBUG, public validation metadata or export command grants
 neither. No public static copy, ref route, alias or symlink is enabled. PHP error display remains disabled and
@@ -208,7 +208,8 @@ The public allowlisted Action identities are `CsrfBootstrapAction`, `ReadValidat
 `ActivateInvitationAction`. Their own origin/cookie/input/catalog/grant controls remain mandatory.
 Other credential-flow Actions are not registered;
 adding a public exception requires the owning approved endpoint and an explicit identity allowlist change,
-never a URL pattern or a blanket group bypass. Swagger, other API routes and `/mcp` gain no exception.
+never a URL pattern or a blanket group bypass. Swagger, other API routes and the reserved future `/mcp/v1` namespace gain no exception; MCP retains
+its separate future authentication/admission boundary and is not implemented.
 
 Slim runs failure handling, routing, group security, input validation, endpoint controls, then the selected
 Action. Security reflects only the matched declaration, authenticates with TASK-00044's consumer, creates

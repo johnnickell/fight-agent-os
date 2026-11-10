@@ -1,6 +1,6 @@
 # Canonical browser login
 
-TASK-00046 supplies `POST /api/v1/auth/login` and `/app/login`, pending independent Review/QA.
+TASK-00046 supplies `POST /api/v1/auth/login` and the browser login, now at `/login`, pending independent Review/QA.
 This is existing-password authentication, not registration, a `/me` client or a dashboard. [TASK-00047](SESSION_CONTINUITY.md) adds refresh/current-session logout and the sign-out action on its success screen.
 
 ## Server contract
@@ -73,21 +73,19 @@ URLs, analytics, diagnostics or history. The blocking head script discards all l
 state before theme storage or form boot. `returnTo` and arbitrary caller state are never navigation authority.
 
 The existing `IntendedRoute` is the sole classified transient navigation owner: ten minutes, 2,048 characters,
-registered protected static `/app/` paths and enumerated non-sensitive queries only. Its guard captures an
+registered protected static root paths and enumerated non-sensitive queries only. Its guard captures an
 eligible anonymous target; the outer navigation/session owner retains that same instance through login.
 Failures leave it untouched. `ShellApplication`/`LoginJourney` expose a credential-free `onAuthenticated`
 completion signal, never an automatic redirect or `consume()` call: authority cached **before** login must
 not select the new user's destination. The outer owner must load fresh post-login principal authority before
 calling the existing `consume()` seam, which re-resolves current route requirements and consumes once. It never
-receives email, password, form bodies or tokens. The current public shell has **no registered protected landing
-or `/me` client**, so ordinary login truthfully stops at “You’re signed in”, removes the form, focuses the
-success heading and keeps access only in the active page. TASK-00047 adds current-session logout here, with immediate local invalidation, matching cookie deletion, focused signed-out and honest server-uncertain states. No dashboard grant/principal is fabricated.
-TICKET-00018 must supply the shared navigation owner, actual protected registrations and fresh `/me` before
-protected entry; TASK-00047/48 own refresh/logout, reload restoration, scheduling and cross-tab continuity.
+receives email, password, form bodies or tokens. The composed application now supplies that sole `/me` owner and registered protected destinations. Fresh
+post-login authority selects the admitted intent or `/`; the Dashboard still requires exact VIEW_DASHBOARD
+and denial remains Forbidden. TASK-00047/48 supply current-session logout, reload restoration, scheduling
+and bounded cross-tab continuity. No dashboard grant/principal is fabricated.
 
-`/app/login/recovery` is a working help destination explaining that reset is not installed and directing the
-user to their installation administrator without requesting a password. TICKET-00019 replaces it with the real
-recovery journey. The C/round-4 typography/tokens, split wide/stacked narrow composition, associated labels,
+`/reset-password` is the real generic reset-request journey; completion is `/reset-password/complete`.
+The former recovery alias is removed, without a redirect. The C/round-4 typography/tokens, split wide/stacked narrow composition, associated labels,
 current-password/username autocomplete, paste, remember explanation, focus, loading/failure/throttle/outage,
 light/dark/system and reduced-motion behavior use production components. React-Bootstrap's remember checkbox
 retains native accent-color rendering and an explicit 3px focus outline; no custom show-password control was

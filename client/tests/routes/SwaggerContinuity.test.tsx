@@ -77,7 +77,7 @@ async function mount() {
   });
   owners.push(owner);
   const navigate = vi.fn();
-  render(<ApplicationView session={owner} pathname="/app/swagger" navigate={navigate} />);
+  render(<ApplicationView session={owner} pathname="/swagger" navigate={navigate} />);
   await act(() => owner.coordinator.restore());
   await waitFor(() => expect(mountSwagger).toHaveBeenCalledOnce());
   return { owner, fetch, principal, navigate };

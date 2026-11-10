@@ -173,7 +173,7 @@ describe('UsersPage', () => {
       screen.getByRole('link', {
         name: 'Invitation status for <script>@example.test'
       })
-    ).toHaveAttribute('href', expect.stringMatching(/^\/app\/admin\/invitations\/[a-f0-9-]+$/));
+    ).toHaveAttribute('href', expect.stringMatching(/^\/admin\/invitations\/[a-f0-9-]+$/));
   });
 
   it('rechecks link activation against expired dispatch authority before the next render', async () => {

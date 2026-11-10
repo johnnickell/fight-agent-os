@@ -29,9 +29,7 @@ describe('password-change terminal application transition', () => {
         owner.authority,
         owner.coordinator.terminal
       );
-      render(
-        <ApplicationView session={owner} pathname="/app/account/password" navigate={navigate} />
-      );
+      render(<ApplicationView session={owner} pathname="/account/password" navigate={navigate} />);
       await act(() => owner.coordinator.restore());
       const current = await screen.findByLabelText('Current password (required)');
       fireEvent.change(current, { target: { value: 'old synthetic' } });
@@ -72,7 +70,7 @@ describe('password-change terminal application transition', () => {
       expect(owner.authority.getSnapshot().status).toBe('terminal');
       expect(owner.intent.consume()).toBeNull();
       if (outcome === 'success')
-        await waitFor(() => expect(navigate).toHaveBeenCalledWith('/app/login', true));
+        await waitFor(() => expect(navigate).toHaveBeenCalledWith('/login', true));
       expect(owner.refresh).toHaveBeenCalledOnce();
       expect(post).toHaveBeenCalledOnce();
       await userEvent.click(screen.getByRole('button', { name: 'Sign in again' }));

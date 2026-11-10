@@ -95,6 +95,7 @@ final class ApplicationSmokeTest extends TestCase
         yield 'API prefix without route' => ['GET', '/api', 404, 'Resource not found.'];
         yield 'unknown API route' => ['GET', '/api/v1/not-an-agent-os-route', 404, 'Resource not found.'];
         yield 'unsupported method' => ['POST', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
+        yield 'GET on POST-only API' => ['GET', '/api/v1/auth/logout', 405, 'Method not allowed.'];
         yield 'unsupported preflight' => ['OPTIONS', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
     }
 
@@ -124,7 +125,7 @@ final class ApplicationSmokeTest extends TestCase
         }
         ApiContract::assertRoutingFailure($response, $status, $status === 404 ? 'NotFound' : 'MethodNotAllowed');
         if ($status === 405) {
-            self::assertSame('GET', $response->getHeaderLine('Allow'));
+            self::assertSame($method === 'GET' ? 'POST' : 'GET', $response->getHeaderLine('Allow'));
         }
         self::assertSame($status, $response->getStatusCode());
         self::assertSame('application/json', $response->getHeaderLine('Content-Type'));

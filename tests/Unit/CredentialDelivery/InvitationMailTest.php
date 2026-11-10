@@ -306,7 +306,7 @@ HTML;
         $mail = $this->createMock(MailDelivery::class);
         $mail->expects(self::never())->method('deliver');
         $provider = new InvitationMailProvider(
-            new CanonicalCredentialLink('https://example.test', '/app/activate'),
+            new CanonicalCredentialLink('https://example.test', '/activate'),
             $templates,
             $mail,
             $grants

@@ -180,7 +180,7 @@ describe('complete route guard', () => {
     expect(screen.queryByText('Protected report')).not.toBeInTheDocument();
   });
 
-  it.each([undefined, '/app/reports?page=2'])(
+  it.each([undefined, '/reports?page=2'])(
     'captures eligible anonymous navigation (%s), defaulting to the registered path, and clears it on logout',
     async (location) => {
       const loader = vi
@@ -202,7 +202,7 @@ describe('complete route guard', () => {
       );
       expect(screen.getByText('Sign in required')).toBeVisible();
       await act(() => cache.beginAuthentication().acceptCredentials());
-      expect(intent.consume()).toBe(location ?? '/app/reports');
+      expect(intent.consume()).toBe(location ?? '/reports');
       await act(() => cache.signal('logout'));
       await act(() => cache.beginAuthentication().acceptCredentials());
       expect(intent.consume()).toBeNull();

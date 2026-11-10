@@ -1,6 +1,6 @@
 # Permission-controlled user directory
 
-TASK-00059 implements `GET /api/v1/users` and `/app/admin/users`. Local implementation evidence is in the
+TASK-00059 implements `GET /api/v1/users` and the browser directory, now at `/admin/users`. Local implementation evidence is in the
 TASK; independent Review/QA and delivery remain separate.
 
 ## Authority and ownership
@@ -63,10 +63,10 @@ controls presentation and link activation:
 
 | Control | Exact current permissions | Registered destination |
 |---|---|---|
-| Directory | `READ_USERS` | `/app/admin/users` |
-| Invite User | `INVITE_USERS` | `/app/admin/invite` |
-| Invite Super Admin | `INVITE_USERS` **and** `ASSIGN_SUPER_ADMIN` | `/app/admin/invite-super-admin` |
-| Pending row's Invitation status | `READ_USERS`; target must be pending | `/app/admin/invitations/{user_id}` |
+| Directory | `READ_USERS` | `/admin/users` |
+| Invite User | `INVITE_USERS` | `/admin/invite` |
+| Invite Super Admin | `INVITE_USERS` **and** `ASSIGN_SUPER_ADMIN` | `/admin/invite-super-admin` |
+| Pending row's Invitation status | `READ_USERS`; target must be pending | `/admin/invitations/{user_id}` |
 
 TASK-00060 implements the target status route using a classified UUID path, never email, form input or credentials in URLs/history. READ_USERS-only viewers have read-only status; page changes additionally require MANAGE_USER_INVITATIONS, which grants no read authority (explicit human correction, 2026-11-02). Ordinary/elevated invitation forms remain unavailable under TASK-00061/00062. Recovery invalidates local directory/detail generations: mounted lists refetch, mounted detail retracts its data and requires deliberate Reload, and returning pages read fresh. Pending invitation reads now use this safe detail API plus the separately protected delivery GET; mutation acknowledgements contain no data. No invitation API is duplicated and no link sends mail.
 Forbidden controls are absent, not hidden focus targets. Client presentation never replaces server enforcement.
@@ -88,7 +88,7 @@ a target disappearing after the gate returns 404. Each new request resolves auth
 there is no second Action recheck or atomic authorization-and-read guarantee.
 
 Each directory row has a permission-rechecked **View details** button. Selection clears the list and fetches
-fresh detail; it does not reuse the row as current target state. Detail remains within `/app/admin/users`, with
+fresh detail; it does not reuse the row as current target state. Detail remains within `/admin/users`, with
 no new parameterized browser route, user ID/email in history, intended-route payload or persisted cache. Back
 refetches the same bounded page; Retry/Reload are explicit. Authority retirement clears selection and data,
 aborts/fences outstanding work and does not replay the directory. The sole service's 401/403 refusal fence and

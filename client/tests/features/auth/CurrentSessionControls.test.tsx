@@ -63,7 +63,7 @@ describe('current-session logout presentation', () => {
       ).toBeVisible();
       expect(screen.getByRole('link', { name: 'Return to sign in' })).toHaveAttribute(
         'href',
-        '/app/login'
+        '/login'
       );
       expect(tokens.getAccessToken()).toBeNull();
       expect(fetch).toHaveBeenCalledTimes(2);

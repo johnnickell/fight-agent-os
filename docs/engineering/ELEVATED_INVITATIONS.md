@@ -1,6 +1,6 @@
 # Confirmed elevated browser invitations
 
-`/app/admin/invite-super-admin` is a separate pending-invitation journey. Its complete route metadata,
+`/admin/invite-super-admin` is a separate pending-invitation journey. Its complete route metadata,
 sole-cache action checks and shared issuance service require **both exact INVITE_USERS and
 ASSIGN_SUPER_ADMIN**. The existing `POST /api/v1/invitations` independently resolves current server
 principal authority. Role names, HTML/JWT/client claims and one permission alone grant nothing.

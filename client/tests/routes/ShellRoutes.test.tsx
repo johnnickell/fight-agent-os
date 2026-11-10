@@ -19,9 +19,7 @@ vi.mock('@/pages/DashboardPage', async (importOriginal) => {
 
 it('imports the protected page only after authority resolves, announcing the pending module', async () => {
   const session = applicationSession();
-  const mounted = render(
-    <ApplicationView session={session} pathname="/app/dashboard" navigate={() => {}} />
-  );
+  const mounted = render(<ApplicationView session={session} pathname="/" navigate={() => {}} />);
   expect(screen.getByText('Restoring your session')).toBeVisible();
   await act(() => session.coordinator.restore());
   expect(screen.getByRole('heading', { name: 'Loading application' })).toBeVisible();

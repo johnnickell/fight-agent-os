@@ -63,7 +63,7 @@ async function mount(response?: Response | Promise<Response>) {
   });
   owners.push(owner);
   render(
-    <ApplicationView session={owner} pathname="/app/admin/invite-super-admin" navigate={vi.fn()} />
+    <ApplicationView session={owner} pathname="/admin/invite-super-admin" navigate={vi.fn()} />
   );
   await act(() => owner.coordinator.restore());
   await screen.findByLabelText('Email (required)');

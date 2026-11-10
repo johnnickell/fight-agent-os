@@ -70,7 +70,7 @@ describe('schema-backed production login', () => {
     });
     expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute(
       'href',
-      '/app/reset-password'
+      '/reset-password'
     );
     deps.service.dispose();
   });
@@ -198,8 +198,8 @@ describe('schema-backed production login', () => {
   it('retains classified navigation through failure and token success until fresh authority permits restoration', async () => {
     const cache = authenticatedCache();
     const intent = new IntendedRoute(cache, () => [reportRoute], 'https://example.test');
-    expect(intent.capture('/app/reports?password=private')).toBe(false);
-    expect(intent.capture('/app/reports?page=2')).toBe(true);
+    expect(intent.capture('/reports?password=private')).toBe(false);
+    expect(intent.capture('/reports?page=2')).toBe(true);
     const deps = loginDependencies(
       vi.fn().mockResolvedValueOnce(loginRejected()).mockResolvedValue(loginSuccess())
     );
@@ -210,7 +210,7 @@ describe('schema-backed production login', () => {
     submit();
     await screen.findByText(/We couldn’t sign you in/);
     expect(onAuthenticated).not.toHaveBeenCalled();
-    expect(intent.capture('/app/reports?page=1')).toBe(false);
+    expect(intent.capture('/reports?page=1')).toBe(false);
     submit();
     await screen.findByRole('heading', { name: 'You’re signed in' });
     expect(
@@ -219,7 +219,7 @@ describe('schema-backed production login', () => {
     expect(onAuthenticated).toHaveBeenCalledExactlyOnceWith();
     expect(intent.consume()).toBeNull();
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/app/reports?page=2');
+    expect(intent.consume()).toBe('/reports?page=2');
     expect(intent.consume()).toBeNull();
     intent.dispose();
     cache.dispose();
@@ -230,7 +230,7 @@ describe('schema-backed production login', () => {
     const cache = authenticatedCache();
     await cache.beginAuthentication().acceptCredentials();
     const intent = new IntendedRoute(cache, () => [reportRoute], 'https://example.test');
-    expect(intent.capture('/app/reports?page=2')).toBe(true);
+    expect(intent.capture('/reports?page=2')).toBe(true);
     const deps = loginDependencies(() => Promise.resolve(loginSuccess()));
     render(<LoginPage {...deps} />);
     await screen.findByLabelText('Email (required)');
@@ -240,7 +240,7 @@ describe('schema-backed production login', () => {
     expect(
       screen.queryByRole('link', { name: 'Continue to your requested page' })
     ).not.toBeInTheDocument();
-    expect(intent.capture('/app/reports?page=1')).toBe(false);
+    expect(intent.capture('/reports?page=1')).toBe(false);
     intent.dispose();
     cache.dispose();
     deps.service.dispose();

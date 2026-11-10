@@ -16,7 +16,7 @@ describe('foundation shell', () => {
     vi.unstubAllGlobals();
     window.history.replaceState(null, '', '/');
   });
-  it.each(['/', '/app', '/app/'])(
+  it.each(['/'])(
     'sends cold anonymous root %s to canonical Login after bounded restoration',
     async (pathname) => {
       vi.stubGlobal(
@@ -43,7 +43,7 @@ describe('foundation shell', () => {
       render(<ShellApplication configuration={configuration} pathname={pathname} />);
       expect(screen.getByText('Restoring your session')).toBeVisible();
       expect(await screen.findByLabelText('Password (required)')).toBeVisible();
-      expect(window.location.pathname).toBe('/app/login');
+      expect(window.location.pathname).toBe('/login');
       expect(screen.getByRole('main')).toBeVisible();
       expect(screen.queryByRole('navigation', { name: 'Primary' })).not.toBeInTheDocument();
       expect(document.title).toBe('Sign in — Fight Agent OS');
@@ -57,14 +57,14 @@ describe('foundation shell', () => {
       )
     );
     vi.stubGlobal('fetch', fetch);
-    render(<ShellApplication configuration={configuration} pathname="/app/missing" />);
+    render(<ShellApplication configuration={configuration} pathname="/missing" />);
     act(() => {
-      window.history.pushState(null, '', '/app/login/recovery');
+      window.history.pushState(null, '', '/reset-password');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     expect(await screen.findByRole('heading', { name: 'Reset your password' })).toBeVisible();
     act(() => {
-      window.history.pushState(null, '', '/app/missing');
+      window.history.pushState(null, '', '/missing');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeVisible();
@@ -119,8 +119,8 @@ describe('foundation shell', () => {
     });
     const identity = crypto.randomUUID();
     vi.stubGlobal('fetch', fetch);
-    window.history.replaceState(null, '', '/app/account/sessions');
-    render(<ShellApplication configuration={configuration} pathname="/app/account/sessions" />);
+    window.history.replaceState(null, '', '/account/sessions');
+    render(<ShellApplication configuration={configuration} pathname="/account/sessions" />);
     fireEvent.change(await screen.findByLabelText('Email (required)'), {
       target: { value: 'reader@example.test' }
     });
@@ -129,14 +129,14 @@ describe('foundation shell', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(await screen.findByRole('heading', { name: 'Active Sessions' })).toBeVisible();
-    expect(window.location.pathname).toBe('/app/account/sessions');
+    expect(window.location.pathname).toBe('/account/sessions');
     act(() => {
-      window.history.pushState(null, '', '/app/dashboard');
+      window.history.pushState(null, '', '/');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeVisible();
     act(() => {
-      window.history.pushState(null, '', '/app/account/sessions');
+      window.history.pushState(null, '', '/account/sessions');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     expect(await screen.findByRole('heading', { name: 'Active Sessions' })).toBeVisible();
@@ -144,14 +144,14 @@ describe('foundation shell', () => {
     expect(fetch.mock.calls.filter(([url]) => url.endsWith('/auth/refresh'))).toHaveLength(1);
   });
 
-  it.each(['/app/unknown', '/app/nested/missing.file', '/app/%3Cscript%3E'])(
+  it.each(['/unknown', '/nested/missing.file', '/%3Cscript%3E', '/app', '/app/login'])(
     'offers safe native recovery from %s',
     async (pathname) => {
       render(<ShellApplication configuration={configuration} pathname={pathname} />);
       expect(screen.getByRole('heading', { name: 'Page not found' })).toBeVisible();
       expect(screen.getByRole('link', { name: 'Return to application' })).toHaveAttribute(
         'href',
-        '/app'
+        '/'
       );
       expect(document.body.textContent).not.toContain(pathname);
       await waitFor(() => expect(document.title).toBe('Page not found — Fight Agent OS'));
@@ -164,12 +164,10 @@ describe('foundation shell', () => {
     window.history.replaceState(
       { password: 'not-retained' },
       '',
-      '/app/private-stack-SQL-marker?token=cookie-marker#form-marker'
+      '/private-stack-SQL-marker?token=cookie-marker#form-marker'
     );
-    render(
-      <ShellApplication configuration={configuration} pathname="/app/private-stack-SQL-marker" />
-    );
-    expect(window.location.pathname).toBe('/app/not-found');
+    render(<ShellApplication configuration={configuration} pathname="/private-stack-SQL-marker" />);
+    expect(window.location.pathname).toBe('/not-found');
     expect(window.location.search).toBe('');
     expect(window.location.hash).toBe('');
     expect(window.history.state).toBeNull();
@@ -181,7 +179,7 @@ describe('foundation shell', () => {
 
   it('puts the skip link first in keyboard order and targets the main landmark', async () => {
     const user = userEvent.setup();
-    render(<ShellApplication configuration={configuration} pathname="/app/missing" />);
+    render(<ShellApplication configuration={configuration} pathname="/missing" />);
     await user.tab();
     const skip = screen.getByRole('link', { name: 'Skip to content' });
     expect(skip).toHaveFocus();
@@ -198,13 +196,10 @@ describe('foundation shell', () => {
     'private-value-not-for-display',
     '{"schema_version":1,"api_base_path":"/api/v1","token":"private-value-not-for-display"}'
   ])('fails boot safely before route rendering %#', async (source) => {
-    render(<ShellApplication configuration={source} pathname="/app/missing" />);
+    render(<ShellApplication configuration={source} pathname="/missing" />);
     expect(screen.getByRole('heading', { name: 'Application unavailable' })).toBeVisible();
     expect(screen.getByRole('alert')).toHaveTextContent('contact the installation operator');
-    expect(screen.getByRole('link', { name: 'Reload application' })).toHaveAttribute(
-      'href',
-      '/app'
-    );
+    expect(screen.getByRole('link', { name: 'Reload application' })).toHaveAttribute('href', '/');
     expect(screen.queryByText('Page not found')).not.toBeInTheDocument();
     expect(document.body.textContent).not.toContain('private-value-not-for-display');
     await waitFor(() => expect(document.title).toBe('Application unavailable — Fight Agent OS'));

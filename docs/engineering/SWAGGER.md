@@ -1,6 +1,6 @@
 # Private API documentation
 
-TASK-00154 implements `/app/swagger` within the existing application session and frame. Engineer verification
+TASK-00154 implements the private viewer, now at `/swagger` within the existing application session and frame. Engineer verification
 is not independent Review/QA acceptance or deployment certification. The generated contract remains private.
 
 ## Enable deliberately
@@ -46,7 +46,7 @@ all available adapters; no real email is enabled or authorized. Policy tests are
 
 ## Entry, direct reads and deployment
 
-Sign in normally, then open API documentation in Administration or navigate to `/app/swagger`. Navigation/reload
+Sign in normally, then open API documentation in Administration or navigate to `/swagger`. Navigation/reload
 obtains credentials through the same cookie-backed bounded restoration and fresh `/me`, never a token URL or
 HTML workaround. The public shell contains neither document nor protected viewer initialization.
 

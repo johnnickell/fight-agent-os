@@ -5,12 +5,12 @@ import { clearLoginLocation } from '@/features/auth/LoginLocation';
 describe('login URL retirement', () => {
   it('drops the entire query, fragment and history state without serializing any caller values', () => {
     const history = { replaceState: vi.fn() };
-    expect(clearLoginLocation({ pathname: '/app/login' }, history)).toBe(true);
-    expect(history.replaceState).toHaveBeenCalledExactlyOnceWith(null, '', '/app/login');
+    expect(clearLoginLocation({ pathname: '/login' }, history)).toBe(true);
+    expect(history.replaceState).toHaveBeenCalledExactlyOnceWith(null, '', '/login');
   });
   it('leaves unrelated routes and sensitive invitation intake to their owners', () => {
     const history = { replaceState: vi.fn() };
-    expect(clearLoginLocation({ pathname: '/app/activate' }, history)).toBe(true);
+    expect(clearLoginLocation({ pathname: '/activate' }, history)).toBe(true);
     expect(history.replaceState).not.toHaveBeenCalled();
   });
   it('signals failure for a fixed safe navigation fallback without exposing the browser exception', () => {
@@ -19,6 +19,6 @@ describe('login URL retirement', () => {
         throw new Error('private');
       }
     };
-    expect(clearLoginLocation({ pathname: '/app/login' }, history)).toBe(false);
+    expect(clearLoginLocation({ pathname: '/login' }, history)).toBe(false);
   });
 });

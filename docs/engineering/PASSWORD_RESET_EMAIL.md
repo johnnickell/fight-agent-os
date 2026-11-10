@@ -14,7 +14,7 @@ checkout's private ignored `.env`, catcher mode now requires **both** activation
 
 ```dotenv
 APP_PASSWORD_RESET_ORIGIN=https://localhost:18443
-APP_PASSWORD_RESET_PATH=/app/reset-password/complete
+APP_PASSWORD_RESET_PATH=/reset-password/complete
 ```
 
 Use the actual trusted HTTPS listener if one is separately configured; these values do not provision a listener

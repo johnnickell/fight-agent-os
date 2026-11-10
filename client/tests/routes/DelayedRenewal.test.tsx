@@ -35,9 +35,7 @@ it('coordinates renewal before a delayed freshness callback can mistake absent m
     swaggerAvailable: false
   });
   const navigate = vi.fn();
-  const view = render(
-    <ApplicationView session={owner} pathname="/app/dashboard" navigate={navigate} />
-  );
+  const view = render(<ApplicationView session={owner} pathname="/" navigate={navigate} />);
   try {
     await act(() => owner.coordinator.restore());
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 });

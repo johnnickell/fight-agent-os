@@ -62,7 +62,7 @@ async function mount() {
   });
   owners.push(owner);
   const rendered = render(
-    <ApplicationView session={owner} pathname="/app/admin/invite" navigate={vi.fn()} />
+    <ApplicationView session={owner} pathname="/admin/invite" navigate={vi.fn()} />
   );
   await act(() => owner.coordinator.restore());
   await screen.findByLabelText('Email (required)');

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { captureReset, discardResetFragment, takeReset } from '@/features/auth/ResetCredential';
 
-const path = '/app/reset-password/complete';
+const path = '/reset-password/complete';
 const userId = crypto.randomUUID();
 const fragment = (credential: string) => `#user_id=${userId}&credential=${credential}`;
 describe('pre-render reset possession intake', () => {
@@ -61,7 +61,7 @@ describe('pre-render reset possession intake', () => {
     ).toBe(false);
     expect(takeReset(host).current()).toBeNull();
     const history = { replaceState: vi.fn() };
-    captureReset(host, { pathname: '/app/login', hash: fragment('x') }, history);
+    captureReset(host, { pathname: '/login', hash: fragment('x') }, history);
     expect(history.replaceState).not.toHaveBeenCalled();
   });
   it('never adopts later fragments, but preserves the owned skip link', () => {

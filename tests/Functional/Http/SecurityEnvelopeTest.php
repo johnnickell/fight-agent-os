@@ -22,8 +22,8 @@ final class SecurityEnvelopeTest extends TestCase
     public static function routes(): iterable
     {
         foreach (
-            ['/', '/app/login', '/app/activate', '/app/reset-password/complete', '/app/account/password',
-                '/app/account/sessions', '/app/admin/invite-super-admin', '/app/swagger', '/api/v1/me',
+            ['/', '/login', '/activate', '/reset-password/complete', '/account/password',
+                '/account/sessions', '/admin/invite-super-admin', '/swagger', '/api/v1/me',
                 '/api/v1/auth/csrf', '/api/v1/documentation/bootstrap', '/api/v1/not-found', '/missing'] as $path
         ) {
             yield $path => [$path];

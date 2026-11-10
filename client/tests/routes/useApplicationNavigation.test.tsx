@@ -4,14 +4,14 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 
 function Example() {
-  const { pathname } = useApplicationNavigation('/app/swagger');
+  const { pathname } = useApplicationNavigation('/swagger');
   return (
     <>
       <output aria-label="Current route">{pathname}</output>
       <button type="button">Operation summary</button>
-      <a href="/app/dashboard">Dashboard</a>
+      <a href="/">Dashboard</a>
       <a href="#main-content">Skip to content</a>
-      <a href="/app/account" data-reload-application>
+      <a href="/account" data-reload-application>
         Reload account
       </a>
     </>
@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 it('leaves href-less embedded controls to their owner and still intercepts registered native links', () => {
-  window.history.replaceState(null, '', '/app/swagger');
+  window.history.replaceState(null, '', '/swagger');
   render(<Example />);
   const push = vi.spyOn(window.history, 'pushState');
   // Upstream Swagger embeds an href-less anchor inside its summary button.
@@ -32,11 +32,11 @@ it('leaves href-less embedded controls to their owner and still intercepts regis
   anchor.textContent = 'Operation details';
   screen.getByRole('button', { name: 'Operation summary' }).append(anchor);
   fireEvent.click(anchor);
-  expect(screen.getByLabelText('Current route')).toHaveTextContent('/app/swagger');
+  expect(screen.getByLabelText('Current route')).toHaveTextContent('/swagger');
   expect(push).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('link', { name: 'Dashboard' }));
-  expect(screen.getByLabelText('Current route')).toHaveTextContent('/app/dashboard');
-  expect(push).toHaveBeenCalledExactlyOnceWith(null, '', '/app/dashboard');
+  expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
+  expect(push).toHaveBeenCalledExactlyOnceWith(null, '', '/');
 });
 
 it('preserves modifier, fragment and explicit document-reload navigation', () => {

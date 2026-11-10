@@ -27,15 +27,15 @@ final class CanonicalTransportTest extends TestCase
      */
     public static function rejected(): iterable
     {
-        yield 'HTTP navigation' => ['http://agent-os.test/app/login', [], []];
-        yield 'foreign authority' => ['https://evil.test/app/login', [], []];
-        yield 'wrong port' => ['https://agent-os.test:444/app/login', [], []];
-        yield 'userinfo' => ['https://user@agent-os.test/app/login', [], []];
-        yield 'raw host mismatch' => ['https://agent-os.test/app/login', [], ['HTTP_HOST' => 'evil.test']];
-        yield 'forwarded' => ['https://agent-os.test/app/login', ['Forwarded' => 'proto=https'], []];
-        yield 'forwarded host' => ['https://agent-os.test/app/login', ['X-Forwarded-Host' => 'evil.test'], []];
-        yield 'forwarded proto' => ['https://agent-os.test/app/login', ['X-Forwarded-Proto' => 'https'], []];
-        yield 'original authority' => ['https://agent-os.test/app/login', ['X-Original-Host' => 'evil.test'], []];
+        yield 'HTTP navigation' => ['http://agent-os.test/login', [], []];
+        yield 'foreign authority' => ['https://evil.test/login', [], []];
+        yield 'wrong port' => ['https://agent-os.test:444/login', [], []];
+        yield 'userinfo' => ['https://user@agent-os.test/login', [], []];
+        yield 'raw host mismatch' => ['https://agent-os.test/login', [], ['HTTP_HOST' => 'evil.test']];
+        yield 'forwarded' => ['https://agent-os.test/login', ['Forwarded' => 'proto=https'], []];
+        yield 'forwarded host' => ['https://agent-os.test/login', ['X-Forwarded-Host' => 'evil.test'], []];
+        yield 'forwarded proto' => ['https://agent-os.test/login', ['X-Forwarded-Proto' => 'https'], []];
+        yield 'original authority' => ['https://agent-os.test/login', ['X-Original-Host' => 'evil.test'], []];
     }
 
     /**

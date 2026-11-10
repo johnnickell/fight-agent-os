@@ -19,9 +19,10 @@ $app->get(
     }
 )->setName('app.index');
 
-// Final browser GET fallback: explicit server routes win and server/asset misses stay failures.
+// Exclude reserved namespaces while matching so GET cannot mask an API's POST-only 405.
+// Decoded-path checks below also reject encoded namespace/asset spellings.
 $app->get(
-    '/{path:.*}',
+    '/{path:(?!(?:api|mcp|build|app)(?:/|$)).*}',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($container): ResponseInterface {
         $path = rawurldecode($request->getUri()->getPath());
         if (preg_match('~\A/(?:api|mcp|build|app)(?:/|\z)~', $path) === 1 || str_contains($path, '.')) {

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Functional\Http;
 
+use App\Adapter\Http\Action\ClientShellAction;
+use App\Adapter\Http\Web\ClientAssetManifest;
+use App\Adapter\Http\Web\ClientShellResponder;
+use Fight\Common\Application\Service\Container;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -36,7 +40,7 @@ final class DocumentationExposureTest extends TestCase
     }
 
     /**
-     * Returns a safe miss instead of documentation or exception diagnostics
+     * Keeps private documents unavailable and browser-shell failure free of diagnostics
      */
     #[DataProvider('unavailable_urls')]
     public function test_that_documentation_and_diagnostics_are_not_served(string $environment, string $path): void
@@ -45,10 +49,23 @@ final class DocumentationExposureTest extends TestCase
         putenv('APP_ENV='.$environment);
         try {
             $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+            $container = $app->getContainer();
+            self::assertInstanceOf(Container::class, $container);
+            // Eligible browser navigation may receive only the public shell, never a private document.
+            // Force unavailable assets independently of the developer's current client deployment.
+            $absentAssets = dirname(__DIR__, 3).'/.runs/build/tmp/absent-client-'.bin2hex(random_bytes(8));
+            $container->set(ClientShellAction::class, static fn(Container $container) => new ClientShellAction(
+                new ClientAssetManifest($absentAssets),
+                $container->get(ClientShellResponder::class)
+            ));
             $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', $path));
 
-            self::assertSame(404, $response->getStatusCode());
-            self::assertStringContainsString('not found', strtolower((string) $response->getBody()));
+            $browser = in_array($path, ['/swagger', '/diagnostics'], true);
+            self::assertSame($browser ? 503 : 404, $response->getStatusCode());
+            self::assertStringContainsString(
+                $browser ? 'application unavailable' : 'not found',
+                strtolower((string) $response->getBody())
+            );
             $privateValues = [
                 'Stack trace', '/app/', 'APP_ENV', 'APP_CSRF_MAC_KEY', 'Slim\\', 'openapi:', 'Swagger UI'
             ];

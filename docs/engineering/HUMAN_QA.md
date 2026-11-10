@@ -76,7 +76,7 @@ bootstrap/mail delivery is a failed startup, not an invented account or successf
 A final ready result includes exact revision, checkout, verified HTTPS root/CSRF URL, a private scenario-file
 path and exact down command. It does **not** claim a completed login or browser trust. Open the owner-readable
 `qa-activation.html` file locally in your browser, follow its synthetic activation link, choose a password in
-the real activation UI, then sign in at the printed origin's `/app/login`. The pending account is a synthetic
+the real activation UI, then sign in at the printed origin's `/login`. The pending account is a synthetic
 Super Admin; this is not evidence for ordinary-user permission scenarios. Do not paste/capture the file,
 fragment, mail body, password, cookies or tokens. No password or possession link is printed by the tools.
 

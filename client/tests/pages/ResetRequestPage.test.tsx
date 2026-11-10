@@ -52,7 +52,7 @@ describe('real schema-backed reset request form', () => {
     });
     expect(screen.getByRole('link', { name: 'Return to sign in' })).toHaveAttribute(
       'href',
-      '/app/login'
+      '/login'
     );
     expect(deps.calls.some((url) => url.endsWith('/me') || url.endsWith('/auth/refresh'))).toBe(
       false

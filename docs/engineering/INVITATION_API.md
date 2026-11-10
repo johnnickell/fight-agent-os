@@ -142,12 +142,12 @@ v0.5.0 failures remain historical in that TASK. Current unchanged lock: Access C
 
 ## Browser convergence and privacy
 
-The separate [confirmed elevated journey](ELEVATED_INVITATIONS.md) at `/app/admin/invite-super-admin`
+The separate [confirmed elevated journey](ELEVATED_INVITATIONS.md) at `/admin/invite-super-admin`
 uses both exact INVITE_USERS and ASSIGN_SUPER_ADMIN and explicit canonical-target confirmation through
 this existing API. Unconfirmed work stops issuance and directs operator investigation; no browser
 assignment repair, reinvitation or inference of audit completion from a status read is offered.
 
-The [ordinary issuance form](ORDINARY_INVITATIONS.md) at `/app/admin/invite` sends only canonical email and
+The [ordinary issuance form](ORDINARY_INVITATIONS.md) at `/admin/invite` sends only canonical email and
 fixed ordinary mode under INVITE_USERS. It retains only a strictly decoded safe target ID, distinguishes
 accepted/rejected/unconfirmed work and offers status only with READ_USERS. It does not change the existing
 issuance sequencing or implement TASK-00577's architecture cutover.

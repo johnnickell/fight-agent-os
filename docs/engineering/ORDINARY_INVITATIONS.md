@@ -1,6 +1,6 @@
 # Ordinary browser invitations
 
-`/app/admin/invite` presents TASK-00061's ordinary invitation journey. Both the complete protected route
+`/admin/invite` presents TASK-00061's ordinary invitation journey. Both the complete protected route
 metadata and the existing server Action require exact current `INVITE_USERS`. A displayed Role name grants
 nothing. The browser uses the sole session/AuthorityCache graph and rechecks dispatch authority; server
 admission remains authoritative. Unknown/stale authority cannot submit. No user-availability query precedes

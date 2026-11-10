@@ -66,7 +66,7 @@ lifecycle, read-only release handling and worker restarts remain the installatio
   not while constructing unrelated services. Restore a missing directory and restart any long-lived process to
   rebuild its loader. A misspelled configured path also fails when a consumer attempts to render from it.
 - Fight Common's adapter reports missing templates and render failures through its templating exceptions. Each
-  consumer owns its safe failure policy. `/app` retains the asset-free HTML 503, then plain-text 503 if the
+  consumer owns its safe failure policy. The browser shell retains the asset-free HTML 503, then plain-text 503 if the
   unavailable template also fails, without exposing exception messages, paths or partial output.
 
 ## Verification

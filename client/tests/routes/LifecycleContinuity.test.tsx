@@ -40,7 +40,7 @@ it('ignores focus while still hidden and coalesces focus-before-visibility retur
         appDebug: false,
         swaggerAvailable: false
       }}
-      pathname="/app/dashboard"
+      pathname="/"
       navigate={vi.fn()}
     />
   );
