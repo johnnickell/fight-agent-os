@@ -93,11 +93,20 @@ version. Coordinate overlapping composition/manifest edits once during TASK deco
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00572](../tasks/00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | in-progress |
+| [TASK-00572](../tasks/00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | done |
 | [TASK-00573](../tasks/00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+The Common DBAL consumer adoption is independently accepted under
+[TASK-00572](../tasks/00572-TASK.md#accepted-implementation-checkpoint--2026-11-10): released Common v1.5.0,
+source/lock `06fb5cd3720af9cf8295198f74040d95b64c5155`, direct shared-Connection composition and real PostgreSQL
+failure/concurrency/recovery qualification. Unused ORM scaffolding/direct dependency is removed; the required
+Role audit decorator remains. TASK-00573 still owns the separate explicit package-handler audit capability
+hold, so this TICKET is not complete. Publication/merge are separate from implementation acceptance.
+
+The decomposition and supplier observations below are historical planning checkpoints, not current TASK status.
 
 John approved this third requirement area under EPIC-00023 and the two complete integration TASKs, now written:
 
