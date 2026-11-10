@@ -166,7 +166,7 @@
 | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | wontfix | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done | [TICKET-00039](../tickets/00039-TICKET.md) |
-| [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | in-progress | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | done | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
