@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Adapter\Console\BootstrapSuperAdminCommand;
 use App\Adapter\Persistence\Bootstrap\PostgresBootstrapProgress;
 use App\Application\Bootstrap\BootstrapOperation;
+use App\Domain\Authorization\ManagedPolicyCatalog;
 use App\Domain\Bootstrap\BootstrapProgress;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -29,7 +30,7 @@ return static function (Container $container): void {
             $container->get(QueryBus::class),
             $container->get(UserRepository::class),
             $container->get(BootstrapProgress::class),
-            $container->get(\App\Domain\Authorization\ManagedPolicyCatalog::class)
+            $container->get(ManagedPolicyCatalog::class)
         ));
     $container->set(BootstrapSuperAdminCommand::class, static fn(Container $container): BootstrapSuperAdminCommand =>
         new BootstrapSuperAdminCommand($container->get(BootstrapOperation::class)));
