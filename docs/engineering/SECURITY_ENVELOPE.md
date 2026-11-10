@@ -99,6 +99,12 @@ Qualify startup/configuration and Nginx directly with their owning tools; produc
 transport, CORS and journey behavior, not wrapper/configuration text. Run focused tests then normal `bin/build`.
 Use default-store curl and actual browser TLS without `--insecure`; a diagnostic `--connect-to` retaining
 canonical Host/SNI can qualify supplier transport but **cannot** establish canonical port-443 browser readiness.
+With an independently operated router, use the supplier's explicit [external front door](LOCAL_INGRESS.md#external-proxy-front-door):
+no published supplier ports, unchanged TLS/SNI passthrough, and ordinary canonical port-443 readiness.
+Refresh only the explicitly authorized two supplier services to install changed edge templates; full-test
+installed Nginx and qualify its actual redirects/denials. Before retiring the installed-template source,
+reconcile through supported setup/up from a surviving checkout with the integrated security templates.
+Retain necessary source rather than silently reverting security policy; task runtime retirement is independent.
 If actual host ownership differs from a supplied runbook/context, preserve the existing service and report the
 specific missing front door. A sudo denial is not permission to restart it or invoke an unauthorized OS dialog.
 Do not remove any leaf referenced by a live/pending include; Docker/source cleanup has its independent lifecycle.
