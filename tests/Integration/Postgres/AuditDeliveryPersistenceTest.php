@@ -14,8 +14,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\QueryHandler\FindDueCredentialDeliveriesHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
@@ -35,7 +33,7 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGra
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
@@ -54,7 +52,7 @@ final class AuditDeliveryPersistenceTest extends TestCase
     private Connection $connection;
     private PostgresEmailChangeGrantRepository $changes;
     private PostgresAuditEvidenceRepository $audit;
-    private DoctrineTransactionalUnitOfWork $unit;
+    private DbalTransactionalUnitOfWork $transactionalUnitOfWork;
     private UserId $userId;
     private DateTimeImmutable $now;
 
@@ -97,9 +95,7 @@ SQL
         ]);
         $this->changes = new PostgresEmailChangeGrantRepository($this->connection);
         $this->audit = new PostgresAuditEvidenceRepository($this->connection);
-        $config = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $config->enableNativeLazyObjects(true);
-        $this->unit = new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $config));
+        $this->transactionalUnitOfWork = new DbalTransactionalUnitOfWork($this->connection);
     }
 
     /**
@@ -814,7 +810,7 @@ SQL);
      */
     private function commit(callable $work): mixed
     {
-        return $this->unit->commitTransactional($work);
+        return $this->transactionalUnitOfWork->commitTransactional($work);
     }
 
     /**

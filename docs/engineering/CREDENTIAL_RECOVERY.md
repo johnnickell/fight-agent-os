@@ -85,8 +85,10 @@ says nothing about work arriving or expiring after that observation.
 `run` additionally reports `discovered`, `offered`, `dispatched`, `contended`, `unsupported`, and `stopped` under
 `delivery`. Cleanup stall or failure prevents live dispatch. Budget exhaustion alone does not prevent still-live work.
 Delivery handler return counts do not mean provider success; inspect safe status. Unsupported email delivery is counted
-but never dispatched. A stale/non-retryable package delivery failure stops that page because Doctrine may close its
-manager on rollback; restart with a fresh invocation. Unexpected failures stop immediately with a constant diagnostic.
+but never dispatched. A stale/non-retryable package delivery failure stops that page; restart with a fresh invocation.
+The [shared DBAL boundary](TRANSACTIONS.md) remains usable after confirmed rollback, but uncertain transaction
+outcomes close it. The runner does not automatically retry either outcome. Unexpected failures stop immediately
+with a constant diagnostic.
 
 | Exit | Meaning |
 |---|---|

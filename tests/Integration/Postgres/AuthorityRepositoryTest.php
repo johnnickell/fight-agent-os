@@ -21,8 +21,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\Agent\CommandHandler\GrantPermissionToAgentHandler;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
@@ -54,7 +52,7 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
@@ -70,7 +68,7 @@ use RuntimeException;
 final class AuthorityRepositoryTest extends TestCase
 {
     private Connection $connection;
-    private DoctrineTransactionalUnitOfWork $unitOfWork;
+    private DbalTransactionalUnitOfWork $unitOfWork;
     private PostgresPermissionRepository $permissions;
     private PostgresRoleRepository $roles;
 
@@ -84,10 +82,7 @@ final class AuthorityRepositoryTest extends TestCase
         $fences = new AuthorizationReferenceFences($this->connection);
         $this->permissions = new PostgresPermissionRepository($this->connection, $fences);
         $this->roles = new PostgresRoleRepository($this->connection, $fences);
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $entityManager = new EntityManager($this->connection, $configuration);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
+        $this->unitOfWork = new DbalTransactionalUnitOfWork($this->connection);
     }
 
     /**

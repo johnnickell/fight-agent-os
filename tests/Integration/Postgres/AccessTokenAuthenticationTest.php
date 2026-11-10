@@ -18,8 +18,6 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\RefreshCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
@@ -41,7 +39,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Auth\Security\PhpPasswordHasher;
 use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -390,8 +388,6 @@ final class AccessTokenAuthenticationTest extends TestCase
      */
     private function service(PasswordHash $hash): AuthenticationService
     {
-        $orm = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $orm->enableNativeLazyObjects(true);
         $throttle = $this->createStub(LoginThrottle::class);
         $throttle->method('allows')->willReturn(true);
         $generator = $this->createStub(RefreshCredentialGenerator::class);
@@ -402,7 +398,7 @@ final class AccessTokenAuthenticationTest extends TestCase
             $this->createStub(ActivationGrantRepository::class),
             $this->sessions,
             new SessionRevocationService($this->sessions),
-            new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $orm)),
+            new DbalTransactionalUnitOfWork($this->connection),
             $this->fixture->clock,
             $throttle,
             $generator,

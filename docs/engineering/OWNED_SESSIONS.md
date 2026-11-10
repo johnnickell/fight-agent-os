@@ -125,8 +125,9 @@ Unexpected notification/storage failure is an uncertain sanitized failure, not p
 Every response is no-store. Target access tokens fail the existing authoritative session lookup immediately,
 even while the signature and JWT lifetime remain valid; target refresh credentials likewise fail. Current refresh
 and access authority remain usable. Other devices have no push guarantee; their next server request is authoritative.
-Package conflicts may close their transactional ORM unit: an HTTP request ends after its one dispatched command;
-callers must not reuse a failed unit for later mutations. Ordinary PHP requests construct a fresh container.
+An HTTP request ends after its one dispatched command; ordinary PHP requests construct a fresh container.
+The [shared DBAL boundary](TRANSACTIONS.md) stays usable after confirmed rollback, including expected package
+conflicts. Uncertain transaction outcomes close it; never reuse that closed unit for later mutations.
 
 ### Confirmation, convergence and volatile coordination
 
