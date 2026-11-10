@@ -340,7 +340,9 @@ final class ApiActionSecurityTest extends TestCase
         $container = $this->app->getContainer();
         self::assertInstanceOf(Container::class, $container);
         $container->get(SynchronousCommandBus::class)->execute(
-            new ReconcileManagedPolicy(InstallationManagedPolicy::create())
+            new ReconcileManagedPolicy($container->get(
+                \Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class
+            ))
         );
         $role = $this->roles->getByName(RoleName::fromString($name));
         self::assertNotNull($role);
@@ -370,9 +372,10 @@ final class ApiActionSecurityTest extends TestCase
         yield 'ordinary' => ['ROLE_USER', ['DELETE_OWN_SESSIONS', 'READ_OWN_SESSIONS', 'VIEW_DASHBOARD']];
         yield 'super admin' => ['ROLE_SUPER_ADMIN', [
             'ASSIGN_SUPER_ADMIN', 'CREATE_ROLES', 'DELETE_OWN_SESSIONS', 'DELETE_ROLES', 'DELETE_SESSIONS',
-            'DELETE_USERS', 'DISABLE_USERS', 'ENABLE_USERS', 'INVITE_USERS', 'MANAGE_ROLE_PERMISSIONS',
-            'MANAGE_USER_INVITATIONS', 'MANAGE_USER_ROLES', 'READ_OWN_SESSIONS', 'READ_PERMISSIONS',
-            'READ_ROLES', 'READ_SESSIONS', 'READ_SWAGGER', 'READ_USERS', 'REMOVE_SUPER_ADMIN', 'RESTORE_USERS',
+            'DELETE_USERS', 'DISABLE_USERS', 'ENABLE_USERS', 'GENERATE_REFERENCE_IDS', 'INVITE_USERS',
+            'MANAGE_ROLE_PERMISSIONS', 'MANAGE_USER_INVITATIONS', 'MANAGE_USER_ROLES', 'READ_OWN_SESSIONS',
+            'READ_PERMISSIONS', 'READ_PROJECTS', 'READ_ROLES', 'READ_SESSIONS', 'READ_SWAGGER', 'READ_USERS',
+            'REGISTER_PROJECTS', 'REMOVE_SUPER_ADMIN', 'RESTORE_USERS',
             'UPDATE_ROLES', 'VIEW_DASHBOARD'
         ]];
     }

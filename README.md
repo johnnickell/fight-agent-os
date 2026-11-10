@@ -433,7 +433,9 @@ enable real-inbox delivery or establish complete production recovery. Production
 preflight fail closed; Compose now consumes `APP_ENV` rather than hardcoding development.
 
 Trusted operators can explicitly preview and apply the version-controlled installation authority with
-`./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal`. Read the
+`./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal` from the single
+`database/seeds/permissions.json` / `roles.json` catalog. User retains its three approved Permissions; Super Admin
+receives every current/future managed Permission on reconciliation, without implicit custom/Agent grants. Read the
 [managed policy runbook](docs/engineering/MANAGED_POLICY.md) before applying: this reconciles the exact managed
 catalog, not users, bootstrap, Swagger routes or live Agent operations. It never runs automatically.
 After reconciliation, trusted operators can invite an ordinary pending user with

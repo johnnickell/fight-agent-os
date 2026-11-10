@@ -11,6 +11,7 @@ use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\ConsoleUserOperation;
+use App\Domain\Authorization\ManagedPolicyCatalog;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\GetPermissionByIdHandler;
@@ -51,7 +52,10 @@ return static function (Container $container): void {
             $container->get(ConsoleAssignmentPolicy::class)
         ));
     $container->set(ConsoleAssignmentPolicy::class, static fn(Container $container): ConsoleAssignmentPolicy =>
-        new ConsoleAssignmentPolicy($container->get(QueryBus::class)));
+        new ConsoleAssignmentPolicy(
+            $container->get(QueryBus::class),
+            $container->get(ManagedPolicyCatalog::class)
+        ));
     $container->get('messaging.command.router')->registerHandlers([
         InvitePendingUserHandler::commandRegistration() => InvitePendingUserHandler::class
     ]);

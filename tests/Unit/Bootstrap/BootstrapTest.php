@@ -222,7 +222,7 @@ final class BootstrapTest extends TestCase
                     \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
                 );
             }
-            $policy = InstallationManagedPolicy::create();
+            $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
 
             return new ManagedPolicyPlan(
                 array_map(
@@ -277,7 +277,13 @@ final class BootstrapTest extends TestCase
             }
         });
 
-        return new BootstrapOperation($bus, $queries, $users, $progress);
+        return new BootstrapOperation(
+            $bus,
+            $queries,
+            $users,
+            $progress,
+            new \App\Adapter\Authorization\JsonManagedPolicy()
+        );
     }
 
     /**
