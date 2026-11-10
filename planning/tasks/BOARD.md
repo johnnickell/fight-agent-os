@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 9 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -306,7 +306,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 9 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | — | — |
 | 10 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | — | — |
 | 13 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
 | 14 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00576](00576-TASK.md) | — |

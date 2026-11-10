@@ -14,15 +14,13 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +31,7 @@ use PHPUnit\Framework\TestCase;
 final class RefreshSessionRepositoryTest extends TestCase
 {
     private Connection $connection;
-    private DoctrineTransactionalUnitOfWork $unitOfWork;
+    private DbalTransactionalUnitOfWork $unitOfWork;
     private PostgresRefreshSessionRepository $sessions;
     private PostgresUserRepository $users;
 
@@ -57,10 +55,7 @@ SQL
             new AuthorizationReferenceFences($this->connection),
             new AuthenticationAuthorityFences($this->connection)
         );
-        $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $configuration->enableNativeLazyObjects(true);
-        $entityManager = new EntityManager($this->connection, $configuration);
-        $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
+        $this->unitOfWork = new DbalTransactionalUnitOfWork($this->connection);
     }
 
     /**

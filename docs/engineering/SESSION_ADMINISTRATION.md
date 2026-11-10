@@ -45,8 +45,9 @@ Qualification used the installed stable Composer distribution and remote annotat
 - Common `v1.4.1`, tag object `7e1c2fc1989fdf3fef99ddbe4ef74488856318d1`, peeled source and lock reference
   `a482c220d312d2ef7762c3f0d85d9fb76a7021fa`.
 
-No dependency update, guessed signature, vendor patch or development snapshot is needed. These are tested
-identities, not guarantees for future releases.
+These are the original qualification identities, not guarantees for future releases. TASK-00572 subsequently
+adopts Common v1.5.0 at `06fb5cd3720af9cf8295198f74040d95b64c5155` while retaining Access Control v0.8.0;
+see [current transaction composition and failure recovery](TRANSACTIONS.md). No vendor patch or development snapshot is used.
 
 `RevokeSession` accepts actor/current/target-session/reason, **not an explicit target user**. The HTTP adapter
 therefore checks the selected session's owner against the path user before dispatch. Session ownership is
@@ -56,7 +57,7 @@ optimistically replaces only that session and appends `AuditEvidence::administra
 own single generic `TransactionalUnitOfWork`. The audit records actor, target user, target session, reason,
 action/outcome and database timestamp. No consumer transaction wraps package dispatch.
 
-The configured Common `DoctrineTransactionalUnitOfWork` uses the EntityManager's exact shared DBAL connection;
+The configured Common v1.5.0 `DbalTransactionalUnitOfWork` uses the exact shared DBAL connection directly;
 both session and audit repositories use that same registered connection and require an enclosing transaction.
 The repository's conflict-recovery savepoint neither commits the outer transaction nor supplies a second
 transaction authority. PostgreSQL integration proves audit-write failure rolls session state back and no success

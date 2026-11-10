@@ -21,7 +21,7 @@ Source observations at TASK-00564's base `eb5fe2f56a8fbb8b5c27f64b959dc2d36d5bc0
 |---|---|
 | Historical registration used an unregistered Application service, internal IDs and a mixed Store; TASK-00575 replaces that whole path with Project-owned registered commands/queries, an aggregate repository and adapter admission | Current [Project runbook](REPOSITORY_REGISTRATION.md) and TASK-00575 own implementation/evidence; independent acceptance is separate |
 | `RoleMutationUnitOfWork` infers required audit from the transaction callback's returned Role event | TASK-00573; preserve existing atomic audit until explicit package-handler support is qualified |
-| `config/common/persistence.php` binds one shared EntityManager/DBAL Connection and Common `DoctrineTransactionalUnitOfWork` | TASK-00572 qualifies an actual DBAL-only alternative; no ORM replacement or second transaction authority is implied |
+| TASK-00572 binds Common v1.5.0 `DbalTransactionalUnitOfWork` directly to the shared DBAL Connection; unused EntityManager scaffolding and direct ORM dependency are removed | [Current transaction composition](TRANSACTIONS.md); no genuine ORM participant or second transaction authority is introduced |
 | `AuthenticatedRoleAssignment::assign()` is the existing Application admission path, not a new all-entry rule | TASK-00576 owns its correction; do not bypass current checks or expose raw messages to untrusted callers meanwhile |
 | `ChangePasswordAction` calls owned `ChangePassword`, which invokes public package `AuthenticationService::changePassword()` synchronously with sensitive inputs | Actual sensitive non-serializable exception, not a reason to put passwords/tokens in messages; broader correction belongs to TASK-00580 |
 | TASK-00582 selects released Common v1.4.1 and preserves Access Control v0.8.0; canonical categories and the Common safe HTTP boundary replace the local generic classifier | [Safe API failures](SAFE_HTTP_ERRORS.md) records actual composition, direct cookie effects, strict client cutover and scoped independent HTTP/browser/security acceptance; capability-specific corrections and deployment remain separate |
@@ -37,7 +37,7 @@ migration or explicitly authorized disposal.
 TASK-00574 replaces the extracted mixed-store paths with `Domain/Workspace/Workspace` (root, ID, repository,
 bootstrap command and current-state queries) and mirrored registered Application handlers/typed Views. Console
 owns trusted-operator admission and generates the ID before void dispatch. The bootstrap handler coordinates
-collection persistence and an explicit required audit writer through the qualified Common Doctrine transaction;
+collection persistence and an explicit required audit writer through the qualified Common DBAL transaction;
 all participating writes share its connection. No audit is inferred from a callback result.
 
 The reference HTTP Action owns current Workspace admission after central authentication/permission enforcement;

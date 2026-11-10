@@ -678,9 +678,9 @@ SQL);
     }
 
     /**
-     * Retains first-step state after rollback and corrects it only through a fresh manager
+     * Retains first-step state and corrects membership through the usable shared DBAL boundary
      */
-    public function testFailedSharedContainerRequiresFreshInvocation(): void
+    public function testConfirmedRollbackAllowsSharedBoundaryCorrection(): void
     {
         $this->connection->executeStatement(
             'ALTER TABLE user_role_assignments ADD CONSTRAINT invitation_test_abort CHECK (FALSE)'
@@ -692,10 +692,6 @@ SQL);
         self::assertCount(1, $this->events);
         self::assertFalse($this->connection->isTransactionActive());
         $this->connection->executeStatement('ALTER TABLE user_role_assignments DROP CONSTRAINT invitation_test_abort');
-        self::assertSame(1, $this->runConsole('after.failure@example.test'));
-        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
-        self::assertCount(1, $this->events);
-        $this->container = $this->newContainer();
         self::assertSame(0, $this->runRole($target, InstallationManagedPolicy::USER_ROLE_ID));
         self::assertSame($grants, $this->connection->fetchAllAssociative('SELECT * FROM activation_grants'));
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
@@ -828,7 +824,7 @@ SQL);
     /**
      * Retains committed membership on separate audit failure and repairs evidence by safe repeat
      */
-    public function testRoleAuditFailureAndFreshCorrection(): void
+    public function testRoleAuditFailureAndSharedBoundaryCorrection(): void
     {
         $constraint = 'ALTER TABLE audit_evidence ADD CONSTRAINT invitation_test_abort ';
         $this->connection->executeStatement($constraint."CHECK (action <> 'user.console_role_assigned')");
@@ -840,8 +836,7 @@ SQL);
             "SELECT count(*) FROM audit_evidence WHERE action = 'user.console_role_assigned'"
         ));
         $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT invitation_test_abort');
-        self::assertSame(1, $this->runRole($user, InstallationManagedPolicy::USER_ROLE_ID));
-        $this->container = $this->newContainer();
+        self::assertFalse($this->connection->isTransactionActive());
         self::assertSame(0, $this->runRole($user, InstallationManagedPolicy::USER_ROLE_ID));
         self::assertSame($grants, $this->connection->fetchAllAssociative('SELECT * FROM activation_grants'));
         self::assertSame(1, (int) $this->connection->fetchOne(

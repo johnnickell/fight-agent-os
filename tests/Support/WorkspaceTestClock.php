@@ -8,6 +8,7 @@ use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AccessKeyring;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use DateTimeImmutable;
+use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
@@ -31,9 +32,12 @@ final class WorkspaceTestClock
      *
      * @return App<Container>
      */
-    public static function application(DateTimeImmutable $time): App
+    public static function application(DateTimeImmutable $time, ?Connection $connection = null): App
     {
         $container = require dirname(__DIR__, 2).'/config/services.php';
+        if ($connection !== null) {
+            $container->set(Connection::class, static fn(): Connection => $connection);
+        }
         self::configure($container, $time);
         AppFactory::setContainer($container);
         AppFactory::setResponseFactory(new ResponseFactory());
