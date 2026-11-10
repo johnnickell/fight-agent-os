@@ -69,7 +69,7 @@ final class UserLifecycleApiTest extends TestCase
      */
     protected function setUp(): void
     {
-        foreach (['DATABASE_URL', 'APP_ACCESS_TOKEN_CONFIG'] as $name) {
+        foreach (['DATABASE_URL', 'APP_ACCESS_TOKEN_CONFIG', 'APP_CREDENTIAL_DELIVERY_KEY'] as $name) {
             $this->environment[$name] = getenv($name);
         }
         $url = (string) getenv('TEST_DATABASE_URL');
@@ -82,6 +82,8 @@ final class UserLifecycleApiTest extends TestCase
         $tokens->clock->time = new DateTimeImmutable('2026-11-09T12:00:00Z');
         putenv('DATABASE_URL='.$url);
         putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($tokens->configuration, JSON_THROW_ON_ERROR));
+        // Own the fixture cipher key; independent race workers inherit this ephemeral value.
+        putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
         $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
