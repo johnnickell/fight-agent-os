@@ -333,13 +333,16 @@ Require a relevant diagram when the effective change materially affects **class 
 or runtime flow**. Choose the smallest view explaining the changed boundary or interaction, not a picture of the
 whole application. For non-material changes where a diagram adds no useful information, omit the section; that is complete,
 not missing evidence. A copy edit, for example, does not require a diagram. Follow the existing
-[source/image and rendering standard](DIAGRAMS.md); this section adds no renderer or application gate.
+[source/image and rendering standard](DIAGRAMS.md), using the target project's declared format. For Mermaid,
+apply its [validation and publication checks](DIAGRAMS.md#mermaid-validation) to the complete prepared body,
+final GitHub display and linked documentation. This section adds no renderer or application gate.
 
 For an applicable change, prepare the following in the PR description before authorized publication:
 
 - Name the changed responsibilities, dependency direction or flow and the view's scope. Distinguish existing
   implementation from **PROPOSED** elements; a proposal is not a picture of implemented behavior.
-- Embed the maintained PNG and link its canonical editable Python source and owning feature documentation.
+- For Agent OS, embed the maintained PNG and link its canonical editable Python source and owning feature
+  documentation. For a target using Mermaid, embed the validated block and link its maintained editable diagram.
   Use repository URLs pinned to a full commit, not local filesystem paths or moving branch links. Keep the
   source and image at the same artifact revision; name the full implementation source revision they describe
   (which can precede the documentation commit). If the PR head differs, explain the relevant unchanged-source

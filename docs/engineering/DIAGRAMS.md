@@ -20,11 +20,15 @@ outward dependency. A dependency edge does not establish execution order, succes
 For PHP, [STANDARDS.md](STANDARDS.md#architecture) owns the normative architecture; source is evidence of the
 implementation, not permission to weaken that contract or move classes to make a picture conform.
 
-Use Python [Diagrams](https://diagrams.mingrammer.com/) for authored views. Labeled `Node` boxes and `Cluster`
+For Agent OS, use Python [Diagrams](https://diagrams.mingrammer.com/) for authored views. Labeled `Node` boxes and `Cluster`
 groups work for class ownership; infrastructure icons, C4 or programming nodes may suit other questions.
 Do not imply UML cardinalities, inheritance or generated source completeness from generic boxes.
 If the building blocks or layout cannot make the requested view readable, report the gap for a decision instead
 of presenting an unclear image as qualified.
+
+When shared skills operate on another project, follow its declared diagram format through
+[project context](PROJECT_CONTEXT.md). For authored or embedded Mermaid, apply
+[Mermaid validation](#mermaid-validation); the Python/PNG tooling below is Agent OS-specific.
 
 Each view needs:
 
@@ -44,6 +48,34 @@ Each view needs:
 - Explicit scope, omissions and limitations. A partial dependency view is not the whole class graph; a static
   source trace is not a runtime observation. No diagram proves correctness, security, acceptance or deployment,
   or replaces behavior tests and independent review.
+
+## Mermaid validation
+
+Apply this whenever the selected work authors, changes or republishes Mermaid in documentation or a PR body.
+Keep the maintained editable diagram with its owning feature documentation; an inline PR copy is a publication
+of that source. Preserve the represented revision, scope and source links when making a syntax-only correction.
+
+1. Validate each complete Mermaid block from the actual document and prepared PR body with an available Mermaid
+   renderer. Extract the block verbatim into ignored execution scratch; checking a shortened example or only the
+   documentation copy does not validate an edited PR copy. Record the actual tool/version, command and result.
+   Use target-owned tooling when provided; missing tooling is an explicit setup prerequisite, not permission to
+   install or upgrade global tools or claim a pass. Inspect the rendered labels, arrows, branches and legibility.
+2. Follow Mermaid's [sequence-diagram escaping rules](https://mermaid.js.org/syntax/sequenceDiagram.html#entity-codes-to-escape-characters).
+   A literal semicolon separates statements even inside message text. Prefer a comma or encode an intended
+   semicolon as `#59;`: `Common->>Storage: Identity lookup#59; compare or append`. HTML `&...;` escaping is not a
+   substitute for Mermaid syntax validation. Rerender the complete affected blocks after correction.
+3. During authorized publication, inspect the exact final PR body in GitHub's rendered view and follow the
+   pinned documentation link to check its diagram too. GitHub can use a different Mermaid version from the local
+   renderer; [check its supported syntax/version](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#checking-your-version-of-mermaid)
+   when diagnosing a mismatch. API readback confirms saved text, not rendering. A local render or successful edit
+   alone does not prove the published diagram works. Recheck after publication transformations or body edits.
+4. Correct both the maintained source and affected PR copy within the authorized scope. A pinned historical file
+   cannot be repaired by editing the PR body: commit the source correction and update its artifact link, retaining
+   the implementation revision it describes. If a copy, renderer or hosted view cannot be corrected or checked,
+   identify that exact remaining gap in the existing handoff; do not claim diagram verification is complete.
+
+These are documentation checks through the owning renderer and viewer. They add no application-suite tests,
+new renderer wrapper or publication authority; retain scratch only while needed under the existing resource rules.
 
 ## Keep source and image with the owner
 

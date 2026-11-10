@@ -47,7 +47,9 @@ Ordinary new implementation and repairs retain the complete sequence below.
    Test owned product behavior; qualify infrastructure with its own tools, not application tests of tooling.
    For material ownership, dependency-direction or runtime-flow changes, prepare the relevant maintained
    diagram and revision-linked authoring material under [PR diagram guidance](../../../docs/engineering/LANDING.md#architecture-diagrams-in-pr-descriptions);
-   omit an unhelpful diagram for non-material changes. This preparation grants no publication authority.
+   omit an unhelpful diagram for non-material changes. Render and inspect authored/changed diagrams using the
+   target's format; apply [Mermaid validation](../../../docs/engineering/DIAGRAMS.md#mermaid-validation) to Mermaid
+   documentation and prepared PR copies. This preparation grants no publication authority.
    Use [quality guidance](../../../docs/engineering/QUALITY.md) as needed and
    [Writing for Agents](../writing-for-agents/SKILL.md) for instruction changes. Keep affected current docs accurate.
 5. Run focused checks during iteration, planning refresh/check if changed, `git diff --check` and **one final full

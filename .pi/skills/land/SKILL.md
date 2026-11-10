@@ -31,7 +31,9 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    deliberate fresh execution and distinguish reused receipts from fresh evidence. Genuinely new implementation
    needs renewed verification/independence; integration-only changes follow advancing-base policy. Commit only
    owned files, non-force push, create/update the exact PR using its template and `TASK-NNNNN — <title>`. Verify
-   current base/head/remote OID, required checks and audience-accessible applicable captures. Follow the standards'
+   current base/head/remote OID, required checks and audience-accessible applicable captures. Verify final published
+   diagrams under [PR diagram guidance](../../../docs/engineering/LANDING.md#architecture-diagrams-in-pr-descriptions),
+   including the rendered Mermaid body and linked source when present. Follow the standards'
    upload/partial-publication recovery and the [native attachment method](#github-native-artifact-attachments) below;
    missing required proof keeps delivery incomplete. No approval or merge.
 4. **Retire and inspect.** Follow the one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
