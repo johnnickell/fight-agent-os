@@ -5,6 +5,8 @@ TASK-00063 integrates the existing [local HTTPS](LOCAL_HTTPS.md), [shared ingres
 production mail provider, deploy a production proxy or certify a production artifact. Independent acceptance
 and outstanding host/browser evidence are recorded in the TASK, not implied by this policy.
 
+The [source-verified runtime flow](security-envelope/README.md) shows startup and request ordering.
+
 ## Startup and transport
 
 `bootstrap/app.php` resolves the shared `HttpSecurityConfiguration`, authentication admission, activation
