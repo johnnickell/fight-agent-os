@@ -6,6 +6,8 @@ roots, each project's `local.{domain}` namespace and native Checkout UUID bindin
 It is ignored local configuration, not a resource inventory or hosted database.
 Git and Docker remain authoritative for source and running resources.
 
+The [registration flow and source traces](local-domains/README.md) describe the implemented local boundary.
+
 ## Install and enroll
 
 Use a maintained Fight checkout as the local supplier. `bin/local-domain install`
