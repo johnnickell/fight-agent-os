@@ -1,8 +1,11 @@
 {{/* Only one opted-in running TLS gateway per safe exact name. No wildcard/default routing. */}}
 {{ range $host, $containers := groupBy (where $ "Env.FIGHT_LOCAL_INGRESS" "1") "Env.VIRTUAL_HOST" }}
-{{ if and (regexMatch "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.localhost$" $host) (eq (len $containers) 1) }}
+{{ $localDomain := regexMatch "^(task-[0-9]{5}-[a-f0-9]{10}\\.)?local\\.([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$" $host }}
+{{ $certHost := $host }}
+{{ if $localDomain }}{{ $certHost = regexReplaceAll "^task-[0-9]{5}-[a-f0-9]{10}\\." $host "" }}{{ end }}
+{{ if and (or $localDomain (regexMatch "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.localhost$" $host)) (eq (len $containers) 1) }}
 {{ $gateway := index $containers 0 }}
-{{ if and $gateway.State.Running (eq $gateway.Env.VIRTUAL_PROTO "https") (eq $gateway.Env.VIRTUAL_PORT "8443") (exists (printf "/etc/nginx/certs/%s/localhost.pem" $host)) (exists (printf "/etc/nginx/certs/%s/localhost-key.pem" $host)) (exists "/etc/nginx/certs/rootCA.pem") }}
+{{ if and $gateway.State.Running (or (eq $gateway.State.Health.Status "") (eq $gateway.State.Health.Status "healthy")) (eq $gateway.Env.VIRTUAL_PROTO "https") (eq $gateway.Env.VIRTUAL_PORT "8443") (exists (printf "/etc/nginx/certs/%s/localhost.pem" $certHost)) (exists (printf "/etc/nginx/certs/%s/localhost-key.pem" $certHost)) (exists "/etc/nginx/certs/rootCA.pem") }}
 {{ range $network := $gateway.Networks }}
 {{ if and (eq $network.Name "fight-local-ingress") $network.IP }}
 server {
@@ -15,8 +18,8 @@ server {
 server {
     listen 443 ssl;
     server_name {{ $host }};
-    ssl_certificate /etc/nginx/certs/{{ $host }}/localhost.pem;
-    ssl_certificate_key /etc/nginx/certs/{{ $host }}/localhost-key.pem;
+    ssl_certificate /etc/nginx/certs/{{ $certHost }}/localhost.pem;
+    ssl_certificate_key /etc/nginx/certs/{{ $certHost }}/localhost-key.pem;
     if ($request !~ "^[^ ]+ /") { return 421; }
     if ($http_host != "{{ $host }}") { return 421; }
     if ($ssl_server_name != "{{ $host }}") { return 421; }

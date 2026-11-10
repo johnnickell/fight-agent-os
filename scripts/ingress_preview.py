@@ -17,13 +17,14 @@ def target(root, selector):
         require(entry and checkout != safe and str(checkout) == selector and checkout == checkout.resolve(),
                 'Expected an exact registered isolated consumer checkout path')
         require((checkout / 'etc/local-tooling.json').is_file(), 'Selected checkout has no local tooling profile')
+    if selector is None:
+        project = json.loads((checkout / 'etc/local-tooling.json').read_text())['project']
     return safe, checkout, project
 
 
 def up(supplier, root, selector):
     from local_ingress import NETWORK, NGINX, check_leaf, live, ready
 
-    require(selector is not None, 'Project preview requires an exact --worktree path')
     safe, checkout, project = target(root, selector)
     profile = json.loads((checkout / 'etc/local-tooling.json').read_text()).get('https_preview')
     require(isinstance(profile, dict), 'Selected project has no HTTPS preview profile')
@@ -31,10 +32,15 @@ def up(supplier, root, selector):
     require(all(isinstance(name, str) and re.fullmatch(r'[a-z0-9][a-z0-9-]*', name) for name in (service, network))
             and type(port) is int and 1 <= port <= 65535, 'Invalid project preview profile')
 
-    host = project + '.localhost'
+    from local_domain import selected_host, binding
+    require(selector is not None or binding(supplier, checkout), 'Primary preview requires explicit local-domain enrollment')
+    host = selected_host(supplier, checkout, project + '.localhost')
     ready(supplier)
     certs = check_leaf(supplier, host)
-    command = [checkout / 'bin/runtime', 'docker', '--worktree', str(checkout), 'compose']
+    command = [checkout / 'bin/runtime', 'docker']
+    if selector is not None:
+        command += ['--worktree', str(checkout)]
+    command += ['compose']
     model = query([*command, 'config', '--format=json'], checkout)
     backend = model['services'].get(service, {})
     app_network = model.get('networks', {}).get(network, {})
@@ -87,7 +93,7 @@ http {{
     overlay = gateway / 'compose.json'
     write_private(overlay, json.dumps({
         'services': {'fight-https-preview': {
-            'image': NGINX, 'user': f'{os.getuid()}:{os.getgid()}',
+            'restart': 'unless-stopped', 'image': NGINX, 'user': f'{os.getuid()}:{os.getgid()}',
             'entrypoint': ['nginx'], 'command': ['-c', '/etc/fight-preview/nginx.conf', '-g', 'daemon off;'],
             'read_only': True, 'tmpfs': ['/tmp:rw,nosuid,noexec,size=32m'], 'cap_drop': ['ALL'],
             'security_opt': ['no-new-privileges:true'], 'mem_limit': '128m', 'cpus': 0.5, 'pids_limit': 64,

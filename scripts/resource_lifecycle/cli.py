@@ -21,6 +21,7 @@ def main():
         entry.add_argument('--worktree', default=argparse.SUPPRESS)
         if name == 'up':
             entry.add_argument('--build-only', action='store_true')
+            entry.add_argument('--task', help='Actual TASK identity for an enrolled new worktree')
             entry.add_argument('--shared-ingress', action='store_true', help='explicitly connect main to shared HTTPS; never the ordinary default')
     docker = sub.add_parser('docker')
     docker.add_argument('argv', nargs=argparse.REMAINDER)
@@ -39,7 +40,7 @@ def main():
     root = Path.cwd().resolve()
     try:
         if args.action == 'up':
-            return up(root, args.worktree, args.build_only, args.shared_ingress)
+            return up(root, args.worktree, args.build_only, args.shared_ingress, args.task)
         if args.action == 'down':
             return down(root, args.worktree)
         if args.action == 'finish':

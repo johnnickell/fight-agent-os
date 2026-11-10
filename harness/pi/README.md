@@ -162,3 +162,21 @@ node_modules. Keep artifacts under ignored task scratch.
 Use explicit isolated native/SDK probes in [qualification](WORKFLOW.md#direct-qualification). Tested Pi versions
 are evidence, not equality gates or future compatibility promises. Controlled scripted model responses are not
 live provider qualification, a genuine Build assignment, native visual evidence or independent acceptance.
+
+## Local project names
+
+The packaged `fight-local` command uses this machine's explicitly configured supplier
+(`FIGHT_INGRESS_SUPPLIER`, otherwise the user config `fight/local-ingress.json` under
+`XDG_CONFIG_HOME` or `~/.config`). Configure that pointer with the reviewed supplier's
+`bin/local-domain install`. There are no author-specific paths or DockerProxy requirements.
+The supplier owns canonical `var/local-ingress/hosts.json`; installed package copies
+never carry a duplicate registry. `fight-local plan --project-root /absolute/app
+--namespace local.example.com --primary` previews enrollment; `fight-local apply`
+requires the printed plan path. Repository `bin/up --worktree PATH --task TASK-NNNNN`
+maintains bindings only for already enrolled projects. Python 3 is required, as for
+repository local tooling. Trust and scoped OS DNS enrollment remain explicit.
+
+Future local browser Project creation should call this same supplier registration
+operation. Hosted Project creation may offer a reviewed local command; it cannot
+write the user's workstation registry directly. This package supplies the local
+command, not hosted enrollment or a remote shell bridge.

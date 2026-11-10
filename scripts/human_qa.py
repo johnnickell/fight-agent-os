@@ -149,12 +149,14 @@ def state(safe, entry):
     if complete and ready:
         from local_ingress import live, ready as ingress_ready
         ingress_ready(safe)
-        live(safe, project + '.localhost')
+        from local_domain import selected_host, domain_host
+        host = selected_host(safe, Path(entry['path']), project + '.localhost')
+        live(safe, host)
         for form in ('invitation_activation', 'login'):
             text(['curl', '--noproxy', '*', '--fail', '--silent', '--show-error', '--connect-timeout', '3',
-                  '--max-time', '10', '--resolve', project + '.localhost:443:127.0.0.1', '--output', '/dev/null',
-                  'https://' + project + '.localhost/api/v1/validations/' + form], safe)
-        status, url = 'running', 'https://' + project + '.localhost'
+                  '--max-time', '10', *([] if domain_host(host) else ['--resolve', host + ':443:127.0.0.1']), '--output', '/dev/null',
+                  'https://' + host + '/api/v1/validations/' + form], safe)
+        status, url = 'running', 'https://' + host
     elif not actual or not ready:
         status = 'partial'
     if entry.get('ref_only'):
@@ -225,6 +227,8 @@ def allocate(safe, task, oid):
         require(any(e['path'] == str(checkout) and e['branch'] == branch for e in registrations(safe)) and
                 text(['git', 'rev-parse', 'HEAD'], checkout) == oid, 'Worktrunk did not allocate the exact QA revision')
         creation_hooks(safe, checkout=checkout)
+        from local_domain import ensure
+        ensure(safe, safe, str(checkout), task)
         prepare(safe, checkout, project, entry)
     except (Exception, KeyboardInterrupt):
         cleanup_failed(safe, {'path': str(checkout), 'task': task, 'revision': oid})
@@ -305,7 +309,9 @@ def up(safe, task, ref):
             from local_ingress import check_leaf, ready
             ready(safe)
             try:
-                check_leaf(safe, project + '.localhost')
+                from local_domain import load
+                enrolled = load(safe)['projects'].get(str(safe))
+                check_leaf(safe, enrolled['namespace'] if enrolled else project + '.localhost')
             except Hold as error:
                 raise Hold(str(error) + '; before allocation, explicitly prepare the exact leaf: ' + shlex.join([
                     str(ROOT / 'bin/https'), 'setup', '--ingress', '--worktree', str(checkout)])) from error

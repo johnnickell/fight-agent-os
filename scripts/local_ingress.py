@@ -9,7 +9,9 @@ import re
 import socket
 import subprocess
 import sys
+import tempfile
 
+from local_domain import namespace, domain_host, selected_host
 from resource_lifecycle.preparation import environment, identity, resolve
 from resource_lifecycle.resources import Hold, query, registrations, require, run, text, write_private
 
@@ -28,13 +30,13 @@ def state(safe):
 
 def consumer(root, selector=None):
     safe, checkout, project, entry = resolve(root, selector)
-    host = project + '.localhost' if selector else 'fight-agent-os.localhost'
+    host = selected_host(safe, checkout, project + '.localhost' if selector else 'fight-agent-os.localhost')
     return safe, checkout, project, host
 
 
 def certificates(safe, host):
-    require(re.fullmatch(r'[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.localhost', host), 'Invalid exact local name')
-    directory = state(safe) / 'certs' / host
+    require(domain_host(host) or re.fullmatch(r'[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.localhost', host), 'Invalid local name')
+    directory = state(safe) / 'certs' / (namespace(host) if domain_host(host) else host)
     require(directory.resolve() == directory, 'Aliased certificate directory refused')
     return directory
 
@@ -48,8 +50,8 @@ def openssl_tool():
     return executable
 
 
-def check_leaf(safe, host):
-    directory = certificates(safe, host)
+def check_leaf(safe, host, directory=None):
+    directory = directory or certificates(safe, host)
     cert, key = directory / 'localhost.pem', directory / 'localhost-key.pem'
     ca = state(safe) / 'certs/rootCA.pem'
     for path in (cert, key, ca):
@@ -57,8 +59,9 @@ def check_leaf(safe, host):
                 'Missing regular actual-name leaf/key/CA; explicitly run ./bin/https setup --ingress [--worktree SELECTOR]')
     openssl = openssl_tool()
     san = text([openssl, 'x509', '-in', cert, '-noout', '-ext', 'subjectAltName'], safe)
-    require(san.splitlines()[1:] and ''.join(san.splitlines()[1:]).strip() == 'DNS:' + host,
-            'Leaf must contain only the exact actual-name DNS SAN, not wildcards or aliases')
+    expected_sans = {'DNS:' + namespace(host), 'DNS:*.' + namespace(host)} if domain_host(host) else {'DNS:' + host}
+    require(san.splitlines()[1:] and set(''.join(san.splitlines()[1:]).strip().split(', ')) == expected_sans,
+            'Leaf SANs must match the exact localhost name or the project base plus one-level wildcard')
     require('does match certificate' in text([openssl, 'x509', '-in', cert, '-checkhost', host, '-noout'], safe),
             'Leaf does not cover the exact canonical hostname')
     text([openssl, 'x509', '-in', cert, '-checkend', '86400', '-noout'], safe)
@@ -211,7 +214,7 @@ def herd_config(safe, included_worktrees=(), consumer_roots=()):
         require(checkout == Path(selector) == checkout.resolve() and not checkout.is_symlink() and
                 (not checkout.exists() or any(entry['path'] == str(checkout) for entry in registrations(safe))),
                 'Unknown/aliased included checkout path')
-        host = project + '.localhost'
+        host = selected_host(safe, checkout, project + '.localhost')
         # Explicit future names must have valid leaves; never silently omit the
         # very block needed before QA allocation/readiness can complete.
         check_leaf(safe, host)
@@ -235,7 +238,8 @@ def herd_config(safe, included_worktrees=(), consumer_roots=()):
 def live(safe, host, retry=False, *, preview=False):
     check_leaf(safe, host)
     front, port = listener_options(safe)
-    connections = [['--resolve', host + ':443:127.0.0.1']]
+    # Optional domains must qualify OS DNS too, never conceal missing enrollment.
+    connections = [[]] if domain_host(host) else [['--resolve', host + ':443:127.0.0.1']]
     if front == 'herd':
         # Qualify both exact-name verified supplier transport and the canonical browser front door.
         # connect-to changes transport only, never TLS SNI, Host or browser origin.
@@ -267,8 +271,9 @@ def operate(safe, action, bind_ports=False):
                             'Port ' + str(port) + ' unavailable; operator must resolve it without foreign teardown')
         require(owned(safe), 'Ingress network missing; run explicit setup')
         # Check every installed leaf before listener mutation, including expiry/key/CA.
-        for leaf in sorted((state(safe) / 'certs').glob('*.localhost')):
-            check_leaf(safe, leaf.name)
+        for leaf in sorted((state(safe) / 'certs').iterdir()):
+            if leaf.is_dir() and (leaf.name.endswith('.localhost') or domain_host(leaf.name)):
+                check_leaf(safe, leaf.name)
         run([*compose(safe), 'up', '--detach', '--force-recreate', '--wait', '--wait-timeout', '60'], safe, env=environment())
         ready(safe)
         text([*compose(safe), 'exec', '-T', 'nginx', 'nginx', '-s', 'reload'], safe)
@@ -276,7 +281,7 @@ def operate(safe, action, bind_ports=False):
     elif action == 'status':
         ready(safe)
         config = text([*compose(safe), 'exec', '-T', 'nginx', 'nginx', '-T'], safe)
-        hosts = sorted(set(re.findall(r'^    server_name ([a-z0-9-]+\.localhost);$', config, re.M)))
+        hosts = sorted(set(re.findall(r'^    server_name ([a-z0-9.-]+);$', config, re.M)))
         ids = text(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.service=fight-https-preview'], safe).splitlines()
         preview_hosts = {entry.removeprefix('VIRTUAL_HOST=') for item in
                          (query(['docker', 'inspect', *ids], safe) if ids else [])
@@ -299,14 +304,33 @@ def operate(safe, action, bind_ports=False):
               (' Network removed; use setup before restarting.' if action == 'remove' else ' Network retained.'))
 
 
+
+def install_leaf(directory, candidate):
+    names = ('localhost.pem', 'localhost-key.pem')
+    require(all(not (directory / name).is_symlink() for name in names), 'Aliased installed certificate pair refused')
+    replacement = {name: (candidate / name).read_text() for name in names}
+    previous = directory / 'previous'
+    require(previous.resolve() == previous, 'Aliased prior certificate directory refused')
+    old = {name: (directory / name).read_text() for name in names if (directory / name).is_file()}
+    if len(old) == 2:
+        for name in names:
+            write_private(previous / name, old[name])
+    try:
+        for name in names:
+            write_private(directory / name, replacement[name])
+    except OSError:
+        for name, content in old.items():
+            write_private(directory / name, content)
+        raise
+
+
 def certificate_operation(root, action, selector, consumer_root=None):
     if consumer_root is not None:
         from ingress_preview import target
-        require(selector, 'Project preview certificates require an exact --worktree path')
-        consumer_safe, _, project = target(consumer_root, selector)
+        consumer_safe, checkout, project = target(consumer_root, selector)
         safe, _, _, _ = resolve(root)
         require(consumer_safe != safe, 'Use the Agent OS certificate command for its own checkout')
-        host = project + '.localhost'
+        host = selected_host(safe, checkout, project + '.localhost')
     elif selector and Path(selector).is_absolute() and action in ('setup', 'remove'):
         # Explicit operator leaf preparation may precede disposable QA allocation;
         # exact original paths also remain useful after source retirement. This
@@ -315,11 +339,20 @@ def certificate_operation(root, action, selector, consumer_root=None):
         safe, checkout, project, entry = resolve(root, selector, removed=True)
         require(checkout == checkout.resolve() and not checkout.is_symlink() and
                 (entry is not None or not checkout.exists()), 'Unknown/aliased certificate checkout path')
-        host = project + '.localhost'
+        if checkout.exists():
+            host = selected_host(safe, checkout, project + '.localhost')
+        else:
+            from local_domain import load
+            enrolled = load(safe)['projects'].get(str(safe))
+            host = enrolled['namespace'] if enrolled else project + '.localhost'
     else:
         safe, checkout, project, host = consumer(root, selector)
     directory = certificates(safe, host)
-    if action == 'setup':
+    if action in ('setup', 'renew'):
+        if action == 'setup' and domain_host(host) and (directory / 'localhost.pem').exists():
+            check_leaf(safe, host)
+            print('Reusing the project base/wildcard leaf; use explicit renew for rotation.')
+            return
         # Explicit scoped invocation only. Preflight capabilities before any leaf/CA writes.
         # Never mkcert -install, DNS or .env edits here.
         openssl_tool()
@@ -334,11 +367,22 @@ def certificate_operation(root, action, selector, consumer_root=None):
         require(all(not (directory / name).is_symlink() for name in ('localhost.pem', 'localhost-key.pem')),
                 'Aliased leaf/key refused before generation')
         write_private(shared_ca, ca.read_text())
-        run(['mkcert', '-cert-file', directory / 'localhost.pem', '-key-file', directory / 'localhost-key.pem', host], safe)
-        for name in ('localhost.pem', 'localhost-key.pem'):
-            (directory / name).chmod(0o600)
+        names = [namespace(host), '*.' + namespace(host)] if domain_host(host) else [host]
+        # Validate a new pair before touching the installed pair. Nginx reload is
+        # separate; preserve one prior pair for explicit local recovery.
+        with tempfile.TemporaryDirectory(prefix='.issue-', dir=directory) as temporary:
+            candidate = Path(temporary)
+            run(['mkcert', '-cert-file', candidate / 'localhost.pem', '-key-file', candidate / 'localhost-key.pem', *names], safe)
+            check_leaf(safe, host, candidate)
+            install_leaf(directory, candidate)
         check_leaf(safe, host)
         print('Actual-name leaf prepared for ' + host + '; no trust/DNS/origin change. Refresh ingress and the selected app explicitly.')
+    elif action == 'restore':
+        previous = directory / 'previous'
+        require(previous.resolve() == previous, 'Aliased prior certificate refused')
+        check_leaf(safe, host, previous)
+        install_leaf(directory, previous)
+        print('Restored prior leaf pair; explicitly refresh the supplier and affected app gateways.')
     elif action == 'status':
         check_leaf(safe, host)
         ready(safe)
@@ -351,11 +395,21 @@ def certificate_operation(root, action, selector, consumer_root=None):
             attached = query(['docker', 'network', 'inspect', NETWORK], safe)[0].get('Containers') or {}
             for item in attached.values():
                 current = query(['docker', 'inspect', item['Name']], safe)[0]
-                require('VIRTUAL_HOST=' + host not in current['Config']['Env'], 'Stop the selected app before removing its leaf')
+                active_hosts = [v.removeprefix('VIRTUAL_HOST=') for v in current['Config']['Env'] if v.startswith('VIRTUAL_HOST=')]
+                require(not any(v == host or (domain_host(host) and domain_host(v) and namespace(host) == namespace(v)) for v in active_hosts),
+                        'Stop all consumers of this leaf before removing it')
         for name in ('localhost.pem', 'localhost-key.pem'):
             leaf = directory / name
             require(not leaf.is_symlink(), 'Aliased certificate refused')
             leaf.unlink(missing_ok=True)
+        previous = directory / 'previous'
+        require(previous.resolve() == previous, 'Aliased prior certificate refused')
+        for name in ('localhost.pem', 'localhost-key.pem'):
+            prior = previous / name
+            require(not prior.is_symlink(), 'Aliased prior certificate file refused')
+            prior.unlink(missing_ok=True)
+        if previous.exists() and not any(previous.iterdir()):
+            previous.rmdir()
         if directory.exists() and not any(directory.iterdir()):
             directory.rmdir()
         print('Removed only ' + host + ' leaf/key; shared CA and trust preserved.')
@@ -371,7 +425,7 @@ def main():
     parser.add_argument('--front-door', choices=['independent', 'herd', 'external'], default='independent',
                         help='setup only; external uses an independently operated proxy on the ingress network')
     parser.add_argument('--https-port', type=int, help='setup only; explicit loopback high port in Herd mode')
-    parser.add_argument('--certificate-action', choices=['setup', 'status', 'remove'])
+    parser.add_argument('--certificate-action', choices=['setup', 'renew', 'restore', 'status', 'remove'])
     parser.add_argument('--worktree')
     parser.add_argument('--consumer-root', action='append', type=Path, default=[],
                         help='Canonical project checkout for certificate, preview or herd-config')

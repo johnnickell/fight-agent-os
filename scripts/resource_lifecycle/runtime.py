@@ -47,9 +47,12 @@ def command(root, argv, selector=None):
     return subprocess.run(['docker', *argv], cwd=checkout, env=environment(isolated)).returncode
 
 
-def up(root, selector=None, build_only=False, shared=False):
+def up(root, selector=None, build_only=False, shared=False, task=None):
     safe, checkout, project, entry = resolve(root, selector)
     isolated = selector is not None
+    from local_domain import ensure
+    registered = ensure(safe, safe, selector, task)
+    shared = shared or (not isolated and registered is not None)
     storage_admit(checkout)
     if isolated:
         prepare(safe, checkout, project, entry)

@@ -57,7 +57,7 @@ case "${1:-}" in
     fi
     ;;
   *)
-    echo "Usage: ./bin/https {setup|status|down|remove} | {setup|status|remove} --ingress [--worktree SELECTOR]" >&2
+    echo "Usage: ./bin/https {setup|status|down|remove} | {setup|renew|restore|status|remove} --ingress [--worktree SELECTOR]" >&2
     exit 2
     ;;
 esac

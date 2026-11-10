@@ -16,7 +16,7 @@ SETUP_PATHS = (
     'compose.yaml', 'bin/composer', 'bin/client', 'bin/runtime', 'bin/database',
     'bin/console', 'bin/validations', 'scripts/runtime.py', 'scripts/resource_lifecycle/cli.py',
     'scripts/resource_lifecycle/runtime.py', 'scripts/resource_lifecycle/resources.py',
-    'scripts/resource_lifecycle/preparation.py', 'etc/docker',
+    'scripts/resource_lifecycle/preparation.py', 'scripts/local_domain.py', 'etc/docker',
 )
 
 
@@ -108,7 +108,8 @@ def setup(root, safe, checkout, project):
     message_id = messages['messages'][0]['ID']
     require(re.fullmatch(r'[A-Za-z0-9-]+', message_id), 'Invalid catcher message identifier')
     message = mailbox('message/' + message_id)
-    host = project + '.localhost'
+    from local_domain import selected_host
+    host = selected_host(safe, checkout, project + '.localhost')
     links = re.findall(r'https://' + re.escape(host) + r'/app/activate#[^\s<>"\']+', message.get('Text', ''))
     require(len(set(links)) == 1, 'Documented synthetic activation link unavailable; unsupported revision')
     # Only owner-readable runtime output holds the possession link. No password
