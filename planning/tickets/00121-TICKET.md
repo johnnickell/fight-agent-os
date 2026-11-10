@@ -97,7 +97,7 @@ owners retain their behavior; missing capabilities return to those owners rather
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00522](../tasks/00522-TASK.md) | Package a runnable immutable production application | ready-for-agent |
+| [TASK-00522](../tasks/00522-TASK.md) | Package a runnable immutable production application | needs-info |
 | [TASK-00523](../tasks/00523-TASK.md) | Build and deliver the exact production candidate through GitHub CI | ready-for-agent |
 <!-- /planning:children -->
 
@@ -118,7 +118,7 @@ branch/tag, build, CI or publication operation.
 
 | Slice | Accepted TASK | Blockers | Delivered outcome |
 |---|---|---|---|
-| A | [TASK-00522 — Package a runnable immutable production application](../tasks/00522-TASK.md) | None unfinished | Complete NGINX/PHP-FPM artifact, required assets/exports/corpus/licenses, exact identity, runtime configuration/state contract and real checkout-free packaged behavior |
+| A | [TASK-00522 — Package a runnable immutable production application](../tasks/00522-TASK.md) | Real-mail production-startup qualification under TASK-00284 | Complete NGINX/PHP-FPM artifact, required assets/exports/corpus/licenses, exact identity, runtime configuration/state contract and real checkout-free packaged behavior |
 | B | [TASK-00523 — Build and deliver the exact production candidate through GitHub CI](../tasks/00523-TASK.md) | TASK-00522 | Existing GitHub Build integration, canonical gate and packaged probes, safe delivery, exact provenance and independently verified retrieval without rebuilding or deployment |
 
 A reuses completed frontend, corpus, validation/OpenAPI and security owners; it does not wait for TASK-00072's
@@ -127,8 +127,10 @@ push/PR filters and protects build/publication credentials; naming `release/<ver
 CalVer and exact release-to-commit/digest records require no retained Git tag. Public/private artifact visibility,
 retrieval and retention remain explicit; no new registry/account purchase or publication permission is implied.
 
-Both are unranked `chore` TASKs, `ready-for-agent` with the actual dependency above. Each includes its direct owning-
-tool validation, relevant application behavior checks, full build and independent Review/QA; no standalone
+Both are unranked `chore` TASKs. TASK-00522 is now `needs-info` for the existing real-mail production-startup
+qualification; TASK-00523 remains `ready-for-agent` behind TASK-00522. Artifact construction need not wait for
+production deployment, but runnable production acceptance cannot bypass the real-provider guard. Each includes
+its direct owning-tool validation, relevant application behavior checks, full build and independent Review/QA; no standalone
 certification TASK or product-suite tests of Docker/CI/wrappers are added. Actual hosted evidence is required for
 B but does not block A's local work. TICKET-00122 and TICKET-00125 consume early artifact/runtime/identity seams;
 completed target delivery never reverse-blocks packaging.

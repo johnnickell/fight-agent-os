@@ -524,7 +524,7 @@
 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | done | [TICKET-00120](../tickets/00120-TICKET.md) |
 | [TASK-00520](00520-TASK.md) | Manage your protected OpenRouter connections | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
 | [TASK-00521](00521-TASK.md) | Inspect optional allowance in connection settings | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
-| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
+| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | needs-info | [TICKET-00121](../tickets/00121-TICKET.md) |
 | [TASK-00523](00523-TASK.md) | Build and deliver the exact production candidate through GitHub CI | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
 | [TASK-00524](00524-TASK.md) | Run the staging application behind real HTTPS | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
 | [TASK-00525](00525-TASK.md) | Operate staging's protected services and diagnosis | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
