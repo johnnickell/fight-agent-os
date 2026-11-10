@@ -32,9 +32,10 @@ Only nonpublic docker-gen mounts the selected local Unix Docker socket read-only
 and no published ports. Read-only mounting does **not** make the Docker API read-only: this process can inspect
 container environments and signal containers, and a compromise can exercise daemon authority. Only trusted local
 operators may run it. Public Nginx has no socket and mounts generated routes and leaves read-only. Both services
-have bounded CPU/memory/PIDs, read-only roots, temporary writable paths and bounded failure restarts. Nginx retains
+have bounded CPU/memory/PIDs, read-only roots, temporary writable paths and `unless-stopped` restart policies. Nginx retains
 only CHOWN/SETUID/SETGID capabilities for its native worker/temp-directory setup. Default independent mode
 publishes loopback 80/443. Optional Herd mode publishes only one explicitly selected high loopback HTTPS port.
+External-proxy mode publishes no host ports.
 Remote/TCP Docker endpoints and foreign reserved network/project ownership are refused, never adopted or stopped.
 
 ## Explicit operator preparation
@@ -82,6 +83,43 @@ separate human decision. Neither is a startup side effect.
 (or `./bin/runtime --worktree SELECTOR inspect` from main). Git registration resolves selectors; branch changes
 never rename a checkout project. On clients without `.localhost` resolution, stop and diagnose; do not edit hosts
 or silently switch origins. curl probes use exact `--resolve` mappings to loopback without changing DNS.
+
+## External proxy front door
+
+When a separately operated router owns 80/443, select `external` instead of Herd:
+
+```sh
+./bin/ingress setup --front-door external
+./bin/ingress up --bind-ports
+```
+
+The existing explicit `up --bind-ports` acknowledgement authorizes supplier recreation; external mode
+binds no host ports and rejects `--https-port`. Connect the router to `fight-local-ingress` and route
+Fight HTTP to `fight-local-ingress-nginx-1:80` and TLS connections to `fight-local-ingress-nginx-1:443`.
+The router must preserve HTTP Host and pass HTTPS through unchanged, including SNI. The supplier still
+terminates TLS and verifies the app gateway; no Herd installation, site include or high port is used.
+The external router owns its own lifecycle, routing policy and readiness. This command does not operate it.
+
+Exact-name certificates and application startup remain explicit. Canonical root/CSRF probes use the ordinary
+443 front door with default trust; an empty route list or healthy supplier alone is not application readiness.
+Unknown names keep the supplier's rejection policy. DNS, trust and custom-domain enrollment are unchanged.
+Do not switch to independent mode while the external router owns 80/443. When changing modes, rerun both
+commands above deliberately; setup alone does not change running containers.
+
+## Restart and wake behavior
+
+The supplier and running application services use `unless-stopped`. Docker restarts existing containers
+when its engine starts; Docker Desktop must be enabled to start at sign-in on macOS. A manually stopped
+container stays stopped, and a removed task runtime stays removed. These policies do not recreate deleted
+containers, run migrations, generate certificates, enroll trust or start profiles that were never started.
+Composer and other one-off tools do not inherit the application restart policy.
+
+Compose startup dependency ordering is not a daemon-restart guarantee. Nginx retries through its restart
+policy if a required name is temporarily unavailable, and docker-gen rebuilds routes as gateway events arrive.
+Allow the database and proxies time to recover before checking the canonical root/CSRF endpoints. Sleep pauses
+local service availability; wake normally resumes Docker, but actual sleep/reboot recovery must be qualified
+on the operator's machine. Do not restart the whole Docker engine merely to test one project's policy.
+Mailpit and the test database use disposable memory storage and can lose contents across restart.
 
 ## Optional existing-Herd coexistence
 
