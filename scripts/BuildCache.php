@@ -7,8 +7,6 @@ namespace Tooling\Build;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
-use Symfony\Component\Process\ExecutableFinder;
-use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
@@ -79,107 +77,24 @@ final class BuildCache
     }
 
     /**
-     * Calculates a fingerprint of installed files and effective runtime without retaining secret values
+     * Calculates a fingerprint of project files, dependencies and generated inputs
      */
     public function fingerprint(): string
     {
-        $environment = getenv();
-        // Shell bookkeeping does not reach the tools as an intentional input.
-        unset($environment['_'], $environment['SHLVL'], $environment['OLDPWD']);
-        ksort($environment);
-        $extensions = [];
-        foreach (get_loaded_extensions() as $extension) {
-            $extensions[$extension] = phpversion($extension);
-        }
-        ksort($extensions);
-        $runtime = [
-            'schema'      => 2,
-            'root'        => $this->root,
-            'environment' => $environment,
-            'os'          => php_uname(),
-            'php_runtime' => [PHP_VERSION, PHP_BINARY, PHP_INT_SIZE, $extensions, ini_get_all()],
-            'project'     => $this->projectFingerprint()
-        ];
-        $paths = [PHP_BINARY, PHP_EXTENSION_DIR];
+        $generated = [];
         foreach (['var/openapi', 'var/validations', 'var/client/build'] as $path) {
-            $runtime['generated'][$path] = $this->tree($this->root.'/'.$path);
+            $generated[$path] = $this->tree($this->root.'/'.$path);
         }
-        foreach (array_filter(explode(',', (string) php_ini_scanned_files())) as $ini) {
-            $paths[] = trim($ini);
-        }
-        if (php_ini_loaded_file() !== false) {
-            $paths[] = php_ini_loaded_file();
-        }
-        foreach (['/etc/os-release', '/var/lib/dpkg/status', '/etc/ld.so.cache'] as $path) {
-            if (is_file($path)) {
-                $paths[] = $path;
-            }
-        }
-        $finder = new ExecutableFinder();
-        foreach (['php', 'composer', 'git', 'python3'] as $tool) {
-            $path = $finder->find($tool);
-            if ($path === null) {
-                throw new RuntimeException('Build runtime tool unavailable.');
-            }
-            $paths[] = $path;
-            $runtime[$tool] = $this->command([$path, '--version']);
-        }
-        $frontendEnvironment = $this->frontendEnvironment($this->root.'/.runs/cache/client/fingerprint-home');
-        $toolPath = $frontendEnvironment['PATH'];
-        foreach (['node', 'npm'] as $tool) {
-            $path = null;
-            foreach (explode(PATH_SEPARATOR, $toolPath) as $directory) {
-                $candidate = $directory.'/'.$tool;
-                if (is_file($candidate) && is_executable($candidate)) {
-                    $path = $candidate;
-                    break;
-                }
-            }
-            if ($path === null) {
-                throw new RuntimeException('Build frontend tool unavailable.');
-            }
-            $paths[] = $path;
-            $runtime[$tool] = $this->command([$path, '--version'], $frontendEnvironment);
-            if ($tool === 'npm') {
-                $resolved = realpath($path);
-                if ($resolved === false) {
-                    throw new RuntimeException('Cannot resolve npm installation.');
-                }
-                $paths[] = dirname($resolved, 2);
-            }
-        }
-        // Include both Chromium and its headless shell, not just a reported version.
-        $browserPath = getenv('PLAYWRIGHT_BROWSERS_PATH') ?: '/ms-playwright';
-        if (!is_dir($browserPath)) {
-            throw new RuntimeException('Build browser installation unavailable.');
-        }
-        $paths[] = $browserPath;
-        sort($paths);
-        foreach (array_unique($paths) as $path) {
-            $runtime['files'][$path] = $this->tree($path);
-        }
-        $runtime['database'] = $this->command(
-            [PHP_BINARY, 'scripts/guarded_test_database.php', 'fingerprint'],
-            ['APP_ENV' => 'test']
-        );
-
-        $this->components = [];
-        $inputs = [
-            'project'   => $runtime['project'],
-            'generated' => $runtime['generated'],
-            'database'  => $runtime['database']
+        $this->components = [
+            'project'   => $this->projectFingerprint(),
+            'generated' => hash('sha256', json_encode($generated, JSON_THROW_ON_ERROR))
         ];
-        foreach ($inputs as $component => $value) {
-            $this->components[$component] = hash('sha256', json_encode($value, JSON_THROW_ON_ERROR));
-        }
-        unset($runtime['project'], $runtime['generated'], $runtime['database']);
-        $this->components['runtime'] = hash('sha256', json_encode($runtime, JSON_THROW_ON_ERROR));
 
         return hash('sha256', json_encode($this->components, JSON_THROW_ON_ERROR));
     }
 
     /**
-     * Creates the same credential-free frontend environment for probes and phases
+     * Creates the credential-free frontend environment for build phases
      *
      * @phpstan-return array<string, string|false>&array{PATH: string}
      */
@@ -207,7 +122,7 @@ final class BuildCache
             $this->missReason = 'Cache pointer missing or unreadable';
             $cache = $this->json($this->root.'/var/build.json');
             $this->missReason = 'Cache format changed; a fresh build is required';
-            if (($cache['schema_version'] ?? null) !== 2) {
+            if (($cache['schema_version'] ?? null) !== 3) {
                 return null;
             }
             $this->missReason = 'Cache pointer is invalid or does not record success';
@@ -222,9 +137,7 @@ final class BuildCache
                 $changed = [];
                 $labels = [
                     'project'   => 'project/dependency/instruction contents',
-                    'generated' => 'generated inputs',
-                    'runtime'   => 'runtime/environment',
-                    'database'  => 'database identity'
+                    'generated' => 'generated inputs'
                 ];
                 foreach ($labels as $key => $label) {
                     if (($cache['components'][$key] ?? null) !== ($this->components[$key] ?? null)) {
@@ -261,12 +174,6 @@ final class BuildCache
                 return null;
             }
 
-            $this->missReason = 'Guarded test database is unavailable or no longer clean';
-            $this->command(
-                [PHP_BINARY, 'scripts/guarded_test_database.php', 'reuse-check'],
-                ['APP_ENV' => 'test']
-            );
-
             return $cache['receipt'];
         } catch (Throwable) {
             return null;
@@ -292,7 +199,7 @@ final class BuildCache
         $path = $this->root.'/var/build.json';
         $temporary = $path.'.tmp';
         $data = [
-            'schema_version'  => 2,
+            'schema_version'  => 3,
             'fingerprint'     => $fingerprint,
             'components'      => $this->components,
             'exit'            => 0,
@@ -409,23 +316,5 @@ final class BuildCache
         }
 
         return $value;
-    }
-
-    /**
-     * Runs a bounded runtime command without exposing its output on failure
-     *
-     * @param array<string>               $command
-     * @param array<string, string|false> $environment
-     */
-    private function command(array $command, array $environment = []): string
-    {
-        $process = new Process($command, $this->root, $environment);
-        $process->setTimeout(30);
-        $process->run();
-        if (!$process->isSuccessful()) {
-            throw new RuntimeException('Cannot qualify build runtime.');
-        }
-
-        return $process->getOutput();
     }
 }

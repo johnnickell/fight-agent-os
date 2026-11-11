@@ -67,7 +67,7 @@ Evidence names the approved scope, changed files, commands, fresh exit results, 
 
 Run `./bin/build` normally. It owns automatic reuse; agents do not calculate hashes, select an old green run,
 or manually compare installed tool versions. Planning validation runs freshly every time. Ordinary planning
-record updates can reuse the application result; governing instructions, code and runtime inputs remain covered
+record updates can reuse the application result; governing instructions, code and dependency contents remain covered
 by the [build contract](BUILD.md#automatic-build-reuse). A cache hit exits successfully and names the original
 receipt, separating fresh planning validation from reused application phases. `./bin/build --force` bypasses reuse. Native CI uses the same behavior
 through `php scripts/build.php [--force]`; fresh runners normally have no reusable local receipt.

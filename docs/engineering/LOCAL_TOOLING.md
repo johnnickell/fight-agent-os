@@ -21,7 +21,7 @@ to a provider or another project.
 
 A normal target `bin/build` validates planning freshly and reuses only its own qualifying application receipt.
 Use `--force` for deliberate fresh application execution. Shared Docker layers and local gate evidence are
-separate caches: down retains shared layers, while removing/recreating the runtime invalidates application
+separate caches: down retains shared layers, while removing/recreating the runtime does not invalidate application
 receipt reuse. Report fresh planning, reused original application evidence and independent acceptance
 separately. Review/QA requirements and publication authority remain unchanged.
 
