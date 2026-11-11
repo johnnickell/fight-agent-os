@@ -40,8 +40,16 @@ final class ActivationRaceWorker
             $connection->executeStatement("SET lock_timeout = '5s'");
             putenv('DATABASE_URL='.$url);
             if (($input['mode'] ?? '') === 'admission') {
-                $app = require dirname(__DIR__, 2).'/bootstrap/app.php';
-                $container = $app->getContainer();
+                $container = require dirname(__DIR__, 2).'/config/services.php';
+                $container->set(
+                    \Fight\AccessControl\Application\AccessControl\Timing\Service\Clock::class,
+                    static fn() => new AccessClock(new \DateTimeImmutable($input['now']))
+                );
+                \Slim\Factory\AppFactory::setContainer($container);
+                $app = \Slim\Factory\AppFactory::create();
+                $container->set(\Slim\App::class, static fn() => $app);
+                require dirname(__DIR__, 2).'/config/routes.php';
+                require dirname(__DIR__, 2).'/config/middleware.php';
                 $nonce = bin2hex(random_bytes(32));
                 $proof = $container->get(\App\Adapter\Security\HmacCsrfProofs::class)->sign($nonce, time() + 900);
                 $request = new \Slim\Psr7\Factory\ServerRequestFactory()->createServerRequest(

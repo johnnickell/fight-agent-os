@@ -38,6 +38,8 @@ use Tooling\OpenApi\Document;
  */
 final class PasswordChangeApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -514,7 +516,12 @@ final class PasswordChangeApiTest extends TestCase
         ];
         $request->getBody()->write($raw ?? json_encode(array_replace($input, $changes), JSON_THROW_ON_ERROR));
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [
+            $this->oldPassword, $this->password, $this->access, $this->refresh
+        ]);
+
+        return $response;
     }
 
     /**

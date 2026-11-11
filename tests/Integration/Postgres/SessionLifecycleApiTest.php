@@ -47,6 +47,8 @@ use Tooling\OpenApi\Document;
  */
 final class SessionLifecycleApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -82,6 +84,7 @@ final class SessionLifecycleApiTest extends TestCase
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
         $tokens = new AccessTokens();
+        $this->journeySecrets = [$tokens->secret, bin2hex($tokens->secret)];
         $this->clock = $tokens->clock;
         $this->clock->time = new DateTimeImmutable('2026-10-20T00:00:00.654321Z');
         $container->set(Clock::class, fn(): Clock => $this->clock);
@@ -591,7 +594,12 @@ final class SessionLifecycleApiTest extends TestCase
         }
         $request->getBody()->write($raw);
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [
+            $this->password, $this->nonce, $this->proof, $credential ?? ''
+        ]);
+
+        return $response;
     }
 
     /**

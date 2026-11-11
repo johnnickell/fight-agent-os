@@ -62,6 +62,8 @@ use Tooling\OpenApi\Document;
  */
 final class InvitationRecoveryApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -1038,7 +1040,12 @@ SQL,
             $request = $request->withHeader('Content-Type', 'application/json');
         }
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [
+            $this->token, $this->credential
+        ]);
+
+        return $response;
     }
 
     /**

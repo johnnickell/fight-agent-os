@@ -240,7 +240,144 @@ SQL,
         yield ['reset_endpoint'];
         foreach (AuthOperation::cases() as $operation) {
             yield [$operation->value];
+            yield ['endpoint:'.$operation->value];
         }
+    }
+
+    /**
+     * Proves production peer and endpoint budgets for every purpose without clock sleeps
+     */
+    #[DataProvider('endpointOperations')]
+    public function testConfiguredEndpointBoundaries(AuthOperation $operation): void
+    {
+        $admission = $this->admission();
+        for ($index = 0; $index < 20; ++$index) {
+            $admission->endpoint($operation, '192.0.2.1');
+        }
+        try {
+            $admission->endpoint($operation, '192.0.2.1');
+            self::fail('Peer boundary bypassed.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(900, $failure->retryDelaySeconds());
+        }
+        for ($index = 0; $index < 280; ++$index) {
+            $admission->endpoint($operation, '2001:db8::'.dechex($index + 1));
+        }
+        try {
+            $admission->endpoint($operation, '192.0.2.2');
+            self::fail('Endpoint boundary bypassed.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(900, $failure->retryDelaySeconds());
+            self::assertSame('', $failure->getMessage());
+            self::assertNull($failure->getPrevious());
+        }
+        $this->clock->time = $this->clock->time->modify('+899 seconds +999999 microseconds');
+        try {
+            $admission->endpoint($operation, '192.0.2.1');
+            self::fail('Rolling endpoint expired early.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(1, $failure->retryDelaySeconds());
+        }
+        $this->clock->time = $this->clock->time->modify('+1 microsecond');
+        $admission->endpoint($operation, '192.0.2.1');
+        $rows = $this->connection->fetchAllAssociative('SELECT * FROM auth_rate_limits');
+        self::assertCount(2, $rows);
+        foreach ($rows as $row) {
+            self::assertMatchesRegularExpression('/\A[0-9a-f]{64}\z/D', $row['key']);
+            self::assertCount(1, json_decode($row['hits'], true, flags: JSON_THROW_ON_ERROR));
+        }
+    }
+
+    /**
+     * Supplies every implemented endpoint purpose
+     *
+     * @return iterable<array{AuthOperation}>
+     */
+    public static function endpointOperations(): iterable
+    {
+        foreach (AuthOperation::cases() as $operation) {
+            yield [$operation];
+        }
+    }
+
+    /**
+     * Keeps every purpose budget independent even after another purpose is exhausted
+     */
+    public function testPurposeIsolation(): void
+    {
+        $admission = new AuthAdmission(new PostgresAuthAttempts($this->connection, $this->clock), $this->key, 1, 1);
+        foreach (AuthOperation::cases() as $operation) {
+            $admission->endpoint($operation, '192.0.2.1');
+            try {
+                $admission->endpoint($operation, '192.0.2.1');
+                self::fail('Exhausted purpose accepted.');
+            } catch (RateLimitExceeded $failure) {
+                self::assertSame(900, $failure->retryDelaySeconds());
+            }
+        }
+        $admission->passwordReset(EmailAddress::fromString('separate@example.test'), '192.0.2.1');
+        self::assertSame(13, (int) $this->connection->fetchOne('SELECT count(*) FROM auth_rate_limits'));
+    }
+
+    /**
+     * Proves default reset peer and endpoint budgets cannot be evaded by varying email
+     */
+    public function testResetPeerAndEndpointBoundaries(): void
+    {
+        $admission = $this->admission();
+        for ($index = 0; $index < 20; ++$index) {
+            $admission->passwordReset(EmailAddress::fromString('peer'.$index.'@example.test'), '192.0.2.1');
+        }
+        try {
+            $admission->passwordReset(EmailAddress::fromString('blocked@example.test'), '192.0.2.1');
+            self::fail('Reset peer limit bypassed.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(900, $failure->retryDelaySeconds());
+        }
+        for ($index = 0; $index < 280; ++$index) {
+            $admission->passwordReset(
+                EmailAddress::fromString('endpoint'.$index.'@example.test'),
+                '2001:db8::'.dechex($index + 1)
+            );
+        }
+        try {
+            $admission->passwordReset(EmailAddress::fromString('new@example.test'), '192.0.2.2');
+            self::fail('Reset endpoint limit bypassed.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(900, $failure->retryDelaySeconds());
+        }
+        $this->clock->time = $this->clock->time->modify('+900 seconds');
+        $admission->passwordReset(EmailAddress::fromString('peer0@example.test'), '192.0.2.1');
+        self::assertSame(3, (int) $this->connection->fetchOne('SELECT count(*) FROM auth_rate_limits'));
+    }
+
+    /**
+     * Proves canonical reset email isolation and precise independent rolling expiry
+     */
+    public function testResetEmailBoundaryAndIsolation(): void
+    {
+        $admission = $this->admission();
+        $email = EmailAddress::fromString('Reset@Example.test');
+        for ($index = 0; $index < 3; ++$index) {
+            $admission->passwordReset($email, '192.0.2.1');
+        }
+        try {
+            $admission->passwordReset(EmailAddress::fromString('reset@example.test'), '192.0.2.2');
+            self::fail('Canonical reset budget bypassed by changing peer.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(900, $failure->retryDelaySeconds());
+        }
+        $admission->passwordReset(EmailAddress::fromString('other@example.test'), '192.0.2.1');
+        $this->clock->time = $this->clock->time->modify('+899 seconds +999999 microseconds');
+        try {
+            $admission->passwordReset($email, '192.0.2.1');
+            self::fail('Reset budget expired early.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(1, $failure->retryDelaySeconds());
+        }
+        $this->clock->time = $this->clock->time->modify('+1 microsecond');
+        $admission->passwordReset($email, '192.0.2.1');
+        self::assertSame(3, (int) $this->connection->fetchOne('SELECT count(*) FROM auth_rate_limits'));
     }
 
     /**

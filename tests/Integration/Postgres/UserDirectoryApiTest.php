@@ -59,6 +59,8 @@ use Tooling\OpenApi\Document;
  */
 final class UserDirectoryApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -92,6 +94,7 @@ final class UserDirectoryApiTest extends TestCase
         $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
+        $this->observeJourneyDiagnostics($container);
         $container->set(Clock::class, static fn(): Clock => $tokens->clock);
         $container->set(AccessJwt::class, static fn(): AccessJwt => $tokens->jwt);
         $container->set(AuthenticateAccessToken::class, static fn(Container $c) => new AuthenticateAccessToken(
@@ -611,7 +614,10 @@ final class UserDirectoryApiTest extends TestCase
         }
         $request->getBody()->write($body);
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [$this->token]);
+
+        return $response;
     }
 
     /**

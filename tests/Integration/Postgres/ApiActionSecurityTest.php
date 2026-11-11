@@ -65,6 +65,8 @@ use Tooling\OpenApi\Document;
  */
 final class ApiActionSecurityTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private PostgresUserRepository $users;
     private PostgresRoleRepository $roles;
@@ -946,7 +948,10 @@ final class ApiActionSecurityTest extends TestCase
             $request = $request->withHeader('Cookie', 'access_token='.$this->token.'; refresh_token='.$this->token);
         }
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [$this->token]);
+
+        return $response;
     }
 
     /**

@@ -64,6 +64,8 @@ use Tooling\OpenApi\Document;
  */
 final class ProjectRegistrationTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -752,7 +754,10 @@ JSON);
             $request->getBody()->write(json_encode($body, JSON_THROW_ON_ERROR));
         }
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [$this->token]);
+
+        return $response;
     }
 
     /**

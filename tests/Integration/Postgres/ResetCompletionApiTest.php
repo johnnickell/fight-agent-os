@@ -50,6 +50,8 @@ use Tooling\OpenApi\Document;
  */
 final class ResetCompletionApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -86,6 +88,7 @@ final class ResetCompletionApiTest extends TestCase
         putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
         $this->container = require dirname(__DIR__, 3).'/config/services.php';
         $this->tokens = new AccessTokens();
+        $this->journeySecrets = [$this->tokens->secret, bin2hex($this->tokens->secret)];
         $this->clock = $this->tokens->clock;
         $this->clock->time = new DateTimeImmutable('2026-10-23T12:00:00.654321Z');
         $this->container->set(Clock::class, fn(): Clock => $this->clock);
@@ -583,7 +586,12 @@ final class ResetCompletionApiTest extends TestCase
             'password_confirmation' => $this->password
         ], $changes), JSON_THROW_ON_ERROR));
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [
+            $this->credential, $this->password, $this->oldPassword, $this->nonce, $this->proof, $cookie ?? ''
+        ]);
+
+        return $response;
     }
 
     /**

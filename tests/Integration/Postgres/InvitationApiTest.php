@@ -62,6 +62,8 @@ use Tooling\OpenApi\Document;
  */
 final class InvitationApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -169,6 +171,7 @@ final class InvitationApiTest extends TestCase
             CredentialDeliveryInvocation $invocation
         ): CredentialDeliveryOutcome {
             ++$this->providerCalls;
+            $this->journeySecrets[] = $invocation->getCredential();
             $this->providerObservations[] = [
                 $this->container->get(Connection::class)->isTransactionActive(),
                 (int) $this->connection->fetchOne(
@@ -812,7 +815,10 @@ final class InvitationApiTest extends TestCase
             $request = $request->withHeader('Content-Type', $contentType);
         }
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [$this->token]);
+
+        return $response;
     }
 
     /**

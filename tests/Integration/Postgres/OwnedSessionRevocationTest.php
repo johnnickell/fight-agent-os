@@ -61,6 +61,8 @@ use Tooling\OpenApi\Document;
  */
 final class OwnedSessionRevocationTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -95,6 +97,7 @@ final class OwnedSessionRevocationTest extends TestCase
         $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
+        $this->observeJourneyDiagnostics($container);
         $container->set(Clock::class, fn(): Clock => $this->tokens->clock);
         $container->set(AccessJwt::class, fn(): AccessJwt => $this->tokens->jwt);
         $container->set(AuthenticateAccessToken::class, fn(Container $c) => new AuthenticateAccessToken(
@@ -654,7 +657,12 @@ SQL);
             $request->getBody()->write($body);
         }
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [
+            substr($request->getHeaderLine('Authorization'), 7)
+        ]);
+
+        return $response;
     }
 
     /**
@@ -785,6 +793,11 @@ SQL);
         }
         $request->getBody()->write($body);
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [
+            substr($request->getHeaderLine('Authorization'), 7)
+        ]);
+
+        return $response;
     }
 }

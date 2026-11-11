@@ -61,6 +61,8 @@ use Tooling\OpenApi\Document;
  */
 final class OwnedSessionsApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -94,6 +96,7 @@ final class OwnedSessionsApiTest extends TestCase
         $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
+        $this->observeJourneyDiagnostics($container);
         $container->set(Clock::class, fn(): Clock => $this->tokens->clock);
         $container->set(AccessJwt::class, fn(): AccessJwt => $this->tokens->jwt);
         $container->set(AuthenticateAccessToken::class, fn(Container $c) => new AuthenticateAccessToken(
@@ -122,6 +125,7 @@ final class OwnedSessionsApiTest extends TestCase
         ));
         $this->actor = $this->user('owner@example.test');
         $this->session = $this->addSession($this->actor, $this->tokens->clock->now()->modify('-1 hour'));
+        $this->journeySecrets[] = $this->session->getCredentialDigest();
         $claims = $this->tokens->claims();
         $claims['sub'] = $this->actor->getId()->toString();
         $claims['sid'] = $this->session->getId()->toString();
@@ -441,6 +445,9 @@ SQL);
         }
         $request->getBody()->write($body);
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [$this->token]);
+
+        return $response;
     }
 }
