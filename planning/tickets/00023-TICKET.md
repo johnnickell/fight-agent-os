@@ -78,7 +78,7 @@ upgrade, reconfigure, or repair services from a read-only check.
 | [TASK-00075](../tasks/00075-TASK.md) | Deliver the guided Planning installation journey | ready-for-agent |
 | [TASK-00076](../tasks/00076-TASK.md) | Qualify supported local Planning operation | ready-for-human |
 | [TASK-00553](../tasks/00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done |
-| [TASK-00589](../tasks/00589-TASK.md) | Register local project and task domains across installed harness consumers | in-progress |
+| [TASK-00589](../tasks/00589-TASK.md) | Register local project and task domains across installed harness consumers | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

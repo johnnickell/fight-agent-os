@@ -5,512 +5,101 @@
 
 # Fight Agent OS
 
-An open-source software factory: software to build software. Plan engineering work, carry it through a
-customized Pi terminal and managed workflow, and inspect progress in a browser dashboard as those capabilities
-are delivered. This project is not a general-purpose personal AI operating system or an Internet homepage;
-those belong to a separate future project.
+An open-source software factory: software to build software. Fight brings engineering planning,
+agent-assisted implementation, independent review and delivery into a customized Pi terminal and a
+browser dashboard.
 
-**Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
-API validation/error handling, public-safe form metadata and local engineering skills are
-present. Confirmed [user lifecycle APIs](docs/engineering/USER_LIFECYCLE.md) provide exact-permission
-disable/enable and reversible delete/restore, session invalidation and required audit. Disable's last-admin
-safeguard is a non-atomic query-before-command precheck, not a cross-request final-admin guarantee.
-Delete/restore use current-state confirmation without a revision/count prerequisite; self-deletion rejects,
-concurrent cross-admin deletion is accepted, and restore never revives sessions. Pending restoration requires
-a terminal invitation predecessor and issues internal activation authority without disclosure. No administration UI is added. [Safe API failures](docs/engineering/SAFE_HTTP_ERRORS.md) use released Common categories and one redacted
-HTTP boundary with strict matching client contracts, protocol metadata and preserved session-cookie recovery;
-scoped independent HTTP/browser/security QA covers the cutover, not production deployment or unrelated use cases.
-Explicit initial Workspace bootstrap has independent technical and behavioral acceptance under
-[TASK-00574](planning/tasks/00574-TASK.md#accepted-implementation-checkpoint--2026-11-08), including its separately
-owned exceptional-reference admission and factory. Protected Project registration/detail/list/conflict preview now use
-Project-owned CQRS, entry-generated IDs and ordinary conflict/fresh-query recovery under the
-[current runbook](docs/engineering/REPOSITORY_REGISTRATION.md), with independent technical and failure/concurrency/
-canonical Swagger-browser QA acceptance under [TASK-00575](planning/tasks/00575-TASK.md#accepted-implementation-checkpoint--2026-11-08). These capabilities add no checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/activate`, pending independent acceptance;
-canonical login is implemented at `/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
-TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
-pending independent Review/QA, at `/` and registered root-level protected destinations. Local system/light/dark
-appearance and truthful future account/admin seams are available. TASK-00052 adds the honest permission-aware
-Dashboard using the sole principal cache, safe identity, independent administration shortcuts and explicit
-unavailable-capability copy (independent Review/QA pending). Other product UI journeys,
-managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
+## Project status
 
-Land closes accepted TASKs and applicable current documentation during delivery, validates the exact live PR
-and retires eligible owned local Git/Docker/storage resources. Human merge remains separate, without a tracked
-pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
-acceptance/publication checkpoints below are evidence, not current merge instructions.
+**Active development; not production-ready.** The application uses Slim/PHP, PostgreSQL and
+React/TypeScript.
 
-[TASK-00570's area-F planning correction](planning/tasks/00570-TASK.md#accepted-implementation-checkpoint--2026-11-06)
-has independent Review version 3 ACCEPT and documentation QA version 2 PASS on
-`226a054cef9812f84b674c1b73b990e5cbf96887` (26 passed / 0 failed / 0 incomplete / 1 visual/HTTPS N/A).
-All 97 unfinished execution/delivery records are accounted for (79 corrected / 18 justified unchanged), with
-six terminal records preserved. Managed execution/review/release implementation, supplier qualification and
-whole-portfolio acceptance remain separate. Publication and eligible cleanup are pending at this checkpoint;
-current outcomes are in canonical ignored `.runs/tasks/TASK-00570/runs/land.md` and the TASK PR. Human merge
-remains separate.
+- **Application foundation:** authentication, invitation and password flows, session management,
+  permission-controlled administration, and an authenticated application frame are implemented.
+  Individual features have different verification and integration boundaries; this is not a claim
+  of complete application readiness.
+- **Planning:** Markdown records are authoritative, organized as EPIC → TICKET → TASK. Workspace
+  bootstrap and Project registration APIs are implemented; browser Planning and database cutover
+  remain planned.
+- **Agent tooling:** the Pi package provides terminal presentation, workflow roles, local skills and
+  stage coordination. Complete managed execution, isolation, accounting and recovery remain under
+  development; a worktree or workflow role is not a security sandbox.
+- **Local development:** Docker tooling, HTTPS, isolated worktree runtimes and optional local-domain
+  registration are available. DNS, certificate trust and shared ingress require explicit setup.
+- **Deployment:** production qualification and real email-provider integration remain unfinished.
+  Local email testing uses a disposable catcher, not real inbox delivery.
 
-[TASK-00569's area-E planning correction](planning/tasks/00569-TASK.md#accepted-implementation-checkpoint--2026-11-06)
-has independent Review version 3 ACCEPT and documentation QA PASS on `3bd959f2168fc41ec0f4900e71557f1eaa9928b3`
-(26 passed / 0 failed / 0 incomplete / 1 visual/browser/TLS N/A); R1 is resolved. All 111 unfinished
-EPIC-00006/00011 records are accounted for (87 corrected / 24 justified unchanged), with 28 terminal exclusions
-preserved, including completed TASK-00555. Canonical coverage remains for TASK-00571. No feature implementation,
-supplier qualification or whole-portfolio acceptance follows. Publication/final delivery verification and eligible
-cleanup are pending at this checkpoint; current outcomes are in canonical ignored
-`.runs/tasks/TASK-00569/runs/land.md` and the TASK PR. Human merge remains separate.
+See the [capability inventory](planning/FOUNDATION.md), [roadmap](planning/ROADMAP.md) and
+[TASK Board](planning/tasks/BOARD.md) for scope and remaining work.
 
-[TASK-00568's area-D planning correction](planning/tasks/00568-TASK.md#accepted-implementation-checkpoint--2026-11-06)
-has independent Review version 3 ACCEPT and complete documentation QA PASS on `fa28fd79eee6b7ce11d13a2d80901177bd16c04c`
-(27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A). All 63 unfinished EPIC-00014/00017 records are accounted
-for (53 corrected / 10 justified unchanged); TASK-00571 still consumes canonical coverage. Managed features,
-actual supplier qualification and whole-portfolio acceptance remain separate. Publication and eligible cleanup
-are pending at this checkpoint; current outcomes are in canonical ignored `.runs/tasks/TASK-00568/runs/land.md`
-and the TASK PR. Human merge remains separate.
+## Development setup
 
-[TASK-00567's area-C planning correction](planning/tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06)
-has independent Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`
-(27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A). All 57 unfinished EPIC-00009/00010 records are accounted
-for (44 corrected / 13 justified unchanged). Feature implementation, supplier qualification and Markdown cutover
-remain separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are in
-canonical ignored `.runs/tasks/TASK-00567/runs/land.md` and the TASK PR. Human merge remains separate.
+Use Git and Docker with Compose. Application tooling runs through the repository's `bin/` wrappers.
+Local HTTPS also requires [mkcert and explicit trust enrollment](docs/engineering/LOCAL_HTTPS.md).
 
-[TASK-00566's area-B planning correction](planning/tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05)
-has independent Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`.
-EPIC-00005's 50 unfinished records are corrected; product implementation, source suppliers and Markdown
-cutover remain separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are
-in canonical ignored `.runs/tasks/TASK-00566/runs/land.md` and the TASK PR. Human merge remains separate.
-
-[TASK-00548](planning/tasks/00548-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent
-Review ACCEPT and nonvisual QA PASS on `a7e062a` plus the exact owner-authorized ignore, committed as `15bf30f`.
-The complete 24-phase gate is qualified reused evidence. Publication and eligible cleanup are pending at this
-checkpoint; actual delivery/cleanup results are in canonical ignored `.runs/tasks/TASK-00548/runs/land/receipt.md`
-and the TASK PR. Main/current checkout, private legacy source/history and unknown/shared resources remain held;
-accepted simplification is not complete cleanup or human merge. Earlier TASK checkpoints below retain their history.
-
-[TASK-00546](planning/tasks/00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31) has independent
-Review ACCEPT and affected nonvisual QA PASS on repaired candidate `369664f`. Publication and cleanup were
-pending at this checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and
-[PR #186](https://github.com/johnnickell/fight-agent-os/pull/186). Acceptance is not complete cleanup or merge.
-
-The following acceptance checkpoint is historical, not acceptance of LAND-01's repair.
-[TASK-00546](planning/tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current delivery results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
-
-The following repair checkpoint is historical, not current acceptance.
-[TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for
-Review2 R3/R4/R5: shared plan prerequisites at storage effects, original image-policy preservation and truthful
-cache absence under unavailable inventory. Focused owning checks and the new 24-phase final gate pass
-(`20261031T034831Z-22913`). Gate PASS is not upstream READY: the canonical Work handoff owns current-source
-observation status, external proof and precise legacy holds. Existing runtime/receipt/history remain protected.
-Renewed independent Review/nonvisual QA are pending; no acceptance, retirement or publication is claimed.
-
-The following integration checkpoint is historical, not current repair verification.
-[TASK-00546](planning/tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is integrating
-accepted TASK-00547's single lifecycle with recoverable-storage policy and executable upstream Land readiness.
-The original verification runtime is reused through its SAME receipt, not recreated. The one final combined-source
-24-phase gate passed (`20261031T023423Z-15117`); independent Review/QA remain pending. Executable readiness
-verified external preservation while exposing original service-capability and deny-delete ACL holds before
-publication. Current proof and exact affected resource holds are in canonical ignored
-`.runs/tasks/TASK-00546/runs/work-handoff.md`. No acceptance, publication or universal cleanup guarantee is claimed.
-
-The following Repair 1 checkpoint is historical, not the current Work continuation.
-[TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in bounded Work repair for
-Review R1/R2: trusted local Docker socket aliases and effective Compose startup/build image protection.
-Focused owning regressions pass, but the final changed-source gate failed in the unchanged activation rate-boundary
-test (expected 429, received 500); Work verification is incomplete. Coordinator intake owns that out-of-scope
-failure; independent renewed Review/nonvisual QA remain pending. The retained verification runtime and current
-Work handoff remain available; no acceptance or publication is claimed.
-
-The following Work2 checkpoint is historical, not current review readiness.
-[TASK-00546](planning/tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) implements bounded
-recoverable-storage reclamation, configurable retention/reserve admission and same-helper disposable-runtime
-retirement. Real Docker cache/image effects, worker visibility and runtime/Build caller qualification are recorded
-in its canonical Work handoff. The frozen-source 24-phase `./bin/build` passed with an exact input/artifact
-bridge; independent Review/QA are next. No acceptance, publication, fleet or physical-reclaim claim follows.
-
-The following Work1 checkpoint is preserved history, not current Work readiness.
-[TASK-00546](planning/tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in progress but
-incomplete. Its partial executor repair holds unavailable/changed worker visibility and unresolved connected
-peers. The 15-case controlled matrix and one fresh real worker probe passed their bounded checks, not full
-helper/caller or application acceptance. Cache-to-source recoverability qualification is held; automatic
-reclamation, retention/reserve admission and lifecycle/caller work remain unfinished. The unqualified storage
-draft was withdrawn. No final application gate, cleanup, independent acceptance or physical reclaim is claimed.
-TASK-00542's acceptance, limits and delivery evidence remain separate; prior checkpoints below are historical.
-
-[TASK-00542's repaired H](planning/tasks/00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) has independent
-Review11 ACCEPT and QA12 PASS (42 fresh observations / 12 groups plus twenty explicit accumulated rows);
-R10 is resolved. Done records implementation acceptance, not completed delivery. Repaired publication/checks
-and eligible cleanup are pending at this frozen checkpoint; actual results and finite next actions are in
-canonical ignored `.runs/tasks/TASK-00542/runs/primary-land16-handoff.md` and
-[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). NEW repair6 verification resources remain
-later Land obligations; original retired resources are never replayed and the old partial stays immutable.
-P1/P2/F1/current effects keep full delivery INCOMPLETE; no foreign-preservation, physical-reclaim, all-disk-clean
-or integrated-fleet runtime PASS. Sixth/final repair stays 6/6 consumed, none remaining. John owns merge,
-without post-merge Board maintenance. Visual evidence is N/A; behavioral QA is PASS.
-
-The following R10 repair paragraph is a preserved checkpoint, not current acceptance/readiness.
-[TASK-00542 is reopened for Review10 R10](planning/tasks/00542-TASK.md#current-repair--r10-directory-metadata):
-required directory xattrs were omitted on supported macOS Python. The same helper now uses native metadata-only,
-no-follow directory transfer without recursive copying or weakened verification. Fresh final local verification,
-independent Review and affected QA are required; canonical ignored `repair-6/handoff.md` under
-`.runs/tasks/TASK-00542/runs/` owns evidence and new isolated verification resource provenance. Sixth/final repair
-is consumed (6/6; none remaining). Original primary runtime is retired, never replayed; source/ref/private data
-and the incomplete immutable Land15 copy remain protected. P1/P2/F1 remain separate holds; no real cleanup,
-publication, full delivery, physical-reclaim or foreign-preservation PASS claim. John owns merge.
-
-The following F closeout is a preserved checkpoint, not current R10 acceptance/readiness.
-[TASK-00542's repaired F](planning/tasks/00542-TASK.md#accepted-f-closeout-checkpoint--2026-10-29) has independent
-Review9 ACCEPT and QA11 PASS (20 candidate scenarios; 63 fresh expected reader/filesystem observations plus
-qualified accumulated reuse); R9 is resolved. Done means accepted implementation, not completed delivery.
-Repaired publication/checks and eligible primary cleanup are pending at this frozen checkpoint; actual results
-and finite next actions are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land14-handoff.md` and
-[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). P1/P2 holds and F1 strict foreign-preservation
-FAIL remain; no all-disk-clean, integrated-fleet runtime PASS or future growth-cap claim. John owns merge;
-no post-merge Board chore. Visual evidence is N/A. Shared repairs remain exhausted at 5/5.
-
-The following R9 repair paragraph is a preserved checkpoint, not current acceptance/readiness.
-[TASK-00542 is reopened for Review8 R9](planning/tasks/00542-TASK.md#current-repair--r9-excluded-link-readers):
-read-only LINKs under the original dependency exclusion now require stable no-follow metadata through the same
-signed-reader qualification. New local verification, independent Review and affected QA are required; prior D
-acceptance is historical. P1/P2 and F1 owner holds remain; no real cleanup or publication occurs in this repair.
-Canonical ignored `.runs/tasks/TASK-00542/runs/repair-5/handoff.md` owns the repair evidence and next action.
-
-The following D acceptance paragraph is a preserved checkpoint, not current readiness.
-[TASK-00542's repaired candidate D](planning/tasks/00542-TASK.md#current-accepted-candidate--2026-10-29) has
-independent Review7 ACCEPT and QA10 PASS (17 bounded accumulated scenarios); QA-02 is resolved. Done records
-accepted implementation, not complete delivery. Repaired publication/checks and eligible cleanup are pending at
-this frozen checkpoint; actual results and finite authority/consumer holds are in canonical ignored
-`.runs/tasks/TASK-00542/runs/primary-land12-handoff.md` and [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181).
-No all-disk-clean, integrated-fleet runtime PASS or future growth-cap claim; only the original 194 uncertain
-cache IDs are excepted. John owns merge, without post-merge Board maintenance. Visual evidence is N/A.
-
-The following repair and Review4/QA8 paragraphs are preserved historical checkpoints, not current stage instructions.
-[TASK-00542 remains in-progress for QA-02](planning/tasks/00542-TASK.md#current-repair--qa-02): the owned-root
-reference census is repaired and locally qualified on the original QA fixture; fresh final verification,
-independent Review and affected QA are required. Prior acceptance below remains historical, not completion.
-
-[TASK-00542](planning/tasks/00542-TASK.md#land-acceptance-checkpoint--2026-10-28) has independent Review4 ACCEPT
-and nonvisual QA8 PASS for the bounded disposable-storage lifecycle and delivery-mechanism removal. At this frozen
-checkpoint, primary publication and eligible cleanup remain pending; actual results and finite image/cache/consumer
-holds are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land10-handoff.md`. This is implementation
-acceptance, not complete storage retirement, human merge or integrated-fleet PASS; the original 194 uncertain
-shared-cache exception is not a future disk-growth guarantee. Visual evidence is N/A to these operational changes.
-
-PR #159/#162/#167 publication statements below are preserved historical checkpoints: all three are verified
-merged into `develop` and locally integrated as of 2026-10-26, with no merge action remaining. This observes
-merge, not new acceptance, deployment or release.
-
-[TASK-00059's current reconciliation](planning/tasks/00059-TASK.md) also records original PR #172 as merged
-into `develop` and locally integrated. Its acceptance/report provenance remains with that TASK. The user-directory
-pending-review wording below is a retained implementation checkpoint, not today's acceptance or merge handoff.
-
-## Start planning
-
-Read the [foundation brief](planning/FOUNDATION.md), [planning conventions](planning/CONVENTIONS.md), and
-[TASK Board](planning/tasks/BOARD.md). Use your preferred planning skills in the terminal; saved artifacts follow
-**EPIC → TICKET → TASK**, with dependency-ordered SUBTASKs during implementation.
-
-For already accepted work with an existing open PR, explicit
-[`/skill:sync TASK-NNNNN`](.pi/skills/sync/SKILL.md) delegates merge integration to fresh Engineer and automatic
-PR refresh to fresh Land. It reuses existing dispatch and original independent reports; intent-preserving code
-conflicts alone do not repeat Review/QA. New implementation still uses ordinary Build/independent acceptance.
-Sync requires native Harness admission; discovering the skill does not update an installed package.
-
-Use the [ubiquitous language](docs/UBIQUITOUS_LANGUAGE.md) for human Roles, Agent Team roles, Permissions and
-Repository access. Fresh project skills live in [.pi/skills/](.pi/skills/README.md). Markdown remains authoritative
-until an explicit, verified migration to the future project-scoped planning database.
-
-## Fight terminal
-
-[TASK-00585's accepted repair](planning/tasks/00585-TASK.md#accepted-implementation-checkpoint--2026-11-05)
-adds pane-local extended Enter/Esc, compact ordinary process-stage Agent rows, clock-drift-safe admission and
-truthful timeout finalization. Independent Review ACCEPT and visual/behavioral QA PASS cover `3d324c7e`
-(10 groups; QA-01 resolved), with a mechanical advancing-base bridge. Publication/capture access and eligible
-cleanup are pending at this checkpoint; actual outcomes are in canonical ignored
-`.runs/tasks/TASK-00585/runs/land/receipt.md` and the new implementation PR, not planning PR #215.
-Original incident attribution, existing mixed-source summary-count debt and descendant-shutdown uncertainty
-remain disclosed. This does not update installed/active sessions or deliver the all-role SDK cutover.
-
-Install the approved Fight welcome and compact working header for all your Pi sessions:
-
-Before starting the updated package, follow its [bundled-subagent profile/migration](harness/pi/SUBAGENTS.md#select-the-supported-profile)
-to avoid loading the old standalone companion alongside the bundled engine. Prepare local runtime dependencies explicitly:
+Create an ignored local configuration:
 
 ```sh
-npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-pi install ./harness/pi
+cp .env.example .env
+chmod 600 .env
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ```
 
-TASK-00560's [opt-in SDK Engineer journey](harness/pi/SUBAGENTS.md#opt-in-build-engineer) has independent Review
-and QA acceptance; its delivery results remain in `.runs/tasks/TASK-00560/runs/land/receipt.md`. Current source
-extends that boundary with the [sole all-role SDK Build default](harness/pi/SUBAGENTS.md#all-role-build-default),
-requiring a deliberately prepared fresh host and genuine Build/TASK/checkout selection, not a route flag.
-Missing supported capabilities/profile holds execution without process fallback. Explicit Sync retains its
-process Engineer/Land path and shared native custody. Complete implementation has independent technical and
-applicable QA acceptance; actual same-TASK delivery remains separate from acceptance and everyday rollout.
-Active hosts/shared installations remain untouched until deliberate safe-boundary adoption.
+Before startup, configure independent secrets and the access-token keyring in `.env`; example values
+are not credentials. Follow [access-token configuration](docs/engineering/ACCESS_TOKENS.md),
+[browser request security](docs/engineering/BROWSER_AUTH_REQUESTS.md) and
+[credential delivery](docs/engineering/CREDENTIAL_RECOVERY.md). Never commit secrets or reuse one key
+across these boundaries.
 
-Restart only the intended session at a safe boundary, then use `/fight-header` to choose a presentation or `off` to restore its default header.
-See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
-The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
-browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
-After the separate [user-prefix executable installation](harness/pi/README.md#install-the-global-workspace-command),
-run `fight-workspace` in the intended checkout inside Herdr: native Pi starts and opens owned human-only child
-activity and verified Docker log companions without a blocking log form, follow-up slash command or model turn.
-Ordinary `pi` stays unchanged; `/fight-workspace [open|close]` remains manual open/recovery/close.
-Pi retains its editor, completion, colors, Markdown, dialogs, session and workflow authority. Actual native context
-and registered-worktree metadata select only verified existing local Docker stacks. LOGS defaults to all main
-services at idle, follows eligible active agent stacks, and offers Follow active (`f`), Main pin (`m`) and Services
-All/subset (`s`). Services have distinguishing container prefixes and one bounded history. Multiple services need
-no picker; genuine project ambiguity remains inspected. A missing active stack is visibly unavailable, not hidden
-main fallback. Stack changes clear stale live/paused output and reset service filters. Missing logs or cancelling
-selection never blocks panes.
-Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
-there is no automatic RPC-editor fallback.
-
-[TASK-00563's accepted LOGS candidate](planning/tasks/00563-TASK.md#accepted-implementation-checkpoint--2026-11-04)
-`9d9d952` has independent Review ACCEPT and visual/behavioral QA PASS (18 scenario groups / 18 inspected native
-captures), including the explicit persistent Sol/high QA/Land defaults and single-owner caller documentation.
-Publication/capture access and eligible cleanup are pending at this checkpoint; actual outcomes are in canonical
-ignored `.runs/tasks/TASK-00563/runs/land-delivery.md` and the TASK PR. Actual main/two-worktree tooling-stack
-observation is qualified, not full worktree HTTPS/auth startup (actual-name certificates missing), everyday
-installed-package rollout or upstream SDK Build cutover. Human merge remains separate.
-
-TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
-current independent QA PASS. Its accepted-candidate closeout is published in [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162); final delivery verification and human merge remain separate. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
-The package no longer ships `fight-terminal` or its direct retirement stub; `fight-workspace` opens the workspace and `fight-local` supplies local-domain enrollment. Existing copied installations change only through an explicit owned update/removal. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
-[actual-file session migration](harness/pi/WORKSPACE.md#native-entry-and-existing-rpc-sessions), and
-[explicit installed-launcher adoption/removal](harness/pi/README.md#update-remove-and-recover-the-launcher).
-Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
-requires separate operator selection on the qualified runtime; it is not Jev screening or sandbox isolation.
-
-## Development
-
-Docker Compose is required for application development. [Worktrunk](https://worktrunk.dev/) (`wt` on PATH)
-owns eligible Git worktree/local-branch removal, not Docker lifecycle or ordinary Pi. Use
-[explicit main/worktree commands](docs/engineering/RESOURCE_LIFECYCLE.md), reusing one native project across roles:
-`bin/up` / `bin/down` operate main and retain its persistent data; `bin/up --worktree SELECTOR` /
-`bin/down --worktree SELECTOR` operate a registered checkout's disposable isolated stack. No TASK receipt,
-worker/PID or stale feature-branch gate. Worktrunk/Land use the same Docker-first teardown and guarded native
-removal. The exact reviewed repository down hook runs unattended after effective-hook inspection, without
-persistent trust; unknown/user/changed hooks retain source, not Docker resources.
-
-For on-demand human testing after original task cleanup, TASK-00556's `bin/qa up TASK-ID [--ref REVISION]`,
-`bin/qa list` and `bin/qa down SELECTOR` have independent Review acceptance and behavioral QA PASS, including
-published-revision recreation and host Chrome activation/login. Publication and merge remain separate; see the [TASK checkpoint](planning/tasks/00556-TASK.md#accepted-implementation-checkpoint--2026-11-05). See [human QA operations](docs/engineering/HUMAN_QA.md) for fixed-OID selection,
-explicit certificate/front-door prerequisites, fresh synthetic activation and mandatory end-of-session down.
-
-For an unenrolled main checkout, ordinary `bin/up` uses direct TLS at **https://localhost:18443**, with
-the explicit `.env`/certificate prerequisites below. Explicit [local-domain enrollment](docs/engineering/LOCAL_DOMAINS.md)
-opts main startup into its registered shared HTTPS origin and generated proxy configuration; prepare that
-supplier and certificate before startup. TASK-00543's earlier main-startup failure was a regression, now repaired, not deferred browser testing.
-
-**TASK-00543 consumer acceptance is complete** on its independently reviewed and QA-verified candidate;
-publication and final delivery checks remain separate. See the [acceptance checkpoint](planning/tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02)
-and `.runs/tasks/TASK-00543/runs/land/receipt.md` for delivery results. `bin/up --worktree SELECTOR` still requires
-[TASK-00553](planning/tasks/00553-TASK.md)'s separately operated shared HTTPS ingress and actual-name certificates;
-it reports missing prerequisites without starting substitute services or printing a ready URL. Intended shared
-origins are `https://fight-agent-os.localhost` and distinct `https://fight-wt-<checkout-hash>.localhost` names.
-This does not block ordinary main startup. Trust/certificates remain explicit. This application has committed Composer lockfiles:
+Prepare dependencies and the application:
 
 ```sh
-export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
+./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
 ./bin/client build
-# Configure independent application keys, then explicitly enroll local TLS once:
 ./bin/https setup
 ./bin/up
 ./bin/database migrate
 ```
 
-For explicit shared `<name>.localhost` HTTPS, see [shared ingress operations](docs/engineering/LOCAL_INGRESS.md).
-TASK-00553's supplier includes optional existing-Herd coexistence with verified high-port upstream TLS;
-independent ingress remains the default. At the historical acceptance checkpoint, the approved three-name Herd
-configuration was loaded; the supplier's later cleanup detached its include, without proving live unload. Work qualified
-canonical HTTPS, both verified proxy hops and available auth flows on two full disposable task stacks; main
-root/CSRF/UI transport was exercised without changing its inherited unprepared database. Independent Review ACCEPT and QA PASS bind the accepted TASK-00553 candidate; publication and cleanup are
-pending at this checkpoint, with actual results in `.runs/tasks/TASK-00553/runs/land/receipt.md` and the TASK PR.
-Default independent low-port runtime and other platforms/browsers remain unverified here.
-Unenrolled main startup stays direct localhost TLS, independent of that supplier.
+For an unenrolled checkout, the default HTTPS address is **https://localhost:18443**. Explicit
+[local-domain enrollment](docs/engineering/LOCAL_DOMAINS.md) selects a separately prepared shared
+HTTPS origin. Use the verified URL reported by startup. TLS setup changes local trust only through
+explicit enrollment; ordinary startup does not install trust or generate certificates.
 
-The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
-`./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
-`/`; see [client commands and boundaries](client/README.md).
-`./bin/build` is the [complete read-only gate](docs/engineering/BUILD.md), including backend coverage and
-frontend/browser checks without duplicate test executions. Dependencies and private OpenAPI/validation exports
-need explicit setup first; acceptance never installs or exports. `./bin/backend-tests` remains a focused command;
-see its [guarded lifecycle and reports](docs/engineering/BACKEND_TESTS.md). Override the port with `FIGHT_AGENT_OS_PORT`.
-Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
-`APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
-(e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
-Also configure the external `APP_ACCESS_TOKEN_CONFIG` HS256 keyring before boot; follow
-[access-token configuration](docs/engineering/ACCESS_TOKENS.md) for its exact shape and finite rotation bounds.
-JWT issuance/consumption, request-scoped PostgreSQL authentication and a JWT-by-default matched-Action
-API-v1 gate are available. The protected `GET /api/v1/me` returns safe identity and current role/permission
-names without a dashboard permission prerequisite. Protected read-only role and permission catalogs are implemented at `GET /api/v1/roles`, `/roles/{roleId}`,
-`/permissions` and `/permissions/{permissionId}`, pending independent Review/QA; see
-[guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
-The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) at `GET /api/v1/users` and
-`/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
-(TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
-`GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
-declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
-queries and safe Responder presentation. No target data is stored in browser history. The pagination-only
-correction has independent Review/QA acceptance on `55c55ad`; delivery results are in the receipt and PR below.
-Removal of duplicate
-permission checks from both Actions has independent Review and QA acceptance on `ba7f652`; the earlier
-acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
-current results are in
-`.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
-TASK-00060's `/admin/invitations/{user_id}` deliberately reads safe user detail and invitation status
-under READ_USERS; READ_USERS-only viewers receive read-only presentation. Page management additionally needs
-MANAGE_USER_INVITATIONS. Mutation APIs need only that operation permission and return no user/status data;
-manage-only grants no reading. The maintainer revision has independent Review/QA acceptance; publication and
-final checks were pending at closeout. Current delivery is in [PR #204](https://github.com/johnnickell/fight-agent-os/pull/204)
-and `.runs/tasks/TASK-00060/runs/land-delivery.md`; earlier acceptance/delivery is historical.
-[Ordinary invitation](docs/engineering/ORDINARY_INVITATIONS.md) at `/admin/invite` now uses exact INVITE_USERS,
-a canonical email-only form and the existing API, with truthful accepted/unconfirmed outcomes and READ_USERS-only
-status continuation. Independent technical Review and behavioral QA accepted this ordinary journey;
-[confirmed elevated issuance](docs/engineering/ELEVATED_INVITATIONS.md) is now implemented at the separate
-`/admin/invite-super-admin` route using both exact permissions, explicit canonical-target confirmation
-and truthful partial-result investigation. Independent technical Review and behavioral QA accepted the elevated journey, including retained
-uncertainty through routine authority verification. The owning TASKs record evidence and verification limits;
-acceptance does not establish real-inbox delivery or production qualification.
-Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
-independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
-before upgrading an existing database: historical reset authority is never guessed or discarded.
-Permission-protected invitation issuance and safe status are available at `POST /api/v1/invitations` and
-`GET /api/v1/invitations/{user_id}`. Permission-controlled retry, resend and atomic pending-email correction
-are available at `POST /api/v1/invitations/{user_id}/retry`, `POST /api/v1/invitations/{user_id}/resend`, and
-`PATCH /api/v1/invitations/{user_id}/email`; see [invitation API](docs/engineering/INVITATION_API.md) for exact
-permissions, confirmation, bounded atomic limits and retained partial/uncertain outcomes. Public `POST /api/v1/auth/activate` establishes an ordinary session by invitation possession with
-Origin/CSRF/JSON/admission protections; see [activation contracts and limits](docs/engineering/ACTIVATION.md).
-Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY` before HTTP boot.
-The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
-fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
-rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
-no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. TASK-00057 adds read-only [owned active sessions](docs/engineering/OWNED_SESSIONS.md) at `/account/sessions` and `GET /api/v1/me/sessions`, with exact `READ_OWN_SESSIONS`, principal-only ownership and coarse original device hints (independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) merged into `develop` at `0629697bd1a51b88720b1881aa5024928981f5ce`). TASK-00058 adds confirmed other-owned revocation through `DELETE /api/v1/me/sessions/{sessionId}` and the Active Sessions page, with exact `DELETE_OWN_SESSIONS`, package-owned denial of cross-user administration and volatile same-origin convergence; independent Review/QA accepted the implementation, and [PR #173](https://github.com/johnnickell/fight-agent-os/pull/173) merged into `develop` at `0ec84eb67043e40bb84890d45ed1d2887a4a5573`. See [revocation contracts](docs/engineering/OWNED_SESSIONS.md#confirmed-other-owned-revocation-task-00058).
-The API-only [installation session administration](docs/engineering/SESSION_ADMINISTRATION.md) adds distinct
-`READ_SESSIONS` / `DELETE_SESSIONS` user-targeted reads and reasoned audited revocation without broadening
-self-service; independent technical and behavioral acceptance is recorded in [TASK-00122](planning/tasks/00122-TASK.md).
-The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For required local TLS at
-**https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
-`./bin/https setup` once, then `./bin/up` for every startup or configuration refresh, and `./bin/https status` to inspect it. Setup preserves your CSRF key and changes only
-the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`
-for the separate HTTP listener. The [integrated security envelope](docs/engineering/SECURITY_ENVELOPE.md)
-adds fail-closed production-like configuration/transport admission, same-origin deny-CORS and outer CSP/security/
-cache/referrer headers. Independent technical and behavioral acceptance covers bounded ordinary-443 local
-journeys and the finite coverage-tool budget; see [scope and evidence](planning/tasks/00063-TASK.md#accepted-implementation-closeout--2026-11-10).
-This is not current full-app readiness, a complete authenticated deployment, real-provider enrollment or
-production-artifact certification. Trust and runtime preparation remain explicit.
-For PHP error logs, process limits and opt-in IDE debugging, see [local PHP diagnostics](docs/engineering/LOCAL_PHP.md).
-Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
-variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
-database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database
-schemas and fixtures belong alongside `migrations/` under `database/`.
-The shared [password-setting boundary](docs/engineering/PASSWORDS.md) enforces Unicode code-point composition,
-checks a pinned local hashed common-password list and uses explicit Argon2id parameters. Application startup
-verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
-in deployment artifacts. Activation, [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) and
-[authenticated change](docs/engineering/PASSWORD_CHANGE.md) consume this boundary. Password change at
-`/account/password` requires current proof and ends all sessions; independent Review/QA accepted the implementation, and [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge. It is not a standalone password endpoint.
-
-Direct Fight Access Control invitation/reset delivery handlers now require an independent
-`APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
-for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.
-Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. Invitation email can
-explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELIVERY_ADAPTER=catcher` and validated
-`APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
-[local invitation email](docs/engineering/INVITATION_EMAIL.md) and
-[password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
-start/send/recovery/cleanup contracts. No real inbox is supplied. TASK-00055 adds [one-time reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) at `/reset-password/complete` and its versioned API, pending independent Review/QA; it revokes target sessions and requires fresh sign-in. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
-at `/reset-password` and `POST /api/v1/auth/password-reset`, pending independent Review/QA.
-Reset mail now requires the bounded internal runner rather than synchronous request-time SMTP. The public activation UI requires the
-configured canonical `/activate` path and the qualified fragment-only link shape described in the activation runbook.
-A bounded internal
-`./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
-command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
-migration, data guards, bounded downtime-expiry cleanup and exit codes. There is no production provider or enrolled recovery schedule, so this does not
-enable real-inbox delivery or establish complete production recovery. Production-like HTTP boot and delivery
-preflight fail closed; Compose now consumes `APP_ENV` rather than hardcoding development.
-
-Trusted operators can explicitly preview and apply the version-controlled installation authority with
-`./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal` from the single
-`database/seeds/permissions.json` / `roles.json` catalog. User retains its three approved Permissions; Super Admin
-receives every current/future managed Permission on reconciliation, without implicit custom/Agent grants. Read the
-[managed policy runbook](docs/engineering/MANAGED_POLICY.md) before applying: this reconciles the exact managed
-catalog, not users, bootstrap, Swagger routes or live Agent operations. It never runs automatically.
-After reconciliation, trusted operators can invite an ordinary pending user with
-`./bin/console user:invite --internal --operator=OPERATOR_UUID --email=person@example.test`.
-Read the [console invitation runbook](docs/engineering/CONSOLE_INVITATIONS.md) before use. Invitation and
-`ROLE_USER` assignment commit independently: delivery may begin before assignment, and a later failure retains
-the invitation. Safe partial output identifies the known target and corrective command. Trusted operators can add
-an existing eligible role with `./bin/console user:role:add --internal --operator=OPERATOR_UUID --user=USER_UUID --role=ROLE_UUID`;
-this is additive/idempotent and excludes authoritative Super Admin. Role confirmation audit commits separately,
-with disclosed crash/uncertainty boundaries. TASK-00037 implementation awaits fresh independent Review/QA;
-the earlier alternate-policy probe is conditional history, not a shipped fixed-catalog prerequisite.
-This is not bootstrap/public registration; null/memory adapters send no email, while the opt-in catcher stores
-local test invitation/reset mail only.
-The separate `./bin/console user:bootstrap-super-admin --internal --confirm-bootstrap --operator=OPERATOR_UUID --email=person@example.test`
-checks authoritative Super Admin presence and refuses if one exists or lookup fails. Run it manually, one operator
-at a time; no concurrent admission guarantee is provided. Another manual attempt is allowed after partial/failure
-when no Super Admin exists; retained same-email invitations still conflict normally. Read the
-[bootstrap runbook](docs/engineering/SUPER_ADMIN_BOOTSTRAP.md) before confirming. Invitation, assignment and completion
-audit commit independently; early delivery and retained partial state are deliberate, not an atomic rollback guarantee.
-All three Console commands share the normal glob-loaded container and bus. Raw package dispatch is trusted internal
-infrastructure; nontrusted role assignment must use the explicit authenticated Application use case. No direct HTTP/Agent
-role-assignment endpoint or managed Agent CLI restriction is supplied here; invitation-specific authenticated
-managed assignment is available through the separate invitation API.
+Prepare private metadata, then run the complete gate:
 
 ```sh
-./bin/database check       # Check development and guarded test PostgreSQL services
-./bin/database status      # Inspect development migration status
-./bin/database test-reset  # Guard, reset, and migrate only the dedicated test database
-./bin/database test        # Run focused PostgreSQL repository tests
-./bin/backend-tests        # Reset guarded test DB, run all backend suites once with coverage
-./bin/planning-check --write  # Refresh planning views
-./bin/planning-check          # Validate planning
-./bin/build                   # Complete gate; automatically reuses an unchanged verified success
-./bin/build --force           # Run every phase even when a reusable success exists
-./bin/down                         # Main: retain persistent data
-./bin/down --worktree task-00543    # Registered task: disposable stack/data cleanup
+./bin/openapi export
+./bin/validations export
+./bin/build
 ```
 
-Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
-then validate freshness and real responses with `./bin/openapi check`. Generate the public-safe
-form catalog (including the real `invitation_activation` form) with `./bin/validations export` and verify it with `./bin/validations check`; see
-[validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `var/openapi/` and
-`var/validations/`, not public assets. Compiled browser assets live in `var/client/build/` and local TLS state
-in `var/https/`. Application runtime never depends on `.runs/`. The [private Swagger viewer](docs/engineering/SWAGGER.md)
-at `/swagger` requires an explicit exact environment allowlist and current server-side `READ_SWAGGER` for
-both initialization and direct spec reads. `.env.example` starts with `["local"]`; absent/malformed settings disable
-it. Independent strict APP_DEBUG supports only closed sanitized diagnostics and refuses true in prod/production.
-No public spec, long-lived Swagger credential or production-mail exception is supplied. Full production startup
-qualification remains explicitly deferred until the independent real-mail prerequisite exists.
+`./bin/build` validates planning freshly and automatically reuses qualifying unchanged application
+results. Use `./bin/build --force` for a deliberate fresh run. See the [build guide](docs/engineering/BUILD.md)
+for prerequisites and verification boundaries.
 
-Expensive local wrappers check host free space (20 GiB reserve plus 4 GiB allowance by default) and daemon
-availability; insufficient space refuses allocation, never triggers global prune. Configure host-shell
-`FIGHT_STORAGE_RESERVE_BYTES` / `FIGHT_STORAGE_ALLOCATION_BYTES` when needed. `./bin/up --build-only` is explicit
-image setup. Builds normally use native shared caches; task-specific image tags are disposable, shared downloads/
-caches require separate explicit maintenance. `bin/down --worktree SELECTOR` uses the same
-[Compose cleanup](docs/engineering/RESOURCE_LIFECYCLE.md) as Land/Worktrunk: `down --volumes --remove-orphans`,
-then remaining project-owned resources/task tags and a dedicated builder if created. Main data and foreign
-projects remain protected; source protections do not block explicit task Docker teardown. Keep needed role
-evidence outside disposable source until outcomes reach TASK/PR, then retire it. No source copies or archives.
+Stop the main stack with `./bin/down`; its database data is retained. For isolated worktrees, follow
+[local tooling](docs/engineering/LOCAL_TOOLING.md) and the [resource lifecycle](docs/engineering/RESOURCE_LIFECYCLE.md)
+for explicit startup and disposable-runtime cleanup.
 
-Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
-Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots
-(such as a sibling `.worktrees/` directory, outside `.runs/`). Runtime sandboxing remains planned, not implied by the development Compose stack.
+## Fight terminal
 
-For maintained feature architecture pictures, use the [source-verified diagram standard](docs/engineering/DIAGRAMS.md)
-and its explicit local `./bin/diagrams` setup/render commands.
-[TASK-00551's accepted `/skill:show-me`](planning/tasks/00551-TASK.md#independent-acceptance-checkpoint--2026-11-05)
-adds explicit bounded existing/proposed views in ignored scratch with inspected local Chrome fallback.
-Human-inline display remains unobserved in JSON/print; proposals are not implementation or approval.
-Publication/capture access and cleanup are pending at this checkpoint; actual delivery results are in
-canonical ignored `.runs/tasks/TASK-00551/runs/land/receipt.md` and the TASK PR. Human merge is separate. The
-[CSRF bootstrap example](docs/engineering/browser-auth-requests/README.md) shows actual PHP layer ownership with
-source and arrow traces; it is not runtime or security acceptance evidence.
+The optional [Pi package](harness/pi/README.md) adds Fight's terminal interface and workflow tools.
+Follow its prerequisites, installation and profile-migration instructions before enabling it.
+The [workspace guide](harness/pi/WORKSPACE.md) covers Herdr panes and Docker logs; ordinary Pi remains
+available without the workspace integration.
 
-See [architecture](ARCHITECTURE.md), [roadmap](planning/ROADMAP.md), and [scaffold origin](docs/ORIGIN.md).
-The inherited starter retains its [MIT license](LICENSE).
+## Documentation
 
-See [local Docker, worktree and build-cache operations](docs/engineering/LOCAL_TOOLING.md) for explicit main/worktree selection, guarded teardown and fresh versus reused gate evidence.
+- [Architecture](ARCHITECTURE.md) and [engineering standards](docs/engineering/STANDARDS.md)
+- [Planning conventions](planning/CONVENTIONS.md), [Board](planning/tasks/BOARD.md) and [Wayfinder](planning/wayfinder/README.md)
+- [Client development](client/README.md) and [API documentation](docs/api/README.md)
+- [Local HTTPS](docs/engineering/LOCAL_HTTPS.md), [shared ingress](docs/engineering/LOCAL_INGRESS.md) and [local domains](docs/engineering/LOCAL_DOMAINS.md)
+- [Human QA environments](docs/engineering/HUMAN_QA.md) and [project skills](.pi/skills/README.md)
+- [Project origin](docs/ORIGIN.md)
+
+## License
+
+[MIT](LICENSE).
