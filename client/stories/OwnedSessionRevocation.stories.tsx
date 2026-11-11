@@ -130,6 +130,7 @@ const confirm: NonNullable<Story['play']> = async ({ canvasElement, args }) => {
     }
   }
 };
+export const Ready: Story = { args: { scenario: 'success' } };
 export const Confirmation: Story = { play: confirm };
 export const DarkConfirmation: Story = {
   args: { dark: true },

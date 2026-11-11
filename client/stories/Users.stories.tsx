@@ -146,6 +146,7 @@ export const SystemFailure: Story = { args: { scenario: 'error' } };
 export const ServerForbidden: Story = { args: { scenario: 'forbidden' } };
 export const RoleNameWithoutRead: Story = { args: { scenario: 'denied' } };
 export const ReadOnly: Story = { args: { scenario: 'read-only' } };
+export const PaginationReady: Story = { args: { scenario: 'pagination' } };
 export const Pagination: Story = {
   args: { scenario: 'pagination' },
   play: async ({ canvasElement }) => {
