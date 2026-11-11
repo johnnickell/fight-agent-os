@@ -117,6 +117,59 @@ final class SafeErrorBoundaryTest extends TestCase
     }
 
     /**
+     * Challenges the real failure boundary with independently generated secret families and nested causes
+     */
+    public function testSeededSecretsStayOutOfResponseAndFormattedDiagnostics(): void
+    {
+        $secrets = [];
+        foreach (
+            [
+                'password', 'access_token', 'refresh_token', 'grant', 'digest', 'ciphertext',
+                'credential_link', 'signing_key', 'encryption_key', 'csrf_key', 'provider_key',
+                'cookie', 'sql', 'stack'
+            ] as $family
+        ) {
+            $secrets[$family] = bin2hex(random_bytes(32));
+        }
+        $private = json_encode($secrets, JSON_THROW_ON_ERROR);
+        $failure = new RuntimeException($private, 0, new RuntimeException($private));
+        $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $logs = new TestHandler();
+        $logs->setFormatter(new JsonFormatter());
+        $app->getContainer()?->get('http.failure.logger')->setHandlers([$logs]);
+        $bus = $this->createMock(QueryBus::class);
+        $bus->method('fetch')->willThrowException($failure);
+        $app->getContainer()?->set(QueryBus::class, static fn(): QueryBus => $bus);
+        $request = (new ServerRequestFactory())->createServerRequest(
+            'GET',
+            'https://agent-os.test/api/v1/auth/csrf'
+        )->withHeader('Authorization', 'Bearer '.$secrets['access_token'])
+            ->withHeader('Cookie', 'session='.$secrets['cookie'])
+            ->withHeader('X-Correlation-ID', $secrets['provider_key'])
+            ->withHeader('Referer', 'https://agent-os.test/private/'.$secrets['grant']);
+        $response = $app->handle($request);
+        self::assertSame(500, $response->getStatusCode());
+        self::assertCount(1, $logs->getRecords());
+        self::assertSame(
+            ['http_status' => 500, 'exception_type' => RuntimeException::class],
+            $logs->getRecords()[0]->context
+        );
+        $surfaces = [
+            (string) $response->getBody(),
+            json_encode($response->getHeaders(), JSON_THROW_ON_ERROR),
+            (string) $logs->getRecords()[0]->formatted,
+            json_encode($logs->getRecords()[0]->toArray(), JSON_THROW_ON_ERROR)
+        ];
+        foreach ($secrets as $family => $secret) {
+            foreach ($surfaces as $surface) {
+                self::assertFalse(str_contains($surface, $secret), $family.' reached a public or diagnostic surface');
+            }
+        }
+        self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/D', $response->getHeaderLine('X-Correlation-ID'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+    }
+
+    /**
      * Supplies invalid or ambiguous client correlation identifiers
      *
      * @return iterable<array{string|list<string>}>

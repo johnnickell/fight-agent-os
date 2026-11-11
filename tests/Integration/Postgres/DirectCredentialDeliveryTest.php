@@ -446,22 +446,55 @@ final class DirectCredentialDeliveryTest extends TestCase
     /**
      * Proves unexpected provider failure persists only the package safe classification
      */
-    public function testUnexpectedProviderExceptionRemainsRetryableWithoutErrorDisclosure(): void
+    #[DataProvider('purposes')]
+    public function testUnexpectedProviderExceptionRemainsRetryableWithoutErrorDisclosure(string $purpose): void
     {
-        $this->seed('password_reset');
-        $sensitive = bin2hex(random_bytes(32));
-        $this->provider(static function () use ($sensitive): CredentialDeliveryOutcome {
-            throw new \RuntimeException($sensitive);
+        $grant = $this->seed($purpose);
+        $before = $this->row($purpose);
+        $markers = [
+            'password'     => bin2hex(random_bytes(32)),
+            'provider_key' => bin2hex(random_bytes(32)),
+            'sql'          => 'SELECT private_'.bin2hex(random_bytes(16)),
+            'stack'        => '/private/'.bin2hex(random_bytes(16)).'.php',
+            'digest'       => $before['credential_digest'],
+            'ciphertext'   => $before['delivery_ciphertext']
+        ];
+        $rawCredential = null;
+        $this->provider(static function (CredentialDeliveryInvocation $invocation) use (
+            $markers,
+            &$rawCredential
+        ): CredentialDeliveryOutcome {
+            $rawCredential = $invocation->getCredential();
+            throw new \RuntimeException(json_encode(
+                [...$markers, 'grant' => $rawCredential],
+                JSON_THROW_ON_ERROR
+            ));
         });
-        $this->dispatch('password_reset');
-        $row = $this->row('password_reset');
+        $this->dispatch($purpose);
+        self::assertIsString($rawCredential);
+        $row = $this->row($purpose);
         self::assertSame('retry_pending', $row['delivery_status']);
         self::assertSame('unexpected_provider', $row['delivery_last_failure']);
-        self::assertStringNotContainsString($sensitive, json_encode($row, JSON_THROW_ON_ERROR));
-        self::assertStringNotContainsString($sensitive, json_encode(
-            $this->connection->fetchAllAssociative('SELECT * FROM audit_evidence'),
-            JSON_THROW_ON_ERROR
+        self::assertSame($before['credential_digest'], $row['credential_digest']);
+        self::assertSame($before['delivery_ciphertext'], $row['delivery_ciphertext']);
+        $status = $this->queries()->fetch(new FindCredentialDeliveryStatus(
+            $purpose,
+            $grant->getDelivery()->getId()->toString()
         ));
+        $surfaces = [
+            var_export($status, true),
+            json_encode($this->connection->fetchAllAssociative('SELECT * FROM audit_evidence'), JSON_THROW_ON_ERROR)
+        ];
+        foreach ([...$markers, 'grant' => $rawCredential] as $family => $marker) {
+            foreach ($surfaces as $surface) {
+                self::assertFalse(str_contains($surface, $marker), $family.' reached status or audit');
+            }
+        }
+        // Protected digest/ciphertext storage is intentional; provider diagnostics are not.
+        foreach (['password', 'provider_key', 'sql', 'stack'] as $family) {
+            self::assertFalse(str_contains(json_encode($row, JSON_THROW_ON_ERROR), $markers[$family]));
+        }
+        self::assertFalse(str_contains(json_encode($row, JSON_THROW_ON_ERROR), $rawCredential));
     }
 
     /**
