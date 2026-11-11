@@ -27,7 +27,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 64 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | — | — |
 | 65 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | — | — |
 | 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -304,6 +303,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | Needed input or evidence | PR |
 |---|---|---|---|---|---|---|---|
+| 64 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | needs-info | — | Resolve credential-fragment retention in Chromium userTypedURL against the required browser-history/artifact boundary | — |
 | — | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | needs-info | — | Demonstrate a recurring native-retention recall gap and approve a beneficial optional-context evaluator | — |
 | — | [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | needs-info | — | Establish a concrete companion-storage need and retention owner after the native compaction slice | — |
 | — | [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | needs-info | [TASK-00168](00168-TASK.md) | Demonstrate a timing gap and evaluator benefit beyond deterministic native compaction scheduling | — |

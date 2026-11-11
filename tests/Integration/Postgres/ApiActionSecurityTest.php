@@ -6,6 +6,7 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
 use App\Adapter\Http\Action\ClientShellAction;
+use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
 use App\Adapter\Http\Responder\Api\V1\Me\ReadCurrentPrincipalResponder;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
@@ -18,8 +19,11 @@ use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Adapter\Security\AccessToken\SystemAccessClock;
+use App\Adapter\Security\HmacCsrfProofs;
+use App\Application\Security\Csrf\Clock\CsrfClock;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
@@ -538,10 +542,394 @@ final class ApiActionSecurityTest extends TestCase
     }
 
     /**
+     * Refuses invalid authority across every protected operation before query dispatch or durable mutation
+     */
+    #[DataProvider('integratedAuthorityStates')]
+    public function testIntegratedAuthenticationDenials(string $state): void
+    {
+        $this->reconcileMatrixPolicy();
+        $this->assignMatrixRole('ROLE_SUPER_ADMIN');
+        $token = $this->token;
+        if ($state === 'anonymous' || $state === 'cookie only') {
+            $token = null;
+        } elseif ($state === 'invalid signature') {
+            $token .= 'x';
+        } elseif ($state === 'revoked') {
+            $this->connection->executeStatement('UPDATE refresh_sessions SET revoked = TRUE');
+        } elseif ($state === 'stale') {
+            $this->connection->executeStatement('UPDATE users SET authentication_version = authentication_version + 1');
+        } elseif (in_array($state, ['pending', 'disabled', 'deleted'], true)) {
+            if ($state === 'pending') {
+                $this->connection->executeStatement(
+                    "UPDATE users SET state = 'pending_activation', password_hash = NULL"
+                );
+            } else {
+                $this->connection->executeStatement('UPDATE users SET state = ?', [$state]);
+            }
+        } elseif (in_array($state, ['idle expired', 'absolute expired'], true)) {
+            $assignments = 'idle_expires_at = ?';
+            if ($state === 'absolute expired') {
+                $assignments .= ', absolute_expires_at = ?';
+            }
+            $deadline = $this->tokens->clock->now()->format('Y-m-d H:i:s.uP');
+            $this->connection->executeStatement(
+                'UPDATE refresh_sessions SET '.$assignments,
+                $state === 'idle expired' ? [$deadline] : [$deadline, $deadline]
+            );
+        } elseif ($state === 'missing role') {
+            $repository = $this->createStub(RoleRepository::class);
+            $repository->method('getByIds')->willReturn([]);
+            $repository->method('getByName')->willReturn(null);
+            $container = $this->app->getContainer();
+            self::assertInstanceOf(Container::class, $container);
+            $container->set(RoleRepository::class, static fn(): RoleRepository => $repository);
+        } else {
+            $claims = $this->tokens->claims();
+            $claims['sub'] = $this->user->getId()->toString();
+            $claims['sid'] = $this->session->getId()->toString();
+            $claims['auth_version'] = $this->user->getAuthenticationVersion();
+            if ($state === 'wrong owner') {
+                $claims['sub'] = UserId::generate()->toString();
+            } elseif ($state === 'missing session') {
+                $claims['sid'] = RefreshSessionId::generate()->toString();
+            } elseif ($state === 'authority snapshot') {
+                $claims['permissions'] = ['READ_USERS'];
+                $claims['roles'] = ['ROLE_SUPER_ADMIN'];
+            }
+            $token = $this->tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
+        }
+        $before = $this->matrixBusinessSnapshot();
+        foreach (self::protectedOperations() as [$method, $path]) {
+            $response = $this->request($token, $method, $this->matrixPath($path), $state === 'cookie only');
+            $this->assertMatrixDenial($response, 401);
+        }
+        self::assertSame($before, $this->matrixBusinessSnapshot());
+        self::assertSame(0, $this->queries);
+        self::assertSame(0, $this->constructions);
+        self::assertSame([], $this->logs->getRecords());
+    }
+
+    /**
+     * Supplies independent invalid authentication and current-authority states
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function integratedAuthorityStates(): iterable
+    {
+        foreach (
+            [
+            'anonymous', 'cookie only', 'invalid signature', 'revoked', 'stale', 'pending', 'disabled', 'deleted',
+            'idle expired', 'absolute expired', 'missing role', 'wrong owner', 'missing session', 'authority snapshot'
+            ] as $state
+        ) {
+            yield $state => [$state];
+        }
+    }
+
+    /**
+     * Varies each grant independently across real routes without granting authority by managed role name
+     *
+     * @param string $role
+     * @param array<int, string> $grants
+     *
+     * @phpstan-param list<string> $grants
+     */
+    #[DataProvider('integratedPermissionSets')]
+    public function testIntegratedPermissionDenials(string $role, array $grants): void
+    {
+        $this->reconcileMatrixPolicy();
+        $this->assignMatrixRole($role);
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name NOT IN (?))',
+            [$grants === [] ? ['NO_PERMISSION'] : $grants],
+            [ArrayParameterType::STRING]
+        );
+        $before = $this->matrixBusinessSnapshot();
+        foreach (self::protectedOperations() as [$method, $path, $permission]) {
+            if ($permission === null || in_array($permission, $grants, true)) {
+                continue;
+            }
+            $this->assertMatrixDenial($this->request($this->token, $method, $this->matrixPath($path)), 403);
+        }
+        self::assertSame($before, $this->matrixBusinessSnapshot());
+        self::assertSame(0, $this->queries);
+        self::assertSame([], $this->logs->getRecords());
+    }
+
+    /**
+     * Supplies empty, ordinary, independent single and amended invitation permission combinations
+     *
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function integratedPermissionSets(): iterable
+    {
+        yield 'misleading managed name without grants' => ['ROLE_SUPER_ADMIN', []];
+        foreach (self::managedMemberships() as $name => [$role, $permissions]) {
+            if ($name === 'ordinary') {
+                yield 'ordinary' => [$role, $permissions];
+            } else {
+                foreach ($permissions as $permission) {
+                    yield $permission.' alone' => [$role, [$permission]];
+                }
+            }
+        }
+        yield 'read and manage invitations' => ['ROLE_SUPER_ADMIN', ['READ_USERS', 'MANAGE_USER_INVITATIONS']];
+        yield 'invite and elevate' => ['ROLE_SUPER_ADMIN', ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN']];
+    }
+
+    /**
+     * Challenges every credential mutation's real transport profile before admission or durable writes
+     */
+    #[DataProvider('integratedRequestViolations')]
+    public function testIntegratedRequestControls(string $violation): void
+    {
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $clock = new class ($this->tokens->clock) implements CsrfClock {
+            /**
+             * Constructs a shared fixed security clock
+             */
+            public function __construct(private readonly AccessClock $clock)
+            {
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function now(): int
+            {
+                return $this->clock->now()->getTimestamp();
+            }
+        };
+        $container->set(CsrfClock::class, static fn(): CsrfClock => $clock);
+        $nonce = bin2hex(random_bytes(32));
+        $proof = $container->get(HmacCsrfProofs::class)->sign($nonce, $clock->now() + 900);
+        $password = 'Aa1!'.bin2hex(random_bytes(16));
+        $credential = bin2hex(random_bytes(32));
+        $headers = [
+            'Content-Type'   => 'application/json',
+            'Origin'         => 'https://agent-os.test',
+            'Sec-Fetch-Site' => 'same-origin',
+            'X-CSRF-Proof'   => $proof,
+            'Cookie'         => CsrfCookie::NAME.'='.$nonce
+        ];
+        $changes = match ($violation) {
+            'foreign origin' => ['Origin' => 'https://foreign.test'],
+            'null origin' => ['Origin' => 'null'],
+            'foreign origin port' => ['Origin' => 'https://agent-os.test:444'],
+            'cross-site fetch' => ['Sec-Fetch-Site' => 'cross-site'],
+            'navigate' => ['Sec-Fetch-Mode' => 'navigate'],
+            'foreign destination' => ['Sec-Fetch-Dest' => 'document'],
+            'forwarded authority' => ['Forwarded' => 'proto=https'],
+            'content type' => ['Content-Type' => 'text/plain'],
+            default => []
+        };
+        $headers = array_replace($headers, $changes);
+        if ($violation === 'missing origin') {
+            unset($headers['Origin']);
+        }
+        // Mount the actual route graph without dispatching a business operation.
+        $this->request(null);
+        $before = $this->matrixBusinessSnapshot();
+        $possession = [
+            'user_id'               => $this->user->getId()->toString(),
+            'credential'            => $credential,
+            'password'              => $password,
+            'password_confirmation' => $password
+        ];
+        $bodies = [
+            'login'                   => [
+                'email' => 'current@example.test', 'password' => $password, 'remember' => false
+            ],
+            'refresh'                 => [],
+            'logout'                  => [],
+            'activate'                => $possession,
+            'password-reset'          => ['email' => 'current@example.test'],
+            'password-reset/complete' => $possession,
+            'password/change'         => [
+                'current_password'      => $password,
+                'password'              => $password,
+                'password_confirmation' => $password
+            ]
+        ];
+        foreach ($bodies as $operation => $body) {
+            $uri = ($violation === 'http' ? 'http' : 'https').'://agent-os.test/api/v1/auth/'.$operation;
+            if ($violation === 'query source') {
+                $uri .= '?credential=alternate';
+            }
+            $request = new ServerRequestFactory()->createServerRequest('POST', $uri, ['REMOTE_ADDR' => '192.0.2.1']);
+            foreach ($headers as $name => $value) {
+                $request = $request->withHeader($name, $value);
+            }
+            if ($operation === 'password/change') {
+                $request = $request->withHeader('Authorization', 'Bearer '.$this->token);
+            }
+            $request->getBody()->write(
+                $violation === 'array body' ? '[]' : json_encode((object) $body, JSON_THROW_ON_ERROR)
+            );
+            $response = $this->app->handle($request);
+            self::assertSame(
+                in_array($violation, ['content type', 'query source', 'array body'], true) ? 400 : 403,
+                $response->getStatusCode(),
+                $operation.' / '.$violation
+            );
+            self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+            $surfaces = json_encode($response->getHeaders(), JSON_THROW_ON_ERROR).(string) $response->getBody();
+            $surfaces .= json_encode($this->logs->getRecords(), JSON_THROW_ON_ERROR);
+            foreach ([$password, $credential, $nonce, $proof, $this->token] as $secret) {
+                self::assertStringNotContainsString($secret, $surfaces);
+            }
+        }
+        self::assertSame($before, $this->matrixBusinessSnapshot());
+        self::assertSame(0, $this->queries);
+    }
+
+    /**
+     * Supplies transport, browser provenance and input-source violations independently
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function integratedRequestViolations(): iterable
+    {
+        foreach (
+            [
+            'foreign origin', 'null origin', 'foreign origin port', 'missing origin', 'cross-site fetch', 'navigate',
+            'foreign destination', 'forwarded authority', 'content type', 'query source', 'array body', 'http'
+            ] as $violation
+        ) {
+            yield $violation => [$violation];
+        }
+    }
+
+    /**
+     * Enumerates actual protected HTTP interactions independently of their implementation declarations
+     *
+     * @return list<array{string, string, ?string}>
+     */
+    private static function protectedOperations(): array
+    {
+        return [
+            ['GET', '/documentation/bootstrap', 'READ_SWAGGER'],
+            ['GET', '/documentation/openapi', 'READ_SWAGGER'],
+            ['POST', '/auth/password/change', null],
+            ['POST', '/invitations', 'INVITE_USERS'],
+            ['POST', '/invitations/{user}/retry', 'MANAGE_USER_INVITATIONS'],
+            ['POST', '/invitations/{user}/resend', 'MANAGE_USER_INVITATIONS'],
+            ['PATCH', '/invitations/{user}/email', 'MANAGE_USER_INVITATIONS'],
+            ['GET', '/invitations/{user}', 'READ_USERS'],
+            ['POST', '/workspaces/{user}/projects', 'REGISTER_PROJECTS'],
+            ['POST', '/workspaces/{user}/projects/conflict-preview', 'READ_PROJECTS'],
+            ['GET', '/workspaces/{user}/projects/{session}', 'READ_PROJECTS'],
+            ['GET', '/workspaces/{user}/projects', 'READ_PROJECTS'],
+            ['POST', '/workspaces/{user}/references', 'GENERATE_REFERENCE_IDS'],
+            ['POST', '/roles', 'CREATE_ROLES'],
+            ['PATCH', '/roles/{user}', 'UPDATE_ROLES'],
+            ['DELETE', '/roles/{user}', 'DELETE_ROLES'],
+            ['GET', '/roles', 'READ_ROLES'],
+            ['GET', '/roles/{user}', 'READ_ROLES'],
+            ['GET', '/permissions', 'READ_PERMISSIONS'],
+            ['GET', '/permissions/{user}', 'READ_PERMISSIONS'],
+            ['DELETE', '/me/sessions/{session}', 'DELETE_OWN_SESSIONS'],
+            ['GET', '/me/sessions', 'READ_OWN_SESSIONS'],
+            ['GET', '/users/{user}/sessions', 'READ_SESSIONS'],
+            ['DELETE', '/users/{user}/sessions/{session}', 'DELETE_SESSIONS'],
+            ['GET', '/users', 'READ_USERS'],
+            ['GET', '/users/{user}', 'READ_USERS'],
+            ['DELETE', '/users/{user}', 'DELETE_USERS'],
+            ['POST', '/users/{user}/restore', 'RESTORE_USERS'],
+            ['POST', '/users/{user}/disable', 'DISABLE_USERS'],
+            ['POST', '/users/{user}/enable', 'ENABLE_USERS'],
+            ['GET', '/me', null]
+        ];
+    }
+
+    /**
+     * Resolves only generated package fixture identities into actual request paths
+     */
+    private function matrixPath(string $path): string
+    {
+        return '/api/v1'.strtr($path, [
+            '{user}' => $this->user->getId()->toString(), '{session}' => $this->session->getId()->toString()
+        ]);
+    }
+
+    /**
+     * Prepares the real managed catalog before challenging operation admission
+     */
+    private function reconcileMatrixPolicy(): void
+    {
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->get(SynchronousCommandBus::class)->execute(new ReconcileManagedPolicy(
+            $container->get(\Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy::class)
+        ));
+    }
+
+    /**
+     * Assigns a managed fixture membership without changing its token authority
+     */
+    private function assignMatrixRole(string $name): void
+    {
+        $role = $this->roles->getByName(RoleName::fromString($name));
+        self::assertNotNull($role);
+        $replacement = clone $this->user;
+        $replacement->assignRole($role->getId(), $this->tokens->clock->now());
+        self::assertTrue($this->connection->transactional(
+            fn() => $this->users->replaceRoleAssignments($this->user, $replacement)
+        ));
+    }
+
+    /**
+     * Compares complete business rows without retaining credential-bearing snapshots in reports
+     *
+     * @return array<string, string>
+     */
+    private function matrixBusinessSnapshot(): array
+    {
+        $snapshots = [];
+        $tables = $this->connection->fetchFirstColumn(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename"
+        );
+        foreach ($tables as $table) {
+            $query = 'SELECT row_to_json(r)::text FROM '.$this->connection->quoteIdentifier($table);
+            $query .= ' r ORDER BY row_to_json(r)::text';
+            $snapshots[$table] = hash('sha256', json_encode(
+                $this->connection->fetchFirstColumn($query),
+                JSON_THROW_ON_ERROR
+            ));
+        }
+
+        return $snapshots;
+    }
+
+    /**
+     * Checks exact safe denial and credential-free response and diagnostic surfaces
+     */
+    private function assertMatrixDenial(ResponseInterface $response, int $status): void
+    {
+        self::assertSame($status, $response->getStatusCode());
+        self::assertSame([
+            'status' => 'fail',
+            'data'   => ['message' => $status === 401 ? 'Authentication required.' : 'Permission denied.']
+        ], json_decode((string) $response->getBody(), true, 32, JSON_THROW_ON_ERROR));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertFalse($response->hasHeader('Set-Cookie'));
+        self::assertFalse($response->hasHeader('Access-Control-Allow-Origin'));
+        $surface = json_encode($response->getHeaders(), JSON_THROW_ON_ERROR).(string) $response->getBody();
+        foreach ([$this->token, $this->user->getPasswordHash()->toString()] as $secret) {
+            self::assertStringNotContainsString($secret, $surface);
+        }
+    }
+
+    /**
      * Sends only actual registered route requests
      */
-    private function request(?string $token, string $method = 'GET', string $path = '/api/v1/me'): ResponseInterface
-    {
+    private function request(
+        ?string $token,
+        string $method = 'GET',
+        string $path = '/api/v1/me',
+        bool $cookieOnly = false
+    ): ResponseInterface {
         if (!$this->routesMounted) {
             $this->routesMounted = true;
             $app = $this->app;
@@ -552,6 +940,10 @@ final class ApiActionSecurityTest extends TestCase
         $request = new ServerRequestFactory()->createServerRequest($method, 'https://agent-os.test'.$path);
         if ($token !== null) {
             $request = $request->withHeader('Authorization', 'Bearer '.$token);
+        }
+
+        if ($cookieOnly) {
+            $request = $request->withHeader('Cookie', 'access_token='.$this->token.'; refresh_token='.$this->token);
         }
 
         return $this->app->handle($request);
