@@ -24,7 +24,7 @@ describe('activation document lifecycle', () => {
             app_debug: false,
             swagger_available: false
           })}
-          pathname="/app/activate"
+          pathname="/activate"
           activation={credential}
         />
       );

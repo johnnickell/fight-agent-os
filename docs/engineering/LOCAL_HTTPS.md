@@ -1,7 +1,7 @@
 # Local HTTPS
 
 The ordinary `./bin/up` development stack includes HTTPS at **https://localhost:18443**. It serves the existing root and
-`GET /api/v1/auth/csrf`, plus the [browser application](../../client/README.md) at `/app` after
+`GET /api/v1/auth/csrf`, plus the [browser application](../../client/README.md) at `/` after
 `./bin/client setup` and `./bin/client build`. Journey-owned login, activation and session controls use this
 transport inside the [shared security envelope](SECURITY_ENVELOPE.md); production enrollment remains separate.
 [TASK-00145](../../planning/tasks/00145-TASK.md) owns this transport slice;

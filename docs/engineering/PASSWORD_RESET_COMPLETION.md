@@ -1,11 +1,11 @@
 # One-time password-reset completion
 
-TASK-00055 implements `/app/reset-password/complete` and `POST /api/v1/auth/password-reset/complete`.
+TASK-00055 implements reset completion, now at `/reset-password/complete` and `POST /api/v1/auth/password-reset/complete`.
 Independent Review/QA, production delivery enrollment and deployment remain separate.
 
 ## Link and browser ownership
 
-Configure catcher delivery with `APP_PASSWORD_RESET_PATH=/app/reset-password/complete` and the exact trusted
+Configure catcher delivery with `APP_PASSWORD_RESET_PATH=/reset-password/complete` and the exact trusted
 HTTPS origin, following [reset email](PASSWORD_RESET_EMAIL.md). The fragment is exactly
 `#user_id=<canonical UserId UUID>&credential=<RFC3986-encoded opaque credential>` in that order, with no other
 fields. UserId is routing, not authority. The blocking head script accepts 1–4096 decoded UTF-8 bytes unchanged,

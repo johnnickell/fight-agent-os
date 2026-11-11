@@ -66,8 +66,8 @@ final readonly class HttpSecurityConfiguration
             if (
                 $environment['APP_ACTIVATION_ORIGIN'] !== $environment['APP_BROWSER_ORIGIN']
                 || $environment['APP_PASSWORD_RESET_ORIGIN'] !== $environment['APP_BROWSER_ORIGIN']
-                || $environment['APP_ACTIVATION_PATH'] !== '/app/activate'
-                || $environment['APP_PASSWORD_RESET_PATH'] !== '/app/reset-password/complete'
+                || $environment['APP_ACTIVATION_PATH'] !== '/activate'
+                || $environment['APP_PASSWORD_RESET_PATH'] !== '/reset-password/complete'
             ) {
                 throw new InvalidArgumentException('Invalid canonical credential link configuration.');
             }

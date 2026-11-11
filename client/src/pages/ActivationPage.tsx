@@ -67,7 +67,7 @@ export function ActivationPage({
               title="Account activated"
               message="Your ordinary session is ready. Your password and invitation have been cleared from this page. The dashboard and account controls are not available yet."
             />
-            <a href="/app">Continue to the application foundation</a>
+            <a href="/">Continue to the application foundation</a>
           </>
         ) : !service.usable() ? (
           <LinkRecovery />

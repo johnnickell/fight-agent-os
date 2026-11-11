@@ -7,6 +7,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
+use Slim\Exception\HttpNotFoundException;
 
 /** @var App $app */
 /** @var ContainerInterface $container */
@@ -18,10 +19,16 @@ $app->get(
     }
 )->setName('app.index');
 
-// Limit browser fallback to /app: API and unrelated routing misses retain their contracts.
+// Exclude reserved namespaces while matching so GET cannot mask an API's POST-only 405.
+// Decoded-path checks below also reject encoded namespace/asset spellings.
 $app->get(
-    '/app[/{path:.*}]',
+    '/{path:(?!(?:api|mcp|build|app)(?:/|$)).*}',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($container): ResponseInterface {
+        $path = rawurldecode($request->getUri()->getPath());
+        if (preg_match('~\A/(?:api|mcp|build|app)(?:/|\z)~', $path) === 1 || str_contains($path, '.')) {
+            throw new HttpNotFoundException($request);
+        }
+
         return $container->get(ClientShellAction::class)->handle($request, $response);
     }
 )->setName('app.shell');

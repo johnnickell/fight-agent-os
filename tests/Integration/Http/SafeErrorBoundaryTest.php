@@ -156,11 +156,11 @@ final class SafeErrorBoundaryTest extends TestCase
     public function testNonApiScope(): void
     {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
-        $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/apiary/missing'));
+        $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/apiary/missing.json'));
         self::assertSame(404, $response->getStatusCode());
         self::assertFalse($response->hasHeader('X-Correlation-ID'));
         self::assertNotSame('application/json', $response->getHeaderLine('Content-Type'));
-        self::assertStringNotContainsString('/apiary/missing', (string) $response->getBody());
+        self::assertStringNotContainsString('/apiary/missing.json', (string) $response->getBody());
     }
 
     /**

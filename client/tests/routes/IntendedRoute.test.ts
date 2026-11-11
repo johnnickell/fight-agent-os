@@ -25,45 +25,54 @@ afterEach(async () => {
 describe('bounded volatile intended navigation', () => {
   it('builds a canonical route with sorted approved queries, drops fragments and consumes once after fresh authority', async () => {
     const intent = intentWith();
-    expect(intent.capture('/app/reports?sort=recent&page=2#discard-me')).toBe(true);
+    expect(intent.capture('/reports?sort=recent&page=2#discard-me')).toBe(true);
     expect(intent.consume()).toBeNull();
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/app/reports?page=2&sort=recent');
+    expect(intent.consume()).toBe('/reports?page=2&sort=recent');
+    expect(intent.consume()).toBeNull();
+  });
+
+  it('restores the canonical root only when registered, opted in and currently permitted', async () => {
+    const intent = intentWith(() => [{ ...reportRoute, pathname: '/' }]);
+    expect(intent.capture('/#discard-me')).toBe(true);
+    await cache.beginAuthentication().acceptCredentials();
+    expect(intent.consume()).toBe('/');
     expect(intent.consume()).toBeNull();
   });
 
   it.each([
-    'https://evil.test/app/reports',
-    'https://example.test/app/reports',
-    '//evil.test/app/reports',
+    'https://evil.test/reports',
+    'https://example.test/reports',
+    '//evil.test/reports',
     'javascript:alert(1)',
     'data:text/html,test',
-    '/app//evil.test',
-    '/app/reports/../reports',
-    '/app/%2freports',
-    '/app/%5creports',
-    '/app/%252freports',
-    '/app/rep%6frts',
-    '/app/reports%00',
-    '/app/reports\\evil',
-    '/app/reports\n',
-    '/app/reports\t',
-    '/app/reports?password=secret',
-    '/app/reports?email=person%40example.test',
-    '/app/reports?token=abc',
-    '/app/reports?returnTo=https://evil.test',
-    '/app/reports?page=1&page=2',
-    '/app/reports?page=3',
-    '/app/reports?page=%0a',
-    '/app/reports?page=%ff',
-    '/app/reports?page=%',
-    '/app/reports?page=%252f',
-    '/app/reports?sort=recent%00',
-    '/app/reports?sort=recent+value',
-    '/app/unknown',
+    '//evil.test',
+    '/reports/../reports',
+    '/%2freports',
+    '/%5creports',
+    '/%252freports',
+    '/rep%6frts',
+    '/reports%00',
+    '/reports\\evil',
+    '/reports\n',
+    '/reports\t',
+    '/reports?password=secret',
+    '/reports?email=person%40example.test',
+    '/reports?token=abc',
+    '/reports?returnTo=https://evil.test',
+    '/reports?page=1&page=2',
+    '/reports?page=3',
+    '/reports?page=%0a',
+    '/reports?page=%ff',
+    '/reports?page=%',
+    '/reports?page=%252f',
+    '/reports?sort=recent%00',
+    '/reports?sort=recent+value',
+    '/unknown',
     '/app',
-    '/app/reports#' + 'a'.repeat(2048),
-    '/app/reports?username:password@evil.test'
+    '/app/reports',
+    '/reports#' + 'a'.repeat(2048),
+    '/reports?username:password@evil.test'
   ])('rejects unsafe, unregistered or unclassified targets (%#)', (target) => {
     expect(intentWith().capture(target)).toBe(false);
   });
@@ -73,8 +82,8 @@ describe('bounded volatile intended navigation', () => {
       { ...reportRoute, requirements: [{ kind: 'public' }] as const },
       { pathname: reportRoute.pathname, requirements: reportRoute.requirements },
       { ...reportRoute, requirements: [] },
-      { ...reportRoute, pathname: '/app/password-reset' },
-      { ...reportRoute, pathname: '/app/invitation/accept' }
+      { ...reportRoute, pathname: '/password-reset' },
+      { ...reportRoute, pathname: '/invitation/accept' }
     ]) {
       expect(intentWith(() => [route]).capture(route.pathname)).toBe(false);
     }
@@ -83,17 +92,17 @@ describe('bounded volatile intended navigation', () => {
 
   it('will not accept credential fields even if a route mistakenly opts them in', () => {
     const intent = intentWith(() => [{ ...reportRoute, intendedRoute: { token: ['secret'] } }]);
-    expect(intent.capture('/app/reports?token=secret')).toBe(false);
+    expect(intent.capture('/reports?token=secret')).toBe(false);
   });
 
   it('does not replace or renew an existing intent on redirects', async () => {
     let now = 0;
     const intent = intentWith(undefined, () => now);
-    expect(intent.capture('/app/reports?page=1')).toBe(true);
+    expect(intent.capture('/reports?page=1')).toBe(true);
     now = 599_999;
-    expect(intent.capture('/app/reports?page=2')).toBe(false);
+    expect(intent.capture('/reports?page=2')).toBe(false);
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/app/reports?page=1');
+    expect(intent.consume()).toBe('/reports?page=1');
   });
 
   it.each([600_000, 600_001, -1, Number.NaN])(
@@ -101,7 +110,7 @@ describe('bounded volatile intended navigation', () => {
     async (elapsed) => {
       let now = 1000;
       const intent = intentWith(undefined, () => now);
-      intent.capture('/app/reports');
+      intent.capture('/reports');
       now += elapsed;
       await cache.beginAuthentication().acceptCredentials();
       expect(intent.consume()).toBeNull();
@@ -113,27 +122,27 @@ describe('bounded volatile intended navigation', () => {
     async (elapsed) => {
       let now = 1000;
       const intent = intentWith(undefined, () => now);
-      expect(intent.capture('/app/reports?page=1')).toBe(true);
+      expect(intent.capture('/reports?page=1')).toBe(true);
       now += elapsed;
-      expect(intent.capture('/app/reports?page=2')).toBe(false);
+      expect(intent.capture('/reports?page=2')).toBe(false);
       now = 700_000;
       await cache.beginAuthentication().acceptCredentials();
       expect(intent.consume()).toBeNull();
-      expect(intent.capture('/app/reports?page=2')).toBe(true);
-      expect(intent.consume()).toBe('/app/reports?page=2');
+      expect(intent.capture('/reports?page=2')).toBe(true);
+      expect(intent.consume()).toBe('/reports?page=2');
     }
   );
 
   it('re-resolves current route metadata instead of replaying old permission requirements', async () => {
     let routes = [reportRoute];
     const intent = intentWith(() => routes);
-    intent.capture('/app/reports');
+    intent.capture('/reports');
     routes = [{ ...reportRoute, requirements: [{ kind: 'permissions', all: ['DELETE_REPORTS'] }] }];
     await cache.beginAuthentication().acceptCredentials();
     expect(intent.consume()).toBeNull();
     routes = [reportRoute];
     expect(intent.consume()).toBeNull();
-    intent.capture('/app/reports');
+    intent.capture('/reports');
     routes = [];
     expect(intent.consume()).toBeNull();
   });
@@ -141,7 +150,7 @@ describe('bounded volatile intended navigation', () => {
   it('consumes denied intent without a login redirect loop and does not grant a fallback dashboard', async () => {
     const deniedCache = authenticatedCache({ ...principal, permissions: [] });
     const intent = new IntendedRoute(deniedCache, () => [reportRoute], 'https://example.test');
-    intent.capture('/app/reports');
+    intent.capture('/reports');
     await deniedCache.load();
     expect(intent.consume()).toBeNull();
     intent.dispose();
@@ -150,11 +159,11 @@ describe('bounded volatile intended navigation', () => {
 
   it('clears on explicit logout but can retain eligible intent across involuntary terminal expiry', async () => {
     const intent = intentWith();
-    intent.capture('/app/reports');
+    intent.capture('/reports');
     await cache.signal('terminal');
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/app/reports');
-    intent.capture('/app/reports');
+    expect(intent.consume()).toBe('/reports');
+    intent.capture('/reports');
     await cache.signal('logout');
     await cache.beginAuthentication().acceptCredentials();
     expect(intent.consume()).toBeNull();
@@ -179,7 +188,7 @@ describe('bounded volatile intended navigation', () => {
             });
       try {
         const intent = intentWith();
-        expect(intent.capture('/app/reports')).toBe(true);
+        expect(intent.capture('/reports')).toBe(true);
         if (callback === 'scope-abort') {
           cache
             .captureScope()
@@ -194,10 +203,10 @@ describe('bounded volatile intended navigation', () => {
         expect(intent.consume()).toBeNull();
 
         // The cleanup must not permanently prevent a genuinely later navigation intent.
-        expect(intent.capture('/app/reports?page=2')).toBe(true);
+        expect(intent.capture('/reports?page=2')).toBe(true);
         await cache.signal('terminal');
         await cache.beginAuthentication().acceptCredentials();
-        expect(intent.consume()).toBe('/app/reports?page=2');
+        expect(intent.consume()).toBe('/reports?page=2');
       } finally {
         unsubscribe();
       }
@@ -210,7 +219,7 @@ describe('bounded volatile intended navigation', () => {
       if (unavailable) throw new Error('Registry unavailable');
       return [reportRoute];
     });
-    expect(intent.capture('/app/reports')).toBe(true);
+    expect(intent.capture('/reports')).toBe(true);
     unavailable = true;
     await cache.beginAuthentication().acceptCredentials();
     expect(intent.consume()).toBeNull();

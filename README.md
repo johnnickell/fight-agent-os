@@ -25,10 +25,10 @@ Explicit initial Workspace bootstrap has independent technical and behavioral ac
 owned exceptional-reference admission and factory. Protected Project registration/detail/list/conflict preview now use
 Project-owned CQRS, entry-generated IDs and ordinary conflict/fresh-query recovery under the
 [current runbook](docs/engineering/REPOSITORY_REGISTRATION.md), with independent technical and failure/concurrency/
-canonical Swagger-browser QA acceptance under [TASK-00575](planning/tasks/00575-TASK.md#accepted-implementation-checkpoint--2026-11-08). These capabilities add no checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
-canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
+canonical Swagger-browser QA acceptance under [TASK-00575](planning/tasks/00575-TASK.md#accepted-implementation-checkpoint--2026-11-08). These capabilities add no checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/activate`, pending independent acceptance;
+canonical login is implemented at `/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
 TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
-pending independent Review/QA, at `/`, `/app` and registered protected destinations. Local system/light/dark
+pending independent Review/QA, at `/` and registered root-level protected destinations. Local system/light/dark
 appearance and truthful future account/admin seams are available. TASK-00052 adds the honest permission-aware
 Dashboard using the sole principal cache, safe identity, independent administration shortcuts and explicit
 unavailable-capability copy (independent Review/QA pending). Other product UI journeys,
@@ -333,7 +333,7 @@ Unenrolled main startup stays direct localhost TLS, independent of that supplier
 
 The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
-`/app`; see [client commands and boundaries](client/README.md).
+`/`; see [client commands and boundaries](client/README.md).
 `./bin/build` is the [complete read-only gate](docs/engineering/BUILD.md), including backend coverage and
 frontend/browser checks without duplicate test executions. Dependencies and private OpenAPI/validation exports
 need explicit setup first; acceptance never installs or exports. `./bin/backend-tests` remains a focused command;
@@ -349,7 +349,7 @@ names without a dashboard permission prerequisite. Protected read-only role and 
 `/permissions` and `/permissions/{permissionId}`, pending independent Review/QA; see
 [guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
 The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) at `GET /api/v1/users` and
-`/app/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
+`/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
 (TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
 `GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
 declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
@@ -360,17 +360,17 @@ permission checks from both Actions has independent Review and QA acceptance on 
 acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
 current results are in
 `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
-TASK-00060's `/app/admin/invitations/{user_id}` deliberately reads safe user detail and invitation status
+TASK-00060's `/admin/invitations/{user_id}` deliberately reads safe user detail and invitation status
 under READ_USERS; READ_USERS-only viewers receive read-only presentation. Page management additionally needs
 MANAGE_USER_INVITATIONS. Mutation APIs need only that operation permission and return no user/status data;
 manage-only grants no reading. The maintainer revision has independent Review/QA acceptance; publication and
 final checks were pending at closeout. Current delivery is in [PR #204](https://github.com/johnnickell/fight-agent-os/pull/204)
 and `.runs/tasks/TASK-00060/runs/land-delivery.md`; earlier acceptance/delivery is historical.
-[Ordinary invitation](docs/engineering/ORDINARY_INVITATIONS.md) at `/app/admin/invite` now uses exact INVITE_USERS,
+[Ordinary invitation](docs/engineering/ORDINARY_INVITATIONS.md) at `/admin/invite` now uses exact INVITE_USERS,
 a canonical email-only form and the existing API, with truthful accepted/unconfirmed outcomes and READ_USERS-only
 status continuation. Independent technical Review and behavioral QA accepted this ordinary journey;
 [confirmed elevated issuance](docs/engineering/ELEVATED_INVITATIONS.md) is now implemented at the separate
-`/app/admin/invite-super-admin` route using both exact permissions, explicit canonical-target confirmation
+`/admin/invite-super-admin` route using both exact permissions, explicit canonical-target confirmation
 and truthful partial-result investigation. Independent technical Review and behavioral QA accepted the elevated journey, including retained
 uncertainty through routine authority verification. The owning TASKs record evidence and verification limits;
 acceptance does not establish real-inbox delivery or production qualification.
@@ -387,7 +387,7 @@ Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY`
 The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
 fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
 rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
-no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/app/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. TASK-00057 adds read-only [owned active sessions](docs/engineering/OWNED_SESSIONS.md) at `/app/account/sessions` and `GET /api/v1/me/sessions`, with exact `READ_OWN_SESSIONS`, principal-only ownership and coarse original device hints (independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) merged into `develop` at `0629697bd1a51b88720b1881aa5024928981f5ce`). TASK-00058 adds confirmed other-owned revocation through `DELETE /api/v1/me/sessions/{sessionId}` and the Active Sessions page, with exact `DELETE_OWN_SESSIONS`, package-owned denial of cross-user administration and volatile same-origin convergence; independent Review/QA accepted the implementation, and [PR #173](https://github.com/johnnickell/fight-agent-os/pull/173) merged into `develop` at `0ec84eb67043e40bb84890d45ed1d2887a4a5573`. See [revocation contracts](docs/engineering/OWNED_SESSIONS.md#confirmed-other-owned-revocation-task-00058).
+no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. TASK-00057 adds read-only [owned active sessions](docs/engineering/OWNED_SESSIONS.md) at `/account/sessions` and `GET /api/v1/me/sessions`, with exact `READ_OWN_SESSIONS`, principal-only ownership and coarse original device hints (independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) merged into `develop` at `0629697bd1a51b88720b1881aa5024928981f5ce`). TASK-00058 adds confirmed other-owned revocation through `DELETE /api/v1/me/sessions/{sessionId}` and the Active Sessions page, with exact `DELETE_OWN_SESSIONS`, package-owned denial of cross-user administration and volatile same-origin convergence; independent Review/QA accepted the implementation, and [PR #173](https://github.com/johnnickell/fight-agent-os/pull/173) merged into `develop` at `0ec84eb67043e40bb84890d45ed1d2887a4a5573`. See [revocation contracts](docs/engineering/OWNED_SESSIONS.md#confirmed-other-owned-revocation-task-00058).
 The API-only [installation session administration](docs/engineering/SESSION_ADMINISTRATION.md) adds distinct
 `READ_SESSIONS` / `DELETE_SESSIONS` user-targeted reads and reasoned audited revocation without broadening
 self-service; independent technical and behavioral acceptance is recorded in [TASK-00122](planning/tasks/00122-TASK.md).
@@ -411,7 +411,7 @@ checks a pinned local hashed common-password list and uses explicit Argon2id par
 verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
 in deployment artifacts. Activation, [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) and
 [authenticated change](docs/engineering/PASSWORD_CHANGE.md) consume this boundary. Password change at
-`/app/account/password` requires current proof and ends all sessions; independent Review/QA accepted the implementation, and [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge. It is not a standalone password endpoint.
+`/account/password` requires current proof and ends all sessions; independent Review/QA accepted the implementation, and [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge. It is not a standalone password endpoint.
 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
@@ -421,10 +421,10 @@ explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELI
 `APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
 [local invitation email](docs/engineering/INVITATION_EMAIL.md) and
 [password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
-start/send/recovery/cleanup contracts. No real inbox is supplied. TASK-00055 adds [one-time reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) at `/app/reset-password/complete` and its versioned API, pending independent Review/QA; it revokes target sessions and requires fresh sign-in. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
-at `/app/reset-password` and `POST /api/v1/auth/password-reset`, pending independent Review/QA.
+start/send/recovery/cleanup contracts. No real inbox is supplied. TASK-00055 adds [one-time reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) at `/reset-password/complete` and its versioned API, pending independent Review/QA; it revokes target sessions and requires fresh sign-in. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
+at `/reset-password` and `POST /api/v1/auth/password-reset`, pending independent Review/QA.
 Reset mail now requires the bounded internal runner rather than synchronous request-time SMTP. The public activation UI requires the
-configured canonical `/app/activate` path and the qualified fragment-only link shape described in the activation runbook.
+configured canonical `/activate` path and the qualified fragment-only link shape described in the activation runbook.
 A bounded internal
 `./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
 command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
@@ -480,7 +480,7 @@ form catalog (including the real `invitation_activation` form) with `./bin/valid
 [validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `var/openapi/` and
 `var/validations/`, not public assets. Compiled browser assets live in `var/client/build/` and local TLS state
 in `var/https/`. Application runtime never depends on `.runs/`. The [private Swagger viewer](docs/engineering/SWAGGER.md)
-at `/app/swagger` requires an explicit exact environment allowlist and current server-side `READ_SWAGGER` for
+at `/swagger` requires an explicit exact environment allowlist and current server-side `READ_SWAGGER` for
 both initialization and direct spec reads. `.env.example` starts with `["local"]`; absent/malformed settings disable
 it. Independent strict APP_DEBUG supports only closed sanitized diagnostics and refuses true in prod/production.
 No public spec, long-lived Swagger credential or production-mail exception is supplied. Full production startup

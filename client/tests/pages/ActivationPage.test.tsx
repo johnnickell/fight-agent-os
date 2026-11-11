@@ -72,7 +72,7 @@ describe('production invitation form', () => {
     expect(deps.credential.current()).toBeNull();
     expect(
       screen.getByRole('link', { name: 'Continue to the application foundation' })
-    ).toHaveAttribute('href', '/app');
+    ).toHaveAttribute('href', '/');
     deps.service.dispose();
   });
 

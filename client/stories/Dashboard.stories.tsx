@@ -80,7 +80,7 @@ function DashboardExample({
       {state.status === 'authenticated' ? (
         <ApplicationFrame
           cache={cache}
-          pathname="/app/dashboard"
+          pathname="/"
           title="Dashboard"
           theme={theme}
           onLogout={() => {

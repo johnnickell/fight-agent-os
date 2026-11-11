@@ -44,7 +44,7 @@ describe('honest Dashboard permission and destination contracts', () => {
       Promise.resolve({ status: 'principal', principal: { ...principal, roles, permissions } })
     );
     owned.push(owner);
-    render(<ApplicationView session={owner} pathname="/app/dashboard" navigate={vi.fn()} />);
+    render(<ApplicationView session={owner} pathname="/" navigate={vi.fn()} />);
     await act(() => owner.coordinator.restore());
     if (!(mask & 1)) {
       expect(await screen.findByText('Access forbidden')).toBeVisible();
@@ -61,9 +61,9 @@ describe('honest Dashboard permission and destination contracts', () => {
     const main = within(screen.getByRole('main', { name: 'Dashboard' }));
     const admin = main.queryByRole('navigation', { name: 'Dashboard administration' });
     for (const [title, bit, path] of [
-      ['Users', 2, '/app/admin/users'],
-      ['Invite User', 4, '/app/admin/invite'],
-      ['Invitation Admin', 2, '/app/admin/invitations']
+      ['Users', 2, '/admin/users'],
+      ['Invite User', 4, '/admin/invite'],
+      ['Invitation Admin', 2, '/admin/invitations']
     ] as const) {
       const link = main.queryByRole('link', { name: title });
       if (mask & bit) {
@@ -75,7 +75,7 @@ describe('honest Dashboard permission and destination contracts', () => {
     expect(main.queryByRole('link', { name: 'Invite Super Admin' })).not.toBeInTheDocument();
     expect(main.getByRole('link', { name: 'Account & Security' })).toHaveAttribute(
       'href',
-      '/app/account'
+      '/account'
     );
     expect(Boolean(main.queryByRole('link', { name: 'Active Sessions' }))).toBe(Boolean(mask & 32));
     for (const link of main.getAllByRole('link')) {
@@ -87,7 +87,7 @@ describe('honest Dashboard permission and destination contracts', () => {
         );
       else if (route?.destination === 'invite-user')
         expect(route.availability).toMatch(/Invite one ordinary user/);
-      else if (route?.pathname === '/app/admin/invitations')
+      else if (route?.pathname === '/admin/invitations')
         expect(route.availability).toMatch(/Choose a pending user/);
       else expect(route?.availability).toMatch(/not available/);
       expect(main.getByText(route?.availability ?? '')).toBeVisible();
@@ -197,7 +197,7 @@ describe('honest Dashboard permission and destination contracts', () => {
     const oldest = deferred<PrincipalLoadResult>();
     const owner = applicationSession(permissionNames);
     owned.push(owner);
-    render(<ApplicationView session={owner} pathname="/app/dashboard" navigate={vi.fn()} />);
+    render(<ApplicationView session={owner} pathname="/" navigate={vi.fn()} />);
     await act(() => owner.coordinator.restore());
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 });
     owner.load

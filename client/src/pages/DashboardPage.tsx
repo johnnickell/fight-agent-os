@@ -52,13 +52,13 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
     (route) => evaluateAccess(state, route.requirements) === 'allowed'
   );
   const security = allowed.filter(
-    (route) => route.pathname === '/app/account' || route.pathname === '/app/account/sessions'
+    (route) => route.pathname === '/account' || route.pathname === '/account/sessions'
   );
   const administration = allowed.filter(
     (route) =>
-      route.pathname === '/app/admin/users' ||
-      route.pathname === '/app/admin/invite' ||
-      route.pathname === '/app/admin/invitations'
+      route.pathname === '/admin/users' ||
+      route.pathname === '/admin/invite' ||
+      route.pathname === '/admin/invitations'
   );
   return (
     <div className="dashboard-page">

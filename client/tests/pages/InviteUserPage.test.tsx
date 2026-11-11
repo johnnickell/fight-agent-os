@@ -47,7 +47,7 @@ describe('InviteUserPage', () => {
     expect(screen.getByText(/not proof of inbox/)).toBeVisible();
     expect(screen.getByRole('link', { name: 'View invitation status' })).toHaveAttribute(
       'href',
-      expect.stringMatching(/^\/app\/admin\/invitations\//)
+      expect.stringMatching(/^\/admin\/invitations\//)
     );
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Invite another user' }));

@@ -25,7 +25,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 function FrameExample({
   outcome = 'ready',
-  initial = '/app/dashboard',
+  initial = '/',
   longEmail = false,
   preference = 'system'
 }: {
@@ -276,8 +276,8 @@ export const DashboardRouteReturn: Story = {
     await expect(canvas.getByRole('banner', { name: 'Application utilities' })).toBeVisible();
   }
 };
-export const AccountSeam: Story = { args: { initial: '/app/account' } };
-export const InvitationSeam: Story = { args: { initial: '/app/admin/invitations' } };
+export const AccountSeam: Story = { args: { initial: '/account' } };
+export const InvitationSeam: Story = { args: { initial: '/admin/invitations' } };
 export const AccountMenuKeyboard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

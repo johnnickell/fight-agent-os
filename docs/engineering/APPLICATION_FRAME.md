@@ -17,30 +17,47 @@ Server authorization remains authoritative; an SPA route response is not an acce
 
 | Registered destination | Complete presentation requirements |
 |---|---|
-| `/`, `/app`, `/app/` | Public root decision: wait for restoration; anonymous → Login; fresh principal → permitted intent or Dashboard; denied Dashboard → authenticated Forbidden |
-| `/app/login` | Public; fresh authenticated authority selects one permitted landing |
-| `/app/login/recovery`, `/app/activate` | Public/inert: no automatic cookie restoration; existing recovery/activation owners |
-| `/app/dashboard` | Authenticated + `VIEW_DASHBOARD`; honest Dashboard, no product data |
-| `/app/account`, `/app/account/password` | Authenticated; truthful Account & Security and Change Password seams |
-| `/app/account/sessions` | Authenticated + `READ_OWN_SESSIONS` |
-| `/app/admin/users` | Authenticated + `READ_USERS` |
-| `/app/admin/invite` | Authenticated + `INVITE_USERS` |
-| `/app/admin/invite-super-admin` | Authenticated + both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` |
-| `/app/admin/invitations`, `/app/admin/invitations/{user_id}` | Authenticated + `READ_USERS`; page changes additionally require `MANAGE_USER_INVITATIONS` |
+| `/` | Authenticated + exact `VIEW_DASHBOARD`; wait for restoration, anonymous → `/login`, denied → authenticated Forbidden; existing honest Dashboard, no product data |
+| `/login` | Public; fresh authenticated authority selects one permitted landing |
+| `/reset-password`, `/reset-password/complete`, `/activate` | Public/inert: no automatic cookie restoration; existing recovery/activation owners |
+| `/account`, `/account/password` | Authenticated; Account & Security and Change Password |
+| `/account/sessions` | Authenticated + `READ_OWN_SESSIONS` |
+| `/admin/users` | Authenticated + `READ_USERS` |
+| `/admin/invite` | Authenticated + `INVITE_USERS` |
+| `/admin/invite-super-admin` | Authenticated + both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` |
+| `/admin/invitations`, `/admin/invitations/{user_id}` | Authenticated + `READ_USERS`; page changes additionally require `MANAGE_USER_INVITATIONS` |
 
 The Users route loads its guarded directory. TASK-00060 now registers UUID-target invitation status using the existing READ_USERS-protected API, with read-only viewing and separately authorized recovery (independent acceptance pending). Ordinary/elevated invitation issuance remains unavailable. No email, form input or credential enters a route or intended-route record. No fake records,
 role-name bypass, workspace switcher, planning/agent/observability content or Feature gate is introduced.
 
-The HTTP `/` now serves the same no-store client document as `/app`; the old PHP root smoke representation
-is intentionally superseded by the accepted root decision. Other unrelated paths and API routing remain
-server-owned. Missing/incomplete production assets retain the shell's generic no-store HTTP 503, with no
+The HTTP `/` and eligible browser GET destinations serve the no-store client document. Explicit server
+routes and assets take precedence. API/MCP namespace misses, asset-like paths and unsupported methods remain
+server-owned; `/api/v1` is unchanged and `/mcp/v1` is reserved without MCP implementation. Legacy `/app`
+locations are neither aliases nor redirects; no `/dashboard` alias is registered. Missing/incomplete production assets retain the shell's generic no-store HTTP 503, with no
 broken asset references or authentication challenge; a deployable shell requires an explicit client build.
 HTTP/security tests supply isolated available/unavailable deployment inputs rather than depending on
 `var/client/build/`. The canonical gate checks scratch assets and does not publish a live deployment.
-Unknown `/app/...` paths produce a generic application not-found page without echoing the path.
+Unknown eligible browser paths produce a generic application not-found page without echoing the path.
 Native links remain real destinations. Same-origin registered, unmodified clicks use null-state history
 push/replace to preserve the single owner. Back/forward reads the pathname. Download/modified/target/external
 links and fixed reload recovery remain native. Refresh/direct load creates a fresh context and restores once.
+
+## Root-URL cutover and retained credentials
+
+Deploy the PHP routes/configuration, blocking prepaint and complete client assets together. Set the exact
+trusted HTTPS browser origin and canonical `APP_ACTIVATION_PATH=/activate` and
+`APP_PASSWORD_RESET_PATH=/reset-password/complete`; catcher-enabled boot and delivery reject stale paths.
+Use the selected runtime's private settings and owning startup/export/build commands, not another checkout's
+keys or database. Existing source links and the synthetic-mail extractor use the same canonical paths.
+
+The URL change needs no schema migration or disposal. Preserve User identities, invitation/reset generations,
+required audit/recovery state and the original external delivery encryption key while material is outstanding.
+The mail provider builds links at invocation using current configuration and package material; do not rewrite
+opaque ciphertext or infer its grant binding. Already-sent old-path links are deliberately unsupported, not
+redirected. Before an installation cutover, its operator must inspect known generation status through
+[credential recovery](CREDENTIAL_RECOVERY.md), distinguish pending/delivered/consumed/expired work and use only
+the existing authorized retry/replacement contracts. Do not blindly reinvite, reset data or rotate keys to
+make the new routes work. This local change performs no production cutover or historical-material disposal.
 
 ## State and recovery
 

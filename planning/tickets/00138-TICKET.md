@@ -2,7 +2,7 @@
 id: TICKET-00138
 epic: EPIC-00025
 title: Serve browser journeys from root URLs
-status: ready-for-agent
+status: done
 ---
 
 # Serve browser journeys from root URLs
@@ -97,7 +97,7 @@ URL matching; preserve the existing operations behind renamed destinations.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00590](../tasks/00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | ready-for-agent |
+| [TASK-00590](../tasks/00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -114,8 +114,16 @@ documentation/unfinished-plan and verification cutover in one independently revi
 route-only intermediate state. There are no identified blockers or assigned execution priority and no dependency
 on TICKET-00139's authority change.
 
-This TICKET's TASK decomposition is approved and written in full; implementation has not started.
-TICKET-00139's independent decomposition is subsequently approved and written as
-[TASK-00591](../tasks/00591-TASK.md), completing this EPIC's planning phase. Next use Board-based work selection,
-without changing existing active work or priority. No runtime configuration or authority data was changed by
-these planning operations.
+This TICKET's TASK decomposition was approved and written in full. TICKET-00139's independent decomposition
+was subsequently approved and written as [TASK-00591](../tasks/00591-TASK.md), completing the EPIC's planning
+phase without changing existing active work or priority. No runtime configuration or authority data was changed
+by those planning operations.
+
+### Current implementation handoff
+
+The sole child [TASK-00590](../tasks/00590-TASK.md#accepted-implementation-and-administrative-closeout--2026-11-10)
+now records independently accepted complete root-URL implementation and applicable behavioral/browser QA.
+This TICKET closes through its child; historical planning and Work checkpoints remain evidence. Actual
+publication/final-head and cleanup results belong to the child's canonical Land receipt and PR, not a claim
+of human merge, production cutover or discarded credential recovery material. Use the Board for subsequent
+work selection; TASK-00589's active authority and priority remain independent.

@@ -1,6 +1,6 @@
 # Owned active sessions
 
-TASK-00057 implements `GET /api/v1/me/sessions` and `/app/account/sessions`.
+TASK-00057 implements `GET /api/v1/me/sessions` and `/account/sessions`.
 TASK-00058 adds confirmed other-owned revocation; its independent Review and behavioral QA remain pending.
 
 ## Authority and wire contract

@@ -21,7 +21,7 @@ privately; never enable server error dumps to diagnose startup.
 Only exact `local`, `development` and `test` are development compositions. Every other environment requires
 explicit `APP_AUTH_TRANSPORT=direct`, `APP_AUTH_TRUSTED_PROXIES=[]`, every configurable rate input, independent
 delivery encryption and exact activation/reset origins and paths. Both mail origins must equal
-`APP_BROWSER_ORIGIN`, with `/app/activate` and `/app/reset-password/complete`. `HmacCsrfProofs` validates and
+`APP_BROWSER_ORIGIN`, with `/activate` and `/reset-password/complete`. `HmacCsrfProofs` validates and
 normalizes bounded HTTPS origins (no userinfo, query, fragment or path). No runtime permission can select or
 relax these settings. Cookies have compiled names, host-only scope, `/api/v1/auth`, Secure, HttpOnly and
 SameSite=Strict; there are no environment overrides for unsafe cookie variants.

@@ -14,7 +14,7 @@ import type {
   UserDirectoryService
 } from '@/features/users/UserDirectoryService';
 
-const usersRoute = matchApplicationRoute('/app/admin/users');
+const usersRoute = matchApplicationRoute('/admin/users');
 type State =
   | { kind: 'loading' }
   | { kind: 'retired' }
@@ -123,10 +123,10 @@ export default function UsersPage({
           <p>Installation-wide identities and current role assignments.</p>
         </div>
         <nav aria-label="User invitation destinations" className="users-actions">
-          <Destination cache={cache} path="/app/admin/invite">
+          <Destination cache={cache} path="/admin/invite">
             Invite User
           </Destination>
-          <Destination cache={cache} path="/app/admin/invite-super-admin">
+          <Destination cache={cache} path="/admin/invite-super-admin">
             Invite Super Admin
           </Destination>
         </nav>
@@ -317,7 +317,7 @@ function UserRow({
         {user.state === 'pending_activation' ? (
           <Destination
             cache={cache}
-            path={`/app/admin/invitations/${user.userId}`}
+            path={`/admin/invitations/${user.userId}`}
             label={`Invitation status for ${user.email}`}
           >
             Invitation status

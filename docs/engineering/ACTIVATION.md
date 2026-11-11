@@ -1,13 +1,13 @@
 # Public invitation activation
 
-TASK-00043 implements `/app/activate` and `POST /api/v1/auth/activate`. This is invitation possession,
+TASK-00043 implements invitation activation, now at `/activate` and `POST /api/v1/auth/activate`. This is invitation possession,
 not registration, login, refresh, logout, a `/me` client or a dashboard. Independent acceptance and deployment
 remain separate from implementation. Use the existing [invitation recovery API](INVITATION_API.md) to resend
 an invitation; do not reinvite an existing identity or choose its password as a recovery shortcut.
 
 ## Link and transient browser ownership
 
-Configure `APP_ACTIVATION_ORIGIN` to the exact trusted HTTPS browser origin and `APP_ACTIVATION_PATH=/app/activate`.
+Configure `APP_ACTIVATION_ORIGIN` to the exact trusted HTTPS browser origin and `APP_ACTIVATION_PATH=/activate`.
 The mail adapter now resolves the invocation's stable delivery ID through the installed package's
 `ActivationGrantRepository::getByDeliveryId()` and adds the owning user ID **inside the fragment** alongside
 `credential`. It does not infer identity from credential bytes or reproduce grant validation. Both fields are
@@ -20,7 +20,7 @@ obtain the qualified link shape. There was no prior activation UI. No public cre
 account enumeration endpoint, plaintext lookup index or consumer activation policy is added.
 
 The blocking same-origin head script captures only the two bounded expected fragment fields and immediately
-replaces the **whole** URL and history state with `/app/activate` and `null`, before theme storage access,
+replaces the **whole** URL and history state with `/activate` and `null`, before theme storage access,
 React boot, schema fetch or normal rendering. A symbol-keyed, single-use closure hands material to a private
 in-memory owner; the root deletes that handoff. Page hide synchronously retires/unmounts the password form as
 well as clearing owners, before a browser can freeze the document in back/forward cache. Teardown also clears

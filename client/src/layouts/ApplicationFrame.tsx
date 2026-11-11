@@ -113,7 +113,7 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
   const rail = (
     <>
       <div className="application-rail-heading">
-        <a href="/app">
+        <a href="/">
           FIGHT <span>AGENT OS</span>
         </a>
         {expanded && (
@@ -183,7 +183,7 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
           </button>
         )}
         <header className="application-utility" aria-label="Application utilities">
-          <a href="/app">Fight Agent OS</a>
+          <a href="/">Fight Agent OS</a>
           <Dropdown className="application-account" align="end" focusFirstItemOnShow="keyboard">
             <Dropdown.Toggle variant="" className="application-user-toggle" aria-label="User Menu">
               <PresentationIcon name="user" />
@@ -193,7 +193,7 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
               {applicationRoutes
                 .filter(
                   (route) =>
-                    ['/app/account', '/app/account/sessions'].includes(route.pathname) &&
+                    ['/account', '/account/sessions'].includes(route.pathname) &&
                     evaluateAccess(state, route.requirements) === 'allowed'
                 )
                 .map((route) => (

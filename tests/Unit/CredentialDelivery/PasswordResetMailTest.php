@@ -151,7 +151,7 @@ HTML;
         $activationGrants->expects(self::never())->method('getByDeliveryId');
         $provider = new CredentialMailProvider(
             new InvitationMailProvider(
-                new CanonicalCredentialLink('https://example.test', '/app/activate'),
+                new CanonicalCredentialLink('https://example.test', '/activate'),
                 $this->templates(),
                 $mail,
                 $activationGrants
@@ -320,7 +320,7 @@ HTML;
             MailMessage $message
         ) use ($activationGrant): MailOutcome {
             [$destination, $subject, $text, $html] = $message->content();
-            $url = 'https://example.test/app/activate#credential=synthetic&user_id=';
+            $url = 'https://example.test/activate#credential=synthetic&user_id=';
             $url .= $activationGrant->getUserId()->toString();
             self::assertTrue($destination->toString() === 'local@example.test');
             self::assertSame('Your Fight Agent OS invitation', $subject);
@@ -331,7 +331,7 @@ HTML;
             return MailOutcome::DELIVERED;
         });
         $invitations = new InvitationMailProvider(
-            new CanonicalCredentialLink('https://example.test', '/app/activate'),
+            new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->templates(),
             $mail,
             $activationGrants

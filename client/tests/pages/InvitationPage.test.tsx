@@ -190,7 +190,7 @@ describe('Pending invitation', () => {
   });
   it('registers only canonical UUID target paths without accepting query or authority fields', () => {
     const id = crypto.randomUUID();
-    const route = matchApplicationRoute(`/app/admin/invitations/${id}`);
+    const route = matchApplicationRoute(`/admin/invitations/${id}`);
     expect(route).toMatchObject({ destination: 'invitation', targetUserId: id });
     expect(route?.requirements).toContainEqual({ kind: 'permissions', all: ['READ_USERS'] });
     expect(route?.intendedRoute).toBeUndefined();
@@ -201,7 +201,7 @@ describe('Pending invitation', () => {
       'invalid',
       `${id}/retry`
     ])
-      expect(matchApplicationRoute(`/app/admin/invitations/${suffix}`)).toBeUndefined();
+      expect(matchApplicationRoute(`/admin/invitations/${suffix}`)).toBeUndefined();
   });
   it('retries only failed live work once and refetches instead of fabricating delivery', async () => {
     const target = invitationTarget();

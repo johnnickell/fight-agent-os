@@ -66,11 +66,11 @@ it('keeps real embedded operation links local, with keyboard expansion and no op
   });
   vi.stubGlobal('fetch', fetch);
   vi.stubGlobal('scrollTo', vi.fn());
-  window.history.replaceState(null, '', '/app/swagger');
+  window.history.replaceState(null, '', '/swagger');
   const { container } = render(
     <ShellApplication
       configuration='{"schema_version":2,"api_base_path":"/api/v1","app_debug":false,"swagger_available":true}'
-      pathname="/app/swagger"
+      pathname="/swagger"
     />
   );
   const user = userEvent.setup();
@@ -86,7 +86,7 @@ it('keeps real embedded operation links local, with keyboard expansion and no op
   const historyLength = window.history.length;
   const requestCount = fetch.mock.calls.length;
   await user.click(anchor);
-  expect(window.location.pathname).toBe('/app/swagger');
+  expect(window.location.pathname).toBe('/swagger');
   expect(window.history.length).toBe(historyLength);
   expect(button).toHaveAttribute('aria-expanded', 'true');
   const operation = button.closest('.opblock');
@@ -102,7 +102,7 @@ it('keeps real embedded operation links local, with keyboard expansion and no op
   if (!identityAnchor) throw new Error('Missing identity anchor');
   await user.click(identityAnchor);
   expect(identityButton).toHaveAttribute('aria-expanded', 'true');
-  expect(window.location.pathname).toBe('/app/swagger');
+  expect(window.location.pathname).toBe('/swagger');
   expect(window.history.length).toBe(historyLength);
   expect(fetch).toHaveBeenCalledTimes(requestCount);
   // Let upstream's debounced schema resolution settle before retiring its private store.

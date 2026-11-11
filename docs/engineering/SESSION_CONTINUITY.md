@@ -2,7 +2,7 @@
 
 TASK-00047 implements `POST /api/v1/auth/refresh` and `POST /api/v1/auth/logout`, plus the current-session
 logout action on the real login success screen. TASK-00048 adds bounded reload/multi-tab continuity at
-`/app/login`, pending independent Review/QA. TASK-00049 now adds the [sole production `/me` client/cache](CURRENT_PRINCIPAL.md), pending independent Review/QA.
+`/login`, pending independent Review/QA. TASK-00049 now adds the [sole production `/me` client/cache](CURRENT_PRINCIPAL.md), pending independent Review/QA.
 Those slices do not add a session-management UI. TASK-00051 now lifts the sole graph into the
 [responsive authenticated frame](APPLICATION_FRAME.md), pending independent Review/QA. Public activation and
 future email-confirmation landings do not mount restoration.
@@ -81,7 +81,7 @@ The standalone login-success composition exposes “Sign out of this session.”
 now provides its current-session “Sign out” control using the same coordinator/service; the older standalone
 composition remains a focused test/catalog seam. Busy state suppresses repeat activation;
 completion removes the signed-in panel and focuses “Signed out of this page.” Failure uses the same terminal
-local state with explicit “Server sign-out unconfirmed” guidance. The fixed return link is `/app/login`, not
+local state with explicit “Server sign-out unconfirmed” guidance. The fixed return link is `/login`, not
 caller-supplied navigation authority. No dashboard, principal, account or other-session controls are invented.
 The public activation journey retains its existing document-scoped memory seam; this TASK does not mount a
 shared authenticated shell around it.
@@ -97,7 +97,7 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
 - States: unknown → restoring → credential-ready (`authenticated`), conflict, network-degraded or terminal;
   explicit login may cross a terminal/logout barrier. Logout clears memory immediately, then reports anonymous
   completion or unconfirmed server sign-out. No protected operation may use a missing/expired token.
-- Cold `/app/login` performs one controlled refresh (or accepts a response to its fresh peer challenge).
+- Cold `/login` performs one controlled refresh (or accepts a response to its fresh peer challenge).
   Network/protocol/service failure clears access and requires explicit retry. Exhausted conflict or established-
   session 401 ends the context and broadcasts terminal. TASK-00051's production graph opts into cold-anonymous
   401 presentation before any credentials have been established: fence work, keep the barrier, offer Login and

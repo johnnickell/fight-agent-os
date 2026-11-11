@@ -79,14 +79,14 @@ export class IntendedRoute {
   #resolve(target: string): { target: string; route: RegisteredRoute } | null {
     if (
       target.length > 2048 ||
-      !target.startsWith('/app/') ||
+      !target.startsWith('/') ||
       /[\\\s\p{Cc}]/u.test(target) ||
       /%(?![0-9a-f]{2})/i.test(target)
     )
       return null;
     const path = target.split(/[?#]/)[0];
     // No parameterized paths, encodings, dot normalization or ambiguous separators yet.
-    if (!path || !/^\/app(?:\/[A-Za-z0-9_-]+)+(?![\s\S])/.test(path)) return null;
+    if (!path || !/^\/(?:[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*)?(?![\s\S])/.test(path)) return null;
     try {
       const url = new URL(target, this.#origin);
       if (url.origin !== this.#origin || url.pathname !== path || url.username || url.password)

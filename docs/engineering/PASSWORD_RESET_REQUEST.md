@@ -1,6 +1,6 @@
 # Generic password-reset requests
 
-TASK-00054 implements `/app/reset-password` (with `/app/login/recovery` retained as an inert public alias)
+TASK-00054 implements the public reset request journey, now at `/reset-password` with no legacy alias
 and `POST /api/v1/auth/password-reset`. Independent Review/QA remain separate acceptance stages.
 [TASK-00055 supplies completion](PASSWORD_RESET_COMPLETION.md), pending independent Review/QA. There is no public registration, delivery-management UI or production mail enrollment.
 
@@ -78,7 +78,7 @@ Follow [reset email](PASSWORD_RESET_EMAIL.md) and [recovery](CREDENTIAL_RECOVERY
 keys, catcher/private inspection, due retries, expiry and cleanup. No scheduler is enrolled by this TASK;
 without an operator/scheduler, pending resets are not sent. Request acknowledgement does not promise provider
 submission. The package's one-hour deadline begins at request, not at delivery. Configure the canonical
-completion path explicitly as `/app/reset-password/complete`; see [completion contracts](PASSWORD_RESET_COMPLETION.md). Do not
+completion path explicitly as `/reset-password/complete`; see [completion contracts](PASSWORD_RESET_COMPLETION.md). Do not
 misconfigure reset email links to the request page or copy private mailbox material into evidence.
 
 Controlled PostgreSQL evidence covers two simultaneous bus requests against no predecessor, live issued,

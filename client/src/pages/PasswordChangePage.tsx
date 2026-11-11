@@ -91,7 +91,7 @@ export default function PasswordChangePage({
         )}
       </div>
       <p>
-        <a href="/app/account">Back to Account &amp; Security</a>
+        <a href="/account">Back to Account &amp; Security</a>
       </p>
     </section>
   );

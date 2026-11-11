@@ -24,14 +24,14 @@ it('removes the entire protected frame on render/import failure and presents saf
       configuration={
         '{"schema_version":2,"api_base_path":"/api/v1","app_debug":false,"swagger_available":false}'
       }
-      pathname="/app/dashboard"
+      pathname="/"
     />,
     { onCaughtError: () => {} }
   );
   expect(await screen.findByRole('heading', { name: 'Application unavailable' })).toBeVisible();
   expect(screen.getByRole('alert')).toBeVisible();
   expect(screen.getByRole('main')).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Reload application' })).toHaveAttribute('href', '/app');
+  expect(screen.getByRole('link', { name: 'Reload application' })).toHaveAttribute('href', '/');
   expect(screen.queryByRole('button', { name: 'Sign out' })).not.toBeInTheDocument();
   expect(document.body.textContent).not.toContain(
     'token-cookie-password-stack-SQL-private-module-failure'

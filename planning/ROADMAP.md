@@ -458,7 +458,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00022](epics/00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | feature-architecture-review | done |
 | [EPIC-00023](epics/00023-EPIC.md) | Adopt canonical Fight contracts and refactor Agent OS around Project-owned CQRS | maintainable-project-owned-cqrs | ready-for-agent |
 | [EPIC-00024](epics/00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | accepted-task-base-synchronization | done |
-| [EPIC-00025](epics/00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | root-browser-urls | ready-for-agent |
+| [EPIC-00025](epics/00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | root-browser-urls | done |
 <!-- /planning:epics -->
 
 ## Planning Frontier

@@ -1,6 +1,6 @@
 # Authenticated password change
 
-TASK-00056 implements Account & Security → Change Password at `/app/account/password` and
+TASK-00056 implements Account & Security → Change Password at `/account/password` and
 `POST /api/v1/auth/password/change`. Independent Review/QA and delivery remain separate.
 
 ## Authority and server behavior

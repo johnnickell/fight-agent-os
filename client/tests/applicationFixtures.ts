@@ -25,7 +25,8 @@ import type { PrincipalLoader } from '@/features/authority/AuthorityCache';
 
 export function applicationSession(
   permissions: string[] = ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS'],
-  loader?: PrincipalLoader
+  loader?: PrincipalLoader,
+  coldAnonymous = false
 ) {
   const tokens = new MemoryAccessToken();
   const load = vi.fn<PrincipalLoader>(
@@ -46,6 +47,7 @@ export function applicationSession(
     tokens,
     authority,
     clearIntent: () => intent.clear(),
+    coldAnonymous,
     session: { refresh, logout, invalidate: () => tokens.clear(), dispose: () => tokens.clear() },
     login: { submit: accept, dispose: () => tokens.clear() }
   });

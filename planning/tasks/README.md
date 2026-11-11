@@ -592,6 +592,6 @@
 | [TASK-00587](00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | done | [TICKET-00137](../tickets/00137-TICKET.md) |
 | [TASK-00588](00588-TASK.md) | Match public and error headers to the compact application frame | done | — |
 | [TASK-00589](00589-TASK.md) | Register local project and task domains across installed harness consumers | in-progress | [TICKET-00023](../tickets/00023-TICKET.md) |
-| [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | ready-for-agent | [TICKET-00138](../tickets/00138-TICKET.md) |
+| [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | done | [TICKET-00138](../tickets/00138-TICKET.md) |
 | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | done | [TICKET-00139](../tickets/00139-TICKET.md) |
 <!-- /planning:records -->

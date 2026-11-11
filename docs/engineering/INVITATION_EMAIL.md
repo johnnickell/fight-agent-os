@@ -21,7 +21,7 @@ FIGHT_AGENT_OS_MAIL_PORT=28041
 APP_ENV=development
 APP_CREDENTIAL_DELIVERY_ADAPTER=catcher
 APP_ACTIVATION_ORIGIN=https://localhost:28443
-APP_ACTIVATION_PATH=/app/activate
+APP_ACTIVATION_PATH=/activate
 ```
 
 Also set `APP_CREDENTIAL_DELIVERY_KEY` to an independent random 32-byte hex key. This command fills only an
@@ -126,9 +126,9 @@ Use `./bin/credential-delivery status activation DELIVERY_ID --internal` with a 
 There is no scheduler: later due retries require another explicit runner invocation.
 
 Open the catcher privately and inspect the invitation's text and HTML alternatives. The link should have the
-configured `https://localhost:28443/app/activate` base and fragment-only credential and user routing fields,
+configured `https://localhost:28443/activate` base and fragment-only credential and user routing fields,
 never a query credential. Port 28443 remains only an isolated configuration example, not an automatically
-provisioned HTTPS listener. Configure the actual trusted browser origin and `/app/activate` before enabling
+provisioned HTTPS listener. Configure the actual trusted browser origin and `/activate` before enabling
 catcher delivery; composition rejects a different origin/path. See the activation runbook for current capture,
 history, request and session behavior. Existing optional local HTTPS has separate setup and ports. The catcher delivers only to this local mailbox,
 regardless of the recipient address; it cannot deliver to Gmail or another real inbox.

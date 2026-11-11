@@ -110,7 +110,7 @@ def setup(root, safe, checkout, project):
     message = mailbox('message/' + message_id)
     from local_domain import selected_host
     host = selected_host(safe, checkout, project + '.localhost')
-    links = re.findall(r'https://' + re.escape(host) + r'/app/activate#[^\s<>"\']+', message.get('Text', ''))
+    links = re.findall(r'https://' + re.escape(host) + r'/activate#[^\s<>"\']+', message.get('Text', ''))
     require(len(set(links)) == 1, 'Documented synthetic activation link unavailable; unsupported revision')
     # Only owner-readable runtime output holds the possession link. No password
     # is generated, printed or recorded; the human chooses it in the real UI.

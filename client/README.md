@@ -1,15 +1,17 @@
 # Browser foundation
 
-The [authoritative application frame](../docs/engineering/APPLICATION_FRAME.md) now mounts at `/`, `/app`
-and `/app/` (TASK-00051 implementation; independent Review/QA pending). One route manifest and the existing sole
+The [authoritative application frame](../docs/engineering/APPLICATION_FRAME.md) mounts the permission-aware
+Dashboard at `/` and registered root-level protected destinations (TASK-00051 implementation; independent Review/QA pending). One route manifest and the existing sole
 principal/session graph drive bounded root/restoration, exact protected guards, responsive navigation, current-user/
 theme/logout controls and truthful future account/admin destinations. TASK-00052 adds the honest permission-aware
 Dashboard with safe cache identity, independently allowed account/admin links and explicit unavailable-product
-copy (independent Review/QA pending). Later operations are not implemented. Canonical login `/app/login` and public invitation activation `/app/activate` retain their existing
+copy (independent Review/QA pending). Later operations are not implemented. Canonical login `/login` and public invitation activation `/activate` retain their existing
 feature owners. See [login](../docs/engineering/LOGIN.md), [activation](../docs/engineering/ACTIVATION.md) and
 [session continuity](../docs/engineering/SESSION_CONTINUITY.md). `/api/v1` retains its independent API contract.
-Unknown `/app/...` paths render generic not-found HTML (HTTP 200), not an API response. Apart from `/`, unrelated
-paths outside `/app` never fall back to React.
+Eligible unknown browser GET paths render generic client Not Found (HTTP 200), not an API response.
+Explicit server routes and assets take precedence. API/MCP namespace misses, missing assets, legacy `/app`
+locations and unsupported server methods do not receive a successful shell. `/mcp/v1` is reserved only;
+MCP is not implemented. There are no legacy redirects or aliases, including `/dashboard`.
 
 ## Toolchain and commands
 
@@ -20,11 +22,11 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/client storybook-setup # Explicit pinned browser image build, once per Docker host
 ./bin/client versions
 ./bin/client check        # Complete focused frontend checks; no network or dependency changes
-./bin/client build        # Publish inspected assets for the local /app (check uses scratch output)
+./bin/client build        # Publish inspected assets for the local application (check uses scratch output)
 ./bin/client coverage     # Scoped client unit/component coverage under .runs/build/reports/client/coverage/
 ./bin/client audit        # Optional live registry vulnerability report
 ./bin/up
-# Open http://localhost:18087/app, or use the existing opt-in HTTPS setup below
+# Open http://localhost:18087/, or use the existing opt-in HTTPS setup below
 ./bin/build              # Complete canonical gate, including this frontend sequence
 ```
 
@@ -248,7 +250,7 @@ HTTP development routing and the HTTPS gateway allow only hashed JS/CSS/qualifie
 server-owned, including dotted paths.
 
 For production-like local HTTPS, follow [local HTTPS setup](../docs/engineering/LOCAL_HTTPS.md), then run
-`./bin/up` after building assets to refresh the complete HTTP/HTTPS stack and gateway configuration. Open **https://localhost:18443/app**.
+`./bin/up` after building assets to refresh the complete HTTP/HTTPS stack and gateway configuration. Open **https://localhost:18443/**.
 The gateway mounts only `var/client/build/` for static delivery, with immutable caching of hashed assets. HTML is
 no-store with a restrictive self-only script/style/font CSP, no inline executable code/eval, no-referrer and nosniff.
 The inert config JSON is not executable. A blocking, self-hosted prepaint script runs before the stylesheet
@@ -275,7 +277,7 @@ build. Local static output and PHP must belong to the same release.
   current-user/theme/logout controls, focusable named main outlet and footer.
 - `src/pages/`: truthful landing seams, not-found, pending page import, and generic boot/render/module failure.
 - `src/components/`: reusable presentation, native controls/forms and the shared render-error boundary. Recovery reloads the
-  fixed `/app` path; it never reconstructs a destination from caller input.
+  fixed `/` path; it never reconstructs a destination from caller input.
 
 Loading/errors are actual boot/import states, not pretend product routes or a permanent debug gallery.
 Malformed config never mounts routes; failed page imports show generic recovery. Initial entry-script/network
@@ -336,7 +338,7 @@ returned access token only into `MemoryAccessToken` and never retries mutations.
 CSRF proof, keeps all transport privacy controls and deliberately does not abort an observed server mutation
 success. Login consumes the same response codec and memory-token seam through `LoginService`; activation does not mount restoration or a principal cache. `SessionService` now supplies explicit single-tab refresh/logout using that shared memory seam; it never retries conflicts, persists authority or invents a principal. Login success mounts current-session logout and truthful uncertain-server outcomes. TASK-00048’s `SessionCoordinator`
 now owns bounded lock/channel restoration, one conflict recovery, monotonic scheduling, generation barriers and
-accessible state presentation at `/app/login`; see the [exact protocol and timeout contract](../docs/engineering/SESSION_CONTINUITY.md#bounded-multi-tab-coordinator-task-00048).
+accessible state presentation at `/login`; see the [exact protocol and timeout contract](../docs/engineering/SESSION_CONTINUITY.md#bounded-multi-tab-coordinator-task-00048).
 It emits existing AuthorityCache signals, never constructs a second authority cache,
 and leaves activation/confirmation landings inert. `LoginJourney` supplies its sole production `/me` owner. TASK-00049 supplies the production `/me` service/cache integration; see [current authority](../docs/engineering/CURRENT_PRINCIPAL.md).
 
@@ -347,7 +349,7 @@ behavior or a live client/server journey. Existing PHP functional contract tests
 cookie attributes/reuse, server guards and OpenAPI response validation. No test-only endpoint is needed.
 
 `features/sessions/OwnedSessionsService` supplies the real protected owned-session page at
-`/app/account/sessions`, using the sole credential/principal graph. It strictly maps only safe session fields,
+`/account/sessions`, using the sole credential/principal graph. It strictly maps only safe session fields,
 fences volatile rows with AuthorityCache scopes and clears them on retirement. Server 401 uses existing bounded
 restoration; 403 revalidates current authority. Only a safe refusal category is retained until explicit retry,
 so guard remount cannot replay a denied read. The responsive semantic cards explain coarse device hints,
@@ -365,19 +367,19 @@ owners. Exact-key safe codecs, volatile authority-scoped rows, server pagination
 explicit denial recovery introduce no persistence, filtering or mutation. TASK-00118 adds a permission-rechecked
 row detail entry within that same route: a fresh safe GET, volatile scope-fenced detail, explicit recovery and
 same-page authoritative return, without target IDs in browser history or a broader administration UI.
-Pending-user links reach TASK-00060's `/app/admin/invitations/{user_id}` using only a classified UUID.
+Pending-user links reach TASK-00060's `/admin/invitations/{user_id}` using only a classified UUID.
 `InvitationService` combines deliberate safe user-detail and nullable delivery GETs under READ_USERS.
 Page management needs READ_USERS plus MANAGE_USER_INVITATIONS; the mutation transport needs only management
 and returns an empty acknowledgement, never user/status data. Outcomes trigger authoritative reads and retire
 local directory/detail generations without adopting form/response identity. Cancel-first confirmations,
 volatile correction values, stale-response fences and no automatic mutation replay remain. No new endpoint
-or command is introduced. `InvitationIssuanceService.submit()` and `/app/admin/invite` now issue only canonical email plus fixed
+or command is introduced. `InvitationIssuanceService.submit()` and `/admin/invite` now issue only canonical email plus fixed
 `mode: ordinary` through the existing API, using exact INVITE_USERS and the same sole graph. Strict issuance
 validation projects only a safe target ID; partial/system/network/protocol outcomes remain unconfirmed and
 are never automatically retried. Every completion retires directory/status generations, including late work.
 Status links additionally require exact READ_USERS. See [ordinary invitations](../docs/engineering/ORDINARY_INVITATIONS.md).
 TASK-00062 mounts the separate [confirmed elevated invitation](../docs/engineering/ELEVATED_INVITATIONS.md)
-route at `/app/admin/invite-super-admin`, requiring both exact INVITE_USERS and ASSIGN_SUPER_ADMIN.
+route at `/admin/invite-super-admin`, requiring both exact INVITE_USERS and ASSIGN_SUPER_ADMIN.
 The shared issuance service's explicit `submitElevated()` requires canonical-target confirmation, sends
 only fixed elevated mode/boolean confirmation and retains the same bounded uncertainty/invalidation contract.
 Cancel-first warning/confirmation, terminal operator investigation and READ_USERS-only continuation add no
@@ -419,9 +421,8 @@ feedback. Locally invalid resubmission preserves current server feedback on unch
 published safe messages on explicit `body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
 form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
-server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. TASK-00054 now supplies the real `password_reset_request` form at `/app/reset-password` (legacy
-`/app/login/recovery` alias), using the same shared adapter, generic success and explicit schema recovery;
-see [reset request contracts](../docs/engineering/PASSWORD_RESET_REQUEST.md). TASK-00055 adds the real `password_reset_completion` form at `/app/reset-password/complete`, with transient fragment intake and target-scoped session retirement; see [completion contracts](../docs/engineering/PASSWORD_RESET_COMPLETION.md). TASK-00056 adds the authenticated `password_change` form at `/app/account/password`, using the sole session graph and terminal all-tab fresh-login transition; see [password change](../docs/engineering/PASSWORD_CHANGE.md). Independent Review/QA accepted the implementation; [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge. The real PHP wire uses zero/one-element string-list rule arguments; the client
+server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. TASK-00054 now supplies the real `password_reset_request` form at `/reset-password` (no legacy alias), using the same shared adapter, generic success and explicit schema recovery;
+see [reset request contracts](../docs/engineering/PASSWORD_RESET_REQUEST.md). TASK-00055 adds the real `password_reset_completion` form at `/reset-password/complete`, with transient fragment intake and target-scoped session retirement; see [completion contracts](../docs/engineering/PASSWORD_RESET_COMPLETION.md). TASK-00056 adds the authenticated `password_change` form at `/account/password`, using the sole session graph and terminal all-tab fresh-login transition; see [password change](../docs/engineering/PASSWORD_CHANGE.md). Independent Review/QA accepted the implementation; [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge. The real PHP wire uses zero/one-element string-list rule arguments; the client
 strictly checks that shape before mapping it into its internal rule representation. The catalog examples are synthetic local
 interactions, not endpoints or authentication E2E evidence.
 
@@ -479,7 +480,7 @@ catalog use synthetic inputs, not production grants. See [current authority owne
   **Server authorization remains authoritative.** A server 403 remains the operation's forbidden result even after
   a fresh projection; signal authority invalidation when appropriate, but never replay the operation automatically.
 - `routes/IntendedRoute` owns at most one in-memory intent, for 10 minutes and 2,048 input characters. Only exact
-  registered protected static paths under `/app/` can opt in via `intendedRoute` query metadata. Initially only
+  registered protected static root paths can opt in via `intendedRoute` query metadata. Initially only
   `page`, `sort` and `view` keys with enumerated non-sensitive 1–64-character alphanumeric/underscore/hyphen values
   are supported; even those keys are rejected unless explicitly listed by that route. Duplicate/unknown keys,
   credentials, auth/grant paths, external/scheme/relative targets, controls, backslashes, ambiguous paths/encoding
@@ -526,7 +527,7 @@ and interactive QA remain separate acceptance steps.
 
 The catalog's presentation core imports five reusable production components, rather than embedding
 implementations or promoting prototype code. Authority examples additionally compose the production cache,
-guard, status and permission-action components above. None adds product routes to `/app`.
+guard, status and permission-action components above. None adds product routes.
 
 | Component         | Responsibility                                                                                                                                                                                                                                |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -584,7 +585,7 @@ Serve it only for local engineering, never as a public product endpoint. The sta
 runtime network. Tooling ships documentation/help/license URL strings; their presence is not a runtime fetch.
 Telemetry/crash reporting are disabled. Storybook emits `project.json.generatedAt` despite that setting;
 `finalize-catalog-build.mjs` removes only that non-runtime timestamp. Compare repeated output hashes directly,
-not through product-suite tests. Static artifacts are ignored and are not deployed with `/app`.
+not through product-suite tests. Static artifacts are ignored and are not deployed with the application.
 
 `storybook-capture` starts/closes its own loopback static server and Chromium inside the network-disabled
 container. It renders every story, blocks/records external requests, runs axe-core on the production preview,
@@ -625,7 +626,7 @@ It runs only explicitly installed tooling. Browser binaries and system libraries
 Playwright base, never an install script or on-demand download.
 Explicit browser image setup also refreshes the base's Ubuntu CA package from its vendor repositories;
 acceptance remains offline and does not update trust stores. Rebuild the image to adopt that change.
-Builds disclose Storybook's >500 kB tool-chunk warnings (not production `/app` chunks), React-Bootstrap
+Builds disclose Storybook's >500 kB tool-chunk warnings (not production application chunks), React-Bootstrap
 `use client` directive-preservation warnings in the browser-only catalog, and Rolldown plugin-timing warnings
 when emitted. None is suppressed. The inherited ESLint 9 installation deprecation remains. Caches, static output, coverage, browser failure screenshots and captures are
 ignored under `.runs/build/reports/client/`. The otherwise read-only install's `node_modules/.cache/` and `.vite-temp/`

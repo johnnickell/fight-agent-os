@@ -10,7 +10,7 @@ export const principal: CurrentPrincipal = {
   permissions: ['VIEW_REPORTS', 'EDIT_REPORTS']
 };
 export const reportRoute: RegisteredRoute = {
-  pathname: '/app/reports',
+  pathname: '/reports',
   requirements: [{ kind: 'authenticated' }, { kind: 'permissions', all: ['VIEW_REPORTS'] }],
   intendedRoute: { page: ['1', '2'], sort: ['recent', 'name'] }
 };

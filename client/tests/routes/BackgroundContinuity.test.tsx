@@ -20,14 +20,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function mount(path = '/app/dashboard') {
+async function mount(path = '/') {
   const owner = applicationSession();
   owners.push(owner);
   const navigate = vi.fn();
   render(<ApplicationView session={owner} pathname={path} navigate={navigate} />);
   await act(() => owner.coordinator.restore());
   await screen.findByRole('heading', {
-    name: path === '/app/dashboard' ? 'Dashboard' : 'Account & Security',
+    name: path === '/' ? 'Dashboard' : 'Account & Security',
     level: 1
   });
   return { owner, navigate };
@@ -72,7 +72,7 @@ describe('background continuity through the composed credential/cache/frame grap
   });
 
   it('coalesces hidden return without refreshing a usable credential or replacing a non-Dashboard page', async () => {
-    const { owner, navigate } = await mount('/app/account');
+    const { owner, navigate } = await mount('/account');
     const main = screen.getByRole('main');
     const focus = screen.getByRole('button', { name: 'User Menu' });
     focus.focus();
@@ -103,7 +103,7 @@ describe('background continuity through the composed credential/cache/frame grap
     const pending = deferred<PrincipalLoadResult>();
     const action = vi.fn();
     const loader = vi.fn(() => <p>New private loader</p>);
-    const route = applicationRoutes.find((entry) => entry.pathname === '/app/account');
+    const route = applicationRoutes.find((entry) => entry.pathname === '/account');
     if (!route) throw new Error('Missing registered account route');
     render(
       <PermissionButton
@@ -134,7 +134,7 @@ describe('background continuity through the composed credential/cache/frame grap
   it.each(['network', 'protocol'] as const)(
     'holds a routine %s failure for explicit recovery without losing context',
     async (status) => {
-      const { owner, navigate } = await mount('/app/account');
+      const { owner, navigate } = await mount('/account');
       const main = screen.getByRole('main');
       owner.load.mockResolvedValueOnce({ status });
       await act(async () => {
@@ -258,7 +258,7 @@ describe('background continuity through the composed credential/cache/frame grap
   });
 
   it('keeps the page during scheduled renewal and removes it on logout before a late response', async () => {
-    const { owner } = await mount('/app/account');
+    const { owner } = await mount('/account');
     const main = screen.getByRole('main');
     let now = performance.now();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
