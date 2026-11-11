@@ -8,6 +8,12 @@ import process from 'node:process';
 import { URL } from 'node:url';
 import { chromium } from 'playwright';
 
+import {
+  observeKeyboard,
+  observePalette,
+  observeRendering
+} from './accessibility-observations.mjs';
+
 const require = createRequire(import.meta.url);
 const root = resolve('../.runs/build/reports/client/storybook');
 const output = resolve('../.runs/build/reports/client/catalog-evidence');
@@ -55,7 +61,8 @@ const receipt = {
   stories: [],
   externalRequests: [],
   pageErrors: [],
-  systemModes: []
+  systemModes: [],
+  keyboardJourneys: []
 };
 // Closing Playwright's owned browser interrupts in-flight operations and reaps its children.
 // Keep the normal finally path so an interrupted run retains evidence, never a partial pass.
@@ -72,7 +79,15 @@ process.once('SIGTERM', onTerminate);
 try {
   const index = JSON.parse(await readFile(`${root}/index.json`, 'utf8'));
   const stories = Object.values(index.entries).filter((entry) => entry.type === 'story');
-  receipt.expectedCaptures = stories.length * 2;
+  const widths = (story) =>
+    /ready-light|long-email|long-unicode|confirmation/.test(story.id)
+      ? [320, 640, 1280]
+      : [320, 1280];
+  receipt.expectedCaptures = stories.reduce((total, story) => total + widths(story).length, 0);
+  receipt.reflowPolicy =
+    '1280px reference; 640px and 320px effective CSS layouts model 200% and 400% reflow. Not an observation of native browser zoom.';
+  receipt.axeScope =
+    'Whole body, including portaled dialogs; WCAG 2 A/AA, 2.1 A/AA and 2.2 AA tags; no rule/element suppressions. Best-practice recommendations are outside this WCAG rule selection.';
   const capture = async (story, width) => {
     const context = await browser.newContext({
       viewport: { width, height: 900 },
@@ -100,6 +115,23 @@ try {
         `${origin}/iframe.html?id=${story.id}&viewMode=story&globals=a11y.manual:!true`
       );
       await page.locator('#storybook-root .catalog-preview').first().waitFor();
+      // Wait for the installed Storybook render/play lifecycle, not just the decorator mount.
+      await page.waitForFunction(() =>
+        window.__STORYBOOK_PREVIEW__?.storyRenders?.some((render) => render.phase === 'finished')
+      );
+      if (
+        /^application-frame--(wide-light|wide-dark|narrow-dark|long-email|account-menu)/.test(
+          story.id
+        )
+      ) {
+        await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
+      }
+      await page.evaluate(
+        () =>
+          new Promise((done) =>
+            window.requestAnimationFrame(() => window.requestAnimationFrame(done))
+          )
+      );
       if (story.id.endsWith('--validation-to-success')) await page.getByRole('status').waitFor();
       if (story.id.endsWith('--keyboard-focus'))
         await page.waitForFunction(() => document.activeElement?.tagName === 'BUTTON');
@@ -118,7 +150,13 @@ try {
       }
       await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
       const accessibility = await page.evaluate(async () => {
-        const result = await window.axe.run('#storybook-root');
+        // Production confirmations portal outside the story root. Scan the whole document.
+        const result = await window.axe.run(document.body, {
+          runOnly: {
+            type: 'tag',
+            values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
+          }
+        });
         return {
           violations: result.violations,
           incomplete: result.incomplete,
@@ -130,7 +168,7 @@ try {
         viewportWidth: window.innerWidth,
         font: getComputedStyle(document.querySelector('.catalog-preview')).fontFamily,
         controls: [
-          ...document.querySelectorAll('#storybook-root button, #storybook-root input')
+          ...document.querySelectorAll('button, input, select, textarea, a[href], [role="radio"]')
         ].map((element) => {
           const bounds = element.getBoundingClientRect();
           return {
@@ -157,7 +195,14 @@ try {
         fullPage: true,
         animations: 'disabled'
       });
-      return { id: story.id, width, screenshot, layout, accessibility };
+      return {
+        id: story.id,
+        width,
+        screenshot,
+        layout,
+        accessibility,
+        rendering: await observeRendering(page)
+      };
     } finally {
       await context.close();
     }
@@ -166,7 +211,16 @@ try {
     if (receipt.interrupted) throw new Error(`Catalog interrupted: ${receipt.interrupted}`);
     // Bound overlap to one story's two widths; never share page/storage or queue the entire catalog.
     // Wait for both cleanups even on failure, preserving successful partial evidence in stable order.
-    const results = await Promise.allSettled([capture(story, 320), capture(story, 1280)]);
+    const results = [];
+    // At most two contexts at once, including the selected intermediate reflow samples.
+    const sizes = widths(story);
+    for (let index = 0; index < sizes.length; index += 2) {
+      results.push(
+        ...(await Promise.allSettled(
+          sizes.slice(index, index + 2).map((width) => capture(story, width))
+        ))
+      );
+    }
     for (const result of results) {
       if (result.status === 'fulfilled') receipt.stories.push(result.value);
     }
@@ -184,6 +238,25 @@ try {
       throw new Error(`Catalog checks failed for ${story.id}; see retained receipt`);
     }
   }
+  await observeKeyboard(browser, origin, receipt.keyboardJourneys);
+  const measurements = await browser.newPage();
+  try {
+    await measurements.goto(
+      `${origin}/iframe.html?id=foundation-composition--wide-light&viewMode=story&globals=a11y.manual:!true`
+    );
+    await measurements.locator('.catalog-preview').first().waitFor();
+    receipt.contrast = await observePalette(measurements);
+    await measurements.emulateMedia({ forcedColors: 'active' });
+    receipt.forcedColors = {
+      emulated: true,
+      rendering: await observeRendering(measurements),
+      limitation:
+        'Chromium media emulation, not a Windows High Contrast or assistive-technology observation'
+    };
+  } finally {
+    await measurements.close();
+  }
+
   // Observe the catalog-only system preview across live OS changes; never write preference storage.
   const page = await browser.newPage();
   await page.route('**/*', (route) => {

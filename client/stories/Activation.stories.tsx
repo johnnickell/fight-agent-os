@@ -55,6 +55,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ReadyLight: Story = {};
+// Ready production form with deterministic success; no pointer-driven play setup.
+export const ReadySuccess: Story = { args: { scenario: 'success' } };
 export const ReadyDark: Story = { parameters: { mode: 'dark' } };
 export const Loading: Story = { args: { scenario: 'loading' } };
 export const MetadataUnavailable: Story = { args: { scenario: 'metadata' } };

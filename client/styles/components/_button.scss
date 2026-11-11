@@ -19,6 +19,21 @@
   transition: background-color var(--ui-motion) ease;
 }
 
+.application-recovery-link {
+  --bs-btn-color: var(--ui-action);
+  --bs-btn-border-color: var(--ui-action);
+  --bs-btn-hover-color: var(--ui-on-action);
+  --bs-btn-hover-bg: var(--ui-action);
+  --bs-btn-hover-border-color: var(--ui-action);
+  --bs-btn-active-color: var(--ui-on-action);
+  --bs-btn-active-bg: var(--ui-action-hover);
+  --bs-btn-active-border-color: var(--ui-action-hover);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .catalog-button[aria-disabled='true'] {
   cursor: wait;
 }
