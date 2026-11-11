@@ -87,7 +87,7 @@ try {
   receipt.reflowPolicy =
     '1280px reference; 640px and 320px effective CSS layouts model 200% and 400% reflow. Not an observation of native browser zoom.';
   receipt.axeScope =
-    'Whole body, including portaled dialogs; WCAG 2 A/AA, 2.1 AA and 2.2 AA tags; no rule/element suppressions. Best-practice recommendations are outside this WCAG rule selection.';
+    'Whole body, including portaled dialogs; WCAG 2 A/AA, 2.1 A/AA and 2.2 AA tags; no rule/element suppressions. Best-practice recommendations are outside this WCAG rule selection.';
   const capture = async (story, width) => {
     const context = await browser.newContext({
       viewport: { width, height: 900 },

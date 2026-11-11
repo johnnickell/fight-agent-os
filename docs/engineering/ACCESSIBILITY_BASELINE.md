@@ -10,21 +10,21 @@ Story IDs are `<prefix>--<state>` in the built Storybook `index.json`. The table
 production-backed states; it is not a Cartesian product of every possible state and permission.
 Every catalog entry renders at **320×900** and **1280×900 CSS pixels**, DPR 1. The 19 entries whose
 IDs contain `ready-light`, `long-email`, `long-unicode` or `confirmation` also render at **640×900**.
-Thus the initial integrated inventory has **223 stories / 465 captures** (including existing reusable
+After Review R1 repair, the integrated inventory has **227 stories / 473 captures** (including existing reusable
 component/authority examples). Explicit dark stories retain dark mode; other stories use their declared
 mode. Captures use light OS preference and reduced motion. System tracking is exercised separately.
 
 | Route / owner | Story prefix | Named states and permission variants |
 |---|---|---|
-| `/login`, TASK-00046 | `authentication-login` | ready-light, ready-dark, remember-keyboard, loading, unavailable, validation, generic-failure, throttled, outage, signing-in, signed-in |
-| `/activate`, TASK-00043 | `authentication-activation` | ready-light, ready-dark, loading, metadata-unavailable, unusable-invitation (invalid/used/expired recovery), policy-validation, common-password, throttled, activated |
+| `/login`, TASK-00046 | `authentication-login` | ready-light, ready-dark, ready-success, remember-keyboard, loading, unavailable, validation, generic-failure, throttled, outage, signing-in, signed-in |
+| `/activate`, TASK-00043 | `authentication-activation` | ready-light, ready-dark, ready-success, loading, metadata-unavailable, unusable-invitation (invalid/used/expired recovery), policy-validation, common-password, throttled, activated |
 | `/reset-password`, TASK-00054 | `authentication-resetrequest` | ready-light, ready-dark, loading, unavailable, validation, pending, throttled, outage, accepted |
-| `/reset-password/complete`, TASK-00055 | `authentication-resetcompletion` | ready-light, ready-dark, loading, metadata-unavailable, invalid-used-expired, validation, common-password, throttled, system-failure, pending, completed |
+| `/reset-password/complete`, TASK-00055 | `authentication-resetcompletion` | ready-light, ready-dark, ready-success, loading, metadata-unavailable, invalid-used-expired, validation, common-password, throttled, system-failure, pending, completed |
 | Root restoration/session expiry, TASK-00048/00051 | `authentication-continuity` | restoring, ready, network, expired-light, expired-dark, explicit-reauthentication |
 | `/` and protected frame, TASK-00051 | `application-frame` | wide-light, wide-dark, narrow-dark, long-email, forbidden (authenticated without destination permission), restoring-authority, malformed-authority, session-network-failure, session-expired, background-check-unavailable, dashboard-route-return, account-seam, invitation-seam, account-menu-keyboard, account-menu-long-email, account-menu-narrow-dark, drawer-keyboard |
 | Dashboard `/`, TASK-00052 | `application-dashboard` | wide-light, wide-dark, system, narrow-dark, long-email, account-only, independent-recovery, forbidden, pending-authority, malformed-authority, sign-out-retires-dashboard |
 | Account/Security `/account`, TASK-00051 | `application-frame` | account-seam, dashboard-route-return; truthful account landing, not an invented account editor |
-| `/account/password`, TASK-00056 | `authentication-passwordchange` | ready-light, ready-dark, loading, metadata-unavailable, validation, wrong-current, common-password, throttled, system-failure, pending, completed |
+| `/account/password`, TASK-00056 | `authentication-passwordchange` | ready-light, ready-dark, ready-success, loading, metadata-unavailable, validation, wrong-current, common-password, throttled, system-failure, pending, completed |
 | `/account/sessions`, TASK-00057/00058 | `security-ownedsessions`, `security-ownedsessionrevocation` | current-and-remembered, dark, loading, empty, failure, unknown-device, pagination, session-end; ready, confirmation, dark-confirmation, pending, success, conflict, failure (owned other-session confirmation/revocation) |
 | Current-session logout, TASK-00047 | `authentication-current-session` | ready-light, ready-dark, pending, ended, uncertain |
 | `/admin/users`, TASK-00059/00118 | `administration-users`, `administration-user-detail` | directory, dark, narrow, long-email, loading, empty, system-failure, server-forbidden, role-name-without-read, read-only, pagination-ready, pagination, retirement; safe-detail, dark, no-roles, loading, forbidden, missing, unavailable |
@@ -43,7 +43,7 @@ No route or state is added to the production router for verification.
 
 `./bin/client storybook-test` exercises production-backed story interactions and the existing Storybook a11y
 addon. `storybook-capture` scans the **whole body**, including body-portaled confirmation dialogs, with axe
-4.13.0 WCAG 2 A/AA, 2.1 AA and 2.2 AA tags. There are no rule or element suppressions. This explicit WCAG
+4.13.0 WCAG 2 A/AA, 2.1 A/AA and 2.2 AA tags. There are no rule or element suppressions. This explicit WCAG
 selection is not all axe best-practice recommendations; the existing addon retains its own default checks.
 For example, a whole-document best-practice scan reports `region` on the intentionally out-of-landmark skip
 link. That recommendation is not used to move the skip link or claim missing production landmarks.
@@ -55,14 +55,19 @@ autocomplete/field associations, native controls and label bounds, focus, motion
 horizontal geometry. Violations, overflow, render errors and unexpected external requests fail the gate.
 This is direct product inspection, not a product-suite test of the inspection tool.
 
-The integrated keyboard observer runs **11 paths at each of two widths (22 cases)** with native browser
+The integrated keyboard observer runs **16 paths at each of two widths (32 cases)** with native browser
 Tab/Shift+Tab/Enter/Space/Escape/arrow input, not locator focus/click/fill:
 
 - Login, activation, reset request/completion and password change: empty submission, first-invalid-field
   focus, forward/reverse navigation, Unicode/spaces insertion and keyboard submission; Login also toggles
-  remembered state with Space. Fixture-owned generic/policy/throttled/success outcomes remain explicit.
+  remembered state with Space. Four rejection paths remain separate from five successful form paths;
+  success requires its exact expected title, a single atomic status with its expected title, no alert,
+  removed form/inputs and an independently specified terminal focus target. Terminal text is retained.
 - Ordinary invitation completion; elevated canonical long-Unicode confirmation, Cancel-first focus,
-  bidirectional containment, Escape and return to the Review trigger.
+  bidirectional containment, Escape and return to the Review trigger. A separate elevated success path
+  enters a mixed-case Unicode target, reviews its canonical form, activates Confirm with Space, then
+  asserts the exact accepted heading/focus and confirmation announcement, dialog/form removal and safe
+  status continuation. Starting a separate invitation with Enter restores an empty focused email field.
 - Owned-session confirmation, cancellation, trigger restoration and explicit successful revocation.
 - Invitation delivery retry and email correction through Cancel-first confirmation to authoritative result.
 - Users table/card pagination, heading focus and disabled terminal Next page.
@@ -73,6 +78,29 @@ Targeted Tab destinations must have visible, unobscured, in-viewport focus after
 pixel rounding tolerance). Steps record actual focus bounds/outline; this is not a claim that every focused
 element in every possible scroll position was manually assessed. Existing stories additionally cover busy
 submission suppression, destructive confirmations, recovery and route/session invalidation.
+
+### Successful keyboard terminal observations (Review R1)
+
+The four new `ready-success` stories have no play helper: they start with empty production forms and
+inject only deterministic successful transport responses. Elevated `ready` already supplies the same
+untouched successful setup. No pointer click, locator fill/focus, pre-submitted success story or any-live-region
+predicate supplies these successful-completion results.
+
+| Keyboard completion | Expected terminal outcome / announcement | Observed focus and cleanup |
+|---|---|---|
+| Login | `You’re signed in` / `Session established` | Success heading focused; form/inputs removed |
+| Activation | `Account activated` atomic status | Standalone page leaves focus on BODY after form removal; Tab reaches the native application continuation with visible, unobscured focus |
+| Reset request | `Check your inbox` / `Request received` | Result heading focused; form/inputs removed |
+| Reset completion | `Password reset complete` / `Sign in with your new password` | Result heading focused; form/inputs removed; native Sign in continuation reachable |
+| Password change | `Password changed — sign in again` atomic status | Existing catalog terminal callback removes protected form/inputs; focus is BODY, not a fabricated success-heading focus |
+| Elevated issuance | `Super Admin invitation accepted` / `Elevated invitation update`, with confirmed invitation/assignment/audit text | Accepted heading focused; dialog/form removed; separate-invitation action restores an empty focused email field |
+
+These are DOM announcement/focus observations at 320/1280px, not AT speech or real-server authentication.
+Activation does not automatically focus its status, and the password-change fixture's terminal callback is
+not a full application reroute; BODY is explicitly asserted/recorded rather than claimed as heading focus.
+Production route main-focus behavior remains separately exercised by the application-frame path. No new
+production focus or journey repair was inferred from R1. Wrapped inline continuation links are hit-tested
+at their actual line boxes, not the empty space inside their union bounding box.
 
 ## Measured rendering and observations
 
@@ -117,6 +145,13 @@ capture receipt and test log are retained in TASK-owned evidence. Both native re
 semantic palette class with wrapping, 44px targets and supported Bootstrap hover/active variables. They remain
 navigation links; no button/Space semantics or journey redesign was introduced. The light/dark recovery
 stories and affected browser scans pass after repair. No blocking defect was waived.
+
+**R1 — Review evidence/assertion gap (AC-03/04), not a demonstrated production defect.** The original
+22 keyboard cases accepted any alert/status for several forms and covered only cancellation for elevated
+issuance. The four new untouched successful form fixtures and five added successful paths (ten additional
+width cases) now assert distinct expected successful outcomes, terminal focus, announcements and cleanup;
+original rejection and cancellation paths remain. The canonical original Review report is preserved.
+Independent reassessment remains required; this Work repair does not self-accept R1.
 
 ## Evidence classes, review limits and retention
 

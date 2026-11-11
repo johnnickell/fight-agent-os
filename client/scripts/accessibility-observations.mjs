@@ -171,7 +171,12 @@ export async function observeKeyboard(browser, origin, results) {
           const element = document.activeElement;
           const rect = element.getBoundingClientRect();
           const style = getComputedStyle(element);
-          const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+          // Inline links can wrap around empty space inside their union bounding box.
+          // Hit-test each actual line box rather than mistaking that space for occlusion.
+          const unobscured = [...element.getClientRects()].every((box) => {
+            const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+            return hit === element || element.contains(hit);
+          });
           return {
             tag: element.tagName,
             label:
@@ -187,7 +192,7 @@ export async function observeKeyboard(browser, origin, results) {
               rect.bottom <= window.innerHeight + 1 &&
               rect.left >= -1 &&
               rect.right <= window.innerWidth + 1,
-            unobscured: hit === element || element.contains(hit)
+            unobscured
           };
         });
         current.steps.push({ key, ...focus });
@@ -214,34 +219,57 @@ export async function observeKeyboard(browser, origin, results) {
         {
           id: 'authentication-login--ready-light',
           submit: 'Sign in',
+          rejected: 'Sign-in not completed',
+          success: 'You’re signed in',
+          announcement: 'Session established',
           fields: ['Email (required)', 'Password (required)']
         },
         {
           id: 'authentication-activation--ready-light',
           submit: 'Activate account',
+          rejected: 'Activation not completed',
+          success: 'Account activated',
+          announcement: 'Account activated',
+          continuation: 'Continue to the application foundation',
           fields: ['New password (required)', 'Confirm new password (required)']
         },
         {
           id: 'authentication-resetrequest--ready-light',
           submit: 'Request reset link',
+          success: 'Check your inbox',
+          announcement: 'Request received',
           fields: ['Email (required)']
         },
         {
           id: 'authentication-resetcompletion--ready-light',
           submit: 'Reset password',
+          rejected: 'Reset not confirmed',
+          success: 'Password reset complete',
+          announcement: 'Sign in with your new password',
+          continuation: 'Sign in',
           fields: ['New password (required)', 'Confirm new password (required)']
         },
         {
           id: 'authentication-passwordchange--ready-light',
           submit: 'Change password and sign out',
+          rejected: 'Password change not confirmed',
+          success: 'Password changed — sign in again',
+          announcement: 'Password changed — sign in again',
           fields: [
             'Current password (required)',
             'New password (required)',
             'Confirm new password (required)'
           ]
         }
-      ]) {
-        begin(form.id);
+      ].flatMap((form) =>
+        form.rejected
+          ? [
+              { ...form, successful: false },
+              { ...form, id: form.id.replace('--ready-light', '--ready-success'), successful: true }
+            ]
+          : [{ ...form, successful: true }]
+      )) {
+        begin(`${form.id}: ${form.successful ? 'successful completion' : 'rejection'}`);
         await open(form.id);
         const submit = page.getByRole('button', { name: form.submit, exact: true });
         await tabTo(submit);
@@ -270,12 +298,49 @@ export async function observeKeyboard(browser, origin, results) {
         }
         await tabTo(submit);
         await record('Enter');
-        await page.locator('[role="alert"], [role="status"]').first().waitFor();
-        if (await page.getByLabel(form.fields[0], { exact: true }).count()) {
+        if (form.successful) {
+          const bodyFocus = form.id.includes('activation') || form.id.includes('passwordchange');
+          const title = bodyFocus
+            ? page.getByText(form.success, { exact: true })
+            : page.getByRole('heading', { name: form.success, exact: true });
+          const status = page.getByRole('status');
+          await title.waitFor();
+          assert.equal(await status.count(), 1, `Expected one success announcement: ${form.id}`);
+          assert(await status.getByText(form.announcement, { exact: true }).isVisible());
+          assert.equal(await status.getAttribute('aria-atomic'), 'true');
+          assert.equal(await page.getByRole('alert').count(), 0);
+          assert.equal(await page.locator('form,input').count(), 0, 'Submitted fields removed');
+          // Standalone Activation and the password-change catalog callback announce success
+          // without moving focus. Record that boundary honestly; do not synthesize focus.
+          assert(
+            await (bodyFocus ? page.locator('body') : title).evaluate(
+              (element) => element === document.activeElement
+            ),
+            `Unexpected terminal focus: ${form.id}`
+          );
+          current.terminal = {
+            outcome: form.success,
+            announcement: await status.textContent(),
+            focus: bodyFocus ? 'BODY (standalone catalog terminal)' : form.success,
+            fieldsRemoved: true,
+            alerts: 0
+          };
+          if (form.continuation) {
+            const continuation = page.getByRole('link', { name: form.continuation, exact: true });
+            await tabTo(continuation);
+            current.terminal.continuation = form.continuation;
+          }
+          current.result =
+            'passed: keyboard-only success, exact announcement, terminal focus and field cleanup';
+        } else {
+          const alert = page.getByRole('alert');
+          await alert.getByText(form.rejected, { exact: true }).waitFor();
+          assert.equal(await alert.count(), 1);
+          current.terminal = { outcome: form.rejected, announcement: await alert.textContent() };
           await tabTo(page.getByLabel(form.fields[0], { exact: true }), true);
+          current.result =
+            'passed: validation focus, insertion, keyboard submission and exact rejection';
         }
-        current.result =
-          'passed: validation focus, insertion, keyboard submission and explicit outcome';
       }
       begin('elevated confirmation cancellation and focus return');
       await open('administration-invite-super-admin--ready');
@@ -300,6 +365,66 @@ export async function observeKeyboard(browser, origin, results) {
       await dialog.waitFor({ state: 'hidden' });
       assert(await review.evaluate((element) => element === document.activeElement));
       current.result = 'passed: Cancel-first, bidirectional containment, Escape and trigger return';
+
+      begin('elevated invitation keyboard-only successful issuance');
+      // Ready already supplies a successful response but has no play helper or submitted values.
+      await open('administration-invite-super-admin--ready');
+      await tabTo(page.getByLabel('Email (required)', { exact: true }));
+      await page.keyboard.insertText('Équipe@EXAMPLE.test');
+      await tabTo(page.getByRole('button', { name: 'Review Super Admin invitation', exact: true }));
+      await record('Enter');
+      const confirmation = page.getByRole('dialog');
+      await confirmation.waitFor();
+      assert(await confirmation.getByText('équipe@example.test', { exact: true }).isVisible());
+      assert(
+        await confirmation
+          .getByRole('button', { name: 'Cancel', exact: true })
+          .evaluate((element) => element === document.activeElement)
+      );
+      await tabTo(
+        confirmation.getByRole('button', { name: 'Confirm Super Admin invitation', exact: true })
+      );
+      await record('Space');
+      await confirmation.waitFor({ state: 'hidden' });
+      const accepted = page.getByRole('heading', {
+        name: 'Super Admin invitation accepted',
+        exact: true
+      });
+      await accepted.waitFor();
+      assert(await accepted.evaluate((element) => element === document.activeElement));
+      const update = page.getByRole('status');
+      assert.equal(await update.count(), 1);
+      assert(await update.getByText('Elevated invitation update', { exact: true }).isVisible());
+      assert.match(
+        await update.textContent(),
+        /The server confirmed the pending invitation, managed Super Admin assignment and required audit steps\./
+      );
+      assert.equal(await update.getAttribute('aria-atomic'), 'true');
+      assert.equal(await page.getByRole('alert').count(), 0);
+      assert.equal(await page.locator('form,input').count(), 0);
+      assert(
+        await page.getByRole('link', { name: 'Read invitation status', exact: true }).isVisible()
+      );
+      current.terminal = {
+        outcome: 'Super Admin invitation accepted',
+        announcement: await update.textContent(),
+        focus: 'Super Admin invitation accepted',
+        fieldsRemoved: true,
+        dialogRemoved: true
+      };
+      await tabTo(page.getByRole('button', { name: 'Start a separate invitation', exact: true }));
+      await record('Enter');
+      const clearedEmail = page.getByLabel('Email (required)', { exact: true });
+      assert.equal(await clearedEmail.inputValue(), '');
+      assert(await clearedEmail.evaluate((element) => element === document.activeElement));
+      assert.equal(
+        await page
+          .getByRole('heading', { name: 'Super Admin invitation accepted', exact: true })
+          .count(),
+        0
+      );
+      current.result =
+        'passed: keyboard-only confirmation activation, exact success, heading focus, announcement and separate-form cleanup';
 
       begin('ordinary invitation keyboard completion');
       await open('administration-invite-user--ready');

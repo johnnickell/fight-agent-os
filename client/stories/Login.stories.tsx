@@ -50,6 +50,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ReadyLight: Story = {};
+// No play helper: the external observer supplies native keyboard input from an untouched form.
+export const ReadySuccess: Story = { args: { scenario: 'success' } };
 export const ReadyDark: Story = { parameters: { mode: 'dark' } };
 export const RememberKeyboard: Story = {
   play: async ({ canvasElement }) => {
