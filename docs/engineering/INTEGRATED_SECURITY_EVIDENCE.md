@@ -178,8 +178,10 @@ provider/SQL/stack/link markers. These synthetic labels are not claimed as actua
 Native browser campaign complements, not duplicates, the API suites: real canonical HTTPS activation success
 and consumed replay, reset success and consumed replay, old-password login failure and new-password login
 success; six visually inspected captures, non-input DOM, storage, visible URL/history, referrer, console,
-request URL/referrer and five runtime log streams. Browser-owned userTypedURL remains accepted under
-S64-HISTORY-01. The earlier two-intake probes additionally inspect all pre-capture request headers/bodies.
+request URL/referrer and both stdout/stderr from five runtime containers. Current native evidence is canonical
+`.runs/tasks/TASK-00064/runs/engineer-04/{browser-summary,fragment-summary}.json`, with adapted runnable probes
+and shared `log-scan.cjs`. Browser-owned userTypedURL remains accepted under S64-HISTORY-01. The fresh two-intake
+probes additionally inspect all pre-capture request headers/bodies.
 The successful-login capture is the safe authority-checking transition, not a claimed dashboard journey.
 
 A currently edited masked password input is authorized transient invocation material, not an error projection:
@@ -192,9 +194,24 @@ same-origin Bearer/cookie transport are also deliberate invocation, never called
 The native probe retains actual browser seed values, provider-time digest/ciphertext, final password/session
 hashes and configured runtime key values only in process memory. It checks exact bytes in OpenAPI/validation
 exports, live and production-check assets, complete build reports (including coverage/snapshots/logs/dumps),
-and campaign artifacts; then checks live audit and five app/FPM/tooling/shared-proxy log streams. Counts and
-family names only survive. Compressed image-byte absence is not OCR: authored six screenshots are visually
-inspected, while the canonical story captures use synthetic production-story fixtures and their owning
+and campaign artifacts; then checks live audit and both stdout/stderr from five app/FPM/tooling/shared-proxy
+containers. Fresh engineer-04 campaign: 19 private values, 1,600 artifact files, six states/120 requests; each
+fresh intake has 21 requests. All streams are successfully collected/scanned: campaign FPM stderr has 104 bytes,
+other campaign streams and both intake windows are empty. Per-container exact since/until, byte counts and
+safe absence results survive, never raw logs. Collection rejects spawn errors, nonzero exits, signals, timeout
+and buffer overflow; each command has a 30-second timeout and each scan window is under ten minutes. Raw,
+JSON-escaped and URI-encoded representations are checked in both streams. Empty enabled streams are not a
+claim about unconfigured or external sinks. Eight fresh captures were visually inspected without credential text.
+
+Independent Review R64-01 found that original engineer-02/03 Docker collectors returned/scanned **stdout only**,
+not piped stderr. Their claimed complete five-container log evidence is withdrawn; no retrospective scan is
+possible with their discarded ephemeral values. Original evidence is preserved unchanged as incomplete log
+coverage, not relabeled complete. Fresh engineer-04 probes rerun both intake journeys and submitted campaign
+with new private seeds and complete stream collection. No actual leak or product defect was demonstrated;
+this is evidence recovery, not a production repair or independent acceptance.
+
+Compressed image-byte absence is not OCR: the eight fresh authored screenshots are visually inspected, while
+the canonical story captures use synthetic production-story fixtures and their owning
 artifact/network checks. No arbitrary browser-generated credential is injected into story fixture inputs.
 
 No analytics/metrics exporter or browser trace/video recording is enabled for these journeys. Their absence
