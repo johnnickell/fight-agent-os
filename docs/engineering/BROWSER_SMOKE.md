@@ -26,8 +26,46 @@ normal application's database. Synthetic Super Admin invitation setup uses the r
 command and its normal catcher provider. An initially nonempty catcher holds the phase without deleting mail.
 Only an initially empty, task-owned disposable catcher is cleared; cleanup verifies zero messages.
 
-Explicitly select the existing task gateway's test supplier after ordinary setup, using ONLY the existing
-public CA (never its private key):
+### Ordinary direct main (no shared-ingress enrollment)
+
+After ordinary dependency/assets/metadata/TLS and full-stack setup (`./bin/up`), prepare smoke explicitly:
+
+```sh
+./bin/browser-smoke setup --ca "$(mkcert -CAROOT)/rootCA.pem"
+./bin/browser-smoke all
+./bin/build
+# After all checks/independent consumers finish:
+./bin/browser-smoke setup --remove-direct
+```
+
+The effective ordinary Compose model automatically selects a **private direct Nginx**. It uses the pinned
+production gateway image/configuration and existing localhost leaf/key, but listens on 18443 only on the
+selected project's private network, with no published ports or shared-network attachment. Its only upstream
+is `web:19087`, never development FPM. Chromium visits **https://localhost:18443** with a browser-only mapping
+to this private gateway's native IP and trusts the supplied public CA in its disposable NSS store. The normal
+file-mounted main gateway, development services/database, TLS files and workstation trust/DNS stay unchanged.
+Only the existing guarded test database and initially empty disposable catcher are used. No shared-ingress
+configuration is read or required. On macOS, explicitly select an installed capable OpenSSL for hostname
+verification, e.g. `FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openssl`.
+
+The reserved `<compose-project>-browser-https` container carries native project/service labels and exact mounts.
+An existing container is refused rather than replaced; `setup --remove-direct` checks ownership before stopping
+and removing only that fixture and its prepared direct metadata/configuration/public CA. Main `bin/down` also
+removes the project-labeled orphan, without deleting persistent data. After interrupted preparation, inspect
+that exact container and use the same scoped removal before preparing again; do not overwrite unknown state.
+Do not run teardown or startup beneath a gate. A stale removed/recreated gateway requires fresh explicit setup.
+
+For safe direct-topology qualification inside an already selected worktree, `setup --direct --ca PUBLIC_CA
+--cert-dir EXISTING_LOCALHOST_LEAF_DIRECTORY` uses the same path and project, without altering its shared task
+gateway. The directory supplies only `localhost.pem` and `localhost-key.pem` mounts; no CA private key is mounted.
+Use an independently prepared disposable localhost CA/leaf when appropriate, never copy main private keys.
+Remove this private fixture and any owned disposable TLS material afterward, then repeat worktree setup below.
+This qualifies direct Nginx/browser transport, not a claim of operating the canonical main stack.
+
+### Shared-ingress worktree (or explicitly enrolled main)
+
+Explicitly select the existing selected gateway's test supplier after ordinary setup (`./bin/up --worktree
+/absolute/selected/checkout`), using ONLY the existing public CA (never its private key):
 
 ```sh
 ./bin/browser-smoke setup --ca /absolute/canonical/var/local-ingress/certs/rootCA.pem
@@ -41,10 +79,12 @@ test mode for the selected task origin: ordinary development requests are unavai
 `./bin/up --worktree /absolute/selected/checkout` restores the ordinary development upstream afterward; rerun
 browser setup before further smoke acceptance. Do not refresh startup underneath a gate.
 
-Each scenario starts actual FPM on the task-private `web:19087`, executing **public/index.php**, using only the
+### Shared fixture contracts
+
+Each scenario starts actual FPM on the project-private `web:19087`, executing **public/index.php**, using only the
 guarded test database and fresh external keys. The production gateway still owns TLS, canonical FastCGI metadata,
 headers, static assets and disabled request/error logs. No custom Node terminator, PHP router or production test
-route remains. Local journeys use the actual chain:
+route remains. Shared-ingress journeys use the actual chain:
 
 `Chromium → existing external front door → shared verified-TLS ingress → task Nginx → isolated FPM/application`.
 
@@ -73,8 +113,10 @@ refresh is triggered by cold documents, not artificial expiry or wall-clock wait
 | `revocation` | Another cookie jar is denied by the server immediately after revocation; same-origin owning-session lists converge; native Cancel-first dialog focus is visible and in viewport after keyboard movement | Real mutation/read outcomes, list state, immediate Bearer 401, denied cookie restoration and native focus |
 | `theme` | Blocking React's main bundle still leaves the OS-dark prepaint applied to the loading shell; a live OS-light change reaches the rendered root | Resource barrier and DOM theme mutation |
 
-Only `fragment` activates through UI. Other scenarios use deterministic API setup; revocation uses UI only for
-the critical confirmation/focus/invalidation interaction. Unit/component/security/catalog suites remain the
+Only `fragment` activates through UI. Other scenarios use deterministic API setup. Revocation obtains CSRF
+and logs in with same-origin browser `fetch` in a real independent cookie jar, then cold-loads the application
+through its real refresh cookie. No login-form selector/input/click is involved; UI is used only for the
+critical confirmation/focus/invalidation interaction. Unit/component/security/catalog suites remain the
 owners of validation, permission matrices, accessibility breadth and failure permutations. Another cookie jar
 has no cross-context/device push guarantee: the server denies its next request. No cross-device UI convergence,
 universal browser/assistive-technology support or accessibility/security certification is claimed.

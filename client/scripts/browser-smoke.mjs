@@ -339,18 +339,24 @@ try {
     try {
       await observe(second);
       const target = await second.newPage();
-      await target.goto(origin + '/login');
-      await target
-        .getByLabel('Email (required)', { exact: true })
-        .fill('browser-smoke@example.test');
-      await target.getByLabel('Password (required)', { exact: true }).fill(secret);
-      step = 'revocation-login';
-      const loggedIn = target.waitForResponse(
-        (response) => response.url() === origin + '/api/v1/auth/login' && response.status() === 200
-      );
-      await target.getByRole('button', { name: 'Sign in', exact: true }).click();
-      const access = (await (await loggedIn).json()).data.access_token;
+      step = 'revocation-api-login';
+      await target.goto(origin + '/api/v1/auth/csrf');
+      const login = await target.evaluate(async (password) => {
+        const csrf = await (await fetch('/api/v1/auth/csrf', { cache: 'no-store' })).json();
+        const response = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Proof': csrf.data.proof },
+          body: JSON.stringify({ email: 'browser-smoke@example.test', password, remember: false })
+        });
+        const body = await response.json();
+        return { status: response.status, token: body.data?.access_token };
+      }, secret);
+      check(login.status === 200 && typeof login.token === 'string');
+      const access = login.token;
       markers.push(access);
+      // Cold application restoration consumes the real cookie in this independent jar.
+      await target.goto(origin);
       await ready(target);
       step = 'revocation-list';
       await page.goto(origin + '/account/sessions');

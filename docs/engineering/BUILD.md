@@ -87,6 +87,8 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/up
 ./bin/openapi export
 ./bin/validations export
+# Ordinary direct main: use only the public CA from existing explicit TLS setup.
+./bin/browser-smoke setup --ca "$(mkcert -CAROOT)/rootCA.pem"
 ./bin/build
 ```
 
@@ -116,8 +118,14 @@ Export OpenAPI/validation metadata again after their source contracts change; ch
 
 Critical browser smoke also requires the selected project's initially empty disposable Mailpit, the CLI image's
 matching FPM binary/OpenSSL/NSS tools, and explicit [browser gateway setup](BROWSER_SMOKE.md) using the existing
-public CA. This selects the real task Nginx's isolated test FPM supplier; acceptance never edits/reloads gateways.
-Local journeys traverse the existing external front door and verified shared ingress. Native CI explicitly
+public CA. Ordinary direct main automatically prepares a private project-local production Nginx at the browser
+origin `https://localhost:18443`, without changing its file-mounted development gateway, reading shared-ingress
+configuration, publishing a port or touching development data. Retire only that fixture after checks with
+`./bin/browser-smoke setup --remove-direct`. Shared-ingress worktrees instead run ordinary `bin/up --worktree
+/absolute/selected/checkout`, then `./bin/browser-smoke setup --ca /absolute/existing/public/rootCA.pem`;
+this selects only their real gateway's isolated FPM supplier. Their journeys retain the existing external front
+door and verified shared ingress. Exact setup, capable OpenSSL selection, safe direct qualification and cleanup
+are in [browser smoke](BROWSER_SMOKE.md). Acceptance never creates/edits/reloads gateways. Native CI explicitly
 prepares its direct production Nginx envelope, native FPM, disposable localhost CA/leaf and pinned catcher first;
 it is not workstation/shared-ingress evidence. Neither mode enrolls global trust.
 
@@ -261,4 +269,5 @@ own their ephemeral application keys in `tests/bootstrap.php`; CI creates no `.e
 containers with a disposable localhost TLS CA/leaf; application fixture keys exist only in each smoke invocation. The sole gate step is **`php scripts/build.php`**, not a
 second phase graph or PHPUnit-only substitute. Artifact retention remains an explicit JSON/log/report allowlist,
 excluding private tool HOME, application configuration and credentials. The hosted VM owns disposal of its native
-prerequisites. Local developer Docker wrappers, TLS setup and lifecycle accounting remain unchanged.
+prerequisites. Local developer Docker wrappers and TLS enrollment remain unchanged; the separately explicit
+browser fixture preparation/retirement above is required before/after uncached local acceptance.

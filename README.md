@@ -73,6 +73,8 @@ Prepare private metadata, then run the complete gate:
 ```sh
 ./bin/openapi export
 ./bin/validations export
+# Direct localhost setup; shared origins use their existing public CA instead (see build guide).
+./bin/browser-smoke setup --ca "$(mkcert -CAROOT)/rootCA.pem"
 ./bin/build
 ```
 
