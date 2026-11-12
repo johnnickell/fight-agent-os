@@ -3,6 +3,7 @@
 /var/
 /graphify-out/
 /.env
+/compare.local.yaml
 /.runs/
 /node_modules/
 /harness/pi/node_modules/

@@ -595,6 +595,6 @@
 | [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | done | [TICKET-00138](../tickets/00138-TICKET.md) |
 | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | done | [TICKET-00139](../tickets/00139-TICKET.md) |
 | [TASK-00592](00592-TASK.md) | Add clear-answer and simplification skills with consistent testing guidance | done | — |
-| [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | ready-for-agent | [TICKET-00140](../tickets/00140-TICKET.md) |
+| [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | in-progress | [TICKET-00140](../tickets/00140-TICKET.md) |
 | [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | ready-for-agent | [TICKET-00141](../tickets/00141-TICKET.md) |
 <!-- /planning:records -->

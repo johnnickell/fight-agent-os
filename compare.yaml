@@ -1,0 +1,18 @@
+# Schema, selection and safe resolution: docs/engineering/COMPARISON_SCOPE.md
+# Expected sources and locations are intent, not proof of access or alignment.
+projects:
+  project-slim:
+    repository: github.com/johnnickell/project-slim
+    path: ${PROJECT_BASE}/project-slim
+  project-symfony:
+    repository: github.com/johnnickell/project-symfony
+    path: ${PROJECT_BASE}/project-symfony
+  project-laravel:
+    repository: github.com/johnnickell/project-laravel
+    path: ${PROJECT_BASE}/project-laravel
+  project-codeigniter:
+    repository: github.com/johnnickell/project-codeigniter
+    path: ${PROJECT_BASE}/project-codeigniter
+  project-yii:
+    repository: github.com/johnnickell/project-yii
+    path: ${PROJECT_BASE}/project-yii

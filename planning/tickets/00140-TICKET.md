@@ -107,7 +107,7 @@ repeat the checkout-choice question. No implementation worktree or TASK is creat
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00593](../tasks/00593-TASK.md) | Resolve configured comparison scope safely | ready-for-agent |
+| [TASK-00593](../tasks/00593-TASK.md) | Resolve configured comparison scope safely | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
