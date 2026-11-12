@@ -137,7 +137,7 @@ binding, avoiding a reverse cycle.
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00461](../tasks/00461-TASK.md) | Provide private Loki ingestion with truthful receipt contracts | needs-info |
-| [TASK-00462](../tasks/00462-TASK.md) | Reconcile the four protected log capabilities | in-progress |
+| [TASK-00462](../tasks/00462-TASK.md) | Reconcile the four protected log capabilities | done |
 | [TASK-00463](../tasks/00463-TASK.md) | Search current logs in the native workspace | needs-info |
 | [TASK-00464](../tasks/00464-TASK.md) | Inspect exact diagnostic content and surrounding context | ready-for-agent |
 | [TASK-00465](../tasks/00465-TASK.md) | Follow live logs with bounded pause and recovery | needs-info |
@@ -158,7 +158,7 @@ are now written/accepted and cover this TICKET's complete agreed native live-dia
 | Slice | TASK / outcome | Dependencies and current gate |
 |---|---|---|
 | A | [TASK-00461 — Provide private Loki ingestion with truthful receipt contracts](../tasks/00461-TASK.md) | `needs-info`; TASK-00455/00467/00482/00483; actual storage/runtime/lifecycle/fence mechanisms remain unqualified |
-| B | [TASK-00462 — Reconcile the four protected log capabilities](../tasks/00462-TASK.md) | Decision-complete; delivered TASK-00036 managed-policy foundation; no backend/browser prerequisite |
+| B | [TASK-00462 — Reconcile the four protected log capabilities](../tasks/00462-TASK.md) | Accepted catalog/operator implementation; activation and downstream operation enforcement remain separate |
 | C | [TASK-00463 — Search current logs in the native workspace](../tasks/00463-TASK.md) | `needs-info`; TASK-00461/00462/00459/00456/00467 and TASK-00051; mapped visibility/disclosure participants remain unqualified |
 | D | [TASK-00464 — Inspect exact diagnostic content and surrounding context](../tasks/00464-TASK.md) | Decision-complete, blocked by TASK-00463 |
 | E | [TASK-00465 — Follow live logs with bounded pause and recovery](../tasks/00465-TASK.md) | `needs-info`; TASK-00463/00464/00485; actual ingress/worker streaming mechanisms remain unqualified |
@@ -175,9 +175,9 @@ query/shared-admission behavior supplies later restore/export use cases without 
 supply bounded detail behavior under their additional scope checks. The existing cached request principal alone
 cannot certify fresh release/batch authority; C/E must prove actual revalidation and owner-fenced disclosure.
 
-All six are unranked. B is ready on its delivered foundation; D/F await named dependencies; A/C/E retain concrete
-missing-capability gates. Existing catalog identities are preserved when B is implemented; this planning operation
-assigns no permission and does not reopen the completed initial catalog delivery. No terminal-first/Workflow/
+All six are unranked. B's catalog/operator implementation is accepted; D/F await named dependencies; A/C/E retain
+concrete missing-capability gates. B preserves existing catalog identities; accepted definitions do not apply live
+grants, qualify downstream operations or reopen the completed initial catalog delivery. No terminal-first/Workflow/
 evidence owner gains a reverse prerequisite, and TASK-00449 remains independent.
 
 Fetched `origin/develop`/HEAD remained `ac41c28`. Before allocation, live/archive paths across 18 local/remote refs
