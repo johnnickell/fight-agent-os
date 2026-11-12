@@ -67,7 +67,7 @@ try {
 }
 $missReason = $force ? 'Explicit --force requested' : 'No successful cache pointer';
 try {
-    fwrite(STDOUT, "Checking build inputs and runtime...\n");
+    fwrite(STDOUT, "Checking build source inputs...\n");
     $fingerprint = $timed('Input fingerprint', static fn (): string => $cache->fingerprint());
     $reused = $force ? null : $timed(
         'Receipt/artifact validation',
@@ -101,11 +101,11 @@ try {
     }
 } catch (Throwable) {
     $fingerprint = null;
-    fwrite(STDERR, "Build cache unavailable: input/runtime identity is incomplete; running the full gate.\n");
+    fwrite(STDERR, "Build cache unavailable: source input identity is incomplete; running the full gate.\n");
 }
 // A failure or interruption from here must never revive an earlier success.
 $cache->invalidate();
-$missReason = $fingerprint === null ? 'Input/runtime fingerprint unavailable' : $missReason;
+$missReason = $fingerprint === null ? 'Source input fingerprint unavailable' : $missReason;
 fwrite(STDOUT, 'Build cache miss: '.$missReason.".\n");
 fwrite(STDOUT, $force ? "Forced full build.\n" : "No reusable success; running the full build.\n");
 $run = $directory.'/'.gmdate('Ymd\THis\Z').'-'.getmypid();

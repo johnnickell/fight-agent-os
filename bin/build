@@ -21,6 +21,4 @@ if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
 fi
 
 ./bin/runtime storage-admit
-image=$(./bin/runtime docker inspect --format '{{.Image}}' "$container")
-runtime_id=$(printf '%s\n%s\n%s\n' "$container" "$image" "$actual" | python3 -c 'import hashlib, sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')
-exec ./bin/runtime docker compose exec -T -e "FIGHT_BUILD_RUNTIME_ID=$runtime_id" web php scripts/build.php "$@"
+exec ./bin/runtime docker compose exec -T web php scripts/build.php "$@"

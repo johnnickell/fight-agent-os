@@ -34,21 +34,16 @@ or agent assessment of whether the implementation satisfies it. A cache hit does
 Administrative-only evidence assessment remains available under [execution standards](EXECUTION.md#gate-evidence-reuse).
 
 Output names the cache-miss category: missing/old pointer, changed project/dependency/instruction contents,
-generated inputs, runtime/environment, database identity, invalid original receipt, changed retained evidence,
-unclean test database, unstable inputs or explicit force. Digests never persist environment values; reasons expose
-no secret input values. Planning, fingerprinting, evidence validation and stability rechecks report elapsed seconds;
-full builds also report each phase duration. Full receipts retain the miss reason and cache-operation timings.
+generated inputs, invalid original receipt, changed retained evidence, unstable inputs or explicit force.
+Reasons expose no secret input values. Planning, fingerprinting, evidence validation and stability rechecks
+report elapsed seconds; full builds also report each phase duration. Full receipts retain the miss reason and cache-operation timings.
 An older cache format requires one fresh build.
 
-Runtime identity includes PHP and extensions/INI settings and files, PHP/Composer/Git/Python/Node/npm executable
-contents and versions, the npm installation, Chromium/headless installation, OS/kernel/package metadata and the
-inherited environment as a single digest without persisting environment values. Local entry additionally binds
-the running container, immutable image and Compose configuration. A guarded read-only PostgreSQL probe verifies
-connected identity, server version/incarnation, settings and database/role attributes on every invocation. A hit
-also requires the empty owned public schema left by backend cleanup, including no namespaced objects, explicit
-schema privileges, comments or security labels. Intentional schema resets during a fresh
-gate are not runtime drift; rows are not cached inputs. This cache does not certify
-arbitrary external services or concurrent writers; explicit fresh requirements use `--force`.
+Cache inputs are source and dependency contents, including generated application inputs. Database contents,
+schema and server identity, container/image identity, installed runtime tools and inherited environment values
+are not fingerprinted or queried for cache reuse. Changing Pi roles or recreating a runtime does not invalidate
+an otherwise qualifying receipt. Tests that run freshly retain their normal database target guards and cleanup.
+Use `--force` when fresh execution is explicitly required.
 
 The existing exclusive gate lock covers checking, invalidation, execution and publication. Before any real run,
 the old cache pointer is removed so failures and interruptions cannot revive an older success. A forced attempt
