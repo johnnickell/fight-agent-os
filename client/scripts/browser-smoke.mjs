@@ -1,10 +1,8 @@
-/* global document, window, localStorage, sessionStorage, indexedDB, caches, navigator, location, history, fetch, AbortSignal, getComputedStyle, innerWidth, innerHeight -- Browser callbacks and Node fetch */
+/* global document, window, localStorage, sessionStorage, indexedDB, caches, navigator, location, history, fetch, AbortSignal, getComputedStyle, innerWidth, innerHeight, isSecureContext -- Browser callbacks and Node fetch */
 import { Buffer } from 'node:buffer';
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
-import http from 'node:http';
-import https from 'node:https';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import process from 'node:process';
@@ -15,7 +13,8 @@ import { chromium } from 'playwright';
 // Deliberately no test reporter, trace, screenshot, video, HAR, DOM/console dump,
 // assertion operands or third-party exception output on credential-bearing pages.
 const [scenario, scratch] = process.argv.slice(2);
-const origin = 'https://localhost:19443';
+const origin = process.env.BROWSER_SMOKE_ORIGIN;
+const host = new URL(origin).hostname;
 const mailbox =
   process.env.BROWSER_SMOKE_NATIVE === '1'
     ? 'http://127.0.0.1:8025/api/v1/'
@@ -24,7 +23,6 @@ const started = performance.now();
 let step = 'fixture';
 let assertions = 0;
 let context;
-let tls;
 let grant = '';
 let secret = '';
 let leak = false;
@@ -33,6 +31,20 @@ const markers = [];
 const tokenReads = [];
 let markerReadFailed = false;
 const observe = async (browserContext) => {
+  browserContext.on('request', (request) => {
+    const url = new URL(request.url());
+    counts.set(url.pathname, (counts.get(url.pathname) ?? 0) + 1);
+    if (
+      request.url().includes('#') ||
+      markers.some(
+        (marker) =>
+          typeof marker === 'string' &&
+          marker.length > 16 &&
+          JSON.stringify([request.url(), request.headers().referer]).includes(marker)
+      )
+    )
+      leak = true;
+  });
   await browserContext.route('**/*', async (route) => {
     if (new URL(route.request().url()).origin !== origin) {
       external = true;
@@ -106,7 +118,9 @@ const activate = async () => {
   const messages = await mail('messages');
   check(messages.total === 1 && messages.messages.length === 1);
   const message = await mail('message/' + messages.messages[0].ID);
-  const links = message.Text.match(/https:\/\/localhost:19443\/activate#[^\s<>"']+/g) ?? [];
+  const links = (message.Text.match(/https:\/\/[^\s<>"']+/g) ?? []).filter((link) =>
+    link.startsWith(origin + '/activate#')
+  );
   check(links.length === 1);
   grant = links[0].split('#')[1];
   secret = 'Smoke!9z ' + randomBytes(16).toString('hex');
@@ -181,117 +195,18 @@ const activate = async () => {
 try {
   await import('./dependencies.mjs');
   await mkdir(path.join(scratch, '.pki/nssdb'), { recursive: true, mode: 0o700 });
-  command('openssl', [
-    'req',
-    '-x509',
-    '-newkey',
-    'rsa:2048',
-    '-nodes',
-    '-days',
-    '1',
-    '-subj',
-    '/CN=Disposable Browser Smoke CA',
-    '-keyout',
-    scratch + '/ca.key',
-    '-out',
-    scratch + '/ca.pem'
-  ]);
-  command('openssl', [
-    'req',
-    '-new',
-    '-newkey',
-    'rsa:2048',
-    '-nodes',
-    '-subj',
-    '/CN=localhost',
-    '-addext',
-    'subjectAltName=DNS:localhost',
-    '-keyout',
-    scratch + '/leaf.key',
-    '-out',
-    scratch + '/leaf.csr'
-  ]);
-  command('openssl', [
-    'x509',
-    '-req',
-    '-in',
-    scratch + '/leaf.csr',
-    '-CA',
-    scratch + '/ca.pem',
-    '-CAkey',
-    scratch + '/ca.key',
-    '-CAcreateserial',
-    '-days',
-    '1',
-    '-copy_extensions',
-    'copy',
-    '-out',
-    scratch + '/leaf.pem'
-  ]);
   command('certutil', ['-N', '-d', 'sql:' + scratch + '/.pki/nssdb', '--empty-password']);
   command('certutil', [
     '-A',
     '-d',
     'sql:' + scratch + '/.pki/nssdb',
     '-n',
-    'Disposable smoke CA',
+    'Prepared envelope public CA',
     '-t',
     'C,,',
     '-i',
-    scratch + '/ca.pem'
+    process.env.BROWSER_SMOKE_CA
   ]);
-  tls = https.createServer(
-    { key: await readFile(scratch + '/leaf.key'), cert: await readFile(scratch + '/leaf.pem') },
-    (request, response) => {
-      const target = new URL(request.url, origin);
-      counts.set(target.pathname, (counts.get(target.pathname) ?? 0) + 1);
-      if (
-        request.url.includes('#') ||
-        markers.some(
-          (marker) =>
-            typeof marker === 'string' &&
-            marker.length > 16 &&
-            JSON.stringify([request.url, request.headers.referer]).includes(marker)
-        )
-      )
-        leak = true;
-      const upstream = http.request(
-        {
-          hostname: '127.0.0.1',
-          port: 19087,
-          path: request.url,
-          method: request.method,
-          headers: { ...request.headers, host: 'localhost:19443' }
-        },
-        (result) => {
-          response.writeHead(result.statusCode, result.headers);
-          result.pipe(response);
-        }
-      );
-      upstream.on('error', () => {
-        response.writeHead(503);
-        response.end();
-      });
-      request.pipe(upstream);
-    }
-  );
-  await new Promise((resolve, reject) => {
-    tls.once('error', reject);
-    tls.listen(19443, '127.0.0.1', resolve);
-  });
-  await until(async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:19087/api/v1/auth/csrf', {
-        signal: AbortSignal.timeout(1000)
-      });
-      return (
-        response.status === 200 &&
-        response.headers.get('X-Browser-Smoke-Fixture') === process.env.BROWSER_SMOKE_FIXTURE
-      );
-    } catch {
-      return false;
-    }
-  });
   context = await chromium.launchPersistentContext(scratch + '/profile', {
     headless: true,
     locale: 'en-US',
@@ -299,11 +214,37 @@ try {
     viewport: { width: 1280, height: 800 },
     colorScheme: 'dark',
     acceptDownloads: false,
+    args: [
+      '--no-proxy-server',
+      `--host-resolver-rules=MAP ${host} ${process.env.BROWSER_SMOKE_ADDRESS}`
+    ],
     env: { HOME: scratch, PATH: '/usr/local/bin:/usr/bin:/bin', TZ: 'UTC' }
   });
   check(context.browser().version() === '149.0.7827.0');
   context.setDefaultTimeout(10000);
   await observe(context);
+  const readiness = await context.newPage();
+  await readiness.route('**/build/main-*.js', (route) => route.abort());
+  await until(async () => {
+    try {
+      const response = await readiness.goto(origin, { timeout: 1000 });
+      step = `readiness-http-${response.status()}`;
+      return (
+        response.status() === 200 &&
+        response.headers()['x-browser-smoke-fixture'] === process.env.BROWSER_SMOKE_FIXTURE &&
+        (await readiness.evaluate(async () => {
+          const result = await fetch('/api/v1/auth/csrf', { signal: AbortSignal.timeout(1000) });
+          return result.status === 200 && typeof (await result.json()).data?.proof === 'string';
+        }))
+      );
+    } catch (error) {
+      const code = String(error.message).match(/net::(ERR_[A-Z_]+)/)?.[1];
+      if (code) step = 'readiness-' + code;
+      return false;
+    }
+  });
+  check(await readiness.evaluate(() => isSecureContext));
+  await readiness.close();
   step = 'activation';
   const page = await activate();
   step = scenario;
@@ -538,7 +479,6 @@ try {
   process.exitCode = 1;
 } finally {
   await context?.close();
-  if (tls) await new Promise((resolve) => tls.close(resolve));
   try {
     await mail('messages', { method: 'DELETE' });
   } catch {

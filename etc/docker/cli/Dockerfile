@@ -1,9 +1,11 @@
 # Acceptance tooling is installed only during explicit image setup, never by bin/build.
 FROM node@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS node
 FROM mcr.microsoft.com/playwright@sha256:57b65fdc9ceabe0ef613124c7bbe2babcf9362c4d85e382fe3b03604e84b428a AS browser
+FROM php:8.5.12-fpm-bookworm@sha256:d3db5340c7ecfb1e3a26af5d3d9de8b4e160cdd75692a830b5cb74b0b85db2cf AS fpm
 FROM php:8.5.12-cli-bookworm@sha256:d4f6e10eb393de7e3a7a88e8b88e139072dd3ae297f6a5dada8257e6fe32c585
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=fpm /usr/local/sbin/php-fpm /usr/local/sbin/php-fpm
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 COPY --from=browser /ms-playwright/chromium-1228 /ms-playwright/chromium-1228

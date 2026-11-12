@@ -114,9 +114,12 @@ Do not replace dependencies beneath a live gate. Missing/stale Compose configura
 fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
-Critical browser smoke also requires the selected project's initially empty disposable Mailpit and the CLI image's
-OpenSSL/NSS `certutil`. Native CI explicitly prepares its own pinned catcher and NSS tools before acceptance.
-The fixture's private CA does not enroll workstation trust or replace TASK-00063 shared-ingress qualification.
+Critical browser smoke also requires the selected project's initially empty disposable Mailpit, the CLI image's
+matching FPM binary/OpenSSL/NSS tools, and explicit [browser gateway setup](BROWSER_SMOKE.md) using the existing
+public CA. This selects the real task Nginx's isolated test FPM supplier; acceptance never edits/reloads gateways.
+Local journeys traverse the existing external front door and verified shared ingress. Native CI explicitly
+prepares its direct production Nginx envelope, native FPM, disposable localhost CA/leaf and pinned catcher first;
+it is not workstation/shared-ingress evidence. Neither mode enrolls global trust.
 
 The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
@@ -170,8 +173,9 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
    checks, and static catalog captures/resource checks. Only the capture phase overlaps work: the two widths
    of one story use separate contexts in one browser, then both close before the next story. No backend,
    Vitest, Harness or browser-story phase overlaps another phase or a database reset.
-9. [Critical browser smoke](BROWSER_SMOKE.md): five isolated real-TLS platform scenarios, guarded test-schema
-   and catcher cleanup, ephemeral browser-only CA trust, credential-safe diagnostics and focused source stability.
+9. [Critical browser smoke](BROWSER_SMOKE.md): five isolated real Nginx/FPM HTTPS platform scenarios, guarded
+   test-schema/catcher cleanup, private browser-only trust of the prepared public CA, credential-safe diagnostics
+   and focused source stability. Local task runs exercise the existing shared HTTPS envelope.
 10. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
 Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
@@ -253,8 +257,8 @@ JS/PHP commands. Acceptance never installs or exports.
 
 Ubuntu 24.04's native PostgreSQL service supplies a dedicated non-superuser `agent_os_test` role/database over
 allowlisted loopback TCP. Only the guarded backend phase resets/migrates/cleans that test schema. Product tests
-own their ephemeral application keys in `tests/bootstrap.php`; CI creates no `.env`, application keys, TLS/CA,
-nginx/FPM, Docker images/services or developer stack. The sole gate step is **`php scripts/build.php`**, not a
+own their ephemeral application keys in `tests/bootstrap.php`; CI creates no `.env` or developer stack. Explicit browser setup prepares native FPM and pinned Nginx/Mailpit
+containers with a disposable localhost TLS CA/leaf; application fixture keys exist only in each smoke invocation. The sole gate step is **`php scripts/build.php`**, not a
 second phase graph or PHPUnit-only substitute. Artifact retention remains an explicit JSON/log/report allowlist,
 excluding private tool HOME, application configuration and credentials. The hosted VM owns disposal of its native
 prerequisites. Local developer Docker wrappers, TLS setup and lifecycle accounting remain unchanged.

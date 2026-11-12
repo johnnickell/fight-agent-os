@@ -23,12 +23,22 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     fwrite(STDERR, "Another database verification phase is running.\n");
     exit(1);
 }
-$run = $root.'/.runs/build/tmp/browser-'.bin2hex(random_bytes(12));
+$envelopeFile = $root.'/var/browser-smoke/envelope.json';
+if (!is_file($envelopeFile)) {
+    fwrite(STDERR, "Explicit browser gateway setup is required before acceptance.\n");
+    exit(1);
+}
+$envelopeJson = file_get_contents($envelopeFile);
+if ($envelopeJson === false) {
+    fwrite(STDERR, "Browser gateway setup is unreadable.\n");
+    exit(1);
+}
+$envelope = json_decode($envelopeJson, true, flags: JSON_THROW_ON_ERROR);
+$run = $root.'/var/browser-smoke/run-'.bin2hex(random_bytes(12));
 mkdir($run, 0700, true);
-$origin = 'https://localhost:19443';
+$origin = $envelope['origin'];
 $fixtureId = bin2hex(random_bytes(16));
 $environment = [
-    'BROWSER_SMOKE_FIXTURE'           => $fixtureId,
     'APP_ENV'                         => 'test',
     'APP_DEBUG'                       => 'false',
     'DATABASE_URL'                    => getenv('TEST_DATABASE_URL'),
@@ -113,14 +123,31 @@ try {
         throw new RuntimeException('Disposable catcher is not empty; preserve unknown mail.');
     }
     $mailOwned = true;
+    $connection = @stream_socket_client('tcp://127.0.0.1:19087', $errorCode, $errorMessage, 1);
+    if ($connection !== false) {
+        fclose($connection);
+        throw new RuntimeException('Preserve unknown FastCGI listener; fixture port is occupied.');
+    }
     $runCommand(['php', 'scripts/guarded_test_database.php', 'check']);
     foreach ($selected === 'all' ? $scenarios : [$selected] as $scenario) {
         $runCommand(['php', 'scripts/guarded_test_database.php', 'reset']);
         $reset = true;
         $runCommand(['php', 'vendor/bin/doctrine-migrations', 'migrate', '--no-interaction']);
         $runCommand(['php', 'scripts/browser_smoke_seed.php']);
+        // Real FPM executes public/index.php behind the separately prepared owning
+        // Nginx gateway. Its private port has no development supplier or fallback.
+        // Correlate the actual HTTP supplier before any browser database operation.
+        // This prepend adds only a random readiness header, never HTTPS metadata.
+        file_put_contents($run.'/correlation.php', "<?php header('X-Browser-Smoke-Fixture: ".$fixtureId."');");
+        file_put_contents($run.'/fpm.conf', implode("\n", [
+            '[global]', 'error_log = /dev/null', 'daemonize = no',
+            '[smoke]', 'user = root', 'group = root', 'listen = 0.0.0.0:19087',
+            'pm = static', 'pm.max_children = 2', 'clear_env = no', 'catch_workers_output = no',
+            'php_admin_flag[log_errors] = off', 'php_admin_flag[display_errors] = off',
+            'php_admin_value[auto_prepend_file] = '.$run.'/correlation.php', ''
+        ]));
         $server = new Process([
-            'php', '-S', '127.0.0.1:19087', '-t', 'public', 'scripts/browser_smoke_router.php'
+            $envelope['fpm'], '--nodaemonize', '--allow-to-run-as-root', '--fpm-config', $run.'/fpm.conf'
         ], $root, $environment);
         $server->disableOutput();
         $server->start();
@@ -128,6 +155,9 @@ try {
             'PATH'                       => getenv('FIGHT_BUILD_TOOL_PATH') ?: '/usr/local/bin:/usr/bin:/bin',
             'HOME'                       => $run,
             'BROWSER_SMOKE_FIXTURE'      => $fixtureId,
+            'BROWSER_SMOKE_ORIGIN'       => $origin,
+            'BROWSER_SMOKE_ADDRESS'      => $envelope['address'],
+            'BROWSER_SMOKE_CA'           => $root.'/var/browser-smoke/rootCA.pem',
             'TZ'                         => 'UTC',
             'npm_config_offline'         => 'true',
             'npm_config_update_notifier' => 'false',
@@ -143,8 +173,12 @@ try {
         $runner->run(static function (string $type, string $output): void {
             fwrite($type === Process::ERR ? STDERR : STDOUT, $output);
         });
+        $serverAlive = $server->isRunning();
         $server->stop(2);
         $server = null;
+        if (!$serverAlive) {
+            throw new RuntimeException('The isolated FastCGI supplier exited.');
+        }
         $pattern = '/Browser smoke PASS: ([a-z]+); ([0-9]+) assertions; ([0-9.]+)s; Chromium ([0-9.]+)/';
         if (!$runner->isSuccessful() || preg_match($pattern, $runner->getOutput(), $match) !== 1) {
             throw new RuntimeException('Critical browser smoke failed.');
@@ -208,7 +242,11 @@ try {
         'seconds'          => round(microtime(true) - $started, 3),
         'scratch_removed'  => !file_exists($run),
         'mailbox_empty'    => $mailClean,
-        'limits'           => 'Loopback TLS fixture; not workstation ingress, production mail or independent acceptance'
+        'topology'         => $envelope['topology'],
+        'origin'           => $origin,
+        'gateway_sha256'   => $envelope['gateway_sha256'],
+        'ca_sha256'        => $envelope['ca_sha256'],
+        'limits'           => 'Chromium/Linux; host mapping, not workstation DNS or production enrollment'
     ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n");
     flock($lock, LOCK_UN);
     fclose($lock);

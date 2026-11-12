@@ -1,4 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")/.."
+if [ "${1:-}" = setup ]; then
+    shift
+    exec python3 -B scripts/browser_smoke_setup.py "$@"
+fi
 exec ./bin/runtime docker compose exec -T web php scripts/browser_smoke.php "$@"
