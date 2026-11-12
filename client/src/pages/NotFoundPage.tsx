@@ -5,7 +5,7 @@ export function NotFoundPage() {
     <>
       <PageHeading>Page not found</PageHeading>
       <p>This page is not available.</p>
-      <a className="btn btn-outline-primary" href="/">
+      <a className="btn application-recovery-link" href="/">
         Return to application
       </a>
     </>

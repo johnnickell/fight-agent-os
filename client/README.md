@@ -537,9 +537,9 @@ guard, status and permission-action components above. None adds product routes.
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **216** named examples across twenty-four story files, including four shared public/error-shell,
+`stories/` holds **227** named examples across twenty-four story files, including nine shared public/error-shell,
 seven user-detail, fifteen pending-invitation status/recovery and twelve ordinary plus fifteen confirmed elevated invitation examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples, six confirmed-revocation examples and twelve production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
+7 Composition states, 11 Authority states/interactions, 10 production-backed Activation states and 12 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, twelve reset-completion examples and twelve authenticated password-change examples, plus eight owned-session list/state/retirement examples, seven confirmed-revocation examples and thirteen production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -572,7 +572,7 @@ not only its tokens, so held Light/Dark and OS-following System remain coherent 
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 216 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 227 stories at 320x900/1280x900, selected 640px reflow, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases
@@ -591,8 +591,11 @@ not through product-suite tests. Static artifacts are ignored and are not deploy
 container. It renders every story, blocks/records external requests, runs axe-core on the production preview,
 and sets the addon to manual only in each capture URL to prevent overlapping axe scans (browser story tests
 retain automatic addon checks),
-records violations/incomplete checks, geometry, native target sizes, focus outline, motion and actual heading
-font, and writes screenshots/`receipt.json` to `.runs/build/reports/client/catalog-evidence/`. Captures use Linux Chromium,
+records violations/incomplete checks, geometry, native target/label sizes, field/landmark/status semantics,
+focus outline, motion and actual heading font. TASK-00065 adds whole-body WCAG-tagged scans (including
+portaled dialogs), 19 intermediate 640px reflow samples, 32 native keyboard cases (16 paths at two widths) and 84 measured
+light/dark contrast pairs. See the [integrated route/state matrix and evidence limits](../docs/engineering/ACCESSIBILITY_BASELINE.md).
+It writes screenshots/`receipt.json` to `.runs/build/reports/client/catalog-evidence/`. Captures use Linux Chromium,
 DPR 1, en-US/UTC, light OS preference and reduced motion; explicit dark stories override the OS. The receipt also
 observes the system preview switching light/dark with normal motion. Four additional captures record a native
 Tab walk through the narrow dark composition, and one captures the static Storybook manager. These are evidence, not golden-image tests

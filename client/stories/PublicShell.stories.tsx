@@ -4,15 +4,20 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import { ShellLayout } from '@/layouts/ShellLayout';
+import { LoadingPage } from '@/pages/LoadingPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { SystemErrorPage } from '@/pages/SystemErrorPage';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 function PublicShellExample({
   withoutTheme = false,
-  dark = false
+  dark = false,
+  page = 'example'
 }: {
   withoutTheme?: boolean;
   dark?: boolean;
+  page?: 'example' | 'not-found' | 'loading' | 'system-error';
 }) {
   const [theme] = useState(
     () =>
@@ -31,10 +36,20 @@ function PublicShellExample({
   return (
     <div className="catalog-preview catalog-frame-preview" data-bs-theme={appearance.effective}>
       <ShellLayout {...(!withoutTheme && { theme })}>
-        <h1>Public shell</h1>
-        <p>
-          Shared header presentation. Page content and recovery belong to their existing owners.
-        </p>
+        {page === 'not-found' ? (
+          <NotFoundPage />
+        ) : page === 'loading' ? (
+          <LoadingPage />
+        ) : page === 'system-error' ? (
+          <SystemErrorPage />
+        ) : (
+          <>
+            <h1>Public shell</h1>
+            <p>
+              Shared header presentation. Page content and recovery belong to their existing owners.
+            </p>
+          </>
+        )}
       </ShellLayout>
     </div>
   );
@@ -49,6 +64,28 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const SystemAppearance: Story = {};
+export const NotFound: Story = {
+  args: { page: 'not-found' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+    await expect(canvas.getByRole('link', { name: 'Return to application' })).toHaveAttribute(
+      'href',
+      '/'
+    );
+    await expect(canvas.getByRole('main')).toBeVisible();
+  }
+};
+export const NotFoundDark: Story = {
+  args: { page: 'not-found', dark: true },
+  parameters: { mode: 'dark' }
+};
+export const SystemErrorDark: Story = {
+  args: { page: 'system-error', dark: true },
+  parameters: { mode: 'dark' }
+};
+export const Loading: Story = { args: { page: 'loading' } };
+export const SystemError: Story = { args: { page: 'system-error' } };
 export const WithoutTheme: Story = {
   args: { withoutTheme: true },
   play: async ({ canvasElement }) => {
