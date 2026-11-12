@@ -2,7 +2,7 @@
 id: TICKET-00140
 epic: EPIC-00026
 title: Resolve comparison projects and permitted local settings
-status: ready-for-agent
+status: done
 ---
 
 # Resolve comparison projects and permitted local settings
@@ -107,13 +107,15 @@ repeat the checkout-choice question. No implementation worktree or TASK is creat
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00593](../tasks/00593-TASK.md) | Resolve configured comparison scope safely | in-progress |
+| [TASK-00593](../tasks/00593-TASK.md) | Resolve configured comparison scope safely | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
 The user approved the two-TICKET decomposition of EPIC-00026 in this session. This record owns project selection
 and permitted settings; TICKET-00141 owns comparison and the complete report outcome. Requirements are accepted;
-implementation and verification have not begun. The user approved the single-TASK decomposition, recorded as
+the bounded slice now has independent Review ACCEPT and QA PASS as recorded in TASK-00593. The user approved the single-TASK decomposition, recorded as
 [TASK-00593](../tasks/00593-TASK.md), with no blockers and the isolated-worktree choice preserved. This TICKET's
-TASK decomposition is complete. Next planning phase: decompose TICKET-00141 before selecting implementation.
+TASK decomposition is complete. TICKET-00141's separate decomposition is also complete as TASK-00594;
+that later comparison/report consumer remains unfinished. Accepted scope/settings evidence and delivery
+checkpoint are owned by TASK-00593, not a claim of a working comparison skill or real starter alignment.
