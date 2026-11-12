@@ -16,6 +16,14 @@ jobs:
       BROWSER_SMOKE_NATIVE: '1'
     steps:
       - uses: actions/checkout@v5
+      - name: Provision matching native PHP CLI and FPM packages
+        run: |
+          # setup-php's cached CLI build does not enroll an apt repository for FPM.
+          sudo add-apt-repository --yes ppa:ondrej/php
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes \
+            php8.5-cli php8.5-fpm php8.5-pgsql php8.5-mbstring php8.5-xml \
+            libnss3-tools openssl
       - name: Set up native PHP and coverage
         uses: shivammathur/setup-php@v2
         with:
@@ -61,8 +69,9 @@ jobs:
           sudo -u postgres createdb --owner=agent_os_test agent_os_test
       - name: Prepare disposable browser TLS and catcher prerequisites
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends --yes libnss3-tools openssl php8.5-fpm
+          php --version
+          php-fpm8.5 --version
+          php-fpm8.5 --modules
           mkdir -p var/browser-smoke/certs
           chmod 700 var/browser-smoke/certs
           openssl req -x509 -newkey rsa:2048 -nodes -days 1 \

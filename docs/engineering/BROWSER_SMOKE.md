@@ -16,9 +16,12 @@ The existing Playwright **1.61.0** lock and digest-pinned browser image supply C
 revision **1228**. No additional runner dependency or product-test download is introduced. The runner checks
 the existing Node **24.22.1** / npm **11.19.1** install receipt and exact browser version. Local execution is
 containerized in the selected CLI image; native CI retains its existing explicit locked browser provisioning.
-CI explicitly prepares native FPM, the production direct Nginx configuration, a disposable localhost TLS leaf/CA
-and the same digest-pinned Nginx/Mailpit before acceptance; the gate never operates Docker. Native CI is a direct
-Nginx/FPM envelope, not a claim of the workstation's shared ingress or default trust.
+On Ubuntu 24.04, CI explicitly enables `ppa:ondrej/php` and installs PHP 8.5 CLI/FPM plus the PostgreSQL,
+mbstring and XML packages together before `setup-php` configures extensions/coverage. A cached CLI install alone
+does not make `php8.5-fpm` available to apt. CI then prepares the production direct Nginx configuration, a
+disposable localhost TLS leaf/CA and the same digest-pinned Nginx/Mailpit before acceptance; the gate never
+operates Docker. Native CI is a direct Nginx/FPM envelope, not a claim of the workstation's shared ingress
+or default trust.
 
 The phase holds the backend coverage database lock, verifies the configured AND connected guarded test
 database, resets/migrates it before **each** scenario, and resets it again in `finally`. It never reads the
