@@ -156,7 +156,14 @@ For each selected, authorized checkout:
    root/common directory, `HEAD` full OID, branch or detached state and working-tree status. For example,
    `git -C "$checkout" rev-parse --show-toplevel --git-common-dir HEAD`,
    `git -C "$checkout" symbolic-ref --quiet --short HEAD` (exit 1 means detached), and
-   `git --no-optional-locks -C "$checkout" status --porcelain=v1 --untracked-files=normal`.
+   `git -c core.fsmonitor=false -c core.hooksPath=/dev/null --no-optional-locks -C "$checkout" status --porcelain=v1 --untracked-files=normal --ignore-submodules=all`.
+   These command-scoped overrides disable executable filesystem monitoring and hooks without changing config;
+   `--no-optional-locks` alone does not do so. Do not recurse into submodule status: the command deliberately
+   omits submodule working-copy changes, so record that limit rather than infer those submodules are clean.
+   If a submodule is independently selected and authorized, observe it separately with the same command.
+   Use these overrides for **every** inspected checkout, including linked worktrees and submodules; local or
+   worktree-specific config must not re-enable helpers. If the available Git/native capability cannot suppress
+   executable helpers and avoid recursive inspection, stop status observation and record an unavailable gap.
    Do not run checkout code, hooks, network calls, fetch, install or repair commands for this observation.
 2. Read authorized local remote/source evidence without publishing credential-bearing URLs. Use native Git
    configuration reads (for example `git -C "$checkout" config --local --get-regexp '^remote\..*\.url$'`)
@@ -192,7 +199,10 @@ selection/path rules explicitly using native reads and record that limitation.
 - Walk malformed placeholders, unsupported variables, missing/unreadable directories and a denied/unavailable
   setting or evidence capability. Stop the dependent observation, with no alternate resolver or direct file read.
 - Inspect an authorized Git fixture's actual source, HEAD and status; walk matching source, fork/mismatch,
-  contradictory/missing source and dirty state. Record observations, not managed identity or certification.
+  contradictory/missing source and dirty state. Configure a harmless filesystem-monitor hook in the fixture
+  and a submodule; verify the exact status command creates no hook sentinel, including when the submodule is
+  inspected separately with worktree-specific monitor config. Record omitted submodule state and stop when
+  helper suppression is unavailable. Record observations, not managed identity or certification.
 
 Record actual outcomes, limits and unresolved owner actions in the TASK handoff. Independent Review and QA
 remain separate. The later skill owns automated consumption and comparison/report behavior, not this slice.
