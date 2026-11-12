@@ -43,6 +43,8 @@ use Tooling\OpenApi\Document;
  */
 final class LoginApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -79,6 +81,7 @@ final class LoginApiTest extends TestCase
         $this->clock = new AccessClock(new DateTimeImmutable('2026-10-20T00:00:00.654321Z'));
         $container->set(Clock::class, fn(): Clock => $this->clock);
         $tokens = new AccessTokens();
+        $this->journeySecrets = [$tokens->secret, bin2hex($tokens->secret)];
         $tokens->clock->time = $this->clock->now();
         $container->set(TokenEncoder::class, static fn(): TokenEncoder => $tokens->jwt);
         $this->logs = new TestHandler();
@@ -652,7 +655,12 @@ SQL
         ], $changes);
         $request->getBody()->write($raw ?? json_encode($input, JSON_THROW_ON_ERROR));
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [
+            $this->password, $this->nonce, $this->proof
+        ]);
+
+        return $response;
     }
 
     /**

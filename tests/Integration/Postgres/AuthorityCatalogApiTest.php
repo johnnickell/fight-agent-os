@@ -66,6 +66,8 @@ use Tooling\OpenApi\Document;
  */
 final class AuthorityCatalogApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -101,6 +103,7 @@ final class AuthorityCatalogApiTest extends TestCase
         $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
+        $this->observeJourneyDiagnostics($container);
         $container->set(Clock::class, static fn(): Clock => $tokens->clock);
         $container->set(AccessJwt::class, static fn(): AccessJwt => $tokens->jwt);
         $container->set(AuthenticateAccessToken::class, static fn(Container $c) => new AuthenticateAccessToken(
@@ -753,6 +756,7 @@ SQL);
             ->withHeader('Authorization', 'Bearer '.$this->token)->withHeader('Content-Type', 'application/json');
         $request->getBody()->write(json_encode($body, JSON_THROW_ON_ERROR));
         $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [$this->token]);
         self::assertSame($status, $response->getStatusCode(), (string) $response->getBody());
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
         $operationPath = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/{roleId}';
@@ -792,7 +796,10 @@ SQL);
             $request = $request->withHeader('Authorization', 'Bearer '.$this->token);
         }
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [$this->token]);
+
+        return $response;
     }
 
     /**

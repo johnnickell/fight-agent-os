@@ -36,6 +36,8 @@ use Tooling\OpenApi\Document;
  */
 final class ActivationApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -422,11 +424,24 @@ final class ActivationApiTest extends TestCase
      * Commits only one duplicate activation after both real transactions captured the same grant
      */
     #[DataProvider('atomicCompetitions')]
-    public function testControlledAtomicCompetition(bool $admission): void
+    public function testControlledAtomicCompetition(bool $admission, bool $endpoint): void
     {
+        $clock = new \Tests\Support\AccessClock(new DateTimeImmutable('2026-10-20T00:00:00Z'));
         if ($admission) {
-            for ($i = 0; $i < 9; ++$i) {
-                $this->assertResponse($this->request(['credential' => 'invalid']), 409);
+            $keys = ['endpoint:activation'];
+            if (!$endpoint) {
+                $keys[] = 'network:'.inet_pton('127.0.0.1');
+            }
+            foreach ($keys as $key) {
+                $this->connection->insert('activation_rate_limits', [
+                    'key'        => hash_hmac(
+                        'sha256',
+                        $key,
+                        (string) hex2bin((string) getenv('APP_ACTIVATION_RATE_KEY'))
+                    ),
+                    'window_end' => ((int) floor($clock->now()->getTimestamp() / 900) + 1) * 900,
+                    'attempts'   => $endpoint ? 299 : 9
+                ]);
             }
         }
         $children = [];
@@ -443,6 +458,7 @@ final class ActivationApiTest extends TestCase
                 $children[] = [$process, $pipes];
                 stream_set_timeout($pipes[1], 15);
                 fwrite($pipes[0], json_encode([
+                    'now'        => $clock->now()->format(DATE_ATOM),
                     'mode'       => $admission ? 'admission' : 'activation',
                     'user'       => $this->target->toString(),
                     'credential' => $this->credential,
@@ -465,9 +481,9 @@ final class ActivationApiTest extends TestCase
                 }
                 sort($outcomes);
                 self::assertSame(['409', '429'], $outcomes);
-                self::assertSame([10, 10], $this->connection->fetchFirstColumn(
-                    'SELECT attempts FROM activation_rate_limits ORDER BY key'
-                ));
+                $attempts = $this->connection->fetchFirstColumn('SELECT attempts FROM activation_rate_limits');
+                sort($attempts);
+                self::assertSame($endpoint ? [1, 300] : [10, 10], $attempts);
                 self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
             } else {
                 self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
@@ -490,12 +506,13 @@ final class ActivationApiTest extends TestCase
     /**
      * Supplies duplicate activation and the last admission slot as separate competing contracts
      *
-     * @return iterable<string, array{bool}>
+     * @return iterable<string, array{bool, bool}>
      */
     public static function atomicCompetitions(): iterable
     {
-        yield 'duplicate activation' => [false];
-        yield 'last network admission slot' => [true];
+        yield 'duplicate activation' => [false, false];
+        yield 'last network admission slot' => [true, false];
+        yield 'last endpoint admission slot' => [true, true];
     }
 
     /**
@@ -548,6 +565,63 @@ SQL
     }
 
     /**
+     * Enforces the independent endpoint budget and exact fixed-window expiry across distinct peers
+     */
+    public function testEndpointBudgetAndIsolation(): void
+    {
+        $clock = new \Tests\Support\AccessClock(new DateTimeImmutable('2026-10-20T00:00:00Z'));
+        $admission = new \App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission(
+            $this->connection,
+            $clock,
+            (string) getenv('APP_ACTIVATION_RATE_KEY')
+        );
+        $handler = new class implements \Psr\Http\Server\RequestHandlerInterface {
+            public int $calls = 0;
+            /**
+             * Counts admitted dispatch without performing a credential operation
+             */
+            public function handle(\Psr\Http\Message\ServerRequestInterface $request): ResponseInterface
+            {
+                ++$this->calls;
+
+                return new \Slim\Psr7\Response(204);
+            }
+        };
+        for ($index = 0; $index < 300; ++$index) {
+            $request = new ServerRequestFactory()->createServerRequest(
+                'POST',
+                'https://agent-os.test/api/v1/auth/activate',
+                ['REMOTE_ADDR' => '2001:db8::'.dechex($index + 1)]
+            );
+            self::assertSame(204, $admission->process($request, $handler)->getStatusCode());
+        }
+        self::assertSame(300, $handler->calls);
+        $request = new ServerRequestFactory()->createServerRequest(
+            'POST',
+            'https://agent-os.test/api/v1/auth/activate',
+            ['REMOTE_ADDR' => '192.0.2.1']
+        );
+        $before = $this->connection->fetchAllAssociative('SELECT * FROM activation_rate_limits ORDER BY key');
+        foreach ([0, 899] as $seconds) {
+            $clock->time = new DateTimeImmutable('2026-10-20T00:00:00Z')->modify('+'.$seconds.' seconds');
+            try {
+                $admission->process($request, $handler);
+                self::fail('Endpoint budget bypassed.');
+            } catch (\Fight\Common\Application\Error\Exception\RateLimitExceeded $failure) {
+                self::assertSame(900 - $seconds, $failure->retryDelaySeconds());
+            }
+        }
+        self::assertSame($before, $this->connection->fetchAllAssociative(
+            'SELECT * FROM activation_rate_limits ORDER BY key'
+        ));
+        self::assertSame(300, $handler->calls);
+        $clock->time = $clock->time->modify('+1 second');
+        self::assertSame(204, $admission->process($request, $handler)->getStatusCode());
+        self::assertSame(301, $handler->calls);
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_rate_limits'));
+    }
+
+    /**
      * Builds the real public route request, never a test-only endpoint
      *
      * @param array<string, mixed> $changes
@@ -578,7 +652,12 @@ SQL
         ], $changes);
         $request->getBody()->write($raw ?? json_encode($input, JSON_THROW_ON_ERROR));
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [
+            $this->credential, $this->password, $this->nonce, $this->proof
+        ]);
+
+        return $response;
     }
 
     /**

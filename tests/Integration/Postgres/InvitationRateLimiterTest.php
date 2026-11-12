@@ -127,7 +127,12 @@ final class InvitationRateLimiterTest extends TestCase
     public function testConcurrentAdmission(InvitationOperation $operation): void
     {
         $actor = UserId::generate();
-        $target = $operation === InvitationOperation::ISSUE ? null : UserId::generate();
+        $scoped = !in_array($operation, [InvitationOperation::ISSUE, InvitationOperation::STATUS], true);
+        $target = $scoped ? UserId::generate() : null;
+        if ($operation === InvitationOperation::STATUS) {
+            new PostgresInvitationRateLimiter($this->connection, $this->clock, new InvitationRatePolicy())
+                ->consume($actor, $operation);
+        }
         $children = [];
         $this->connection->beginTransaction();
         $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24121, 41)');
@@ -172,7 +177,8 @@ final class InvitationRateLimiterTest extends TestCase
             }
             sort($results);
             self::assertSame(['admitted', 'throttled', 'throttled'], $results);
-            self::assertSame($target === null ? [1] : [1, 1], array_map(
+            $expected = $operation === InvitationOperation::STATUS ? [2] : ($target === null ? [1] : [1, 1]);
+            self::assertSame($expected, array_map(
                 'intval',
                 $this->connection->fetchFirstColumn('SELECT attempts FROM invitation_rate_limits')
             ));
@@ -197,11 +203,54 @@ final class InvitationRateLimiterTest extends TestCase
     public static function operations(): iterable
     {
         foreach (
-            [InvitationOperation::ISSUE, InvitationOperation::RETRY,
+            [InvitationOperation::ISSUE, InvitationOperation::STATUS, InvitationOperation::RETRY,
             InvitationOperation::RESEND, InvitationOperation::CORRECT] as $operation
         ) {
             yield [$operation];
         }
+    }
+
+    /**
+     * Exercises each production budget at its boundary with independent actor and target scopes
+     */
+    #[DataProvider('operations')]
+    public function testConfiguredBoundariesAndExpiry(InvitationOperation $operation): void
+    {
+        $policy = new InvitationRatePolicy();
+        $limiter = new PostgresInvitationRateLimiter($this->connection, $this->clock, $policy);
+        $actor = UserId::generate();
+        $scoped = !in_array($operation, [InvitationOperation::ISSUE, InvitationOperation::STATUS], true);
+        $target = $scoped ? UserId::generate() : null;
+        for ($index = 0; $index < $policy->limit($operation); ++$index) {
+            $limiter->consume($actor, $operation, $target);
+        }
+        $before = $this->connection->fetchAllAssociative('SELECT * FROM invitation_rate_limits ORDER BY actor_id');
+        foreach ([[$actor, $target], [$actor, $target === null ? null : UserId::generate()]] as [$who, $which]) {
+            try {
+                $limiter->consume($who, $operation, $which);
+                self::fail('Configured operation budget was bypassed.');
+            } catch (RateLimitExceeded $failure) {
+                self::assertSame(60, $failure->retryDelaySeconds());
+                self::assertSame('', $failure->getMessage());
+            }
+        }
+        self::assertSame($before, $this->connection->fetchAllAssociative(
+            'SELECT * FROM invitation_rate_limits ORDER BY actor_id'
+        ));
+        $limiter->consume(UserId::generate(), $operation, $target === null ? null : UserId::generate());
+        $this->clock->time = $this->clock->time->modify('+59 seconds');
+        try {
+            $limiter->consume($actor, $operation, $target);
+            self::fail('Budget expired early.');
+        } catch (RateLimitExceeded $failure) {
+            self::assertSame(1, $failure->retryDelaySeconds());
+        }
+        $this->clock->time = $this->clock->time->modify('+1 second');
+        $limiter->consume($actor, $operation, $target);
+        self::assertSame($target === null ? [1] : [1, 1], array_map(
+            'intval',
+            $this->connection->fetchFirstColumn('SELECT attempts FROM invitation_rate_limits')
+        ));
     }
 
     /**

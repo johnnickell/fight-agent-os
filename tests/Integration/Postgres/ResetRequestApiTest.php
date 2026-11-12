@@ -47,6 +47,8 @@ use Tooling\OpenApi\Document;
  */
 final class ResetRequestApiTest extends TestCase
 {
+    use \Tests\Support\SecretObservability;
+
     private Connection $connection;
     private Container $container;
     /** @var App<Container> */
@@ -154,7 +156,9 @@ final class ResetRequestApiTest extends TestCase
                 self::assertFalse($this->container->get(Connection::class)->isTransactionActive());
             }
         );
-        $baseline = $this->observable($this->request());
+        $response = $this->request();
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [$generator->last]);
+        $baseline = $this->observable($response);
         $row = $this->connection->fetchAssociative('SELECT * FROM password_reset_grants');
         self::assertIsArray($row);
         self::assertSame('pending', $row['delivery_status']);
@@ -560,7 +564,10 @@ final class ResetRequestApiTest extends TestCase
         }
         $request->getBody()->write($raw ?? json_encode(['email' => $email], JSON_THROW_ON_ERROR));
 
-        return $this->app->handle($request);
+        $response = $this->app->handle($request);
+        $this->assertSecretObservability($response, $this->connection, $this->logs, [$this->nonce, $this->proof]);
+
+        return $response;
     }
 
     /**

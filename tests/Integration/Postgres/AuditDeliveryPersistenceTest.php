@@ -114,14 +114,22 @@ SQL
     public function testAuditRoundTripsTypedSubjectsAndRollsBackWithOriginatingWork(): void
     {
         $agent = AgentId::generate();
+        $before = new DateTimeImmutable($this->connection->fetchOne('SELECT clock_timestamp()'));
         $this->commit(function () use ($agent): void {
             $this->audit->add(AuditEvidence::record($this->userId->toString(), 'user.invited', $this->userId));
             $this->audit->add(AuditEvidence::agentProvisioned($this->userId->toString(), $agent));
         });
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT actor_id, action, subject_type, subject_id, context FROM audit_evidence ORDER BY id'
+            'SELECT actor_id, action, subject_type, subject_id, context, recorded_at FROM audit_evidence ORDER BY id'
         );
         self::assertCount(2, $rows);
+        $after = new DateTimeImmutable($this->connection->fetchOne('SELECT clock_timestamp()'));
+        foreach ($rows as $row) {
+            $recorded = new DateTimeImmutable($row['recorded_at']);
+            self::assertGreaterThanOrEqual($before, $recorded);
+            self::assertLessThanOrEqual($after, $recorded);
+        }
+        self::assertSame($rows[0]['recorded_at'], $rows[1]['recorded_at']);
         self::assertSame(['user', 'agent'], array_column($rows, 'subject_type'));
         self::assertSame([$this->userId->toString(), $agent->toString()], array_column($rows, 'subject_id'));
         self::assertSame(['user.invited', 'agent.provisioned'], array_column($rows, 'action'));

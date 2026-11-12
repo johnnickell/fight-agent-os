@@ -34,11 +34,16 @@ final class AuthAdmissionRaceWorker
             'postgres' => 'pdo_pgsql', 'postgresql' => 'pdo_pgsql'
         ])->parse($url));
         $guard->assertConnected($connection, $expected);
+        $endpointOnly = str_starts_with($input['operation'], 'endpoint:');
+        $endpointLimit = $endpointOnly || $input['operation'] === 'reset_endpoint' ? 1 : 3;
+        if ($input['operation'] === 'reset_email') {
+            $endpointLimit = 300;
+        }
         $admission = new AuthAdmission(
             new PostgresAuthAttempts($connection, new AccessClock(new DateTimeImmutable($input['now']))),
             $input['key'],
-            $input['operation'] === 'reset_email' || $input['operation'] === 'reset_endpoint' ? 20 : 1,
-            $input['operation'] === 'reset_endpoint' ? 1 : ($input['operation'] === 'reset_email' ? 300 : 3)
+            $endpointOnly || $input['operation'] === 'reset_email' || $input['operation'] === 'reset_endpoint' ? 20 : 1,
+            $endpointLimit
         );
         fwrite(STDOUT, $connection->fetchOne('SELECT pg_backend_pid()')."\n");
         fflush(STDOUT);
@@ -50,7 +55,8 @@ final class AuthAdmissionRaceWorker
                 if (str_starts_with($input['operation'], 'reset_')) {
                     $admission->passwordReset(EmailAddress::fromString('race@example.test'), '192.0.2.1');
                 } else {
-                    $admission->endpoint(AuthOperation::from($input['operation']), '192.0.2.1');
+                    $operation = $endpointOnly ? substr($input['operation'], 9) : $input['operation'];
+                    $admission->endpoint(AuthOperation::from($operation), '192.0.2.1');
                 }
                 $allowed = true;
             } catch (RateLimitExceeded) {
