@@ -17,6 +17,12 @@ executable priority. Historical gate receipts remain historical.
 | Independent review, QA and delivery | Local review/QA/land guidance; EPIC-00008, completed local TICKET-00033, managed TICKET-00083 and local coordination TICKET-00084 | Managed review/QA/publication phases remain planned; local skill completion does not close that scope; release/deployment need separate runbooks and implementation |
 | Verification | Current `scripts/build.php`: read-only Composer/planning/metadata freshness, syntax/style/types/dependencies/Rector, one guarded all-suite backend coverage phase, frontend coverage/production/catalog/browser checks and source stability | TASK-00033 has current independent technical acceptance and scoped tooling/CLI QA PASS at `36d9a9c`, resolving LAND-01/R1/R2/R3 with actual clean native Linux wrapper install/write, cold-cache analysis, repeated normal-use reaping, receipt privacy/access and guarded cleanup/development-preservation evidence. Historical prepared-runtime acceptance is not substituted. TASK and TICKET-00013 close together; PR #69 publication/final verification remain pending at this checkpoint, with human merge separate. Combined coverage and automated browser observations are not universal accessibility certification |
 
+The integrated local security/accessibility baseline is now accepted through
+[TASK-00066](tasks/00066-TASK.md) and its completed TICKET-00022 siblings. Five critical browser-platform
+scenarios run in the mandatory gate through production Nginx and isolated FPM. This supersedes only the
+snapshot's missing integrated-browser evidence, not its historical feature checkpoints or remaining managed
+execution, Planning, administration, production enrollment and certification boundaries.
+
 ## Accepted direction
 
 This open-source application is a software factory: software to build software. Its planning, agent execution,

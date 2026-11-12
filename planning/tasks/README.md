@@ -68,7 +68,7 @@
 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | done | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | done | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | done | [TICKET-00022](../tickets/00022-TICKET.md) |
-| [TASK-00066](00066-TASK.md) | Prove critical browser continuity and close the foundation gate | in-progress | [TICKET-00022](../tickets/00022-TICKET.md) |
+| [TASK-00066](00066-TASK.md) | Prove critical browser continuity and close the foundation gate | done | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | done | — |
 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | done | — |
 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | done | — |

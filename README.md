@@ -17,7 +17,9 @@ React/TypeScript.
 - **Application foundation:** authentication, invitation and password flows, session management,
   permission-controlled administration, and an authenticated application frame are implemented.
   Individual features have different verification and integration boundaries; this is not a claim
-  of complete application readiness.
+  of complete application readiness. The integrated local security/accessibility baseline and five
+  critical browser-platform smoke scenarios have independent acceptance; production qualification
+  and later user/role administration remain separate.
 - **Planning:** Markdown records are authoritative, organized as EPIC → TICKET → TASK. Workspace
   bootstrap and Project registration APIs are implemented; browser Planning and database cutover
   remain planned.
