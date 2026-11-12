@@ -137,7 +137,7 @@ binding, avoiding a reverse cycle.
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00461](../tasks/00461-TASK.md) | Provide private Loki ingestion with truthful receipt contracts | needs-info |
-| [TASK-00462](../tasks/00462-TASK.md) | Reconcile the four protected log capabilities | ready-for-agent |
+| [TASK-00462](../tasks/00462-TASK.md) | Reconcile the four protected log capabilities | in-progress |
 | [TASK-00463](../tasks/00463-TASK.md) | Search current logs in the native workspace | needs-info |
 | [TASK-00464](../tasks/00464-TASK.md) | Inspect exact diagnostic content and surrounding context | ready-for-agent |
 | [TASK-00465](../tasks/00465-TASK.md) | Follow live logs with bounded pause and recovery | needs-info |

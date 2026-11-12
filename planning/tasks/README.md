@@ -464,7 +464,7 @@
 | [TASK-00459](00459-TASK.md) | Deliver captured logs to private search with truthful receipts | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
 | [TASK-00460](00460-TASK.md) | Deliver captured logs independently to verified archives | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
 | [TASK-00461](00461-TASK.md) | Provide private Loki ingestion with truthful receipt contracts | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
-| [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | in-progress | [TICKET-00113](../tickets/00113-TICKET.md) |
 | [TASK-00463](00463-TASK.md) | Search current logs in the native workspace | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
 | [TASK-00464](00464-TASK.md) | Inspect exact diagnostic content and surrounding context | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
 | [TASK-00465](00465-TASK.md) | Follow live logs with bounded pause and recovery | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |

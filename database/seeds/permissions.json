@@ -23,5 +23,9 @@
     {"id": "01a132ed-a1d6-4d73-acf1-882187ebe9f8", "name": "READ_SWAGGER", "tier": "SUPER_ADMIN_ONLY"},
     {"id": "01a15945-5304-4535-b0df-f4f6f3b449eb", "name": "READ_PROJECTS", "tier": "ADMIN_SAFE"},
     {"id": "01a15945-5304-4783-a78c-e0d647ec8235", "name": "REGISTER_PROJECTS", "tier": "ADMIN_SAFE"},
-    {"id": "01a15945-5304-4648-a247-6eb9387b9afb", "name": "GENERATE_REFERENCE_IDS", "tier": "ADMIN_SAFE"}
+    {"id": "01a15945-5304-4648-a247-6eb9387b9afb", "name": "GENERATE_REFERENCE_IDS", "tier": "ADMIN_SAFE"},
+    {"id": "01a1cfec-8426-41fd-bf72-ea2940c3a814", "name": "READ_LOGS", "tier": "SUPER_ADMIN_ONLY"},
+    {"id": "01a1cfec-8426-499e-82d5-a7a6e64e4332", "name": "EXPORT_LOGS", "tier": "SUPER_ADMIN_ONLY"},
+    {"id": "01a1cfec-8426-48f7-9b8e-202231eb7832", "name": "RESTORE_LOG_ARCHIVES", "tier": "SUPER_ADMIN_ONLY"},
+    {"id": "01a1cfec-8426-49bc-b459-028a80bc68e3", "name": "DOWNLOAD_LOG_ARCHIVES", "tier": "SUPER_ADMIN_ONLY"}
 ]

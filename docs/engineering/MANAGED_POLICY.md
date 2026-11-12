@@ -5,7 +5,10 @@ change. It does not create users, invite anyone, bootstrap a Super Admin, expose
 The required protected-tier and PostgreSQL contracts were qualified in
 [TASK-00126](../../planning/tasks/00126-TASK.md), historically with Fight Access Control **v0.5.0** at
 `46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`. TASK-00078 inspects the current lock/installation at **v0.6.0**,
-`dc4621d13851dd08cdf85ed9715ead24b1051e80`, and exercises its current authority and reference-fence contracts. Agent storage/reference observations do not qualify credential delivery.
+`dc4621d13851dd08cdf85ed9715ead24b1051e80`, and exercises its current authority and reference-fence contracts.
+TASK-00462 exercises this additive catalog on the unchanged current lock: Fight Access Control **v0.8.0**,
+`319738255e682d587642b67856039f882b9588d6`, and Fight Common **v1.5.0**,
+`06fb5cd3720af9cf8295198f74040d95b64c5155`. Agent storage/reference observations do not qualify credential delivery.
 
 ## Policy ownership
 
@@ -22,8 +25,8 @@ ordinary defaults while applying EPIC-00025's complete-Super-Admin amendment:
   `READ_OWN_SESSIONS` and `DELETE_OWN_SESSIONS`; these definitions are `ADMIN_SAFE`.
 - Managed `ROLE_SUPER_ADMIN` (`01a132ed-a1d6-48d4-8ab3-ee366b77ee3c`) uses `"permissions": "*"`, expanded to
   every current/future managed Permission during validation and applied by the existing reconciler. The current
-  catalog has 25 definitions; 19 are `SUPER_ADMIN_ONLY`, including `READ_SWAGGER`. Package/repository invariants
-  reject custom Role membership and direct Agent grants of protected definitions.
+  catalog has 29 definitions; 23 are `SUPER_ADMIN_ONLY`, including `READ_SWAGGER` and the four log capabilities.
+  Package/repository invariants reject custom Role membership and direct Agent grants of protected definitions.
 - Role lists otherwise contain exact Permission names. The wildcard is accepted only for Super Admin, and its
   manually expanded list is rejected. User membership must remain exactly the approved three; both stable managed
   Role identities are required. Additional managed Roles need explicit lists, never inferred tier-based membership.
@@ -47,11 +50,37 @@ concurrency token. Project registration uses 25 definitions/references with `REA
 permission identities in place; migrate before running the changed catalog. TASK-00591 now adds all three to
 Super Admin through the approved continuing rule; User/custom/Agent memberships do not expand. The former
 25-definition policy hash `36c258416583b448910c72ff2c588b7c63e4d3e742e146cdf2152f90dfe4c252` is historical.
-The current complete typed policy SHA-256 is
+The pre-log complete typed policy SHA-256 was
 `6ca2bfcf0eb36dd5f089153df489a1e4af480802f34010ba78fa4a0a1369681d`.
+TASK-00462 adds four protected definitions without changing those 25 identities or either Role identity.
+The current complete typed policy SHA-256 is
+`9265a3f7f27293968e58b781b2aaa0c2632218c84a9e83992b6b7f1a87c3d021`.
 See [registration setup and access limits](REPOSITORY_REGISTRATION.md) before attempting these operations.
 Preserve existing identities when extending the complete catalog. Before removing a definition or reference,
 inspect every consumer check and persisted assignment; do not submit a one-permission replacement policy.
+
+## Protected log intent contract
+
+The four additive definitions are all `SUPER_ADMIN_ONLY`; explicit reconciliation includes them in managed
+Super Admin authority, never ordinary User, custom Role or direct Agent grants. No User is promoted and no
+permission is created at application boot. Existing current-authority resolution fails closed when an exact
+permission is missing or unreconciled. The 25 existing live references remain independent; no log endpoint
+exists yet, so these definitions do not invent live application references or certify operation enforcement.
+
+| Intended operation | Exact capabilities and scope |
+|---|---|
+| Live reads, search, tail, context, detail and coverage | `READ_LOGS` |
+| Archive restore/status and restored reads | `READ_LOGS` + `RESTORE_LOG_ARCHIVES`; requester-owned ready/unexpired scope |
+| Live extraction | `READ_LOGS` + `EXPORT_LOGS` |
+| Restored extraction | `READ_LOGS` + `EXPORT_LOGS` + `RESTORE_LOG_ARCHIVES`; valid requester-owned scope |
+| Verified archive download and necessary bounded catalog/status reads | `READ_LOGS` + `DOWNLOAD_LOG_ARCHIVES`; no restore power required |
+
+Later consuming TASKs must enforce current capability/session/policy and target checks, including private-release
+and bounded-output revalidation. Never use Role-name shortcuts. These separate intent checks do not promise
+separately grantable audiences under the initial managed Role or prevent copying already disclosed bytes.
+Hold, purge, policy, storage, Docker and execution authority remain separate. Catalog delivery is not log-operation
+implementation, production enrollment or permission assignment to a User/Agent. Preview first; only an explicitly
+authorized operator may apply to a real installation. Controlled test-target reconciliation is not live activation.
 
 ## Permission eligibility is not assignment
 
@@ -95,9 +124,10 @@ migrations explicitly before running policy operations. The command itself never
 Preview dispatches package `PreviewManagedPolicy`; it performs reads only and emits one JSON line with
 `operation`, `policy_sha256`, and `plan`. The plan has `permissions` and `roles`, sorted by canonical name, with
 stable IDs, desired names/tiers/memberships and `CREATE`, `RECONCILE`, `REMOVE` or `UNCHANGED` actions.
-A fresh installation shows 25 Permission creates and two Role creates. After apply, preview should show all
-27 definitions unchanged. Inspect this plan before authorizing apply; the preview is advisory and is **not** saved
-as an executable plan.
+A fresh installation shows 29 Permission creates and two Role creates. An installation with the prior complete
+25-definition catalog shows exactly four Permission creates and Super Admin membership reconciliation; User
+membership and prior identities remain unchanged. After apply, preview should show all 31 definitions unchanged.
+Inspect this plan before authorizing apply; the preview is advisory and is **not** saved as an executable plan.
 
 Apply synchronously dispatches package `ReconcileManagedPolicy`. Its planner re-reads state inside the canonical
 Doctrine transaction and owned PostgreSQL reference/optimistic fences protect writes. The original 22-definition policy's historical successful output was:
@@ -145,8 +175,11 @@ security acceptance.
 and redaction. `tests/Integration/Postgres/ManagedPolicyTest.php` crosses real package buses/handlers and owned
 repositories: database-enforced read-only preview, exact creation, repeat stability, name/tier/membership drift,
 removal/reference fences, unmanaged collisions, malformed data, Swagger delegation rejection, injected rollback,
-stale preview and three controlled two-connection interleavings. The Agent fixtures are storage-only test data,
-not enrolled live credentials. No product tests of container wiring, scripts, migrations or tools are added.
+stale preview and three controlled two-connection interleavings. The log extension also exercises read-only
+upgrade preview from the frozen prior policy, unchanged prior rows/ordinary User assignment, and rejection of
+each protected log capability through the package custom-Role grant bus, custom Role persistence and actual
+direct Agent writes. Protected log name/tier drift is repaired under the same reference fences. The Agent fixtures
+are storage-only test data, not enrolled live credentials. No product tests of container wiring, scripts, migrations or tools are added.
 
 Run `./bin/database test-reset` before focused PostgreSQL tests after a gate cleans the test schema. Use
 `./bin/phpunit --filter ManagedPolicy` for this boundary and `./bin/build` for the complete gate. Actual counts,

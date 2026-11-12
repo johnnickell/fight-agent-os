@@ -21,7 +21,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -40,7 +40,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
