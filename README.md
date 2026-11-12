@@ -84,6 +84,13 @@ Stop the main stack with `./bin/down`; its database data is retained. For isolat
 [local tooling](docs/engineering/LOCAL_TOOLING.md) and the [resource lifecycle](docs/engineering/RESOURCE_LIFECYCLE.md)
 for explicit startup and disposable-runtime cleanup.
 
+## Comparison configuration
+
+[Comparison scope and host settings](docs/engineering/COMPARISON_SCOPE.md) defines the shared starter list,
+complete local replacement and future explicit-selection syntax. The host-only `./bin/env PROJECT_BASE`
+returns one supported setting without Docker; configure it explicitly as described there. The comparison
+skill and reports are not implemented by this configuration slice.
+
 ## Fight terminal
 
 The optional [Pi package](harness/pi/README.md) adds Fight's terminal interface and workflow tools.

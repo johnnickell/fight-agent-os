@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Return one permitted host setting without booting the application."""
+
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+
+class SettingError(Exception):
+    """Identify a safe diagnostic without retaining input text."""
+
+
+def fail_if_invalid(value):
+    """Reject empty and control-bearing setting values."""
+    if not value or not value.strip():
+        raise SettingError("missing or empty value")
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise SettingError("malformed value")
+    return value
+
+
+def invoking_root():
+    """Locate the invoking working tree rather than the installed command."""
+    # Ambient Git routing must not redirect the invoking checkout's settings.
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    try:
+        result = subprocess.run(
+            ["git", "--no-optional-locks", "rev-parse", "--show-toplevel"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False,
+            env=environment,
+        )
+        root = result.stdout.decode("utf-8").rstrip("\n")
+    except (OSError, UnicodeError):
+        raise SettingError("invoking checkout unavailable") from None
+    if result.returncode != 0 or not root or "\n" in root or "\r" in root:
+        raise SettingError("invoking checkout unavailable")
+    return Path(root)
+
+
+def parse_value(text):
+    """Read one bounded literal dotenv value."""
+    original = text
+    text = text.strip(" \t")
+    if text.startswith(("'", '"')):
+        end = text.find(text[0], 1)
+        if end == -1:
+            raise SettingError("malformed dotenv")
+        suffix = text[end + 1:]
+        if suffix.strip(" \t") and not re.fullmatch(r"[ \t]+#.*", suffix):
+            raise SettingError("malformed dotenv")
+        return text[1:end]
+    text = re.split(r"[ \t]+#", original, maxsplit=1)[0].strip(" \t")
+    if "'" in text or '"' in text:
+        raise SettingError("malformed dotenv")
+    return text
+
+
+def from_dotenv(root):
+    """Validate dotenv assignments and return only PROJECT_BASE."""
+    try:
+        content = (root / ".env").read_bytes().decode("utf-8")
+    except (OSError, UnicodeError):
+        raise SettingError("dotenv missing or unreadable") from None
+    if content.startswith("\ufeff"):
+        raise SettingError("malformed dotenv")
+    keys = set()
+    selected = None
+    lines = content.split("\n")
+    for index, raw in enumerate(lines):
+        # Accept CR only as part of CRLF, not as a lone final terminator.
+        if index < len(lines) - 1 and raw.endswith("\r"):
+            raw = raw[:-1]
+        if any((ord(char) < 32 and char != "\t") or ord(char) == 127 for char in raw):
+            raise SettingError("malformed dotenv")
+        line = raw.strip(" \t")
+        if not line or line.startswith("#"):
+            continue
+        match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_]*)[ \t]*=(.*)", line)
+        if match is None:
+            raise SettingError("malformed dotenv")
+        key, text = match.groups()
+        if key in keys:
+            raise SettingError("duplicate dotenv key")
+        keys.add(key)
+        value = parse_value(text)
+        if any(ord(char) < 32 or ord(char) == 127 for char in value):
+            raise SettingError("malformed dotenv")
+        if key == "PROJECT_BASE":
+            selected = value
+    return fail_if_invalid(selected)
+
+
+def main():
+    """Resolve the supported request with safe output and diagnostics."""
+    if sys.argv[1:] != ["PROJECT_BASE"]:
+        print("host setting: unsupported request; use ./bin/env PROJECT_BASE", file=sys.stderr)
+        return 2
+    try:
+        root = invoking_root()
+        value = os.environ.get("PROJECT_BASE")
+        if value is None or value == "":
+            value = from_dotenv(root)
+        else:
+            value = fail_if_invalid(value)
+        sys.stdout.write(value + "\n")
+    except SettingError as error:
+        print("PROJECT_BASE: " + str(error), file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
