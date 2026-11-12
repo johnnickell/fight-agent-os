@@ -51,22 +51,111 @@ are not credentials. Follow [access-token configuration](docs/engineering/ACCESS
 [credential delivery](docs/engineering/CREDENTIAL_RECOVERY.md). Never commit secrets or reuse one key
 across these boundaries.
 
-Prepare dependencies and the application:
+Prepare dependencies and browser assets:
 
 ```sh
 ./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
 ./bin/client build
-./bin/https setup
+```
+
+### Choose how to serve HTTPS
+
+Use one of the following setups. DockerProxy is optional and is operated separately from Fight.
+Run Fight commands below from this repository's main checkout.
+
+#### Direct localhost: no shared ingress or DockerProxy
+
+For an unenrolled checkout, the simplest setup serves **https://localhost:18443**:
+
+```sh
+./bin/https setup  # Initial certificate/trust setup; may ask for your system password
 ./bin/up
+```
+
+For later starts, run only `./bin/up`. Do not use this setup to recover an already enrolled custom
+hostname: direct `https setup` changes the browser origin to localhost. Use shared ingress below for
+[enrolled local domains](docs/engineering/LOCAL_DOMAINS.md) and worktree HTTPS.
+
+#### Shared ingress: initial setup
+
+Choose who owns host ports **80 and 443**. Run only the setup command for your chosen mode:
+
+```sh
+# Without a separate DockerProxy: Fight owns loopback ports 80/443.
+./bin/ingress setup --front-door independent
+```
+
+```sh
+# With a separate DockerProxy: Fight publishes no host ports.
+./bin/ingress setup --front-door external
+```
+
+Stop the previous owner before switching modes; two proxies cannot own the same host ports.
+`setup` writes configuration and creates the shared network, but does not start services.
+
+Shared ingress requires a trusted local CA and a certificate for the checkout's hostname. On macOS,
+select Homebrew OpenSSL in each terminal used for shared ingress operations:
+
+```sh
+export FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openssl
+```
+
+On other systems, use an installed OpenSSL with hostname-verification support. Custom names such as
+`local.fight-agent.dev` also need explicit [domain and DNS enrollment](docs/engineering/LOCAL_DOMAINS.md).
+Prepare that enrollment before issuing the hostname certificate; shared ingress alone does not configure DNS.
+
+For first-time trust and certificate preparation, run:
+
+```sh
+mkcert -install             # Once per machine; may ask for your system password
+./bin/https setup --ingress # Issue the checkout certificate using that CA
+```
+
+Then use the startup sequence for your mode below.
+
+#### Shared ingress: routine startup or recovery after a Docker reset
+
+Existing certificates, local configuration and dependencies can be reused. If Docker's networks were
+deleted, first repeat the `ingress setup` command for your chosen mode above.
+
+**Without DockerProxy:**
+
+```sh
+./bin/ingress up --bind-ports
+./bin/up --shared-ingress
+```
+
+**With DockerProxy** installed at `~/Projects/Infrastructure/DockerProxy`:
+
+```sh
+(cd ~/Projects/Infrastructure/DockerProxy && ./bin/proxy up)
+./bin/ingress up --bind-ports
+./bin/up --shared-ingress
+```
+
+The `--bind-ports` flag is required in both modes as explicit permission to start/recreate shared
+ingress. In `external` mode it does **not** publish host ports or take 80/443 from DockerProxy.
+The separate router must join `fight-local-ingress` and forward Fight HTTP/TLS to its supplier;
+see [external-proxy integration](docs/engineering/LOCAL_INGRESS.md#external-proxy-front-door) and
+DockerProxy's own README for its installation and DirectMeds integration.
+
+If you already enrolled custom domains, start their DNS service separately with `./bin/local-dns up`.
+An enrolled main checkout also selects shared ingress with plain `./bin/up`; the explicit flag above
+makes the startup mode clear. Use the verified URL printed by application startup. A healthy proxy
+alone does not mean the application is running.
+
+### Database and validation
+
+After starting the application, apply migrations:
+
+```sh
 ./bin/database migrate
 ```
 
-For an unenrolled checkout, the default HTTPS address is **https://localhost:18443**. Explicit
-[local-domain enrollment](docs/engineering/LOCAL_DOMAINS.md) selects a separately prepared shared
-HTTPS origin. Use the verified URL reported by startup. TLS setup changes local trust only through
-explicit enrollment; ordinary startup does not install trust or generate certificates.
+A Docker reset that removed database volumes also removed their data; migrations recreate schema,
+not lost records. Restore any needed data from backups separately.
 
 Prepare private metadata, then run the complete gate:
 
