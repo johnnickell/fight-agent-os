@@ -62,6 +62,16 @@ Read-only engineering skills are available locally: [audit](audit/SKILL.md) for 
 boundaries, and [adopt](adopt/SKILL.md) for project comparisons. [Fix](fix/SKILL.md) diagnoses bugs and prepares
 a tracking handoff; `work` owns repair. None substitutes for independent `review`.
 
+The local Pi suite also provides [what](what/SKILL.md) to re-explain a confusing answer,
+[ask](ask/SKILL.md) for grounded project questions, [ci](ci/SKILL.md) for build diagnosis,
+[handoff](handoff/SKILL.md) for concise continuation, [learn](learn/SKILL.md) for lessons, and
+[simplify](simplify/SKILL.md) for scoped code, writing and test cleanup proposals. Plain-language output is
+always expected; `what` is a repair when an answer misses that standard. Simplify selects inspection and hands
+already-authorized source changes to Work. These skills live only in this repository's `.pi/skills/`;
+consumer repositories receive guidance, not copied skills or new global installations. Reload skill discovery
+and restart an installed Harness only at a safe session boundary after deliberately updating its source;
+updating Markdown alone does not update a running extension's recognized skill list.
+
 [Shared quality checks](../../docs/engineering/QUALITY.md) help `work` catch weak tests while writing them and
 keep directly affected docs accurate with detail consulted on demand. `review` owns the detailed architecture,
 code, test, instruction and README/CHANGELOG assessment; `audit` applies it to its declared sample; `architecture` identifies contract and documentation

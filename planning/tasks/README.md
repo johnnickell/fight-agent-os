@@ -594,4 +594,5 @@
 | [TASK-00589](00589-TASK.md) | Register local project and task domains across installed harness consumers | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | done | [TICKET-00138](../tickets/00138-TICKET.md) |
 | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | done | [TICKET-00139](../tickets/00139-TICKET.md) |
+| [TASK-00592](00592-TASK.md) | Add clear-answer and simplification skills with consistent testing guidance | done | — |
 <!-- /planning:records -->

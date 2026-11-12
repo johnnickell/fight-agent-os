@@ -43,6 +43,12 @@ come from the specified order, not generation timing. These are not byte-identic
 
 ## Reports and policy
 
+The required policy is now 100% unit-only line coverage of owned unit-testable behavior under
+[engineering standards](STANDARDS.md#tests). The implementation described below still gates combined
+Domain/Application coverage and reports Unit attribution; it does not yet enforce that new requirement.
+A combined pass must not be reported as unit-only compliance. This guidance rollout changes no coverage
+algorithm, suite or dependency setup.
+
 One execution writes ignored `.runs/build/reports/backend/coverage.php`, `clover.xml`, `junit.xml`, `summary.json`,
 `domain-application.json`, and `adapter.json`.
 Old reports are removed before execution. A failed phase is incomplete even if PHPUnit emitted report files;
@@ -66,7 +72,7 @@ raw source denominator, including the explicitly classified non-behavioral paths
 
 `scripts/backend_coverage.php` enforces 100% meaningful Domain/Application **line** coverage. It rejects an empty
 required denominator or an omitted PHP source file. PHPUnit includes unexecuted source and disables inline
-coverage-ignore annotations. Adapter behavior targets 100% where practical: every remaining gap stays in the
+coverage-ignore annotations. The current Adapter report is advisory rather than a 100% gate: every remaining gap stays in the
 Adapter denominator and is reported, not silently excluded or represented as 100%. The TASK records the current
 capability measurements and limits for independent assessment. Branch/path coverage is not collected by this
 phase; a line percentage does not prove branch completeness or the asserted outcome.

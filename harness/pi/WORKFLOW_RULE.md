@@ -5,6 +5,12 @@ metadata, symbols or graph results, then read the needed files directly. Load go
 instructions directly. Follow native truncation and continuation guidance. No enrollment, screening receipt,
 evaluator credential or provider preflight is required. Keep credentials and private data out of outputs.
 
+Write human-facing replies, plans, reports and PR descriptions in plain language: state the answer first,
+use familiar words, explain necessary technical terms and remove repetition. Preserve facts, uncertainty,
+requirements and exact commands. Check the wording before sending; no separate rewriting agent is required.
+`what`, `ask`, `ci` and `simplify` select inspection; `handoff` and `learn` select scratch work. None selects
+source repair or independent acceptance. An authorized cleanup uses the target's normal Work selection.
+
 ## Session-local workflow
 
 Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other installed skill

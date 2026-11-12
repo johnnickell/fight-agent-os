@@ -654,4 +654,5 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00589](00589-TASK.md) | Register local project and task domains across installed harness consumers | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | done | — | [PR #257](https://github.com/johnnickell/fight-agent-os/pull/257) |
 | — | [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | [TICKET-00138 — Serve browser journeys from root URLs](../tickets/00138-TICKET.md) | done | — | [PR #264](https://github.com/johnnickell/fight-agent-os/pull/264) |
 | — | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | [TICKET-00139 — Reconcile JSON-managed authority and access defaults](../tickets/00139-TICKET.md) | done | — | [PR #263](https://github.com/johnnickell/fight-agent-os/pull/263) |
+| — | [TASK-00592](00592-TASK.md) | Add clear-answer and simplification skills with consistent testing guidance | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
