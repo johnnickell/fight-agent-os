@@ -32,7 +32,8 @@ final class InstallationManagedPolicyTest extends TestCase
             'DELETE_SESSIONS', 'READ_ROLES', 'CREATE_ROLES', 'UPDATE_ROLES', 'DELETE_ROLES',
             'READ_PERMISSIONS', 'MANAGE_ROLE_PERMISSIONS', 'READ_SWAGGER'
         ];
-        $catalog = [...$expected, 'READ_PROJECTS', 'REGISTER_PROJECTS', 'GENERATE_REFERENCE_IDS'];
+        $references = [...$expected, 'READ_PROJECTS', 'REGISTER_PROJECTS', 'GENERATE_REFERENCE_IDS'];
+        $catalog = [...$references, 'READ_LOGS', 'EXPORT_LOGS', 'RESTORE_LOG_ARCHIVES', 'DOWNLOAD_LOG_ARCHIVES'];
         self::assertSame($catalog, array_values($names));
         $safe = [
             'VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS',
@@ -51,11 +52,11 @@ final class InstallationManagedPolicyTest extends TestCase
             array_map($toName, $roles[0]->getPermissionIds())
         );
         self::assertSame($catalog, array_map($toName, $roles[1]->getPermissionIds()));
-        self::assertSame($catalog, array_map($toName, $policy->getReferencedPermissionIds()));
+        self::assertSame($references, array_map($toName, $policy->getReferencedPermissionIds()));
         self::assertSame($policy->toArray(), (new JsonManagedPolicy())->load()->toArray());
         // Freeze the once-generated identity mapping as well as the separately asserted authority rules.
         self::assertSame(
-            '6ca2bfcf0eb36dd5f089153df489a1e4af480802f34010ba78fa4a0a1369681d',
+            '9265a3f7f27293968e58b781b2aaa0c2632218c84a9e83992b6b7f1a87c3d021',
             hash('sha256', json_encode($policy->toArray(), JSON_THROW_ON_ERROR))
         );
     }
