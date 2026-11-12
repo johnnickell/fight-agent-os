@@ -13,6 +13,7 @@ jobs:
       DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
       TEST_DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
       TEST_DATABASE_ALLOWED_HOST: 127.0.0.1
+      BROWSER_SMOKE_NATIVE: '1'
     steps:
       - uses: actions/checkout@v5
       - name: Set up native PHP and coverage
@@ -58,8 +59,20 @@ jobs:
           CREATE ROLE agent_os_test LOGIN PASSWORD 'agent_os_test_ci' NOSUPERUSER NOCREATEDB NOCREATEROLE;
           SQL
           sudo -u postgres createdb --owner=agent_os_test agent_os_test
+      - name: Prepare disposable browser TLS and catcher prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes libnss3-tools openssl
+          docker run --detach --name browser-smoke-mailcatcher \
+            --publish 127.0.0.1:1025:1025 --publish 127.0.0.1:8025:8025 \
+            --read-only --tmpfs /data:rw,nosuid,noexec,size=64m --tmpfs /tmp:rw,nosuid,noexec,size=16m \
+            --env MP_DATABASE=/data/mailpit.db --env MP_DISABLE_VERSION_CHECK=true \
+            axllent/mailpit:v1.27.10@sha256:b1f1be18af530d939a11ee8820b379e0c88eeec204d904bfad68862adced3a5a
       - name: Run the sole canonical gate
         run: php scripts/build.php
+      - name: Remove disposable browser catcher
+        if: always()
+        run: docker rm --force browser-smoke-mailcatcher
       - name: Retain gate receipts
         if: always()
         uses: actions/upload-artifact@v4
@@ -69,6 +82,7 @@ jobs:
           path: |
             .runs/build/[0-9]*/*.json
             .runs/build/[0-9]*/*.log
+            .runs/build/reports/browser-smoke/summary.json
             .runs/build/reports/backend/*.json
             .runs/build/reports/backend/junit.xml
             .runs/build/reports/client/coverage/coverage-summary.json

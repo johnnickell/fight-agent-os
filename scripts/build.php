@@ -337,11 +337,16 @@ try {
             throw new RuntimeException('Build failed during '.$name.'.');
         }
     }
+    $exitCode = $execute('Critical browser smoke (HTTPS continuity)', ['php', 'scripts/browser_smoke.php'], $root);
+    if ($exitCode !== 0) {
+        throw new RuntimeException('Build failed during critical browser smoke.');
+    }
     // Counts, coverage and explicit exclusions remain in the owning tools' reports.
     $reports = [
         'backend'  => '.runs/build/reports/backend/summary.json',
         'frontend' => '.runs/build/reports/client/coverage/coverage-summary.json',
-        'catalog'  => '.runs/build/reports/client/catalog-evidence/receipt.json'
+        'catalog'  => '.runs/build/reports/client/catalog-evidence/receipt.json',
+        'browser'  => '.runs/build/reports/browser-smoke/summary.json'
     ];
     foreach ($reports as $name => $path) {
         $bytes = file_get_contents($root.'/'.$path);

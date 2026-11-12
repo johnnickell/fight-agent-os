@@ -114,6 +114,10 @@ Do not replace dependencies beneath a live gate. Missing/stale Compose configura
 fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
+Critical browser smoke also requires the selected project's initially empty disposable Mailpit and the CLI image's
+OpenSSL/NSS `certutil`. Native CI explicitly prepares its own pinned catcher and NSS tools before acceptance.
+The fixture's private CA does not enroll workstation trust or replace TASK-00063 shared-ingress qualification.
+
 The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
@@ -166,7 +170,9 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
    checks, and static catalog captures/resource checks. Only the capture phase overlaps work: the two widths
    of one story use separate contexts in one browser, then both close before the next story. No backend,
    Vitest, Harness or browser-story phase overlaps another phase or a database reset.
-9. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
+9. [Critical browser smoke](BROWSER_SMOKE.md): five isolated real-TLS platform scenarios, guarded test-schema
+   and catcher cleanup, ephemeral browser-only CA trust, credential-safe diagnostics and focused source stability.
+10. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
 Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).

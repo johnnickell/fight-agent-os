@@ -11,7 +11,7 @@ COPY --from=browser /ms-playwright/chromium_headless_shell-1228 /ms-playwright/c
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && apt-get update \
     && apt-get install --no-install-recommends --yes ca-certificates git libpq-dev python3 unzip \
-        libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libdbus-1-3 \
+        libnss3 libnss3-tools openssl libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libdbus-1-3 \
         libx11-6 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxrandr2 \
         libgbm1 libxcb1 libxkbcommon0 libasound2 libpango-1.0-0 libcairo2 \
         fonts-liberation fonts-noto-color-emoji \
