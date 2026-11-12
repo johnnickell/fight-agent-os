@@ -23,6 +23,7 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\CommandHandler\ReconcileManagedPolicyHandler;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\QueryHandler\PreviewManagedPolicyHandler;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\Service\ManagedPolicyPlanner;
+use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\Agent\Agent;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentCredentialId;
@@ -39,6 +40,8 @@ use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
+use Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole;
+use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -110,7 +113,7 @@ final class ManagedPolicyTest extends TestCase
         $this->connection->commit();
         self::assertSame([], $this->observedEvents());
         self::assertSame('0', (string) $this->connection->fetchOne('SELECT count(*) FROM permissions'));
-        self::assertSame(array_fill(0, 25, 'CREATE'), array_column($preview['plan']['permissions'], 'action'));
+        self::assertSame(array_fill(0, 29, 'CREATE'), array_column($preview['plan']['permissions'], 'action'));
         self::assertSame(['CREATE', 'CREATE'], array_column($preview['plan']['roles'], 'action'));
         $this->runConsole($console, 'apply');
         self::assertCount(1, $this->events);
@@ -118,12 +121,72 @@ final class ManagedPolicyTest extends TestCase
         $this->assertExactPolicy();
         $state = $this->snapshot();
         $preview = $this->runConsole($console, 'preview');
-        self::assertSame(array_fill(0, 25, 'UNCHANGED'), array_column($preview['plan']['permissions'], 'action'));
+        self::assertSame(array_fill(0, 29, 'UNCHANGED'), array_column($preview['plan']['permissions'], 'action'));
         self::assertSame(['UNCHANGED', 'UNCHANGED'], array_column($preview['plan']['roles'], 'action'));
         $this->runConsole($console, 'apply');
         self::assertSame($state, $this->snapshot());
         // The tagged handler emits a completed reconciliation event even on a no-op.
         self::assertCount(2, $this->events);
+    }
+
+    /**
+     * Adds log authority only through explicit reconciliation while preserving prior identities and assignments
+     */
+    public function testLogCatalogUpgrade(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $permissions = json_decode(
+            (string) file_get_contents($root.'/database/seeds/permissions.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        );
+        $roles = json_decode(
+            (string) file_get_contents($root.'/database/seeds/roles.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        );
+        $previous = InstallationManagedPolicy::create(array_slice($permissions, 0, 25), $roles);
+        self::assertSame(
+            '6ca2bfcf0eb36dd5f089153df489a1e4af480802f34010ba78fa4a0a1369681d',
+            hash('sha256', json_encode($previous->toArray(), JSON_THROW_ON_ERROR))
+        );
+        $this->runConsole($this->console($previous), 'apply');
+        $user = User::invite(UserId::generate(), EmailAddress::fromString('ordinary@example.test'), $this->now());
+        $user->assignRole(RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID), $this->now());
+        $this->unitOfWork->commitTransactional(function () use ($user): void {
+            $this->users->add($user);
+        });
+        $before = $this->snapshot();
+        $user = $this->users->getById($user->getId());
+        $ordinary = $this->roles->getById(RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID));
+        $console = $this->console();
+        $this->connection->beginTransaction();
+        $this->connection->executeStatement('SET TRANSACTION READ ONLY');
+        $preview = $this->runConsole($console, 'preview');
+        $this->connection->commit();
+        self::assertSame($before, $this->snapshot());
+        $actions = array_column($preview['plan']['permissions'], 'action', 'name');
+        self::assertSame([
+            'DOWNLOAD_LOG_ARCHIVES' => 'CREATE',
+            'EXPORT_LOGS'           => 'CREATE',
+            'READ_LOGS'             => 'CREATE',
+            'RESTORE_LOG_ARCHIVES'  => 'CREATE'
+        ], array_filter($actions, static fn(string $action): bool => $action !== 'UNCHANGED'));
+        self::assertSame(['RECONCILE', 'UNCHANGED'], array_column($preview['plan']['roles'], 'action'));
+        foreach (array_keys(array_filter($actions, static fn(string $action): bool => $action === 'CREATE')) as $name) {
+            self::assertNull($this->permissions->getByName(PermissionName::fromString($name)));
+        }
+        $this->runConsole($console, 'apply');
+        $this->assertExactPolicy();
+        $after = $this->snapshot();
+        self::assertSame($before['permissions'], array_values(array_filter(
+            $after['permissions'],
+            static fn(array $row): bool => isset(array_flip(array_column($before['permissions'], 'id'))[$row['id']])
+        )));
+        self::assertEquals($ordinary, $this->roles->getById($ordinary->getId()));
+        self::assertEquals($user, $this->users->getById($user->getId()));
+        $this->runConsole($console, 'apply');
+        self::assertSame($after, $this->snapshot());
     }
 
     /**
@@ -159,7 +222,7 @@ final class ManagedPolicyTest extends TestCase
         $console = $this->console(InstallationManagedPolicy::create($permissions, $roles));
         $this->runConsole($console, 'apply');
         $super = $this->roles->getById(RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID));
-        self::assertCount(26, $super->getPermissionIds());
+        self::assertCount(30, $super->getPermissionIds());
         self::assertTrue($super->hasPermission($future));
         self::assertCount(3, $this->roles->getById(RoleId::fromString(
             InstallationManagedPolicy::USER_ROLE_ID
@@ -178,7 +241,8 @@ final class ManagedPolicyTest extends TestCase
     /**
      * Repairs supported managed drift while preserving unrelated custom authority
      */
-    public function testDriftRepairAndObsoleteRemoval(): void
+    #[DataProvider('protectedPermissions')]
+    public function testDriftRepairAndObsoleteRemoval(string $name): void
     {
         $console = $this->console();
         $this->runConsole($console, 'apply');
@@ -190,20 +254,20 @@ final class ManagedPolicyTest extends TestCase
             [$custom->getId()],
             $this->now()
         );
-        $oldRole = Role::defineManaged(
+        $old = Role::defineManaged(
             RoleId::generate(),
             RoleName::fromString('ROLE_OLD'),
             [$obsolete->getId()],
             $this->now()
         );
-        $this->unitOfWork->commitTransactional(function () use ($custom, $customRole, $obsolete, $oldRole): void {
+        $this->unitOfWork->commitTransactional(function () use ($custom, $customRole, $obsolete, $old, $name): void {
             $this->permissions->add($custom);
             $this->permissions->add($obsolete);
             $this->roles->add($customRole);
-            $this->roles->add($oldRole);
-            $swagger = $this->permissions->getByName(PermissionName::fromString('READ_SWAGGER'));
-            self::assertTrue($this->permissions->replace($swagger, $swagger->reconcileManaged(
-                PermissionName::fromString('OLD_SWAGGER'),
+            $this->roles->add($old);
+            $protected = $this->permissions->getByName(PermissionName::fromString($name));
+            self::assertTrue($this->permissions->replace($protected, $protected->reconcileManaged(
+                PermissionName::fromString('OLD_PROTECTED'),
                 PermissionTier::ADMIN_SAFE,
                 $this->now()->modify('+1 second')
             )));
@@ -215,14 +279,14 @@ final class ManagedPolicyTest extends TestCase
             )));
         });
         $plan = $this->runConsole($console, 'preview')['plan'];
-        self::assertSame('RECONCILE', array_column($plan['permissions'], 'action', 'name')['READ_SWAGGER']);
+        self::assertSame('RECONCILE', array_column($plan['permissions'], 'action', 'name')[$name]);
         self::assertSame('RECONCILE', array_column($plan['roles'], 'action', 'name')['ROLE_USER']);
         self::assertSame('REMOVE', array_column($plan['permissions'], 'action', 'name')['OBSOLETE']);
         self::assertSame('REMOVE', array_column($plan['roles'], 'action', 'name')['ROLE_OLD']);
         $this->runConsole($console, 'apply');
         $this->assertExactPolicy();
         self::assertNull($this->permissions->getById($obsolete->getId()));
-        self::assertNull($this->roles->getById($oldRole->getId()));
+        self::assertNull($this->roles->getById($old->getId()));
         self::assertEquals($custom, $this->permissions->getById($custom->getId()));
         $preserved = $this->roles->getById($customRole->getId());
         self::assertFalse($preserved->isManaged());
@@ -408,23 +472,66 @@ final class ManagedPolicyTest extends TestCase
     }
 
     /**
-     * Keeps Swagger authority out of custom Roles and direct Agent assignments
+     * Keeps protected catalog authority out of custom Roles and direct Agent assignments
      */
-    public function testSwaggerCannotBeDelegated(): void
+    #[DataProvider('protectedPermissions')]
+    public function testProtectedPermissionCannotBeDelegated(string $name): void
     {
         $this->runConsole($this->console(), 'apply');
-        $swagger = $this->permissions->getByName(PermissionName::fromString('READ_SWAGGER'));
+        $protected = $this->permissions->getByName(PermissionName::fromString($name));
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('protected-log-fixture'),
+            AgentCredentialId::generate(),
+            'synthetic-envelope',
+            $this->now()
+        );
+        $this->unitOfWork->commitTransactional(function () use ($agent): void {
+            $this->agents->add($agent);
+        });
+        $agent = $this->agents->getById($agent->getId());
+        $this->unitOfWork->commitTransactional(function () use ($agent, $protected): void {
+            self::assertFalse($this->agents->replacePermissionAssignments(
+                $agent,
+                $agent->grantPermission($protected->getId(), $this->now()->modify('+1 second'))
+            ));
+        });
+        self::assertEquals($agent, $this->agents->getById($agent->getId()));
+        $custom = Role::define(RoleId::generate(), RoleName::fromString('ROLE_EMPTY_CUSTOM'), [], $this->now());
+        $this->unitOfWork->commitTransactional(function () use ($custom): void {
+            $this->roles->add($custom);
+        });
         $state = $this->snapshot();
+        $clock = $this->createStub(Clock::class);
+        $clock->method('now')->willReturn($this->now()->modify('+1 second'));
+        $router = new InMemoryCommandRouter();
+        $router->registerHandler(GrantPermissionToCustomRole::class, new GrantPermissionToCustomRoleHandler(
+            $this->roles,
+            $this->permissions,
+            $clock,
+            $this->unitOfWork,
+            $this->createStub(EventDispatcher::class)
+        ));
+        try {
+            (new RoutingCommandBus($router))->execute(new GrantPermissionToCustomRole(
+                UserId::generate(),
+                $custom->getId(),
+                $protected->getId()
+            ));
+            self::fail('Package delegation must reject protected authority.');
+        } catch (CustomRoleException) {
+            self::assertSame($state, $this->snapshot());
+        }
         $this->connection->beginTransaction();
         try {
-            self::assertFalse($this->agents->validatePermissionAssignments([$swagger]));
+            self::assertFalse($this->agents->validatePermissionAssignments([$protected]));
             $this->roles->add(Role::define(
                 RoleId::generate(),
                 RoleName::fromString('ROLE_CUSTOM'),
-                [$swagger->getId()],
+                [$protected->getId()],
                 $this->now()
             ));
-            self::fail('A custom Role must not hold protected Swagger authority.');
+            self::fail('A custom Role must not hold protected authority.');
         } catch (\App\Adapter\Persistence\PersistenceConflict $failure) {
             self::assertSame('Role permission membership is not authoritative.', $failure->getMessage());
         } finally {
@@ -451,6 +558,19 @@ final class ManagedPolicyTest extends TestCase
             self::assertInstanceOf(CommandFailedEvent::class, $this->events[1]);
         } finally {
             $other->close();
+        }
+    }
+
+    /**
+     * Supplies protected capabilities including the unchanged Swagger boundary
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function protectedPermissions(): iterable
+    {
+        $names = ['READ_SWAGGER', 'READ_LOGS', 'EXPORT_LOGS', 'RESTORE_LOG_ARCHIVES', 'DOWNLOAD_LOG_ARCHIVES'];
+        foreach ($names as $name) {
+            yield $name => [$name];
         }
     }
 
@@ -557,7 +677,7 @@ final class ManagedPolicyTest extends TestCase
     private function assertExactPolicy(): void
     {
         $policy = (new JsonManagedPolicy())->load();
-        self::assertCount(25, $this->permissions->getManaged());
+        self::assertCount(29, $this->permissions->getManaged());
         self::assertCount(2, $this->roles->getManaged());
         foreach ($policy->getPermissions() as $definition) {
             $actual = $this->permissions->getById($definition->getId());

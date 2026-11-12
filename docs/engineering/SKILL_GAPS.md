@@ -167,3 +167,23 @@ contract/test and affected-document guidance, consulting detail on demand instea
 matrix. The same follow-up broadens local QA to adversarial API, CLI, library/worker and executable-instruction
 scenarios, bounded disposable probes and inspected visual comparisons. These are local requirements, not claims
 that the four upstream skills supply a QA workflow. [QA standards](QA.md) own applicability and evidence.
+
+## Clear answers and focused simplification — 2026-11-12
+
+[TASK-00592](../../planning/tasks/00592-TASK.md) implements the maintainer-approved additions: `what`, `ask`,
+`ci`, `handoff`, `learn` and `simplify`, with shared plain-language output and meaningful test guidance.
+This supersedes the earlier Ask deferral for this named need. Learn teaches the human; it does not implement
+Factory Self-Learn, telemetry analysis or automatic memory/policy updates. CI diagnoses failures and retains
+Fix/Work ownership of tracked repairs. Simplify shares QUALITY.md rather than duplicating audit criteria.
+
+A prior local cheat sheet and skill experiment supplied comparison examples only. No Factory launchers,
+provider policy, clinical rules, report database, global installation or automatic lesson workspace is imported.
+The earlier plain-language approach is adapted into the existing quality owner and Pi workflow instruction.
+Matt Pocock's wait-what inspired an original small explanation skill; no upstream text is copied.
+The source URL is recorded in that skill. The user-supplied testing references are linked in QUALITY.md.
+
+The approved change requires 100% Unit-only line coverage across participating projects. Existing combined
+or absent gates remain explicitly identified gaps; this rollout does not rewrite application tests or gates.
+The approximately 1000:100:10 suite balance guides review, not mechanical deletion. Focused application
+mutation analysis is allowed; tests proving that Deptrac/PHPStan/build machinery work remain excluded.
+Existing source-build cache and validation-simplicity changes are retained without new repeated checks.

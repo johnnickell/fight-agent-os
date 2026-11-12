@@ -13,6 +13,7 @@ match or a green suite alone does not establish a defect or correctness.
 | Review | Own the detailed architecture, code, test and documentation assessment of the changed scope and directly affected contracts. Use existing review IDs and report corrections without applying them. |
 | Audit | Apply relevant checks to the named boundary, including its tests and instructions/docs; report sampled files, paths and unchecked areas. No automatic whole-repository sweep. |
 | Architecture | Use contract, duplication and instruction questions to compare design options and their verification/documentation impact. Stop at the proposal. |
+| Simplify | Find scoped code, writing and test simplifications; show retained protection and hand authorized edits to Work. |
 | Writing for Agents | Reconcile instructions within the authorized document scope; preserve policy authority and route unresolved decisions. |
 | QA | After review, challenge observable behavior through the applicable modes in [QA standards](QA.md). Use contract-based expectations; hand confirmed defects to work without repairing source. |
 
@@ -49,7 +50,47 @@ useful contract remains or equivalent meaningful coverage is demonstrated. If re
 uniquely required coverage, add the replacement in the same change; record gaps honestly. Do not invent a route,
 public API, wrapper or abstraction to satisfy coverage. Preserve the existing exclusions for product tests of
 tooling/configuration and the regression-first rule for confirmed bugs. These reasoning checks do not require
-mutation tooling, deliberately seeded failures or tests of tests.
+mutation tooling. Do not write product tests proving that Deptrac, PHPStan, wrappers, build scripts or other
+quality tools detect seeded failures. Focused mutation analysis of application code is allowed: it assesses
+whether application assertions detect changed behavior. It is not a new mandatory suite or a reason to install
+tools automatically. Measure its runtime; inspect surviving mutations for equivalent behavior and missing
+assertions rather than treating a score as a deletion list.
+
+## Test shape and suite balance
+
+Require 100% unit-test line coverage of owned unit-testable production behavior, measured from Unit tests alone.
+Keep the source denominator and justified non-behavioral/generated/vendor exclusions explicit. Include unexecuted
+source; do not exclude difficult behavior or simple DTOs to reach the target. Missing measurement or a lower
+result is an unmet requirement, not a pass. Report branch coverage separately where available; line coverage
+does not prove all decisions or assertions. Record existing gate limitations honestly and correct them through
+bounded work; changing guidance does not establish that a current gate enforces the requirement.
+
+Prefer one behavior, clear setup, one execution, and one assertion per test. A few related assertions may describe
+one outcome more clearly; do not bundle unrelated predicates merely to count one assertion. Use the assertion
+that best communicates the expected result and failure: `self::assertSame(20, $total)` for an exact value,
+`self::assertTrue($allowed)` for a Boolean. Keep expected values independent of the implementation. Separate
+phases with whitespace or helpful names; mandatory Given/When/Then comments would add needless noise.
+
+Commands, Events and Queries may be immutable DTOs and still define important application contracts. Focused
+tests can verify field assignment, defaults, validation or transformations. Do not delete these classes or
+exclude their executable behavior merely because they are small. Avoid repeating tests of PHP's own language
+guarantees. Required Fight docblocks remain in force during comment cleanup.
+
+Aim for roughly 1,000 Unit cases to 100 Integration cases to 10 Functional cases. This is a review guide, not a
+coverage ratio or a hard count gate. Count expanded runnable cases consistently, including data-provider cases;
+report skips separately and include real PostgreSQL contracts with Integration regardless of folder labels.
+Unit means isolated behavior without real database, filesystem, network or process dependencies. Integration
+checks real boundaries that could break. Functional checks critical complete journeys and useful smoke behavior.
+Do not pad Unit counts, rename suites or remove unique protection to meet the ratio; small projects and justified
+risks can differ. Measure runtime as well as counts, and move repeated behavior checks to the cheapest boundary
+that actually proves them. Preserve security failures, concurrency and external-contract checks when needed.
+
+These are practical guidelines, informed by
+[Given–When–Then](https://martinfowler.com/bliki/GivenWhenThen.html),
+[Microsoft's unit-testing guidance](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices),
+the [Clean Code summary](https://gist.github.com/wojteklu/73c6914cc446146b8b533c0988cf8d29), and
+[risk-focused test design](https://www.ministryoftesting.com/insights/designing-tests-what-s-the-difference-between-a-good-test-and-a-bad-test).
+They do not import every recommendation from those sources or weaken the required coverage percentage.
 
 ## Code quality with evidence
 
@@ -98,6 +139,21 @@ question and decision owner. Remove stale guidance only with evidence that its r
 leave historical decision records and approvals intact. Explain substantive removals in the change evidence.
 
 ## Human-facing documentation
+
+### Plain-language output
+
+Apply this to every human-facing reply, plan, report, lesson, handoff and PR description, as well as documentation.
+State the result or requested action first. Use familiar words and specific nouns; explain necessary technical
+terms when first used. Prefer short sentences and one idea at a time without rigid word counts or forced tense.
+Remove repeated framing, inflated claims and details that do not help the reader decide or act. Keep enough
+context to understand why the result matters. A short answer may be complete; do not manufacture a next action.
+
+Preserve facts, uncertainty, decisions, requirement strength, project vocabulary, code, commands, paths and quoted
+evidence. Name factual corrections explicitly. The author checks the wording before sending; do not add a second
+agent or an automatic rewriting pipeline. The [what skill](../../.pi/skills/what/SKILL.md) repairs an answer that
+did not land. Agent instructions still need precise conditions and authority boundaries, expressed readably.
+
+### Document accuracy
 
 Check meaning and accuracy before polishing prose. Follow the target's established README and CHANGELOG format;
 update documents affected by the authorized change, not every document in the repository.

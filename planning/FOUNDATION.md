@@ -28,7 +28,7 @@ Fight Common and Fight Access Control retain package ownership. The
 [shared architecture contract](../docs/engineering/STANDARDS.md#architecture), amended by EPIC-00023, specifies
 the aggregate-first Project-owned target; this capability snapshot does not claim source conformity or supplier
 availability. Design architecture/interfaces for human maintainers and keep actual corrections with their owners.
-Aim for meaningful 100% unit coverage without imposing TDD on ordinary feature work
+Require meaningful 100% unit-only line coverage without imposing TDD on ordinary feature work
 or adding tests of generated/configuration/tooling text.
 
 The first managed execution proof remains one approved TASK through Team Lead and Software Engineer to durable

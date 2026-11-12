@@ -32,8 +32,8 @@ final class ManagedCatalogTest extends TestCase
         ];
         $policy = InstallationManagedPolicy::create($permissions, $roles);
         self::assertCount(3, $policy->getRoles()[0]->getPermissionIds());
-        self::assertCount(26, $policy->getRoles()[1]->getPermissionIds());
-        self::assertSame($future, $policy->getRoles()[1]->getPermissionIds()[25]->toString());
+        self::assertCount(30, $policy->getRoles()[1]->getPermissionIds());
+        self::assertSame($future, $policy->getRoles()[1]->getPermissionIds()[29]->toString());
         self::assertSame([], $policy->getRoles()[2]->getPermissionIds());
         self::assertCount(25, $policy->getReferencedPermissionIds());
     }
@@ -47,7 +47,7 @@ final class ManagedCatalogTest extends TestCase
         [$permissions, $roles] = self::catalogs();
         switch ($defect) {
             case 'missing permission':
-                array_pop($permissions);
+                array_shift($permissions);
                 break;
             case 'missing role':
                 array_pop($roles);

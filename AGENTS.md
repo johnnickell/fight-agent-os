@@ -11,6 +11,17 @@ This routing path does not require reading README, architecture, full project co
 
 ## Project guidance
 
+Write every human-facing answer, plan, report and PR description in plain language. Follow the
+[shared writing rules](docs/engineering/QUALITY.md#plain-language-output): answer first, explain necessary
+technical terms, remove repetition, and preserve facts, qualifications and exact commands.
+
+Keep verification proportional to the changed behavior. Each added check must cover a concrete risk that
+existing checks do not already cover. Do not duplicate dependency installation, validation, test suites or
+release lanes for unchanged inputs. Reuse qualifying build evidence; run dependency preparation only on a
+cache miss. Validate tooling with its owning commands, without adding tests of wrappers, checks or release
+machinery. Investigate flaky failures; do not hide them with retries or accept a warm rerun as proof that a
+clean build works. Expand release certification only for an explicitly approved compatibility requirement.
+
 For execution or substantive planning changes, load the applicable guidance below. The read-only routing
 path above takes precedence over broad orientation reads; it does not waive engineering or delivery rules.
 
@@ -43,7 +54,8 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Keep PHP properties camelCase and HTTP JSON/database fields snake_case; follow Fight helper conventions where available
 - Write testable code, then tests. For bugs, reproduce and add a failing regression test before repairing
 - Test owned application behavior and important integration contracts; never add product-suite tests for architecture, dependency rules, container/configuration wiring, migrations, generated files, wrappers, build/planning/static-analysis mechanisms, or test infrastructure
-- Validate tooling and infrastructure directly with their owning tools; never test that tests or quality tools detect deliberately seeded failures
+- Validate tooling and infrastructure with their owning tools; do not write product tests proving that Deptrac, PHPStan or other quality tools work. Focused mutation analysis of application behavior is allowed
+- Require 100% unit-test line coverage of owned unit-testable production behavior, measured from Unit tests alone; follow [test quality and suite balance](docs/engineering/QUALITY.md#test-shape-and-suite-balance). Report enforcement gaps honestly rather than treating combined coverage as compliance
 - Use repository `./bin/*` Docker wrappers. Focus iteration, then run `./bin/build` normally; it freshly validates planning and automatically reuses verified application evidence when build inputs match. Planning records do not invalidate application reuse; governing instructions, code, dependencies and artifacts remain covered. Use `--force` for deliberate fresh execution; follow [gate evidence reuse](docs/engineering/EXECUTION.md#gate-evidence-reuse) for boundaries and evidence reporting
 - Surface warnings and incomplete verification. Do not label inherited receipts as fresh application evidence
 - Land closes accepted TASKs and applicable current Board/Roadmap/README/docs during delivery, validates the exact live PR and completes eligible owned local Git/Docker/storage cleanup. No persistent delivery markers/queue or routine post-merge planning maintenance; historical acceptance/publication remain evidence. Planning checks/refresh stay offline

@@ -464,7 +464,7 @@
 | [TASK-00459](00459-TASK.md) | Deliver captured logs to private search with truthful receipts | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
 | [TASK-00460](00460-TASK.md) | Deliver captured logs independently to verified archives | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
 | [TASK-00461](00461-TASK.md) | Provide private Loki ingestion with truthful receipt contracts | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
-| [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | done | [TICKET-00113](../tickets/00113-TICKET.md) |
 | [TASK-00463](00463-TASK.md) | Search current logs in the native workspace | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
 | [TASK-00464](00464-TASK.md) | Inspect exact diagnostic content and surrounding context | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
 | [TASK-00465](00465-TASK.md) | Follow live logs with bounded pause and recovery | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
@@ -594,4 +594,5 @@
 | [TASK-00589](00589-TASK.md) | Register local project and task domains across installed harness consumers | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00590](00590-TASK.md) | Cut over browser journeys and forward plans to root URLs | done | [TICKET-00138](../tickets/00138-TICKET.md) |
 | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | done | [TICKET-00139](../tickets/00139-TICKET.md) |
+| [TASK-00592](00592-TASK.md) | Add clear-answer and simplification skills with consistent testing guidance | done | — |
 <!-- /planning:records -->

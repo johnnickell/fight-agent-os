@@ -10,6 +10,7 @@ export const skillEffects = Object.freeze({
   adopt: 'inspect', 'design-review': 'inspect', grill: 'epic-planning', 'to-tickets': 'ticket-planning',
   'to-tasks': 'task-planning', wayfinder: 'map-planning', research: 'research', design: 'scratch',
   prototype: 'scratch', 'writing-for-agents': 'instructions', graphify: 'graph', release: 'release',
+  what: 'inspect', ask: 'inspect', ci: 'inspect', simplify: 'inspect', handoff: 'scratch', learn: 'scratch',
 });
 const resolvesCheckout = skill => skill === 'build' || skill === 'sync';
 const skillRole = skill => ({ work: 'engineer', review: 'reviewer', qa: 'qa', land: 'land', build: 'qa', sync: 'qa' })[skill] ?? 'reviewer';
