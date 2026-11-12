@@ -324,13 +324,17 @@ Use multiline docblocks with capitalized active-verb summaries and no terminal p
 
 Write testable behavior, then tests at the narrowest boundary that proves it. Prefer Domain/Application unit tests, Adapter integration tests, and functional HTTP tests as their contracts require. Cover meaningful success, rejection and failure outcomes, state changes and external effects where applicable; document why a category does not apply. Test the actual owned policy or important package integration contract, not just a mock's call sequence. An explicit mapper contract can be proven directly; end-to-end claims require a real interaction that reaches it. Do not add a test-only production route, a gratuitous whole-app harness or non-API presentation just to exercise a scoped failure. Keep existing smoke behavior intact.
 
-Product suites test owned application behavior and important integration contracts. They do not test architecture or dependency rules, container/configuration wiring, migrations, generated files, repository wrappers, build/planning/static-analysis mechanisms, test infrastructure, or upstream package behavior. Validate those concerns directly with their owning tools. Never add deliberately invalid fixtures merely to prove that a test or quality tool detects them. Do not test the tests.
+Product suites test owned application behavior and important integration contracts. They do not test architecture or dependency rules, container/configuration wiring, migrations, generated files, repository wrappers, build/planning/static-analysis mechanisms, test infrastructure, or upstream package behavior. Validate those concerns directly with their owning tools. Do not write product tests proving that Deptrac, PHPStan or other quality tools detect seeded failures. Focused mutation analysis of application behavior is allowed under [test quality guidance](QUALITY.md#tests-that-protect-contracts).
 
-Aim for 100% unit-test coverage of meaningful owned unit-testable behavior where practical. Report unit coverage
+Require 100% unit-test line coverage of owned unit-testable production behavior. Report unit coverage
 separately from integration/functional coverage, with denominator, driver availability and justified gaps; a combined
-suite percentage is not a unit-coverage result. The [backend coverage phase](BACKEND_TESTS.md) enforces 100%
+suite percentage is not a unit-coverage result. Follow [test shape and suite balance](QUALITY.md#test-shape-and-suite-balance).
+The current [backend coverage phase](BACKEND_TESTS.md) enforces 100%
 meaningful Domain/Application line coverage across one all-suite execution and reports unit attribution separately;
-the [canonical gate](BUILD.md) includes it once. Adapter 100% remains a practical target, with gaps visible.
+the [canonical gate](BUILD.md) includes it once. This combined gate does not yet enforce the new unit-only
+requirement. Its Adapter report also has no 100% gate; report these enforcement gaps and actual unit-only
+results explicitly. Unit-testable Adapter behavior remains within the required unit denominator; contracts
+that require real external systems retain meaningful Integration/Functional checks.
 Coverage remains a completeness aid, including Adapter behavior where practical. Report actual configured coverage and omissions without claiming that a percentage establishes correctness or protocol conformance. A covered line does not justify a test by itself: tests must assert an observable contract, outcome, or side effect. Exclude non-behavioral composition and generated code rather than manufacturing tests for percentages.
 
 For a bug, reproduce the behavior and make one regression test fail before repair when technically possible. Record why when it is not possible. Focused checks shorten the loop; only the repository canonical gate establishes complete local verification.
