@@ -128,6 +128,7 @@ services:
       - ./vendor:/app/vendor:ro
       - ./public:/app/public:ro
       - ./templates:/app/templates:ro
+      - ./resources:/app/resources:ro
       - ./var/client/build:/app/var/client/build:ro
       - ./var/openapi:/app/var/openapi:ro
       - ./var/validations:/app/var/validations:ro
