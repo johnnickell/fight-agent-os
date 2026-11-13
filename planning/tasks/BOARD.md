@@ -33,7 +33,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00278](00278-TASK.md) | Enforce current email-change authority | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
@@ -437,6 +436,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
+| — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-human | — | — |
 
 ## Needs Triage
 

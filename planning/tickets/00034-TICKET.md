@@ -52,7 +52,7 @@ model choices are explicit. Explorer favors measured speed/cost suitability; nev
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00248](../tasks/00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-agent |
+| [TASK-00248](../tasks/00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-human |
 | [TASK-00249](../tasks/00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info |
 | [TASK-00250](../tasks/00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info |
 <!-- /planning:children -->
