@@ -14,7 +14,7 @@ import sys
 import tempfile
 
 sys.dont_write_bytecode = True
-from resource_lifecycle.preparation import identity
+from resource_lifecycle.preparation import identity, prepare
 from resource_lifecycle.worktrunk import remove
 from resource_lifecycle.resources import Hold
 
@@ -62,7 +62,8 @@ def main():
                 call(['git', 'worktree', 'add', '-b', branch, checkout, fixture_oid])
                 project = identity(ROOT, checkout)
                 fixtures.append((checkout, project))
-                # Real wrapper config resolution, no legacy prepare/receipt/registration.
+                # This explicit qualification owns fixture-only secret setup, not shared enrollment.
+                prepare(ROOT, checkout, project, {'path': str(checkout), 'branch': branch}, initialize=True)
                 scoped(checkout, 'config', '--quiet')
                 docker('tag', main_image, project + '-web')
                 model = json.loads(scoped(checkout, '--profile', '*', 'config', '--format', 'json'))

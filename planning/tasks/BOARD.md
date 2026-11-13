@@ -27,7 +27,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 69 | [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
@@ -347,6 +346,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | Needed input or evidence | PR |
 |---|---|---|---|---|---|---|---|
+| 69 | [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | needs-info | — | Restore the separately operated shared ingress, then complete final runtime and canonical browser qualification | — |
 | — | [TASK-00206](00206-TASK.md) | Confirm and repair a direct hotfix | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00204](00204-TASK.md), [TASK-00142](00142-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00258](00258-TASK.md) | Qualify actual protected hotfix host and named-Agent session composition with supported provisioning and current-use admission | — |
 | — | [TASK-00207](00207-TASK.md) | Independently verify and hand off a hotfix PR | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00206](00206-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00316](00316-TASK.md) | Qualify complete contribution evidence and fresh independent hotfix review through the real protected publication path | — |
 | — | [TASK-00209](00209-TASK.md) | Offer a verified hotfix merge-back | [TICKET-00054 — Merge a verified hotfix back under one authorization](../tickets/00054-TICKET.md) | needs-info | [TASK-00207](00207-TASK.md), [TASK-00317](00317-TASK.md) | Qualify trusted native provider merge identity and configured-base inclusion for the exact accepted hotfix head | — |

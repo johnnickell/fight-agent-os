@@ -11,16 +11,14 @@ Do not expose this development stack or its mailbox to untrusted users.
 Use a private ignored `.env` in the intended checkout, never another worktree's secrets or database. Install
 locked dependencies and prepare browser/CSRF/access-token configuration using [README](../../README.md) and
 [access-token configuration](ACCESS_TOKENS.md). Keep independent cryptographically generated keys for each purpose.
-For an isolated TASK-00040 checkout, set these exact non-secret values (choose other unused ports/project names
-for another concurrent checkout):
+Use [the runtime guide](PLANNING_RUNTIME.md) for explicit service secrets and the selected registered
+worktree's deterministic project. Mailpit is now private, with no browser/host port. The old TASK-00040
+port overrides are superseded. Configure these non-secret values for the selected installation:
 
 ```dotenv
-COMPOSE_PROJECT_NAME=task-00040-invitation-email
-FIGHT_AGENT_OS_PORT=28040
-FIGHT_AGENT_OS_MAIL_PORT=28041
 APP_ENV=development
 APP_CREDENTIAL_DELIVERY_ADAPTER=catcher
-APP_ACTIVATION_ORIGIN=https://localhost:28443
+APP_ACTIVATION_ORIGIN=https://localhost:18443
 APP_ACTIVATION_PATH=/activate
 ```
 
@@ -84,6 +82,10 @@ no-send provider; `memory` is simulation only. `catcher` supports activation inv
 [password-reset mail](PASSWORD_RESET_EMAIL.md). Catcher mode now also requires `APP_PASSWORD_RESET_ORIGIN` and
 `APP_PASSWORD_RESET_PATH`; configure them before boot even when sending invitations only. Other credential
 purposes remain retryable and unsent until their own mapping is implemented.
+
+Runtime setup now copies configured keys into service-specific mounts; edit/rotate them explicitly as described
+in the runtime guide. The commands below retain delivery-specific historical examples; use the selected
+runtime wrapper, canonical origin and private Mailpit API, not the former published mailbox port.
 
 ## Start, send, run, inspect, clean
 

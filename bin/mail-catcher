@@ -4,11 +4,10 @@ cd "$(dirname "$0")/.."
 case "${1:-}" in
     up)
         ./bin/runtime docker compose --profile mail up --detach --no-deps mailcatcher
-        ./bin/runtime docker compose --profile mail port mailcatcher 8025
+        printf '%s\n' 'Mailpit is private to this installation; no host/browser port is published.'
         ;;
     status)
         ./bin/runtime docker compose --profile mail ps mailcatcher
-        ./bin/runtime docker compose --profile mail port mailcatcher 8025
         ;;
     clear)
         # Removing this service destroys its tmpfs mailbox; never touches application databases.

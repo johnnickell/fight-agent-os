@@ -26,7 +26,7 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/client coverage     # Scoped client unit/component coverage under .runs/build/reports/client/coverage/
 ./bin/client audit        # Optional live registry vulnerability report
 ./bin/up
-# Open http://localhost:18087/, or use the existing opt-in HTTPS setup below
+# Open the verified HTTPS URL from startup; HTTP always uses the existing Nginx/FPM path
 ./bin/build              # Complete canonical gate, including this frontend sequence
 ```
 

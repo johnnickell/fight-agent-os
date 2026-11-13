@@ -32,6 +32,9 @@ def environment():
         # Compose parse errors can quote private configuration. Do not echo them.
         raise ValueError("Compose configuration is invalid; inspect .env privately.")
     settings = json.loads(result.stdout)["services"]["https_php"]["environment"]
+    secrets_file = ROOT / 'var/runtime/secrets/application.json'
+    if secrets_file.is_file():
+        settings.update(json.loads(secrets_file.read_text()))
     key = settings.get("APP_CSRF_MAC_KEY", "")
     if not isinstance(key, str) or not re.fullmatch(r"(?:[0-9a-f]{2}){32,}", key):
         raise ValueError("Configure a valid independent APP_CSRF_MAC_KEY before HTTPS setup.")

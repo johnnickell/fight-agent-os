@@ -229,7 +229,8 @@ def allocate(safe, task, oid):
         creation_hooks(safe, checkout=checkout)
         from local_domain import ensure
         ensure(safe, safe, str(checkout), task)
-        prepare(safe, checkout, project, entry)
+        # Explicit qa up already owns disposable installation preparation.
+        prepare(safe, checkout, project, entry, initialize=True)
     except (Exception, KeyboardInterrupt):
         cleanup_failed(safe, {'path': str(checkout), 'task': task, 'revision': oid})
         raise

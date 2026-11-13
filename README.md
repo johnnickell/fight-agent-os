@@ -53,9 +53,13 @@ are not credentials. Follow [access-token configuration](docs/engineering/ACCESS
 [credential delivery](docs/engineering/CREDENTIAL_RECOVERY.md). Never commit secrets or reuse one key
 across these boundaries.
 
-Prepare dependencies and browser assets:
+Prepare service-specific mounted secrets, dependencies and browser assets. See the
+[Planning runtime guide](docs/engineering/PLANNING_RUNTIME.md) for schema-before-traffic startup,
+private storage, status, updates and backup/recovery. The `web` container is tooling only; all
+application traffic uses Nginx/PHP-FPM. Mailpit and SeaweedFS have no public or host ports.
 
 ```sh
+./bin/runtime setup
 ./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
@@ -150,11 +154,14 @@ alone does not mean the application is running.
 
 ### Database and validation
 
-After starting the application, apply migrations:
+Before starting application traffic, start the private database and apply reviewed migrations:
 
 ```sh
+./bin/database start
 ./bin/database migrate
 ```
+
+Run this before either startup sequence above. Startup checks migration currency but never changes schema.
 
 A Docker reset that removed database volumes also removed their data; migrations recreate schema,
 not lost records. Restore any needed data from backups separately.

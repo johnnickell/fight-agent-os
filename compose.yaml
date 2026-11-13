@@ -1,12 +1,21 @@
 services:
   web:
-    restart: unless-stopped
+    restart: "on-failure:3"
     build:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
     # Reap orphaned tool/browser children across repeated checks in this persistent service.
     init: true
-    command: php -S 0.0.0.0:8080 -t public scripts/serve.php
+    # Tooling only: HTTP uses the single Nginx/FPM path.
+    command: ["tail", "-f", "/dev/null"]
+    secrets:
+      - source: tooling
+        target: application
+    healthcheck:
+      test: ["CMD", "php", "--version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     # Explicit setup selects the checkout owner; unset preserves existing service identity.
     user: "${FIGHT_AGENT_OS_USER:-}"
     depends_on:
@@ -19,10 +28,7 @@ services:
       APP_ENV: ${APP_ENV-local}
       APP_DEBUG: ${APP_DEBUG-false}
       APP_SWAGGER_ALLOWED_ENVIRONMENTS: ${APP_SWAGGER_ALLOWED_ENVIRONMENTS:-}
-      APP_ACCESS_TOKEN_CONFIG: ${APP_ACCESS_TOKEN_CONFIG:-}
       APP_BROWSER_ORIGIN: ${APP_BROWSER_ORIGIN:-}
-      APP_CSRF_MAC_KEY: ${APP_CSRF_MAC_KEY:-}
-      APP_CREDENTIAL_DELIVERY_KEY: ${APP_CREDENTIAL_DELIVERY_KEY:-}
       APP_CREDENTIAL_DELIVERY_ADAPTER: ${APP_CREDENTIAL_DELIVERY_ADAPTER:-null}
       APP_INVITATION_RATE_WINDOW: ${APP_INVITATION_RATE_WINDOW:-60}
       APP_INVITATION_RATE_ISSUE_LIMIT: ${APP_INVITATION_RATE_ISSUE_LIMIT:-10}
@@ -35,16 +41,11 @@ services:
       APP_ACTIVATION_PATH: ${APP_ACTIVATION_PATH:-}
       APP_PASSWORD_RESET_ORIGIN: ${APP_PASSWORD_RESET_ORIGIN:-}
       APP_PASSWORD_RESET_PATH: ${APP_PASSWORD_RESET_PATH:-}
-      APP_ACTIVATION_RATE_KEY: ${APP_ACTIVATION_RATE_KEY:-}
-      APP_AUTH_RATE_KEY: ${APP_AUTH_RATE_KEY:-}
       APP_AUTH_NETWORK_LIMIT: ${APP_AUTH_NETWORK_LIMIT:-20}
       APP_AUTH_ENDPOINT_LIMIT: ${APP_AUTH_ENDPOINT_LIMIT:-300}
       APP_AUTH_TRANSPORT: ${APP_AUTH_TRANSPORT:-direct}
       APP_AUTH_TRUSTED_PROXIES: ${APP_AUTH_TRUSTED_PROXIES:-[]}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-agent_os}:${POSTGRES_PASSWORD:-agent_os_local}@postgres:5432/${POSTGRES_DB:-agent_os}
       TEST_DATABASE_ALLOWED_HOST: postgres_test
-      TEST_DATABASE_URL: postgresql://${POSTGRES_TEST_USER:-agent_os_test}:${POSTGRES_TEST_PASSWORD:-agent_os_test_local}@postgres_test:5432/${POSTGRES_TEST_DB:-agent_os_test}
-    ports: ["127.0.0.1:${FIGHT_AGENT_OS_PORT:-18087}:8080"]
     # Checks can write only ignored reports/caches; source, locks and installed tools stay read-only.
     volumes:
       - .:/app:ro
@@ -54,7 +55,8 @@ services:
       - ./.runs/cache/client/vite-temp:/app/client/node_modules/.vite-temp
     shm_size: 256mb
     read_only: true
-    tmpfs: ["/tmp:rw,nosuid,size=256m"]
+    # Runtime tools do not inherit other installations' secret/certificate directories.
+    tmpfs: ["/tmp:rw,nosuid,size=256m", "/app/var/runtime:ro,size=1m", "/app/var/local-ingress:ro,size=1m", "/app/var/worktrees:ro,size=1m", "/app/var/https:ro,size=1m"]
     mem_limit: 2g
     cpus: 2
     pids_limit: 256
@@ -94,7 +96,8 @@ services:
     pids_limit: 64
 
   https_php:
-    restart: unless-stopped
+    restart: "on-failure:3"
+    user: "${FIGHT_AGENT_OS_USER:?Export the installation owner UID:GID before Compose operations}"
     profiles: [https]
     init: true
     mem_limit: 2g
@@ -104,16 +107,51 @@ services:
       context: .
       dockerfile: etc/docker/fpm/Dockerfile
     environment: *application-environment
+    secrets:
+      - source: application
+        target: application
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) === false ? 1 : 0);"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     depends_on:
       postgres:
         condition: service_healthy
-    volumes: [".:/app:ro"]
+      seaweedfs:
+        condition: service_healthy
+    # HTTP receives application code, not checkout-local secrets, Git, tools or task history.
+    volumes:
+      - ./bootstrap:/app/bootstrap:ro
+      - ./config:/app/config:ro
+      - ./src:/app/src:ro
+      - ./vendor:/app/vendor:ro
+      - ./public:/app/public:ro
+      - ./templates:/app/templates:ro
+      - ./var/client/build:/app/var/client/build:ro
+      - ./var/openapi:/app/var/openapi:ro
+      - ./var/validations:/app/var/validations:ro
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,size=64m", "/usr/local/var/run:rw,nosuid,size=1m"]
+    cap_drop: [ALL]
+    cap_add: [SETUID, SETGID]
+    security_opt: ["no-new-privileges:true"]
 
   https:
-    restart: unless-stopped
+    restart: "on-failure:3"
     profiles: [https]
     image: nginx:1.30.6-alpine@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951
-    depends_on: [https_php]
+    depends_on:
+      https_php:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
     ports: ["127.0.0.1:18443:8443"]
     volumes:
       - type: bind
@@ -135,14 +173,18 @@ services:
 
   # Explicit opt-in; mailbox is disposable and SMTP is never published to the host.
   mailcatcher:
-    restart: unless-stopped
+    restart: "on-failure:3"
     profiles: [mail]
     image: axllent/mailpit:v1.27.10@sha256:b1f1be18af530d939a11ee8820b379e0c88eeec204d904bfad68862adced3a5a
     environment:
       MP_DATABASE: /data/mailpit.db
       MP_MAX_MESSAGES: 100
       MP_DISABLE_VERSION_CHECK: "true"
-    ports: ["127.0.0.1:${FIGHT_AGENT_OS_MAIL_PORT:-18088}:8025"]
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     read_only: true
     tmpfs: ["/data:rw,nosuid,noexec,size=64m", "/tmp:rw,nosuid,noexec,size=16m"]
     cap_drop: [ALL]
@@ -152,11 +194,15 @@ services:
     pids_limit: 64
 
   postgres:
-    restart: unless-stopped
-    image: postgres:17-bookworm
+    restart: "on-failure:3"
+    image: postgres:17.12-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
+    secrets: [postgres]
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-agent_os}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agent_os_local}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres
       POSTGRES_USER: ${POSTGRES_USER:-agent_os}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -167,11 +213,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   postgres_test:
-    restart: unless-stopped
-    image: postgres:17-bookworm
+    restart: "on-failure:3"
+    image: postgres:17.12-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
+    secrets: [postgres_test]
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
     environment:
       POSTGRES_DB: ${POSTGRES_TEST_DB:-agent_os_test}
-      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD:-agent_os_test_local}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_test
       POSTGRES_USER: ${POSTGRES_TEST_USER:-agent_os_test}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -181,5 +231,44 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
+  # Storage supplier only; Artifact admission and Planning cutover remain separate.
+  seaweedfs:
+    # Direct binary avoids the image's implicit recursive chown/su-exec bootstrap.
+    # Root has only DAC_OVERRIDE for the supplier-owned data and owner-readable bind secret.
+    entrypoint: ["/usr/bin/weed"]
+    cap_add: [DAC_OVERRIDE]
+    image: chrislusf/seaweedfs:4.53@sha256:ccad23e18639c8b98cee17e7100b95830a06077b56d8e5b006d6dcf8ec5e94a0
+    restart: "on-failure:3"
+    command: ["mini", "-dir=/data", "-ip=seaweedfs", "-master.telemetry=false", "-admin.ui=false", "-webdav=false", "-s3.iam=false", "-s3.port.iceberg=0", "-s3.port.lance=0", "-s3.config=/run/secrets/seaweedfs", "-s3.autoCreateBucket=false", "-volume.max=4", "-master.volumeSizeLimitMB=128"]
+    secrets: [seaweedfs]
+    volumes: ["seaweedfs_data:/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9333/cluster/status && wget -q -O /dev/null http://127.0.0.1:8888/"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 10s
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,noexec,size=32m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+
+secrets:
+  application:
+    file: ${FIGHT_RUNTIME_SECRETS_DIR:-./var/runtime/secrets}/application.json
+  tooling:
+    file: ${FIGHT_RUNTIME_SECRETS_DIR:-./var/runtime/secrets}/tooling.json
+  postgres:
+    file: ${FIGHT_RUNTIME_SECRETS_DIR:-./var/runtime/secrets}/postgres
+  postgres_test:
+    file: ${FIGHT_RUNTIME_SECRETS_DIR:-./var/runtime/secrets}/postgres_test
+  seaweedfs:
+    file: ${FIGHT_RUNTIME_SECRETS_DIR:-./var/runtime/secrets}/seaweedfs.json
+
 volumes:
+  # Main retains these across down; selected worktree down explicitly disposes them.
   postgres_data:
+  seaweedfs_data:
