@@ -45,9 +45,7 @@ final readonly class ResetCompletionResponder
             ['Cache-Control' => 'no-store']
         );
         if ($clearTargetSession) {
-            foreach ($this->cookies->delete() as $cookie) {
-                $response = $response->withAddedHeader('Set-Cookie', $cookie);
-            }
+            $response = $this->cookies->clear($response);
         }
 
         return $response;

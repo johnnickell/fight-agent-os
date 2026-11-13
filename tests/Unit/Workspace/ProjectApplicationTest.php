@@ -107,9 +107,9 @@ final class ProjectApplicationTest extends TestCase
     }
 
     /**
-     * Projects safe detail, deterministic bounded pages and advisory source membership without writing
+     * Projects complete safe detail without writing
      */
-    public function testTypedReadsAndAdvisoryConflicts(): void
+    public function testProjectDetail(): void
     {
         $command = $this->command();
         $project = Project::register(
@@ -124,38 +124,131 @@ final class ProjectApplicationTest extends TestCase
         $projectRepository->expects(self::never())->method('add');
         $projectRepository->method('getById')->with($command->workspaceId, $command->projectId)->willReturn($project);
         $get = new GetProjectById($command->workspaceId, $command->projectId);
-        self::assertEquals($get, GetProjectById::fromArray($get->toArray()));
         $view = (new GetProjectByIdHandler($projectRepository))->handle(QueryMessage::create($get));
-        self::assertSame($command->projectId, $view->projectId);
-        self::assertSame($command->sources->primary, $view->primarySource);
-        self::assertSame($command->metadata->displayName, $view->displayName);
+        self::assertEquals([
+            'projectId'         => $command->projectId,
+            'workspaceId'       => $command->workspaceId,
+            'displayName'       => 'Project',
+            'slug'              => 'project',
+            'primarySource'     => $command->sources->primary,
+            'equivalentSources' => $command->sources->equivalent,
+            'createdBy'         => $command->actorId,
+            'updatedBy'         => $command->actorId,
+            'createdAt'         => new DateTimeImmutable('2026-11-08T05:00:00Z'),
+            'updatedAt'         => new DateTimeImmutable('2026-11-08T05:00:00Z'),
+            'metadataRevision'  => 1,
+            'sourceRevision'    => 1,
+            'lifecycleRevision' => 1
+        ], get_object_vars($view));
+    }
+
+    /**
+     * Returns a complete bounded page and detects the extra-item sentinel without writing
+     */
+    public function testPopulatedProjectPage(): void
+    {
+        $command = $this->command();
+        $project = Project::register(
+            $command->projectId,
+            $command->workspaceId,
+            $command->metadata,
+            $command->sources,
+            $command->actorId,
+            $this->clock()->now()
+        );
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $projectRepository->expects(self::never())->method('add');
         $list = new ListProjects($command->workspaceId, 2, 1);
-        self::assertEquals($list, ListProjects::fromArray($list->toArray()));
         $projectRepository->expects(self::once())->method('slice')->with($command->workspaceId, 2, 2)
             ->willReturn([$project, $project]);
         $page = (new ListProjectsHandler($projectRepository))->handle(QueryMessage::create($list));
-        self::assertEquals([$view], $page->items);
+        self::assertCount(1, $page->items);
+        self::assertEquals([
+            'projectId'         => $command->projectId,
+            'workspaceId'       => $command->workspaceId,
+            'displayName'       => 'Project',
+            'slug'              => 'project',
+            'primarySource'     => $command->sources->primary,
+            'equivalentSources' => $command->sources->equivalent,
+            'createdBy'         => $command->actorId,
+            'updatedBy'         => $command->actorId,
+            'createdAt'         => new DateTimeImmutable('2026-11-08T05:00:00Z'),
+            'updatedAt'         => new DateTimeImmutable('2026-11-08T05:00:00Z'),
+            'metadataRevision'  => 1,
+            'sourceRevision'    => 1,
+            'lifecycleRevision' => 1
+        ], get_object_vars($page->items[0]));
         self::assertTrue($page->hasMore);
         self::assertSame([2, 1], [$page->offset, $page->limit]);
+    }
+
+    /**
+     * Returns an empty page with the requested bounds and no further items or writes
+     */
+    public function testEmptyProjectPage(): void
+    {
+        $workspaceId = WorkspaceId::generate();
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $projectRepository->expects(self::never())->method('add');
+        $projectRepository->expects(self::once())->method('slice')->with($workspaceId, 0, 26)->willReturn([]);
+        $page = (new ListProjectsHandler($projectRepository))->handle(QueryMessage::create(
+            new ListProjects($workspaceId)
+        ));
+        self::assertSame([], $page->items);
+        self::assertFalse($page->hasMore);
+        self::assertSame([0, 25], [$page->offset, $page->limit]);
+    }
+
+    /**
+     * Reports claimed and clear advisory source membership without writing
+     */
+    #[DataProvider('conflictClaims')]
+    public function testAdvisoryConflicts(bool $claimed): void
+    {
+        $command = $this->command();
+        $preview = new PreviewProjectConflicts($command->workspaceId, $command->metadata, $command->sources);
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $projectRepository->expects(self::never())->method('add');
+        $projectRepository->method('hasActiveSlug')->willReturn($claimed);
+        $projectRepository->method('hasActiveSource')->willReturn($claimed);
+        $conflicts = (new PreviewProjectConflictsHandler($projectRepository))->handle(QueryMessage::create($preview));
+        self::assertSame($claimed, $conflicts->slugClaimed);
+        self::assertSame($claimed, $conflicts->sourceClaimed);
+    }
+
+    /**
+     * Supplies occupied and available advisory claims
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function conflictClaims(): iterable
+    {
+        yield 'claimed' => [true];
+        yield 'clear' => [false];
+    }
+
+    /**
+     * Preserves query message serialization including absent source descriptors
+     */
+    public function testReadMessageRoundTrips(): void
+    {
+        $command = $this->command();
+        $get = new GetProjectById($command->workspaceId, $command->projectId);
+        self::assertEquals($get, GetProjectById::fromArray($get->toArray()));
+        $list = new ListProjects($command->workspaceId, 2, 1);
+        self::assertEquals($list, ListProjects::fromArray($list->toArray()));
         $preview = new PreviewProjectConflicts($command->workspaceId, $command->metadata, $command->sources);
         self::assertEquals($preview, PreviewProjectConflicts::fromArray($preview->toArray()));
-        $projectRepository->method('hasActiveSlug')->willReturn(true);
-        $projectRepository->method('hasActiveSource')->willReturn(true);
-        $conflicts = (new PreviewProjectConflictsHandler($projectRepository))->handle(QueryMessage::create($preview));
-        self::assertTrue($conflicts->slugClaimed);
-        self::assertTrue($conflicts->sourceClaimed);
-        $absent = $this->createStub(ProjectRepository::class);
-        $absent->method('slice')->willReturn([]);
-        $absent->method('hasActiveSlug')->willReturn(false);
-        $absent->method('hasActiveSource')->willReturn(false);
-        self::assertFalse((new ListProjectsHandler($absent))->handle(QueryMessage::create(
-            new ListProjects($command->workspaceId)
-        ))->hasMore);
-        $clear = (new PreviewProjectConflictsHandler($absent))->handle(QueryMessage::create($preview));
-        self::assertFalse($clear->slugClaimed);
-        self::assertFalse($clear->sourceClaimed);
         $empty = new PreviewProjectConflicts($command->workspaceId, $command->metadata, new ProjectSources());
         self::assertEquals($empty, PreviewProjectConflicts::fromArray($empty->toArray()));
+    }
+
+    /**
+     * Preserves creation message serialization without source descriptors
+     */
+    public function testSourcelessCreationMessageRoundTrip(): void
+    {
+        $command = $this->command();
         $noSources = new RegisterProject(
             $command->projectId,
             $command->workspaceId,
@@ -220,40 +313,48 @@ final class ProjectApplicationTest extends TestCase
     /**
      * Rejects mismatched dispatch without interpreting another owner's intent
      */
-    public function testMismatchedDispatch(): void
+    public function testRegisterProjectRejectsMismatchedCommand(): void
     {
         $projectRepository = $this->createMock(ProjectRepository::class);
         $projectRepository->expects(self::never())->method('add');
-        $refused = 0;
-        foreach (
-            [
-            fn() => (new RegisterProjectHandler(
-                $projectRepository,
-                $this->createStub(ProjectRegistrationAudit::class),
-                $this->transactions(),
-                $this->clock(),
-                $this->createStub(EventDispatcher::class)
-            ))
-                ->handle(CommandMessage::create(new BootstrapWorkspace(WorkspaceId::generate(), UserId::generate()))),
-            fn() => (new GetProjectByIdHandler($projectRepository))->handle(QueryMessage::create(
-                new FindInitialWorkspace()
-            )),
-            fn() => (new ListProjectsHandler($projectRepository))->handle(QueryMessage::create(
-                new FindInitialWorkspace()
-            )),
-            fn() => (new PreviewProjectConflictsHandler($projectRepository))->handle(QueryMessage::create(
-                new FindInitialWorkspace()
-            ))
-            ] as $dispatch
-        ) {
-            try {
-                $dispatch();
-                self::fail('Mismatched dispatch accepted');
-            } catch (\InvalidArgumentException) {
-                ++$refused;
-            }
-        }
-        self::assertSame(4, $refused);
+        $handler = new RegisterProjectHandler(
+            $projectRepository,
+            $this->createStub(ProjectRegistrationAudit::class),
+            $this->transactions(),
+            $this->clock(),
+            $this->createStub(EventDispatcher::class)
+        );
+        $this->expectException(\InvalidArgumentException::class);
+        $handler->handle(CommandMessage::create(new BootstrapWorkspace(WorkspaceId::generate(), UserId::generate())));
+    }
+
+    /**
+     * Rejects mismatched queries without writing
+     *
+     * @param class-string<GetProjectByIdHandler|ListProjectsHandler|PreviewProjectConflictsHandler> $handlerClass
+     */
+    #[DataProvider('mismatchedQueryHandlers')]
+    public function testQueryRejectsMismatchedMessage(string $handlerClass): void
+    {
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $projectRepository->expects(self::never())->method('add');
+        $handler = new $handlerClass($projectRepository);
+        $this->expectException(\InvalidArgumentException::class);
+        $handler->handle(QueryMessage::create(new FindInitialWorkspace()));
+    }
+
+    /**
+     * Names every Project query rejection scenario
+     *
+     * @return iterable<string, array{
+     *     class-string<GetProjectByIdHandler|ListProjectsHandler|PreviewProjectConflictsHandler>
+     * }>
+     */
+    public static function mismatchedQueryHandlers(): iterable
+    {
+        yield 'detail rejects initial Workspace lookup' => [GetProjectByIdHandler::class];
+        yield 'pagination rejects initial Workspace lookup' => [ListProjectsHandler::class];
+        yield 'conflict preview rejects initial Workspace lookup' => [PreviewProjectConflictsHandler::class];
     }
 
     /**

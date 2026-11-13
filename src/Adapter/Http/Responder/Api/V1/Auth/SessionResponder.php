@@ -70,10 +70,6 @@ final readonly class SessionResponder
      */
     public function clear(ResponseInterface $response): ResponseInterface
     {
-        foreach ($this->cookies->delete() as $cookie) {
-            $response = $response->withAddedHeader('Set-Cookie', $cookie);
-        }
-
-        return $response->withHeader('Cache-Control', 'no-store');
+        return $this->cookies->clear($response)->withHeader('Cache-Control', 'no-store');
     }
 }
