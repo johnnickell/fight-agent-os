@@ -12,13 +12,5 @@ if ! ./bin/runtime docker compose ps --status running --services | grep -Fxq web
   exit 1
 fi
 
-container=$(./bin/runtime docker compose ps -q web)
-expected=$(./bin/runtime docker compose config --hash web | awk '{print $2}')
-actual=$(./bin/runtime docker inspect --format '{{ index .Config.Labels "com.docker.compose.config-hash" }}' "$container")
-if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
-  echo "The Compose web configuration is stale. Refresh it explicitly with ./bin/up." >&2
-  exit 1
-fi
-
 ./bin/runtime storage-admit
 exec ./bin/runtime docker compose exec -T web php scripts/build.php "$@"

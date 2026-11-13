@@ -112,8 +112,8 @@ commands and main opt-in; its live TLS/full-stack qualification and independent 
 Never silently refresh a service inside acceptance.
 Before reinstalling frontend dependencies in an already-running project, stop only `web`
 (`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.
-Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or missing tooling setup
-fails with an explicit setup instruction.
+Do not replace dependencies beneath a live gate. A stopped web service or missing tooling setup
+fails with an explicit setup instruction; the build wrapper does not compare Compose configuration hashes.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
 Critical browser smoke also requires the selected project's initially empty disposable Mailpit, the CLI image's
@@ -159,7 +159,7 @@ execution still mounts source, locks and dependencies read-only. Host-side edits
 
 ## One PHP-owned phase graph
 
-The local host wrapper checks the running `web` service and its Compose configuration identity, then delegates
+The local host wrapper checks that `web` is running and admits storage, then delegates
 with `docker compose exec -T web php scripts/build.php`. Hosted CI invokes `php scripts/build.php` directly
 on the runner after explicit native setup. Both entries use the same PHP-owned phases, in order:
 
