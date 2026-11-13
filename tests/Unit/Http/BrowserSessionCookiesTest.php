@@ -84,6 +84,32 @@ final class BrowserSessionCookiesTest extends TestCase
     }
 
     /**
+     * Appends deletion without resolving a clock or replacing existing response facts and cache policy
+     */
+    public function testDeletionPreservesExistingResponse(): void
+    {
+        $response = new ResponseFactory()->createResponse(503)
+            ->withHeader('Set-Cookie', 'unrelated=value; Path=/')
+            ->withHeader('X-Existing', 'retained')
+            ->withHeader('Cache-Control', 'private')
+            ->withBody(new StreamFactory()->createStream('existing body'));
+
+        $cleared = BrowserSessionCookies::clear($response);
+
+        $expired = '; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0';
+        self::assertSame([
+            'unrelated=value; Path=/',
+            '__Secure-agent_os_refresh=; Path=/api/v1/auth; Secure; HttpOnly; SameSite=Strict'.$expired,
+            '__Secure-agent_os_csrf=; Path=/api/v1/auth; Secure; HttpOnly; SameSite=Strict'.$expired
+        ], $cleared->getHeader('Set-Cookie'));
+        self::assertSame(503, $cleared->getStatusCode());
+        self::assertSame('retained', $cleared->getHeaderLine('X-Existing'));
+        self::assertSame('private', $cleared->getHeaderLine('Cache-Control'));
+        self::assertSame($response->getBody(), $cleared->getBody());
+        self::assertSame('existing body', (string) $cleared->getBody());
+    }
+
+    /**
      * Rejects an invalid package result instead of extending a deadline or transporting unsafe material
      */
     #[DataProvider('invalidDeadlines')]

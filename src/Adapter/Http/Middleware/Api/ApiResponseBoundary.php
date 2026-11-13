@@ -66,9 +66,7 @@ final readonly class ApiResponseBoundary implements MiddlewareInterface
         };
         $response = $this->safeErrors->process($request->withAttribute('correlation_id', $correlationId), $guard);
         if ($guard->clearSessionCookies) {
-            foreach (BrowserSessionCookies::delete() as $cookie) {
-                $response = $response->withAddedHeader('Set-Cookie', $cookie);
-            }
+            $response = BrowserSessionCookies::clear($response);
         }
 
         return $response->withHeader('X-Correlation-ID', $correlationId)->withHeader('Cache-Control', 'no-store');
