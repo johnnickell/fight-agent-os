@@ -40,7 +40,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | [TICKET-00141 — Compare related projects and deliver polished alignment reports](../tickets/00141-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -657,5 +656,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | [TICKET-00139 — Reconcile JSON-managed authority and access defaults](../tickets/00139-TICKET.md) | done | — | [PR #263](https://github.com/johnnickell/fight-agent-os/pull/263) |
 | — | [TASK-00592](00592-TASK.md) | Add clear-answer and simplification skills with consistent testing guidance | — (standalone chore) | done | — | — |
 | — | [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | [TICKET-00140 — Resolve comparison projects and permitted local settings](../tickets/00140-TICKET.md) | done | — | [PR #274](https://github.com/johnnickell/fight-agent-os/pull/274) |
+| — | [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | [TICKET-00141 — Compare related projects and deliver polished alignment reports](../tickets/00141-TICKET.md) | done | — | [PR #278](https://github.com/johnnickell/fight-agent-os/pull/278) |
 | — | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | — (standalone chore) | done | — | [PR #277](https://github.com/johnnickell/fight-agent-os/pull/277) |
 <!-- /planning:board -->
