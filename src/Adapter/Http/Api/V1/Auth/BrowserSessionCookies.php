@@ -8,6 +8,7 @@ use DateTimeZone;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\Security\TokenSet;
 use LogicException;
+use Psr\Http\Message\ResponseInterface;
 use SensitiveParameter;
 
 /**
@@ -40,6 +41,18 @@ final readonly class BrowserSessionCookies
             self::REFRESH_NAME.'='.self::ATTRIBUTES.self::EXPIRED,
             CsrfCookie::NAME.'='.self::ATTRIBUTES.self::EXPIRED
         ];
+    }
+
+    /**
+     * Appends clock-independent deletion cookies without changing the response or cache policy
+     */
+    public static function clear(ResponseInterface $response): ResponseInterface
+    {
+        foreach (self::delete() as $cookie) {
+            $response = $response->withAddedHeader('Set-Cookie', $cookie);
+        }
+
+        return $response;
     }
 
     /**

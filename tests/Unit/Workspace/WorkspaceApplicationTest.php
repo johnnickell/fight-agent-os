@@ -126,39 +126,47 @@ final class WorkspaceApplicationTest extends TestCase
     /**
      * Rejects mismatched dispatch without interpreting a different message as bootstrap or a read
      */
-    public function testMismatchedDispatch(): void
+    public function testBootstrapRejectsMismatchedCommand(): void
     {
         $workspaceRepository = $this->createMock(WorkspaceRepository::class);
         $workspaceRepository->expects(self::never())->method('add');
-        $find = new FindInitialWorkspaceHandler($workspaceRepository);
-        $get = new GetWorkspaceByIdHandler($workspaceRepository);
         $bootstrap = new BootstrapWorkspaceHandler(
             $workspaceRepository,
             $this->createStub(WorkspaceBootstrapAudit::class),
             $this->createStub(TransactionalUnitOfWork::class),
             new AccessClock(new DateTimeImmutable('2026-11-07T12:00:00Z'))
         );
-        $refused = 0;
-        foreach (
-            [
-            static fn() => $find->handle(QueryMessage::create(new GetWorkspaceById(WorkspaceId::generate()))),
-            static fn() => $get->handle(QueryMessage::create(new FindInitialWorkspace())),
-            static fn() => $bootstrap->handle(CommandMessage::create(
-                new \Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser(
-                    UserId::generate(),
-                    UserId::generate(),
-                    \Fight\AccessControl\Domain\AccessControl\Role\RoleId::generate()
-                )
-            ))
-            ] as $dispatch
-        ) {
-            try {
-                $dispatch();
-                self::fail('Mismatched dispatch was accepted');
-            } catch (\InvalidArgumentException) {
-                $refused++;
-            }
-        }
-        self::assertSame(3, $refused);
+        $this->expectException(\InvalidArgumentException::class);
+        $bootstrap->handle(CommandMessage::create(
+            new \Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser(
+                UserId::generate(),
+                UserId::generate(),
+                \Fight\AccessControl\Domain\AccessControl\Role\RoleId::generate()
+            )
+        ));
+    }
+
+    /**
+     * Rejects a required lookup passed to initial Workspace discovery without writing
+     */
+    public function testFindInitialRejectsMismatchedQuery(): void
+    {
+        $workspaceRepository = $this->createMock(WorkspaceRepository::class);
+        $workspaceRepository->expects(self::never())->method('add');
+        $handler = new FindInitialWorkspaceHandler($workspaceRepository);
+        $this->expectException(\InvalidArgumentException::class);
+        $handler->handle(QueryMessage::create(new GetWorkspaceById(WorkspaceId::generate())));
+    }
+
+    /**
+     * Rejects initial discovery passed to a required Workspace lookup without writing
+     */
+    public function testGetWorkspaceRejectsMismatchedQuery(): void
+    {
+        $workspaceRepository = $this->createMock(WorkspaceRepository::class);
+        $workspaceRepository->expects(self::never())->method('add');
+        $handler = new GetWorkspaceByIdHandler($workspaceRepository);
+        $this->expectException(\InvalidArgumentException::class);
+        $handler->handle(QueryMessage::create(new FindInitialWorkspace()));
     }
 }

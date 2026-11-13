@@ -21,7 +21,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 

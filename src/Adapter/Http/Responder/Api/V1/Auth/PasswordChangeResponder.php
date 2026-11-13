@@ -44,10 +44,7 @@ final readonly class PasswordChangeResponder
             200,
             ['Cache-Control' => 'no-store']
         );
-        foreach ($this->cookies->delete() as $cookie) {
-            $response = $response->withAddedHeader('Set-Cookie', $cookie);
-        }
 
-        return $response;
+        return $this->cookies->clear($response);
     }
 }
