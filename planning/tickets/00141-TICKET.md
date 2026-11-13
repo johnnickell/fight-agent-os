@@ -140,7 +140,7 @@ ask for that choice again. This planning operation creates no implementation wor
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00594](../tasks/00594-TASK.md) | Compare related projects and deliver polished reports | ready-for-agent |
+| [TASK-00594](../tasks/00594-TASK.md) | Compare related projects and deliver polished reports | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

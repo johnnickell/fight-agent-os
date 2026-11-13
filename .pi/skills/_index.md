@@ -7,6 +7,7 @@
 - `audit/SKILL.md`
 - `build/SKILL.md`
 - `ci/SKILL.md`
+- `compare/SKILL.md`
 - `design-review/SKILL.md`
 - `design/SKILL.md`
 - `fix/SKILL.md`
