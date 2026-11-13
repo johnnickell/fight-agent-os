@@ -13,8 +13,17 @@ jobs:
       DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
       TEST_DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
       TEST_DATABASE_ALLOWED_HOST: 127.0.0.1
+      BROWSER_SMOKE_NATIVE: '1'
     steps:
       - uses: actions/checkout@v5
+      - name: Provision matching native PHP CLI and FPM packages
+        run: |
+          # setup-php's cached CLI build does not enroll an apt repository for FPM.
+          sudo add-apt-repository --yes ppa:ondrej/php
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes \
+            php8.5-cli php8.5-fpm php8.5-pgsql php8.5-mbstring php8.5-xml \
+            libnss3-tools openssl
       - name: Set up native PHP and coverage
         uses: shivammathur/setup-php@v2
         with:
@@ -58,8 +67,43 @@ jobs:
           CREATE ROLE agent_os_test LOGIN PASSWORD 'agent_os_test_ci' NOSUPERUSER NOCREATEDB NOCREATEROLE;
           SQL
           sudo -u postgres createdb --owner=agent_os_test agent_os_test
+      - name: Prepare disposable browser TLS and catcher prerequisites
+        run: |
+          php --version
+          php-fpm8.5 --version
+          php-fpm8.5 --modules
+          mkdir -p var/browser-smoke/certs
+          chmod 700 var/browser-smoke/certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -subj '/CN=Disposable CI Browser CA' \
+            -keyout var/browser-smoke/certs/ca.key -out var/browser-smoke/certs/rootCA.pem 2>/dev/null
+          openssl req -new -newkey rsa:2048 -nodes -subj '/CN=localhost' \
+            -addext 'subjectAltName=DNS:localhost' \
+            -keyout var/browser-smoke/certs/localhost-key.pem -out var/browser-smoke/certs/leaf.csr 2>/dev/null
+          openssl x509 -req -in var/browser-smoke/certs/leaf.csr \
+            -CA var/browser-smoke/certs/rootCA.pem -CAkey var/browser-smoke/certs/ca.key \
+            -CAcreateserial -days 1 -copy_extensions copy \
+            -out var/browser-smoke/certs/localhost.pem 2>/dev/null
+          python3 -B scripts/browser_smoke_setup.py --native --ca var/browser-smoke/certs/rootCA.pem
+          docker run --detach --name browser-smoke-nginx --network host \
+            --mount "type=bind,source=$PWD/var/browser-smoke/default.conf,target=/etc/nginx/conf.d/default.conf,readonly" \
+            --mount "type=bind,source=$PWD/var/browser-smoke/certs,target=/etc/nginx/certs,readonly" \
+            --mount "type=bind,source=$PWD/var/client/build,target=/app/var/client/build,readonly" \
+            nginx:1.30.6-alpine@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951
+          docker run --detach --name browser-smoke-mailcatcher \
+            --publish 127.0.0.1:1025:1025 --publish 127.0.0.1:8025:8025 \
+            --read-only --tmpfs /data:rw,nosuid,noexec,size=64m --tmpfs /tmp:rw,nosuid,noexec,size=16m \
+            --env MP_DATABASE=/data/mailpit.db --env MP_DISABLE_VERSION_CHECK=true \
+            axllent/mailpit:v1.27.10@sha256:b1f1be18af530d939a11ee8820b379e0c88eeec204d904bfad68862adced3a5a
       - name: Run the sole canonical gate
         run: php scripts/build.php
+      - name: Remove disposable browser envelope and catcher
+        if: always()
+        run: |
+          status=0
+          docker rm --force browser-smoke-nginx browser-smoke-mailcatcher || status=$?
+          rm -rf var/browser-smoke
+          exit "$status"
       - name: Retain gate receipts
         if: always()
         uses: actions/upload-artifact@v4
@@ -69,6 +113,7 @@ jobs:
           path: |
             .runs/build/[0-9]*/*.json
             .runs/build/[0-9]*/*.log
+            .runs/build/reports/browser-smoke/summary.json
             .runs/build/reports/backend/*.json
             .runs/build/reports/backend/junit.xml
             .runs/build/reports/client/coverage/coverage-summary.json

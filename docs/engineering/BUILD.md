@@ -87,6 +87,8 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/up
 ./bin/openapi export
 ./bin/validations export
+# Ordinary direct main: use only the public CA from existing explicit TLS setup.
+./bin/browser-smoke setup --ca "$(mkcert -CAROOT)/rootCA.pem"
 ./bin/build
 ```
 
@@ -113,6 +115,19 @@ Before reinstalling frontend dependencies in an already-running project, stop on
 Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or missing tooling setup
 fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
+
+Critical browser smoke also requires the selected project's initially empty disposable Mailpit, the CLI image's
+matching FPM binary/OpenSSL/NSS tools, and explicit [browser gateway setup](BROWSER_SMOKE.md) using the existing
+public CA. Ordinary direct main automatically prepares a private project-local production Nginx at the browser
+origin `https://localhost:18443`, without changing its file-mounted development gateway, reading shared-ingress
+configuration, publishing a port or touching development data. Retire only that fixture after checks with
+`./bin/browser-smoke setup --remove-direct`. Shared-ingress worktrees instead run ordinary `bin/up --worktree
+/absolute/selected/checkout`, then `./bin/browser-smoke setup --ca /absolute/existing/public/rootCA.pem`;
+this selects only their real gateway's isolated FPM supplier. Their journeys retain the existing external front
+door and verified shared ingress. Exact setup, capable OpenSSL selection, safe direct qualification and cleanup
+are in [browser smoke](BROWSER_SMOKE.md). Acceptance never creates/edits/reloads gateways. Native CI explicitly
+prepares its direct production Nginx envelope, native FPM, disposable localhost CA/leaf and pinned catcher first;
+it is not workstation/shared-ingress evidence. Neither mode enrolls global trust.
 
 The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
@@ -166,7 +181,10 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
    checks, and static catalog captures/resource checks. Only the capture phase overlaps work: the two widths
    of one story use separate contexts in one browser, then both close before the next story. No backend,
    Vitest, Harness or browser-story phase overlaps another phase or a database reset.
-9. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
+9. [Critical browser smoke](BROWSER_SMOKE.md): five isolated real Nginx/FPM HTTPS platform scenarios, guarded
+   test-schema/catcher cleanup, private browser-only trust of the prepared public CA, credential-safe diagnostics
+   and focused source stability. Local task runs exercise the existing shared HTTPS envelope.
+10. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
 Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).
@@ -247,8 +265,9 @@ JS/PHP commands. Acceptance never installs or exports.
 
 Ubuntu 24.04's native PostgreSQL service supplies a dedicated non-superuser `agent_os_test` role/database over
 allowlisted loopback TCP. Only the guarded backend phase resets/migrates/cleans that test schema. Product tests
-own their ephemeral application keys in `tests/bootstrap.php`; CI creates no `.env`, application keys, TLS/CA,
-nginx/FPM, Docker images/services or developer stack. The sole gate step is **`php scripts/build.php`**, not a
+own their ephemeral application keys in `tests/bootstrap.php`; CI creates no `.env` or developer stack. Explicit browser setup prepares native FPM and pinned Nginx/Mailpit
+containers with a disposable localhost TLS CA/leaf; application fixture keys exist only in each smoke invocation. The sole gate step is **`php scripts/build.php`**, not a
 second phase graph or PHPUnit-only substitute. Artifact retention remains an explicit JSON/log/report allowlist,
 excluding private tool HOME, application configuration and credentials. The hosted VM owns disposal of its native
-prerequisites. Local developer Docker wrappers, TLS setup and lifecycle accounting remain unchanged.
+prerequisites. Local developer Docker wrappers and TLS enrollment remain unchanged; the separately explicit
+browser fixture preparation/retirement above is required before/after uncached local acceptance.

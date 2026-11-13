@@ -17,7 +17,9 @@ React/TypeScript.
 - **Application foundation:** authentication, invitation and password flows, session management,
   permission-controlled administration, and an authenticated application frame are implemented.
   Individual features have different verification and integration boundaries; this is not a claim
-  of complete application readiness.
+  of complete application readiness. The integrated local security/accessibility baseline and five
+  critical browser-platform smoke scenarios have independent acceptance; production qualification
+  and later user/role administration remain separate.
 - **Planning:** Markdown records are authoritative, organized as EPIC → TICKET → TASK. Workspace
   bootstrap and Project registration APIs are implemented; browser Planning and database cutover
   remain planned.
@@ -162,6 +164,8 @@ Prepare private metadata, then run the complete gate:
 ```sh
 ./bin/openapi export
 ./bin/validations export
+# Direct localhost setup; shared origins use their existing public CA instead (see build guide).
+./bin/browser-smoke setup --ca "$(mkcert -CAROOT)/rootCA.pem"
 ./bin/build
 ```
 
