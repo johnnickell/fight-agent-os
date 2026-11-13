@@ -20,7 +20,7 @@ const mailbox =
     ? 'http://127.0.0.1:8025/api/v1/'
     : 'http://mailcatcher:8025/api/v1/';
 const started = performance.now();
-let step = 'fixture';
+let step = 'browser-initialization';
 let assertions = 0;
 let context;
 let grant = '';
@@ -194,6 +194,33 @@ const activate = async () => {
 };
 try {
   await import('./dependencies.mjs');
+  step = 'browser-supplier';
+  let expectedBrowserVersion = '149.0.7827.0';
+  if (process.env.BROWSER_SMOKE_NATIVE === '1') {
+    const catalog = JSON.parse(
+      await readFile(
+        new URL('./browsers.json', import.meta.resolve('playwright-core/package.json'))
+      )
+    );
+    const suppliers = ['chromium', 'chromium-headless-shell'].map((name) =>
+      catalog.browsers?.filter((browser) => browser.name === name)
+    );
+    if (
+      suppliers.some((entries) => entries?.length !== 1) ||
+      suppliers.some(
+        ([browser]) =>
+          typeof browser.revision !== 'string' ||
+          !/^\d+$/.test(browser.revision) ||
+          typeof browser.browserVersion !== 'string' ||
+          !/^\d+\.\d+\.\d+\.\d+$/.test(browser.browserVersion)
+      ) ||
+      suppliers[0][0].revision !== suppliers[1][0].revision ||
+      suppliers[0][0].browserVersion !== suppliers[1][0].browserVersion
+    )
+      throw new Error('safe supplier metadata');
+    expectedBrowserVersion = suppliers[1][0].browserVersion;
+  }
+  step = 'browser-launch';
   await mkdir(path.join(scratch, '.pki/nssdb'), { recursive: true, mode: 0o700 });
   command('certutil', ['-N', '-d', 'sql:' + scratch + '/.pki/nssdb', '--empty-password']);
   command('certutil', [
@@ -220,7 +247,8 @@ try {
     ],
     env: { HOME: scratch, PATH: '/usr/local/bin:/usr/bin:/bin', TZ: 'UTC' }
   });
-  check(context.browser().version() === '149.0.7827.0');
+  step = 'browser-version';
+  check(context.browser().version() === expectedBrowserVersion);
   context.setDefaultTimeout(10000);
   await observe(context);
   const readiness = await context.newPage();

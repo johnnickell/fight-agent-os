@@ -12,10 +12,16 @@ change. Locked client dependencies,
 live production assets and validation exports must already exist. No acceptance command installs tools,
 updates locks, publishes assets, writes planning or starts Docker services.
 
-The existing Playwright **1.61.0** lock and digest-pinned browser image supply Chromium **149.0.7827.0**,
-revision **1228**. No additional runner dependency or product-test download is introduced. The runner checks
-the existing Node **24.22.1** / npm **11.19.1** install receipt and exact browser version. Local execution is
-containerized in the selected CLI image; native CI retains its existing explicit locked browser provisioning.
+The existing Playwright **1.61.0** lock selects two exact browser suppliers. The digest-pinned local image
+supplies Chromium **149.0.7827.0**, revision **1228**, and the container runner still requires that exact version.
+Native CI's locked Playwright catalog supplies Chromium/headless-shell **149.0.7827.55**, revision **1228**,
+confirmed by hosted setup downloads. With `BROWSER_SMOKE_NATIVE=1`, the runner reads the installed
+`playwright-core` catalog through its exported package metadata path, requires matching valid Chromium and
+headless-shell versions/revisions, and checks the actual browser against that exact version. Missing/invalid
+metadata or a different browser fails closed; neither mode accepts a patch range or version override.
+No additional runner dependency or product-test download is introduced. The runner also checks the existing
+Node **24.22.1** / npm **11.19.1** install receipt. Local execution remains containerized in the selected CLI
+image; native CI retains its existing explicit locked browser provisioning.
 On Ubuntu 24.04, CI explicitly enables `ppa:ondrej/php` and installs PHP 8.5 CLI/FPM plus the PostgreSQL,
 mbstring and XML packages together before `setup-php` configures extensions/coverage. A cached CLI install alone
 does not make `php8.5-fpm` available to apt. CI then prepares the production direct Nginx configuration, a
@@ -133,7 +139,8 @@ failure. Any nonzero result fails the named canonical phase. Explicit repeatabil
 
 The browser rejects product requests outside the exact fixture origin, including the second cookie jar.
 No trace/video/screenshot/HAR/console dump/HTML snapshot or rich test reporter is enabled. Failures print only
-scenario, fixed step, allowlisted safe UI states, numeric HTTP status and bounded browser network error codes.
+scenario, fixed step (including browser initialization, supplier, launch and version admission), allowlisted
+safe UI states, numeric HTTP status and bounded browser network error codes.
 Credentials and URLs never become assertion operands in output. Password/grant/cookie/access-token markers remain in memory; after browser close,
 profile bytes are scanned for those actual markers before deletion. Browser local/session storage, IndexedDB,
 Cache Storage, service workers, visible URL and history state are checked independently. Browser-owned history
