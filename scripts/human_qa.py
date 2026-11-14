@@ -22,7 +22,7 @@ QA_REF = re.compile(r'qa/(task-\d{5})/([0-9a-f]{40})')
 
 
 def location(safe, task, oid):
-    return safe.parent / '.worktrees' / ('qa-' + task.lower() + '-' + oid)
+    return safe / '.runs' / 'worktrees' / ('qa-' + task.lower() + '-' + oid)
 
 
 def task_record(task):

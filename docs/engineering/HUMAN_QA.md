@@ -24,9 +24,9 @@ feature branch and develop base, and an open or merged PR. Missing/ambiguous pub
 there is no fallback to develop, a similarly named branch, or the original task checkout. A remote advance
 cannot change the allocated revision. An unsupported revision fails rather than running changed host setup code.
 
-The QA-purpose native branch is `qa/task-NNNNN/FULL_OID`; its registered checkout is a sibling under
-`.worktrees/qa-task-NNNNN-FULL_OID`. It never adopts an engineering/main checkout. The existing path-derived
-Compose project/hostname and isolated settings, database and output are reused without a second inventory.
+The QA-purpose native branch is `qa/task-NNNNN/FULL_OID`; its registered checkout is under the canonical
+base repository at `<repo_path>/.runs/worktrees/qa-task-NNNNN-FULL_OID`. It never adopts an engineering/main
+checkout. The existing path-derived Compose project/hostname and isolated settings, database and output are reused without a second inventory.
 An OS advisory lock serializes QA up/down, without saved PIDs or a daemon. A healthy repeat reuses the SAME
 stack and data. A different live/partial revision, ambiguous sessions or stopped/interrupted setup requires
 explicit exact down/up; no reset or silent source switch. After completed down, unchanged retained refs are
