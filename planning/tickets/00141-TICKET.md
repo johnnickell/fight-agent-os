@@ -2,7 +2,7 @@
 id: TICKET-00141
 epic: EPIC-00026
 title: Compare related projects and deliver polished alignment reports
-status: ready-for-agent
+status: done
 ---
 
 # Compare related projects and deliver polished alignment reports
@@ -140,7 +140,7 @@ ask for that choice again. This planning operation creates no implementation wor
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00594](../tasks/00594-TASK.md) | Compare related projects and deliver polished reports | ready-for-agent |
+| [TASK-00594](../tasks/00594-TASK.md) | Compare related projects and deliver polished reports | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -150,4 +150,10 @@ this TICKET owns comparison and polished report delivery. Requirements are accep
 behavioral and delivery verification have not begun. The user approved the single-TASK decomposition,
 recorded as [TASK-00594](../tasks/00594-TASK.md), blocked by TASK-00593's scope/settings outcome. The isolated-worktree
 choice is preserved. This TICKET's TASK decomposition is complete; both EPIC-00026 TICKETs now have their approved
-TASK records. Next: use Board-based execution selection without implicitly starting implementation.
+TASK records.
+
+TASK-00594 now records independent Review ACCEPT and behavioral QA PASS for the bounded comparison skill,
+offline HTML and optional export/copy journey. Its accepted implementation checkpoint retains the source-sample,
+controlled PDF/Desktop fixture and Unit-only enforcement qualifications. The sole child is done, closing this
+TICKET under automatic parent completion. Publication, human approval and merge remain separate; current
+delivery and cleanup results belong in the child's canonical Land receipt and actual PR.

@@ -103,7 +103,7 @@ def output_path(safe, checkout, project, value):
     return candidate
 
 
-def prepare(safe, checkout, project, entry):
+def prepare(safe, checkout, project, entry, initialize=False):
     state = safe / 'var/worktrees' / project
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     require(state.resolve() == state, 'Runtime state alias refused')
@@ -111,6 +111,7 @@ def prepare(safe, checkout, project, entry):
     host = selected_host(safe, checkout, project + '.localhost')
     private = state / 'task.env'
     if not private.exists():
+        require(initialize, 'Run bin/runtime setup explicitly before preparing this installation')
         values = {'APP_ENV': 'local', 'APP_DEBUG': 'false', 'APP_AUTH_TRANSPORT': 'direct',
                   'APP_AUTH_TRUSTED_PROXIES': '[]', 'APP_BROWSER_ORIGIN': 'https://' + host,
                   'APP_ACTIVATION_ORIGIN': 'https://' + host, 'APP_ACTIVATION_PATH': '/activate',
@@ -124,6 +125,11 @@ def prepare(safe, checkout, project, entry):
         values['APP_ACCESS_TOKEN_CONFIG'] = json.dumps({'algorithm': 'HS256', 'issuer': 'https://' + host,
             'audience': 'agent-os-api', 'active_kid': 'local',
             'keys': [{'kid': 'local', 'secret_hex': secrets.token_hex(32)}]}, separators=(',', ':'))
+        from .secrets import APPLICATION_KEYS, provision
+        provision(state / 'secrets', values)
+        values = {key: value for key, value in values.items()
+                  if key not in (*APPLICATION_KEYS, 'POSTGRES_PASSWORD', 'POSTGRES_TEST_PASSWORD')}
+        values['FIGHT_RUNTIME_SECRETS_DIR'] = str(state / 'secrets')
         write_private(private, ''.join(key + "='" + value + "'\n" for key, value in values.items()))
     require(not private.is_symlink(), 'Private environment alias refused')
     # Worktree source and its ignored output remain separate from main. Compose
@@ -134,7 +140,8 @@ def prepare(safe, checkout, project, entry):
         (checkout / relative).mkdir(parents=True, exist_ok=True)
     output = state / 'output'
     evidence = safe / '.runs/compose' / project
-    for path in (output, output / 'client/build', evidence / 'cache/client/dependency-cache', evidence / 'cache/client/vite-temp'):
+    for path in (output, output / 'client/build', output / 'openapi', output / 'validations',
+                 evidence / 'cache/client/dependency-cache', evidence / 'cache/client/vite-temp'):
         path.mkdir(parents=True, exist_ok=True)
     mounts = [{'type': 'bind', 'source': str(output), 'target': '/app/var'},
               {'type': 'bind', 'source': str(evidence), 'target': '/app/.runs'},
@@ -147,7 +154,9 @@ def prepare(safe, checkout, project, entry):
                    'read_only': True, 'bind': {'create_host_path': False}})
     services = {'web': {'image': project + '-web', 'volumes': mounts},
                 'composer': {'image': project + '-web', 'volumes': mounts},
-                'https_php': {'image': project + '-https_php', 'volumes': mounts[:1]},
+                'https_php': {'image': project + '-https_php', 'volumes': [
+                    {'type': 'bind', 'source': str(output / path), 'target': '/app/var/' + path,
+                     'read_only': True} for path in ('client/build', 'openapi', 'validations')]},
                 'https': {'volumes': [{'type': 'bind', 'source': str(output / 'client/build'),
                                        'target': '/app/var/client/build', 'read_only': True}]}, 'mailcatcher': {}}
     for name, settings in services.items():

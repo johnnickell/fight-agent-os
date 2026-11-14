@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>Project comparison · Report layout</title>
+<style>
+:root { color-scheme: light; --ink:#202c36; --muted:#475563; --paper:#faf9f5; --accent:#175e5c; --line:#c6ceca; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.65 system-ui,sans-serif; overflow-wrap:anywhere; }
+a { color:var(--accent); text-underline-offset:.2em; overflow-wrap:anywhere; }
+a:focus-visible, [tabindex]:focus-visible { outline:3px solid #9c4317; outline-offset:4px; }
+header, main, footer { max-width:1180px; margin:auto; padding:2rem clamp(1.2rem,4vw,3rem); }
+header { padding-top:4rem; border-bottom:2px solid var(--ink); }
+.eyebrow, .number { font:700 .78rem/1.5 system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+h1 { font:500 clamp(2.5rem,6vw,4.7rem)/1.08 Georgia,serif; letter-spacing:-.035em; max-width:18ch; margin:.7rem 0 1.5rem; }
+h2 { font:500 clamp(1.7rem,3vw,2.4rem)/1.2 Georgia,serif; margin:.4rem 0 1.2rem; }
+h3 { font-size:1.15rem; line-height:1.4; margin:.5rem 0; }
+p, li { max-width:80ch; }
+.lead { font-size:1.2rem; max-width:65ch; }
+.note { border-left:4px solid var(--accent); padding:.6rem 1rem; background:#edf1ed; }
+nav { display:flex; flex-wrap:wrap; gap:.5rem 1.4rem; margin-top:1.5rem; }
+section { padding:2rem 0; border-bottom:1px solid var(--line); scroll-margin-top:1rem; }
+.meta { color:var(--muted); font-size:.9rem; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:1rem; }
+article { border:1px solid var(--line); background:white; padding:1.3rem; }
+.label { display:inline-block; padding:.2rem .55rem; background:#e5eeea; color:#174c42; font-size:.8rem; font-weight:700; }
+.scroll { overflow-x:auto; border:1px solid var(--line); }
+table { border-collapse:collapse; width:100%; min-width:760px; font-size:.9rem; background:white; }
+caption { text-align:left; padding:.8rem 1rem; color:var(--muted); }
+th, td { padding:.8rem 1rem; text-align:left; vertical-align:top; border-top:1px solid var(--line); }
+th { background:#edf1ed; font-weight:650; }
+code { font: .85em/1.5 ui-monospace,monospace; overflow-wrap:anywhere; }
+pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:1rem; background:#edf1ed; }
+dl { margin:1rem 0 0; } dt { font-weight:700; } dd { margin:0 0 .8rem; }
+footer { font-size:.9rem; color:var(--muted); }
+@media (max-width:600px) { header { padding-top:2rem; } section { padding:1.5rem 0; } .lead { font-size:1.05rem; } }
+@page { size:A4; margin:16mm; }
+@media print {
+ body { background:white; color:#15212b; font-size:10pt; line-height:1.45; }
+ header, main, footer { max-width:none; padding:0; }
+ header { padding-bottom:5mm; } h1 { font-size:30pt; } h2 { font-size:20pt; }
+ section { padding:6mm 0; } nav { display:none; }
+ .cards { display:block; } article { margin:3mm 0; break-inside:avoid; }
+ .scroll { overflow:visible; border:0; } table { min-width:0; table-layout:fixed; font-size:9pt; }
+ th, td { padding:2mm; overflow-wrap:anywhere; } thead { display:table-header-group; }
+ tr { break-inside:avoid; } h2, h3, .number { break-after:avoid; }
+ a { color:inherit; } p { orphans:3; widows:3; }
+}
+</style>
+</head>
+<body>
+<header>
+<p class="eyebrow">Maintainer field report · Unapproved recommendations</p>
+<h1>Where to converge.<br>Where to differ.</h1>
+<p class="lead">Replace this layout's prompts with the current comparison's decision, evidence and limits.</p>
+<p class="meta">Run / observation time · Analysis completeness · Source inspection is not runtime certification</p>
+<nav aria-label="Contents"><a href="#summary">Decision</a><a href="#scope">Scope</a><a href="#matrix">Matrix</a><a href="#findings">Findings</a><a href="#differences">Differences</a><a href="#questions">Questions</a><a href="#proposals">Proposals</a><a href="#evidence">Evidence</a><a href="#continuation">Next action</a></nav>
+</header>
+<main>
+<section id="summary"><p class="number">01 / Executive summary</p><h2>The decision in brief</h2><p>State the recommended direction and highest-impact actions.</p><p class="note">State major qualifications here. This report is not independent acceptance.</p></section>
+<section id="scope"><p class="number">02 / Requested and inspected scope</p><h2>What this report can establish</h2><p>Record active configuration, selection mode, requested versus inspected projects, access/source gaps, revisions, branches, canonical paths, dirty-tree qualifications and observation times.</p></section>
+<section id="matrix"><p class="number">03 / Comparison matrix</p><h2>Compare guarantees, not shapes</h2><p class="meta" id="matrix-help">Scroll horizontally on narrow screens. Labels describe evidence, not correctness scores.</p><div class="scroll" role="region" aria-label="Comparison matrix" aria-describedby="matrix-help" tabindex="0"><table><caption>Sampled responsibilities and limits</caption><thead><tr><th scope="col">Responsibility</th><th scope="col">Project A</th><th scope="col">Project B</th><th scope="col">Evidence / limits</th></tr></thead><tbody><tr><th scope="row">Architecture</th><td>Observation</td><td>Observation</td><td>Sample and references</td></tr><tr><th scope="row">Shared packages</th><td>Observation</td><td>Observation</td><td>Sample and references</td></tr><tr><th scope="row">Application behavior</th><td>Observation</td><td>Observation</td><td>Source-traced, not executed</td></tr><tr><th scope="row">Testing</th><td>Observation</td><td>Observation</td><td>Expectation and unrun checks</td></tr><tr><th scope="row">Tooling</th><td>Observation</td><td>Observation</td><td>Owning contracts</td></tr><tr><th scope="row">Documentation</th><td>Observation</td><td>Observation</td><td>Authority and omissions</td></tr></tbody></table></div></section>
+<section id="findings"><p class="number">04 / Prioritized findings</p><h2>Change only with a reason</h2><article><span class="label">Classification · Impact · Confidence</span><h3>Finding ID / concise consequence</h3><dl><dt>Requirement and evidence</dt><dd>Exact local contract and source trace; link to <a href="#e1">E1</a>.</dd><dt>Counterevidence</dt><dd>Strongest countercheck and remaining uncertainty.</dd><dt>Direction and tradeoff</dt><dd>Bounded recommendation with confidence reason.</dd></dl></article></section>
+<section id="differences"><p class="number">05 / Justified differences</p><h2>Keep useful variation</h2><p>Explain preserved guarantees, supporting evidence and the cost of forced uniformity, or state none established.</p></section>
+<section id="questions"><p class="number">06 / Unresolved questions</p><h2>Decisions still owned by people</h2><p>Name each exact question, options, missing evidence and decision owner.</p></section>
+<section id="proposals"><p class="number">07 / Project-owned proposals</p><h2>Small, observable outcomes</h2><div class="cards"><article><span class="label">Unapproved · Project / priority</span><h3>Outcome, not a created TASK</h3><dl><dt>Rationale and affected area</dt><dd>Practical consequence and linked finding.</dd><dt>Dependencies / existing work</dt><dd>Named dependencies and bounded planning search.</dd><dt>Acceptance</dt><dd>Observable result and owning verification.</dd></dl></article></div></section>
+<section id="evidence"><p class="number">08 / Evidence and limits</p><h2>A traceable, bounded sample</h2><article id="e1"><h3>E1 / Source reference</h3><p>Project · full revision · path:lines or symbol · observation type and time.</p><pre><code>Escaped source-derived text only.</code></pre></article><p>Declare files/use cases sampled, omissions, unexecuted checks and snapshot changes. References must remain useful offline and in print.</p></section>
+<section id="continuation"><p class="number">09 / Continuation and delivery</p><h2>The next permitted action</h2><p>Next: name the actual owner decision or supported command for an already selected record. Do not dispatch.</p><dl><dt>Analysis</dt><dd>Complete within declared sample / incomplete with named gaps.</dd><dt>HTML</dt><dd>Exact path · generation and actual visual inspection separately.</dd><dt>PDF</dt><dd>Not requested / unavailable / exported and inspected, with exact path.</dd><dt>Desktop</dt><dd>Not requested / failed / verified copied paths. State surviving location before cleanup.</dd></dl></section>
+</main>
+<footer>Local comparison · Evidence-backed recommendations, not approval · No remote assets</footer>
+</body>
+</html>

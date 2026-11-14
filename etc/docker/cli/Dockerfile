@@ -24,7 +24,7 @@ FROM php:8.5.12-cli-bookworm@sha256:d4f6e10eb393de7e3a7a88e8b88e139072dd3ae297f6
 
 COPY --from=git-build /opt/git/usr/local/ /usr/local/
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.11.2@sha256:5bcb28b8d0edc4091125f8218f9d088f998bdfc843f8fbb9a4beb4dcd8625684 /usr/bin/composer /usr/bin/composer
 COPY --from=fpm /usr/local/sbin/php-fpm /usr/local/sbin/php-fpm
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
@@ -47,6 +47,8 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && rm -rf /tmp/xdebug /tmp/xdebug.tgz /var/lib/apt/lists/*
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 COPY etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
+COPY etc/docker/php/runtime-secrets.php /usr/local/etc/php/runtime-secrets.php
+COPY etc/docker/php/runtime-secrets.ini /usr/local/etc/php/conf.d/zz-runtime-secrets.ini
 WORKDIR /app
 
 # Preserve the distro executable path without retaining its affected Git package.

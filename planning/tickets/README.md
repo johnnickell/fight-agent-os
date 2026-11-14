@@ -143,5 +143,5 @@
 | [TICKET-00138](00138-TICKET.md) | Serve browser journeys from root URLs | done | [EPIC-00025](../epics/00025-EPIC.md) |
 | [TICKET-00139](00139-TICKET.md) | Reconcile JSON-managed authority and access defaults | done | [EPIC-00025](../epics/00025-EPIC.md) |
 | [TICKET-00140](00140-TICKET.md) | Resolve comparison projects and permitted local settings | done | [EPIC-00026](../epics/00026-EPIC.md) |
-| [TICKET-00141](00141-TICKET.md) | Compare related projects and deliver polished alignment reports | ready-for-agent | [EPIC-00026](../epics/00026-EPIC.md) |
+| [TICKET-00141](00141-TICKET.md) | Compare related projects and deliver polished alignment reports | done | [EPIC-00026](../epics/00026-EPIC.md) |
 <!-- /planning:records -->

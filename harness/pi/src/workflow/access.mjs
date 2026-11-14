@@ -7,7 +7,7 @@ class Unavailable extends Error {
 export const skillEffects = Object.freeze({
   work: 'source', review: 'review-report', qa: 'qa-report', land: 'delivery', build: 'coordination', sync: 'coordination',
   next: 'inspect', fix: 'bug-planning', audit: 'inspect', architecture: 'inspect', 'security-audit': 'inspect',
-  adopt: 'inspect', 'design-review': 'inspect', grill: 'epic-planning', 'to-tickets': 'ticket-planning',
+  adopt: 'inspect', compare: 'scratch', 'design-review': 'inspect', grill: 'epic-planning', 'to-tickets': 'ticket-planning',
   'to-tasks': 'task-planning', wayfinder: 'map-planning', research: 'research', design: 'scratch',
   prototype: 'scratch', 'writing-for-agents': 'instructions', graphify: 'graph', release: 'release',
   what: 'inspect', ask: 'inspect', ci: 'inspect', simplify: 'inspect', handoff: 'scratch', learn: 'scratch',

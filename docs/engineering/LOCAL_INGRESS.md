@@ -108,8 +108,9 @@ commands above deliberately; setup alone does not change running containers.
 
 ## Restart and wake behavior
 
-The supplier and running application services use `unless-stopped`. Docker restarts existing containers
-when its engine starts; Docker Desktop must be enabled to start at sign-in on macOS. A manually stopped
+The supplier uses `unless-stopped`; the [Planning application runtime](PLANNING_RUNTIME.md) now uses bounded
+`on-failure:3`. Check/start application services explicitly after exhausted failures or a host restart/wake.
+Docker Desktop startup at sign-in remains a separate operator setting. A manually stopped
 container stays stopped, and a removed task runtime stays removed. These policies do not recreate deleted
 containers, run migrations, generate certificates, enroll trust or start profiles that were never started.
 Composer and other one-off tools do not inherit the application restart policy.

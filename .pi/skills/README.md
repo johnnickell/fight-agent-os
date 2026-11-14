@@ -59,8 +59,17 @@ tracks remaining capabilities. Future managed identities and phase order follow 
 
 Read-only engineering skills are available locally: [audit](audit/SKILL.md) for scoped conformance,
 [architecture](architecture/SKILL.md) for design options, [security-audit](security-audit/SKILL.md) for trust
-boundaries, and [adopt](adopt/SKILL.md) for project comparisons. [Fix](fix/SKILL.md) diagnoses bugs and prepares
+boundaries, and [adopt](adopt/SKILL.md) for Agent OS alignment choices. [Fix](fix/SKILL.md) diagnoses bugs and prepares
 a tracking handoff; `work` owns repair. None substitutes for independent `review`.
+
+[Compare](compare/SKILL.md) provides peer-project synthesis and a polished offline HTML report, distinct from
+single-boundary audit, provider-focused adopt, cleanup proposals and independent review. Invoke `/skill:compare`
+or `/skill:compare --projects project-slim,project-yii`; selection and settings follow the owning
+[scope contract](../../docs/engineering/COMPARISON_SCOPE.md). Request PDF and/or Desktop delivery separately and
+explicitly. The skill uses native reads and a static layout, not a comparison engine. It writes only ignored
+report output and requested copies, never compared source or planning records. Workflow selection is `scratch`,
+not source repair or acceptance. A fresh Harness containing its registration is required; existing hosts remain
+unchanged until deliberate safe-boundary adoption.
 
 The local Pi suite also provides [what](what/SKILL.md) to re-explain a confusing answer,
 [ask](ask/SKILL.md) for grounded project questions, [ci](ci/SKILL.md) for build diagnosis,

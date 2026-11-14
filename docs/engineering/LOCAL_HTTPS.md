@@ -61,8 +61,8 @@ setup must not mistake text inside an unrelated value for an origin assignment. 
 unchanged and inspect it privately; only convert a value to a supported representation if its meaning is
 preserved. `up`/`status` still use Compose's parser and do not rewrite `.env`.
 
-Leave `FIGHT_AGENT_OS_PORT=18087`: it controls the inherited HTTP listener, not TLS. After explicit setup,
-`./bin/up` is the sole ordinary startup/refresh command for HTTP, HTTPS PHP and the gateway. Use it again after
+The former built-in HTTP listener is removed. After explicit [runtime secret setup and migrations](PLANNING_RUNTIME.md),
+`./bin/up` is the sole ordinary startup/refresh command for tooling, HTTPS PHP and the gateway. Use it again after
 `.env` or image/configuration changes to update both PHP runtimes. It validates effective Compose settings and
 existing certificate/key files before service mutation, waits for services, validates/reloads Nginx, then probes
 the root over verified HTTPS with curl's trust store. Missing prerequisites fail closed; startup never runs setup,

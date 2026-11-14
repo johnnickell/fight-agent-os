@@ -74,7 +74,7 @@
 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | done | — |
 | [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | done | — |
 | [TASK-00071](00071-TASK.md) | Prepare develop documentation for public visibility | done | — |
-| [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | ready-for-agent | [TICKET-00023](../tickets/00023-TICKET.md) |
+| [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | ready-for-agent | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00074](00074-TASK.md) | Expose authorized installation capabilities and diagnostics | ready-for-agent | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00075](00075-TASK.md) | Deliver the guided Planning installation journey | ready-for-agent | [TICKET-00023](../tickets/00023-TICKET.md) |
@@ -596,6 +596,6 @@
 | [TASK-00591](00591-TASK.md) | Move managed authority to JSON catalogs and reconcile approved defaults | done | [TICKET-00139](../tickets/00139-TICKET.md) |
 | [TASK-00592](00592-TASK.md) | Add clear-answer and simplification skills with consistent testing guidance | done | — |
 | [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | done | [TICKET-00140](../tickets/00140-TICKET.md) |
-| [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | ready-for-agent | [TICKET-00141](../tickets/00141-TICKET.md) |
+| [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | done | [TICKET-00141](../tickets/00141-TICKET.md) |
 | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | done | — |
 <!-- /planning:records -->
