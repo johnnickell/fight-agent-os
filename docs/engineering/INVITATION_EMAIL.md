@@ -8,74 +8,48 @@ Do not expose this development stack or its mailbox to untrusted users.
 
 ## Configure the selected checkout
 
-Use a private ignored `.env` in the intended checkout, never another worktree's secrets or database. Install
-locked dependencies and prepare browser/CSRF/access-token configuration using [README](../../README.md) and
-[access-token configuration](ACCESS_TOKENS.md). Keep independent cryptographically generated keys for each purpose.
-Use [the runtime guide](PLANNING_RUNTIME.md) for explicit service secrets and the selected registered
-worktree's deterministic project. Mailpit is now private, with no browser/host port. The old TASK-00040
-port overrides are superseded. Configure these non-secret values for the selected installation:
+This procedure is for one **registered linked checkout**, not main. Run from that checkout and keep the
+exact selector for its entire lifecycle:
+
+```sh
+CHECKOUT="$(pwd -P)"
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
+./bin/runtime --worktree "$CHECKOUT" inspect
+```
+
+Confirm the reported checkout and deterministic `fight-wt-…` project before continuing. Stop if the path is
+not the intended registered worktree. Unselected `bin/up` and `bin/down` target **main**, even from here.
+Follow [the runtime guide](PLANNING_RUNTIME.md) for explicit initial `./bin/runtime setup`, image/dependency
+and browser asset preparation. Reuse an already prepared installation; do not generate a second stack.
+Reuse its enrolled HTTPS name and existing supplier/certificate; hostname, trust and DNS changes are separate
+operator operations. Mailpit has no browser/host port.
+
+Before editing configuration or applying migrations on an already running installation, stop only its gateway:
+
+```sh
+./bin/runtime --worktree "$CHECKOUT" docker compose stop https
+```
+
+Worktree configuration comes from the canonical checkout's ignored `var/worktrees/<project>/task.env`,
+not the linked checkout's `.env`. Privately edit only the intended installation's settings. For TASK-00072,
+the enrolled origin is `https://task-00072-b46c674612.local.fight-agent.dev`; use these non-secret settings:
 
 ```dotenv
 APP_ENV=development
 APP_CREDENTIAL_DELIVERY_ADAPTER=catcher
-APP_ACTIVATION_ORIGIN=https://localhost:18443
+APP_ACTIVATION_ORIGIN=https://task-00072-b46c674612.local.fight-agent.dev
 APP_ACTIVATION_PATH=/activate
+APP_PASSWORD_RESET_ORIGIN=https://task-00072-b46c674612.local.fight-agent.dev
+APP_PASSWORD_RESET_PATH=/reset-password/complete
 ```
 
-Also set `APP_CREDENTIAL_DELIVERY_KEY` to an independent random 32-byte hex key. This command fills only an
-absent or literally empty setting (unquoted, `''` or `""`) without printing it. It recognizes single-line whitespace and
-`export` assignments, preserves nonempty values and all unrelated bytes, and refuses duplicates before writing.
-It deliberately refuses multiline, escaped, interpolated or otherwise unsupported syntax anywhere in `.env`;
-resolve such input privately, preserving any existing effective key, rather than deleting it to bypass refusal.
-Preservation does not validate an existing key's strength. Run only in the selected checkout, with no concurrent
-`.env` edits. Losing/changing the key while work is outstanding makes existing encrypted work unreadable.
+For another selected worktree, use its own verified enrolled origin consistently, including `APP_BROWSER_ORIGIN`.
+Explicit runtime setup generates independent worktree keys, including `APP_CREDENTIAL_DELIVERY_KEY`, in
+service-specific mounted secret files. Preserve existing keys; `.env` edits do not rotate those files.
+Follow the runtime guide for deliberate rotation, and [access-token configuration](ACCESS_TOKENS.md) for the
+keyring contract. Losing/changing the delivery key while work is outstanding makes encrypted work unreadable.
 
-```sh
-python3 - <<'PY'
-from pathlib import Path
-import os, re, secrets
-path = Path('.env')
-if path.is_symlink():
-    raise SystemExit('Refusing a symlink; .env unchanged.')
-data = path.read_bytes() if path.exists() else b''
-if b'\r' in data.replace(b'\r\n', b''):
-    raise SystemExit('Unsupported line endings; .env unchanged.')
-name = b'APP_CREDENTIAL_DELIVERY_KEY'
-# A deliberately limited single-line Compose subset; never guess about quoting/interpolation.
-assignment = re.compile(
-    rb'''[ \t]*(?:export[ \t]+)?([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*?'''
-    rb'''([^ \t\r\n'"\\$#]*|'[^'\\$\r\n]*'|"[^"\\$\r\n]*")(?:[ \t]+\#.*)?[ \t]*'''
-)
-positions = []
-offset = 0
-for line in data.splitlines(keepends=True):
-    body = line.removesuffix(b'\n').removesuffix(b'\r')
-    if body.strip(b' \t') and not body.lstrip(b' \t').startswith(b'#'):
-        match = assignment.fullmatch(body)
-        if not match:
-            raise SystemExit('Unsupported .env syntax; file unchanged. Resolve privately.')
-        if match[1] == name:
-            positions.append((offset + match.start(2), offset + match.end(2), match[2]))
-    offset += len(line)
-if len(positions) > 1:
-    raise SystemExit('Duplicate delivery-key settings; file unchanged. Resolve privately.')
-if positions and positions[0][2] not in (b'', b"''", b'""'):
-    raise SystemExit('Existing delivery key preserved; no update needed.')
-key = secrets.token_hex(32).encode('ascii')
-if positions:
-    start, end, _ = positions[0]
-    updated = data[:start] + key + data[end:]
-else:
-    newline = b'\r\n' if b'\r\n' in data else b'\n'
-    separator = newline if data and not data.endswith(b'\n') else b''
-    updated = data + separator + name + b'=' + key + newline
-os.umask(0o077)
-path.write_bytes(updated)
-os.chmod(path, 0o600)
-PY
-```
-
-Do not paste `.env`, `docker compose config`, messages, SMTP debug output or activation links into transcripts.
+Do not paste `.env`, `task.env`, secret files, `docker compose config`, messages, SMTP debug output or activation links into transcripts.
 Compose consumes `APP_ENV` (default `local`) and strictly parsed independent `APP_DEBUG`; see the
 [documentation/debug contract](SWAGGER.md). `null` is the default retryable
 no-send provider; `memory` is simulation only. `catcher` supports activation invitations and
@@ -83,23 +57,26 @@ no-send provider; `memory` is simulation only. `catcher` supports activation inv
 `APP_PASSWORD_RESET_PATH`; configure them before boot even when sending invitations only. Other credential
 purposes remain retryable and unsent until their own mapping is implemented.
 
-Runtime setup now copies configured keys into service-specific mounts; edit/rotate them explicitly as described
-in the runtime guide. The commands below retain delivery-specific historical examples; use the selected
-runtime wrapper, canonical origin and private Mailpit API, not the former published mailbox port.
+The owning TASK records historical delivery qualification. The procedure below uses the current selected
+runtime, schema-before-traffic order and private Mailpit API.
 
 ## Start, send, run, inspect, clean
 
-From that same checkout, after the ordinary explicit dependency setup:
+From that same checkout, after explicit runtime/dependency preparation and configuration above:
 
 ```sh
-export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
-./bin/mail-catcher up
-./bin/up                         # Applies changed .env to this project's web service
-./bin/database migrate          # Only the selected isolated development database
+# Keep the selected gateway stopped until reviewed migrations have completed.
+./bin/database start
+./bin/database status
+./bin/database migrate          # Apply only reviewed migrations to this selected worktree
+./bin/up --worktree "$CHECKOUT"  # Checks schema currency before admitting HTTPS traffic
 ./bin/mail-catcher status
 ```
 
-The catcher UI/API is **http://127.0.0.1:28041** for the settings above. SMTP is fixed to private Compose
+`database`, `mail-catcher`, `exec`, `console` and `credential-delivery` infer this linked checkout's project;
+keep running them from here. `up/down` require the explicit selector. Startup never applies migrations or
+rotates secrets. If migration or readiness fails, diagnose it before sending; do not substitute main or bypass
+TLS verification. SMTP is fixed to private Compose
 `mailcatcher:1025` with a five-second socket timeout; no host SMTP port, arbitrary DSN, relay or production fallback
 is configured. Mailpit v1.27.10 is digest-pinned in Compose. Its database is a bounded tmpfs mailbox with at most
 100 messages; it disappears when the container is removed and is not a delivery/audit store.
@@ -127,27 +104,38 @@ Use `./bin/credential-delivery status activation DELIVERY_ID --internal` with a 
 [recovery status/exit codes](CREDENTIAL_RECOVERY.md). Console success does not prove mail arrival or activation.
 There is no scheduler: later due retries require another explicit runner invocation.
 
-Open the catcher privately and inspect the invitation's text and HTML alternatives. The link should have the
-configured `https://localhost:28443/activate` base and fragment-only credential and user routing fields,
-never a query credential. Port 28443 remains only an isolated configuration example, not an automatically
-provisioned HTTPS listener. Configure the actual trusted browser origin and `/activate` before enabling
-catcher delivery; composition rejects a different origin/path. See the activation runbook for current capture,
-history, request and session behavior. Existing optional local HTTPS has separate setup and ports. The catcher delivers only to this local mailbox,
-regardless of the recipient address; it cannot deliver to Gmail or another real inbox.
+Inspect Mailpit through trusted tooling on the selected private network. Run these only in a private operator
+terminal with recording/capture disabled; responses contain credentials and must not enter transcripts or logs:
+
+```sh
+./bin/runtime --worktree "$CHECKOUT" docker compose exec -T web curl --fail --silent --show-error http://mailcatcher:8025/api/v1/messages
+# Substitute the selected message ID from that private response:
+./bin/runtime --worktree "$CHECKOUT" docker compose exec -T web curl --fail --silent --show-error http://mailcatcher:8025/api/v1/message/MESSAGE_ID
+```
+
+Inspect the returned text and HTML alternatives transiently. For TASK-00072 the link base must be
+`https://task-00072-b46c674612.local.fight-agent.dev/activate`, with fragment-only credential and user routing
+fields, never a query credential. Another installation must match its own configured canonical origin/path;
+composition rejects a different origin/path. See the activation runbook for capture, history, request and
+session behavior. The catcher delivers only to this private mailbox regardless of recipient address; it cannot
+deliver to Gmail or another real inbox. Do not publish a mailbox port or add an ingress route to inspect it.
 
 The mailbox intentionally holds activation material. Treat every body, source, screenshot and API response as
 sensitive. Inspect transiently; retain only redacted/boolean verification, not full links, fragments or MIME.
 Do not enable SMTP message logging, provider event subscribers, analytics or captures containing credentials.
 
 ```sh
-./bin/mail-catcher clear          # Destroys/recreates only this project's mailbox
-./bin/mail-catcher down           # Removes only this project's catcher and its activation material
-./bin/down                       # Stops this project's application/DB services; preserves its named dev DB
+./bin/mail-catcher clear          # Destroys/recreates only this selected project's mailbox
+./bin/mail-catcher down           # Removes only this selected project's catcher and activation material
+# Only after all assessors/other consumers have finished with this disposable installation:
+./bin/down --worktree "$CHECKOUT" # Destroys task services AND disposable PostgreSQL/SeaweedFS volumes
 ```
 
 Clearing the mailbox does not resend delivered work, revoke grants or clear PostgreSQL. Do not reinvite an existing
-address as a resend workaround. Preserve the delivery key while any retained work is live. Deleting a project DB
-is a separate destructive decision, never part of mailbox cleanup. Other Compose projects are untouched.
+address as a resend workaround. Preserve the delivery key while any retained work is live. Mailbox cleanup alone
+does not authorize task teardown: selected worktree down deletes its disposable database and storage, not merely
+stops them. To retain state for subsequent roles, omit down and use the runtime guide's selected service stop
+commands if needed. Never use unselected down as a substitute. Other Compose projects must remain untouched.
 
 ## Contracts and limits
 
