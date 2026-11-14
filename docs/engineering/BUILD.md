@@ -78,12 +78,15 @@ already exist. Setup may contact registries; acceptance never installs, updates,
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
+./bin/runtime setup       # Explicit service-secret preparation; inside a worktree selects only that checkout
 ./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
 ./bin/client build
 # After configuring independent application keys, explicitly enroll TLS once:
 ./bin/https setup
+./bin/database start
+./bin/database migrate   # Explicit approved schema before traffic; up only checks currency
 ./bin/up
 ./bin/openapi export
 ./bin/validations export
@@ -102,7 +105,8 @@ selection, actual effects and finite temporary-output lifetime. No per-stage sou
 readiness proof archives. Independent acceptance, actual publication and worker exits remain separate facts.
 
 `./bin/up` prepares ignored cache mounts and builds/starts the full declared main application stack, preserving
-main database data. Its explicit `.env`/localhost certificate preflight and verified root/CSRF readiness remain
+main PostgreSQL and SeaweedFS data. The `web` service is tooling only. [Runtime setup](PLANNING_RUNTIME.md)
+owns explicit mounted-secret preparation; startup checks existing migrations before admitting gateway traffic. Its explicit `.env`/localhost certificate preflight and verified root/CSRF readiness remain
 independent of shared ingress; normal URL is `https://localhost:18443`. Main loads no generated proxy override.
 `./bin/up --worktree SELECTOR` instead requires TASK-00553's shared ingress and actual-name TLS leaves, reporting
 that missing prerequisite without a fallback or readiness claim. Shared-topology acceptance remains incomplete.

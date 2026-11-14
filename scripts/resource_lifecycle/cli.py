@@ -8,7 +8,7 @@ import sys
 
 from .preparation import output_path
 from .resources import Hold, native_ids, require
-from .runtime import command, down, finish, selected, storage_admit, up
+from .runtime import command, down, finish, selected, setup, storage_admit, up
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--worktree', help='registered path, branch or unambiguous task-NNNNN')
     sub = parser.add_subparsers(dest='action', required=True)
-    for name in ('up', 'down', 'inspect'):
+    for name in ('up', 'down', 'inspect', 'setup'):
         entry = sub.add_parser(name)
         entry.add_argument('--worktree', default=argparse.SUPPRESS)
         if name == 'up':
@@ -41,6 +41,8 @@ def main():
     try:
         if args.action == 'up':
             return up(root, args.worktree, args.build_only, args.shared_ingress, args.task)
+        if args.action == 'setup':
+            return setup(root, args.worktree)
         if args.action == 'down':
             return down(root, args.worktree)
         if args.action == 'finish':

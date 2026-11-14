@@ -11,6 +11,8 @@ RUN apt-get update \
     && docker-php-ext-enable xdebug \
     && rm -rf /tmp/xdebug /tmp/xdebug.tgz /var/lib/apt/lists/*
 COPY etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
+COPY etc/docker/php/runtime-secrets.php /usr/local/etc/php/runtime-secrets.php
+COPY etc/docker/php/runtime-secrets.ini /usr/local/etc/php/conf.d/zz-runtime-secrets.ini
 COPY etc/docker/fpm/local.ini /usr/local/etc/php/conf.d/zzz-fpm-local.ini
 COPY etc/docker/fpm/zz-local.conf /usr/local/etc/php-fpm.d/zz-local.conf
 WORKDIR /app

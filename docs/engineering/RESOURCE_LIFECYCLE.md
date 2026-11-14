@@ -29,7 +29,8 @@ dependency commands rather than inventing this application's stack.
 `--build-only` explicitly builds application images without starting services or enrolling TLS. Dependency
 installation, schema migrations, exports and certificate setup remain explicit owning commands. Main retains
 its `.env` and persistent PostgreSQL volume. Worktree settings have independent keys, credentials, exact origin,
-project-local PostgreSQL volume and ignored output, never imported main data. Task storage is disposable by
+project-local PostgreSQL/SeaweedFS volumes and ignored output, never imported main data. Prepare them through
+explicit `bin/runtime setup` inside that selected checkout; ordinary startup never generates secrets. Task storage is disposable by
 definition; shared infrastructure belongs in separate projects.
 
 ## Configuration and readiness
@@ -43,9 +44,11 @@ per project and execution evidence stays under
 path so registered-worktree `.git` locators work inside the container; no metadata copy or write mount is added.
 Application boot never depends on execution evidence under `.runs/`.
 
-Full startup enables declared application TLS and mail services, not the Composer maintenance job. Current
-application services are web tooling/HTTP, TLS gateway, FPM, development/test PostgreSQL and private Mailpit;
-future installation services are not fabricated. Expensive wrappers check host space (20 GiB reserve plus
+Full startup enables declared application TLS and mail services, not the Composer maintenance job. The
+[Planning runtime](PLANNING_RUNTIME.md) adds private durable SeaweedFS, service-specific mounted secrets,
+explicit `bin/runtime setup` and a read-only migration-currency preflight. `web` is tooling only, not an HTTP
+server. Nginx/FPM is the sole application path. Mailpit has no host/browser port; future consumers remain
+unavailable until implemented. Expensive wrappers check host space (20 GiB reserve plus
 4 GiB allowance by default) and daemon availability; configure `FIGHT_STORAGE_RESERVE_BYTES` and
 `FIGHT_STORAGE_ALLOCATION_BYTES` explicitly. Existing service CPU/memory/PID limits remain in Compose. No new
 aggregate quota/ownership system or global prune is introduced.
@@ -72,8 +75,8 @@ must pass before a ready URL is printed. Only each application's TLS gateway joi
 `fight-local-ingress`, using verified HTTPS upstream on 8443; inherited publishing is stripped and private
 services remain private. Shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`.
 An independently operated router can instead use [external-proxy mode](LOCAL_INGRESS.md#external-proxy-front-door),
-which publishes no supplier host ports. Running application services restart with Docker unless manually
-stopped; maintenance jobs remain one-off. Removed task runtimes are never recreated by restart policies.
+which publishes no supplier host ports. Application services use bounded `on-failure:3`; exhausted failures and host restart/wake need explicit
+operator checks/startup. Maintenance jobs remain one-off. Removed runtimes are never recreated by restart policies.
 No custom DNS, trust enrollment, leaf generation or shared infrastructure startup is implicit.
 
 The application gateway owns direct TLS authority and canonical FastCGI Host/scheme/port; arbitrary forwarded

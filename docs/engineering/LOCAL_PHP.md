@@ -1,7 +1,6 @@
 # Local PHP diagnostics
 
-Both the built-in HTTP server (`web`, port 18087 by default) and the optional HTTPS FPM service (`https_php`)
-load `etc/docker/php/development.ini`. These are local development images, not a qualified production profile.
+The tooling-only `web` service and application FPM service (`https_php`) both load `etc/docker/php/development.ini`. These are local development images, not a qualified production profile.
 PHP reports all error levels and sends diagnostics to container stderr, including failures before middleware
 boots. Browser display remains off and PHP exception arguments are omitted. This preserves useful file/line and
 stack information without turning browser responses into debug pages. Exception messages can still contain
@@ -31,8 +30,9 @@ After an image or environment configuration change, refresh both PHP runtimes an
 ```
 
 Enroll TLS explicitly once with `./bin/https setup`; use `./bin/up` for every startup/refresh. The shared main checkout is not
-restarted by changes or validation in a worktree. Use a distinct `COMPOSE_PROJECT_NAME`, loopback port and private
-`.env` for isolated runtime qualification. Changing image settings alone does not repair missing application
+restarted by changes or validation in a worktree. Use `./bin/runtime setup` followed by
+`./bin/up --worktree /absolute/registered/checkout` for its deterministic isolated project; never override
+`COMPOSE_PROJECT_NAME` or copy main secrets. See [the runtime guide](PLANNING_RUNTIME.md). Changing image settings alone does not repair missing application
 keys: configure independent auth-rate, activation-rate, CSRF and signing keys as documented in README.
 `APP_DEBUG` remains owned by TASK-00154 and currently does not change application behavior. PHP logging and
 Xdebug configuration do not enable it or replace the planned authorized/redacted application diagnostics.

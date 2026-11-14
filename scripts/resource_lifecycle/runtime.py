@@ -27,6 +27,24 @@ def selected(root, selector=None):
     return (*resolve(root, selector), selector is not None)
 
 
+def setup(root, selector=None):
+    safe, checkout, project, entry, isolated = selected(root, selector)
+    storage_admit(checkout)
+    if isolated:
+        from local_domain import ensure
+        ensure(safe, safe, str(checkout))
+        prepare(safe, checkout, project, entry, initialize=True)
+    else:
+        from .secrets import provision
+        require((checkout / '.env').is_file(), 'Create the ignored .env before runtime setup')
+        raw = run([*compose(safe, checkout, project), 'config', '--environment'], checkout,
+                  capture=True, env=environment())
+        values = dict(line.split('=', 1) for line in raw.splitlines() if '=' in line)
+        provision(checkout / 'var/runtime/secrets', values)
+    print('Installation configuration prepared; no service, migration, trust or DNS change performed.')
+    return 0
+
+
 def command(root, argv, selector=None):
     safe, checkout, project, entry, isolated = selected(root, selector)
     if argv[0] == 'compose':
@@ -71,11 +89,17 @@ def up(root, selector=None, build_only=False, shared=False, task=None):
             env=environment())
         url = 'https://localhost:18443'
     require((checkout / 'vendor/autoload.php').is_file(), 'Install locked dependencies explicitly before startup')
-    for value in ('var', '.runs/cache/client/dependency-cache', '.runs/cache/client/vite-temp'):
+    for value in ('var', 'var/client/build', 'var/openapi', 'var/validations',
+                  '.runs/cache/client/dependency-cache', '.runs/cache/client/vite-temp'):
         (checkout / value).mkdir(parents=True, exist_ok=True)
-    # All declared application profiles, not the Composer maintenance job. No
-    # migrations, dependency installation, shared ingress start or trust mutation.
-    run([*args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--build',
+    # Private dependencies first; traffic is admitted only with the reviewed schema already applied.
+    # This query cannot migrate, install dependencies or enroll shared infrastructure.
+    run([*args, '--profile', 'https', 'build'], checkout, env=environment(isolated))
+    run([*args, 'up', '--detach', '--no-build', '--wait', '--wait-timeout', '120',
+         'web', 'postgres', 'postgres_test', 'seaweedfs'], checkout, env=environment(isolated))
+    run([*args, 'exec', '-T', 'web', 'php', 'vendor/bin/doctrine-migrations', 'up-to-date',
+         '--no-interaction'], checkout, env=environment(isolated))
+    run([*args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--no-build',
          '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-s', 'reload'], checkout, env=environment(isolated))
