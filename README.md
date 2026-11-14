@@ -187,9 +187,12 @@ for explicit startup and disposable-runtime cleanup.
 ## Comparison configuration
 
 [Comparison scope and host settings](docs/engineering/COMPARISON_SCOPE.md) defines the shared starter list,
-complete local replacement and future explicit-selection syntax. The host-only `./bin/env PROJECT_BASE`
-returns one supported setting without Docker; configure it explicitly as described there. The comparison
-skill and reports are not implemented by this configuration slice.
+complete local replacement and explicit-selection syntax. The host-only `./bin/env PROJECT_BASE`
+returns one supported setting without Docker; configure it explicitly as described there.
+Use the local [compare skill](.pi/skills/compare/SKILL.md) with `/skill:compare` or
+`/skill:compare --projects project-slim,project-yii` for bounded peer analysis and an offline HTML report.
+Request optional PDF export or Desktop copies separately. Reports and project-owned proposals are not approved
+work, independent acceptance or source repairs. See the [skill boundary and adoption notes](.pi/skills/README.md).
 
 ## Fight terminal
 

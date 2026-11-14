@@ -1,8 +1,9 @@
 # Comparison scope and host settings
 
 This is the owning contract for comparison project selection, paths and host settings. TASK-00593 supplies
-configuration, `bin/env` and the walkthrough below. The future `compare` skill consumes this contract;
-there is no comparison parser, runner or skill entrypoint yet. Do not copy these rules into that skill.
+configuration, `bin/env` and the walkthrough below. The [compare skill](../../.pi/skills/compare/SKILL.md)
+consumes this contract through native reads; there is no separate comparison parser or runner. Do not copy
+these resolution rules into the skill.
 
 ## Select scope in the invoking project
 
@@ -17,13 +18,13 @@ Configuration is data, not permission. If root discovery is unavailable or denie
    change that base or grant access to its target; require authorized access before following it.
 3. Without explicit selection, select every project in the active file in declaration order. An empty project
    mapping means no scope: ask for project entries. If neither file exists, ask for scope. Never scan siblings.
-4. The future skill's exact selection syntax is `/skill:compare --projects project-slim,project-yii`.
+4. The skill's exact selection syntax is `/skill:compare --projects project-slim,project-yii`.
    One `--projects` followed by one comma-separated, nonempty list of distinct configured names replaces the
    selected membership for this run, preserving list order. Names use `[a-z][a-z0-9-]*`; no spaces, globbing,
    paths, aliases, repeated options or other options are supported by this contract. Unknown names are gaps,
    not paths to discover. Explicit selection still uses the active file for repository/path definitions and
    does not rescue an invalid local file. Without a file, ask for those definitions rather than invent them.
-   This documents future invocation syntax; it is not an installed command today.
+   The local skill supplies this invocation; installed hosts need deliberate safe-boundary discovery/adoption.
 
 ### Small YAML schema
 
@@ -183,8 +184,8 @@ For each selected, authorized checkout:
 ## Owning walkthrough
 
 Use sanitized fixtures in task-owned ignored scratch; do not alter a user's `.env` or compared sources.
-No product-suite tests should exercise this tooling. There is no resolution consumer to execute yet: walk the
-selection/path rules explicitly using native reads and record that limitation.
+No product-suite tests should exercise this tooling. The comparison skill consumes the selection/path rules
+through native reads, not a standalone parser: walk them explicitly and record that boundary.
 
 - Read shared defaults: select exactly five entries; request PROJECT_BASE and join each path once. Walk
   `$PROJECT_BASE/project-slim` as well as `${PROJECT_BASE}/project-slim`; a relative `../storefront` resolves
@@ -205,4 +206,4 @@ selection/path rules explicitly using native reads and record that limitation.
   helper suppression is unavailable. Record observations, not managed identity or certification.
 
 Record actual outcomes, limits and unresolved owner actions in the TASK handoff. Independent Review and QA
-remain separate. The later skill owns automated consumption and comparison/report behavior, not this slice.
+remain separate. The comparison skill owns native consumption and comparison/report behavior, not this scope/settings slice.
