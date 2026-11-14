@@ -1,6 +1,7 @@
 # SDLC template specifications
 
-This is the complete eight-template **authoring catalog, revision 2**, awaiting maintainer acceptance.
+This is the complete eight-template **authoring catalog, revision 2**, accepted by the maintainer and
+independent technical Review and instruction QA under [TASK-00248](../../planning/tasks/00248-TASK.md).
 It supplies reviewed inputs to [TASK-00299](../../planning/tasks/00299-TASK.md), not a runtime registry,
 seed command, installed profile, Agent or grant. No loader consumes these files today.
 
@@ -112,9 +113,9 @@ Design/build contributors cannot independently review their implementation; revi
 follows technical acceptance and precedes land, and source repairs return through Engineer and renewed review.
 Technical and QA repairs share the existing revision allowance; neither resets it.
 
-**Human acceptance: pending.** The maintainer supplied and approved the nine replacement prompt texts for
-revision 2, not the complete supporting catalog or independent Review/QA. The maintainer must explicitly accept
-this complete catalog at an exact Git revision
-and associate that decision with TASK-00248. Implementation authorization, walkthroughs and mechanical checks
-are not that decision. Independent technical Review and QA remain separate. No seed, grant, launch, publication,
+**Human acceptance: recorded** for the complete revision-2 catalog at
+`8a39a28734031476a9f9c4b44bdda723c2045519`, followed by independent technical Review ACCEPT and instruction
+QA PASS (35 scenarios). [TASK-00248](../../planning/tasks/00248-TASK.md) records the decision and evidence.
+This factual closeout changes no prompt, identity or capability contract. Implementation authorization,
+walkthroughs and mechanical checks alone are not human acceptance. No seed, grant, launch, publication,
 merge, release or deployment is authorized by this document.

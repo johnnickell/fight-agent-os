@@ -4,8 +4,9 @@ These are the accepted team responsibilities for the planned managed runtime. Lo
 this document does not assert that managed Agent provisioning, dispatch or QA execution is implemented.
 Harness owns revisioned Agent profile templates, presented as **Team roles**. Templates request capabilities;
 Access Control grants actual Agents direct Permissions. A job title, prompt or Skill grants no authority.
-The eight [versioned template specifications](../../database/agent-templates/README.md) are authored seed-input
-candidates, not runtime profiles; their complete-catalog maintainer acceptance is still pending in TASK-00248.
+The eight [versioned template specifications](../../database/agent-templates/README.md) are accepted seed inputs,
+not runtime profiles; [TASK-00248](../../planning/tasks/00248-TASK.md) records complete-catalog maintainer acceptance,
+independent technical Review ACCEPT and instruction QA PASS for revision 2.
 Human authorization Roles, including `ROLE_REPOSITORY_ADMIN` and `ROLE_DEVELOPER`, belong to the
 [ubiquitous language](../UBIQUITOUS_LANGUAGE.md#human-roles); they are not Agent Team roles or profile aliases.
 

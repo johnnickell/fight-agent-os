@@ -52,7 +52,7 @@ model choices are explicit. Explorer favors measured speed/cost suitability; nev
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00248](../tasks/00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-human |
+| [TASK-00248](../tasks/00248-TASK.md) | Define the eight reviewed SDLC template specifications | done |
 | [TASK-00249](../tasks/00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info |
 | [TASK-00250](../tasks/00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info |
 <!-- /planning:children -->
@@ -69,7 +69,8 @@ of the AccessControl map's next TICKET and approved three TASKs:
 - [TASK-00250](../tasks/00250-TASK.md): integrate immutable role binding and current authority with actual isolated
   session owners, without another launcher or duplicate role journey.
 
-TASK-00248 is `ready-for-agent`; TASK-00249/00250 retain `needs-info` for remaining resource/model,
+TASK-00248's revision-2 specifications are accepted and `done`; this is not runtime enablement or merge.
+TASK-00249/00250 retain `needs-info` for remaining resource/model,
 Harness session/snapshot and actual named-Agent composition prerequisites. TICKET-00075 now maps
 [TASK-00299](../tasks/00299-TASK.md)'s database initialization/history owner directly before TASK-00249;
 its resource/reference and independent Triage-input holds remain explicit. All are unranked. TASK-00200 now consumes TASK-00249 for
