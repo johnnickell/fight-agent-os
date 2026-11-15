@@ -338,7 +338,7 @@ def up(safe, task, ref):
                 # existing user's QA environment because a reuse probe failed.
                 cleanup_failed(safe, entry)
                 raise
-        print(json.dumps({**observed, 'scenario': str(scenario_path(safe, project)),
+        print(json.dumps({**observed, 'scenario': str(scenario_path(safe, observed['project'])),
                           'scenario_state': 'activate only a pending synthetic account; no password printed'}))
     return 0
 
