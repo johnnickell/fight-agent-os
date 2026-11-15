@@ -25,6 +25,13 @@ def location(safe, task, oid):
     return safe / '.runs' / 'worktrees' / ('qa-' + task.lower() + '-' + oid)
 
 
+def known_location(safe, checkout, task, oid):
+    """Recognize exact current and former QA paths without relocating existing work"""
+    current = location(safe, task, oid)
+    previous = safe.parent / '.worktrees' / current.name
+    return checkout in (current, previous) and checkout.resolve() == checkout and not checkout.is_symlink()
+
+
 def task_record(task):
     require(re.fullmatch(r'TASK-\d{5}', task), 'Expected exact TASK-NNNNN')
     matches = [path for path in (ROOT / 'planning/tasks').rglob(task[5:] + '-TASK.md') if path.is_file()]
@@ -87,14 +94,15 @@ def environments(safe):
     for entry in registered:
         match = QA_REF.fullmatch(entry['branch'])
         if match:
-            require(Path(entry['path']) == location(safe, *match.groups()), 'QA ref registered at an unexpected path; inspect ownership')
+            require(known_location(safe, Path(entry['path']), *match.groups()),
+                    'QA ref registered at an unexpected path; inspect ownership')
             entries[entry['path']] = {**entry, 'task': match[1].upper(), 'revision': match[2]}
     for locator in (safe / 'var/worktrees').glob('fight-wt-*/locator.json'):
         entry = json.loads(locator.read_text())
         match = QA_REF.fullmatch(entry.get('branch', ''))
         if match:
-            checkout = location(safe, *match.groups())
-            require(entry['path'] == str(checkout) and entry['project'] == identity(safe, checkout) and
+            checkout = Path(entry['path'])
+            require(known_location(safe, checkout, *match.groups()) and entry['project'] == identity(safe, checkout) and
                     locator.parent.name == entry['project'], 'Invalid QA teardown locator')
             entries.setdefault(entry['path'], {**entry, 'task': match[1].upper(), 'revision': match[2]})
     # Worktrunk can leave an intentionally retained unmerged ref without source.
@@ -103,6 +111,8 @@ def environments(safe):
         branch, actual = row.split()
         match = QA_REF.fullmatch(branch)
         require(match is not None, 'Unknown QA-purpose ref; inspect native Git inventory')
+        if any(entry['branch'] == branch for entry in entries.values()):
+            continue
         checkout = location(safe, *match.groups())
         entries.setdefault(str(checkout), {'path': str(checkout), 'branch': branch,
                                           'task': match[1].upper(), 'revision': match[2],
@@ -345,7 +355,7 @@ def down(safe, selector):
             # repeatable cleanup selector. Never redirect it to an engineering ref.
             path = Path(selector)
             match = re.fullmatch(r'qa-(task-\d{5})-([0-9a-f]{40})', path.name)
-            require(path.is_absolute() and match and path == location(safe, *match.groups()),
+            require(path.is_absolute() and match and known_location(safe, path, *match.groups()),
                     'No matching QA environment; use the exact original QA checkout path')
             entry = {'path': str(path), 'revision': match[2], 'task': match[1].upper()}
         return dispose(safe, entry)

@@ -96,6 +96,12 @@ a URL only after live HTTPS verification. Missing/failed inventory is nonzero/un
 `partial` includes interrupted allocation/setup; `stopped` includes prepared but stopped services. Worktrunk's
 intentionally retained unmerged ref is labeled separately, not reported as a running stack.
 
+Existing QA registrations and teardown locators keep their exact path, including the former
+`<repo_parent>/.worktrees/qa-task-NNNNN-FULL_OID` layout. List reports one environment for a represented
+QA ref, and exact-path down remains repeatable at either the former or current layout after locator retirement.
+New allocations use only `<repo_path>/.runs/worktrees/`. Both layouts require the matching TASK/full-OID
+slug and a nonaliased path; arbitrary moved paths do not gain ownership through their ref name.
+
 Closing a terminal/browser does **not** stop QA. Run the printed `bin/qa down /absolute/qa/checkout` at the end
 of the session. It calls the SAME public `bin/down --worktree` first, removing that project's disposable data,
 services and route, then retires known installed dependency output and invokes the SAME guarded Worktrunk
