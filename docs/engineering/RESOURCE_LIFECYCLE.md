@@ -33,6 +33,24 @@ project-local PostgreSQL/SeaweedFS volumes and ignored output, never imported ma
 explicit `bin/runtime setup` inside that selected checkout; ordinary startup never generates secrets. Task storage is disposable by
 definition; shared infrastructure belongs in separate projects.
 
+For explicitly authorized work without a TASK, an unbound linked checkout may use its existing deterministic
+`https://<project>.localhost` origin without joining the project's custom-domain registry:
+
+```sh
+./bin/runtime setup --unregistered-worktree
+./bin/up --worktree /absolute/registered/checkout --unregistered-worktree --build-only
+# Install dependencies, build assets and migrate the disposable database as usual.
+./bin/https setup --ingress --worktree /absolute/registered/checkout
+./bin/up --worktree /absolute/registered/checkout --unregistered-worktree
+```
+
+Repeat the explicit flag on every setup/start command; it is not a persisted alternative registration mode.
+Main, already bound checkouts, `--task` combinations and existing settings for a different origin are refused.
+Ordinary commands retain their TASK registration requirement. This option neither edits domain registration
+nor changes DNS, trust or shared services. The existing supplier/front door must already support the exact
+`.localhost` name; startup still requires verified HTTPS root/CSRF readiness. Prepare browser smoke normally
+with the existing public CA. Teardown uses the same scoped `bin/down --worktree` command.
+
 ## Configuration and readiness
 
 Compose files, project and env files are selected explicitly, independent of ambient `COMPOSE_FILE`, project

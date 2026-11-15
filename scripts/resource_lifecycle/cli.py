@@ -19,6 +19,9 @@ def main():
     for name in ('up', 'down', 'inspect', 'setup'):
         entry = sub.add_parser(name)
         entry.add_argument('--worktree', default=argparse.SUPPRESS)
+        if name in ('up', 'setup'):
+            entry.add_argument('--unregistered-worktree', action='store_true',
+                               help='explicitly use an unbound linked checkout at its project.localhost origin')
         if name == 'up':
             entry.add_argument('--build-only', action='store_true')
             entry.add_argument('--task', help='Actual TASK identity for an enrolled new worktree')
@@ -40,9 +43,9 @@ def main():
     root = Path.cwd().resolve()
     try:
         if args.action == 'up':
-            return up(root, args.worktree, args.build_only, args.shared_ingress, args.task)
+            return up(root, args.worktree, args.build_only, args.shared_ingress, args.task, args.unregistered_worktree)
         if args.action == 'setup':
-            return setup(root, args.worktree)
+            return setup(root, args.worktree, args.unregistered_worktree)
         if args.action == 'down':
             return down(root, args.worktree)
         if args.action == 'finish':
