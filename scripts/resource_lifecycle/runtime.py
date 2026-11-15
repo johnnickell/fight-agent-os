@@ -27,12 +27,33 @@ def selected(root, selector=None):
     return (*resolve(root, selector), selector is not None)
 
 
-def setup(root, selector=None):
+def registration(safe, checkout, project, selector, unregistered=False, task=None):
+    """Select explicit unregistered worktree operation without changing domain bindings"""
+    from local_domain import binding, ensure
+    if not unregistered:
+        return ensure(safe, safe, selector, task)
+    require(selector is not None and checkout != safe, 'Unregistered mode requires a linked worktree')
+    require(task is None, 'Unregistered mode cannot select a TASK')
+    require(binding(safe, checkout) is None, 'Checkout already has a domain binding; use its registered origin')
+    private = safe / 'var/worktrees' / project / 'task.env'
+    if private.exists():
+        require(not private.is_symlink(), 'Private environment alias refused')
+        lines = private.read_text().splitlines()
+        for key in ('APP_BROWSER_ORIGIN', 'APP_ACTIVATION_ORIGIN', 'APP_PASSWORD_RESET_ORIGIN'):
+            require([line for line in lines if line.startswith(key + '=')] ==
+                    [key + "='https://" + project + ".localhost'"],
+                    'Prepared origin differs from the unregistered worktree; preserve its settings')
+    return None
+
+
+def setup(root, selector=None, unregistered=False):
     safe, checkout, project, entry, isolated = selected(root, selector)
+    if unregistered:
+        registration(safe, checkout, project, str(checkout) if isolated else None, True)
     storage_admit(checkout)
     if isolated:
-        from local_domain import ensure
-        ensure(safe, safe, str(checkout))
+        if not unregistered:
+            registration(safe, checkout, project, str(checkout))
         prepare(safe, checkout, project, entry, initialize=True)
     else:
         from .secrets import provision
@@ -65,11 +86,10 @@ def command(root, argv, selector=None):
     return subprocess.run(['docker', *argv], cwd=checkout, env=environment(isolated)).returncode
 
 
-def up(root, selector=None, build_only=False, shared=False, task=None):
+def up(root, selector=None, build_only=False, shared=False, task=None, unregistered=False):
     safe, checkout, project, entry = resolve(root, selector)
     isolated = selector is not None
-    from local_domain import ensure
-    registered = ensure(safe, safe, selector, task)
+    registered = registration(safe, checkout, project, selector, unregistered, task)
     shared = shared or (not isolated and registered is not None)
     storage_admit(checkout)
     if isolated:

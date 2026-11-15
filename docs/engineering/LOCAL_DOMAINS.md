@@ -49,6 +49,13 @@ Main enrollment opts primary startup into shared HTTPS. Unenrolled framework app
 retain ordinary local startup; no configured provider is required for that path.
 Configured-but-unavailable providers fail explicitly rather than silently changing origin.
 
+Explicitly authorized work without a TASK may instead select an unbound Agent OS linked checkout with
+`--unregistered-worktree` on each runtime setup/start command. This retains its deterministic
+`<project>.localhost` origin without writing this registry; it refuses main, existing bindings, `--task`
+combinations and prepared settings for another origin. Ordinary registration behavior is unchanged.
+Follow the [explicit preparation sequence](RESOURCE_LIFECYCLE.md#explicit-commands), including exact-name
+TLS and the existing shared front door. The option does not change DNS, trust or shared services.
+
 Registration does not enroll trust, start the shared supplier or issue certificates.
 Prepare the project base/wildcard leaf explicitly through `bin/https` (Fight) or the
 project's `bin/ingress certificate` adapter. `setup` reuses a valid project leaf;

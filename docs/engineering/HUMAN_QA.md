@@ -24,9 +24,9 @@ feature branch and develop base, and an open or merged PR. Missing/ambiguous pub
 there is no fallback to develop, a similarly named branch, or the original task checkout. A remote advance
 cannot change the allocated revision. An unsupported revision fails rather than running changed host setup code.
 
-The QA-purpose native branch is `qa/task-NNNNN/FULL_OID`; its registered checkout is a sibling under
-`.worktrees/qa-task-NNNNN-FULL_OID`. It never adopts an engineering/main checkout. The existing path-derived
-Compose project/hostname and isolated settings, database and output are reused without a second inventory.
+The QA-purpose native branch is `qa/task-NNNNN/FULL_OID`; its registered checkout is under the canonical
+base repository at `<repo_path>/.runs/worktrees/qa-task-NNNNN-FULL_OID`. It never adopts an engineering/main
+checkout. The existing path-derived Compose project/hostname and isolated settings, database and output are reused without a second inventory.
 An OS advisory lock serializes QA up/down, without saved PIDs or a daemon. A healthy repeat reuses the SAME
 stack and data. A different live/partial revision, ambiguous sessions or stopped/interrupted setup requires
 explicit exact down/up; no reset or silent source switch. After completed down, unchanged retained refs are
@@ -95,6 +95,12 @@ queries Docker. Each row has TASK, full requested/actual OID, checkout, status a
 a URL only after live HTTPS verification. Missing/failed inventory is nonzero/unavailable, never an empty success.
 `partial` includes interrupted allocation/setup; `stopped` includes prepared but stopped services. Worktrunk's
 intentionally retained unmerged ref is labeled separately, not reported as a running stack.
+
+Existing QA registrations and teardown locators keep their exact path, including the former
+`<repo_parent>/.worktrees/qa-task-NNNNN-FULL_OID` layout. List reports one environment for a represented
+QA ref, and exact-path down remains repeatable at either the former or current layout after locator retirement.
+New allocations use only `<repo_path>/.runs/worktrees/`. Both layouts require the matching TASK/full-OID
+slug and a nonaliased path; arbitrary moved paths do not gain ownership through their ref name.
 
 Closing a terminal/browser does **not** stop QA. Run the printed `bin/qa down /absolute/qa/checkout` at the end
 of the session. It calls the SAME public `bin/down --worktree` first, removing that project's disposable data,

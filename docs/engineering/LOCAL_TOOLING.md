@@ -9,6 +9,10 @@ For this repository use [resource lifecycle](RESOURCE_LIFECYCLE.md), [build](BUI
 Laravel, Yii and CodeIgniter implementations expose the same explicit main/worktree command boundary through
 their local `docs/engineering/LOCAL_TOOLING.md`; their actual service sets and gates remain project-owned.
 
+Create new isolated source worktrees at `<repo_path>/.runs/worktrees/<slug>/`, using the target repository's
+canonical base checkout resolved through Git metadata. This applies when shared workflows operate on another
+Fight project too. Preserve existing registered paths and historical receipts; relocation is a separate operation.
+
 Use `bin/down --worktree /absolute/registered/checkout` before qualifying source removal. Run the target's
 `bin/runtime finish` from its canonical safe checkout only after delivery verification and durable outcomes.
 Its guarded Worktrunk remover rechecks exact native hooks and source ownership. If the canonical target has

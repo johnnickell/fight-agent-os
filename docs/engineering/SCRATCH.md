@@ -33,7 +33,12 @@ on `.runs/`; runtime export directories reject symlinks.
 | `qa/<TASK-ID>/` | Canonical independent QA reports and their runs/captures |
 | `reviews/<TASK-ID>/` | Canonical independent technical reports and their attachments |
 | `tasks/<TASK-ID>/runs/<run-id>/` | Task-owned execution logs, probes, manifests, coordination and delivery/landing evidence |
-| `worktrees/` | Approved registered Git worktrees, operated through Git rather than ordinary file moves |
+| `worktrees/<slug>/` | Approved registered source worktrees beneath the canonical base checkout, operated through Git rather than ordinary file moves |
+
+Create isolated source checkouts at `<repo_path>/.runs/worktrees/<slug>/`. Resolve `repo_path` through Git
+common-directory and registered-worktree metadata; do not nest new worktrees inside the invoking linked checkout.
+The source checkout may live here; its generated runtime files still follow the `var/` rules above. Existing
+registered worktrees retain their paths until an explicitly authorized relocation; this convention is not a move command.
 
 Allocate unique run IDs rather than overwriting another run. Do not create loose logs, root-level task/date
 folders, a separate `land/` category, or a new tool-named top-level directory. A directory need not exist until
