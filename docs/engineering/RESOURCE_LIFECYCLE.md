@@ -35,6 +35,10 @@ definition; shared infrastructure belongs in separate projects.
 
 ## Configuration and readiness
 
+Runtime wrappers default the Compose service owner to the invoking user's UID:GID. A nonempty
+`FIGHT_AGENT_OS_USER` in the shell or selected installation environment file overrides that default;
+the shell takes precedence. No per-terminal export is needed for ordinary startup.
+
 Compose files, project and env files are selected explicitly, independent of ambient `COMPOSE_FILE`, project
 names or auto-loaded overrides. Ordinary main uses only `compose.yaml` and its explicit `.env`; it never loads
 `var/main-ingress.yaml` or generated task overrides. Worktree overrides/settings live in canonical ignored

@@ -35,6 +35,24 @@ Install only what the selected path needs. Nothing here installs tools or change
 | Workflow worktree/ref removal | [Worktrunk](https://worktrunk.dev/) and the target's [resource lifecycle](../../docs/engineering/RESOURCE_LIFECYCLE.md) |
 | Native workspace | Herdr interactive pane/CLI context and Node `process.execve`; see [workspace capabilities](WORKSPACE.md#native-pi-in-herdr) |
 | Application checks/logs | Docker Compose and the target's prepared stack; logs inspect existing verified sources, never provision them |
+| Compact shell output | Optional RTK on PATH with a working `rtk rewrite` command |
+
+## RTK and graph navigation
+
+The packaged RTK extension uses Pi's native `tool_call` hook and the installed RTK rewrite registry.
+Supported bash commands are rewritten automatically; unsupported commands, native file tools and repository
+wrappers retain their execution paths. No separate RTK Pi hook is needed alongside this package. Missing or
+failing RTK warns once and leaves commands native. `rtk proxy COMMAND` requests raw output;
+`RTK_DISABLED=1 pi` disables rewriting for a session. Explicit `--fight-tool-policy` selection disables the
+optimizer so approved script arguments remain exact. RTK changes output presentation, not permissions.
+Use `rtk gain` to inspect actual recorded savings. No RTK installation, filter trust or global settings change
+runs automatically. The integration follows the [upstream Pi hook](https://github.com/rtk-ai/rtk/tree/develop/hooks/pi)
+and is qualified against installed capabilities rather than a pinned Pi version.
+
+The installed workflow guidance directs agents to query existing Graphify graphs before broad source discovery,
+verify findings against current files and notify you when relevant graph coverage is stale. The notice includes
+the actual project's refresh command. Structural `graphify update` does not refresh document semantics;
+semantic maintenance stays an explicit scoped Graphify skill operation. No graph rebuilding or hooks run on startup.
 
 ## Install
 

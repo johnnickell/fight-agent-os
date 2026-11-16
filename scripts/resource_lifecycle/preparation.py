@@ -57,6 +57,8 @@ def resolve(root, selector=None, removed=False):
 
 def environment(isolated=False):
     env = os.environ.copy()
+    # Compose keeps explicit shell/installation owners ahead of this host default.
+    env['FIGHT_AGENT_OS_DEFAULT_USER'] = f'{os.getuid()}:{os.getgid()}'
     # Explicit file/project/env selection must not inherit ambient Compose modes.
     for key in list(env):
         if key.startswith('COMPOSE_') or (isolated and key.startswith(('APP_', 'POSTGRES_', 'FIGHT_TASK_'))):

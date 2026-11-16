@@ -77,7 +77,6 @@ Docker Compose, locked Composer dependencies, the pinned frontend installation a
 already exist. Setup may contact registries; acceptance never installs, updates, audits, exports or formats:
 
 ```sh
-export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/runtime setup       # Explicit service-secret preparation; inside a worktree selects only that checkout
 ./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
@@ -152,12 +151,10 @@ web's root protection, dropped capabilities, resource limits and ignored cache m
 as a writable bind mount and publishes no port.
 The profile excludes it from ordinary startup; only explicit maintenance may change source/dependencies.
 A command-line `--volume ...:/app:rw` is not a substitute: Compose can retain the inherited read-only flag.
-Set `FIGHT_AGENT_OS_USER` to that same `UID:GID` before clean setup so the web service
-can write host-owned ignored caches/reports on Linux without DAC-bypass capabilities. Keep this setting in the
-shell environment for subsequent Compose commands, including `./bin/build`; it is part of service identity.
-Unset preserves the existing default-root service identity for prepared local environments; it does not make
-root-with-dropped-capabilities able to write another Linux user's
-`0755` directories. Do not switch identities over existing private/root-owned caches without explicitly
+Runtime wrappers default to your local `UID:GID` so the web service can write host-owned ignored caches/reports
+on Linux without DAC-bypass capabilities. Set `FIGHT_AGENT_OS_USER` in the shell or installation environment
+file only when a different owner is needed; it is part of service identity.
+Do not switch identities over existing private/root-owned caches without explicitly
 reconciling their ownership; setup never recursively changes historical reports or permissions. Ordinary web
 execution still mounts source, locks and dependencies read-only. Host-side edits remain visible during development.
 

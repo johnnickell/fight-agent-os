@@ -16,8 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    # Explicit setup selects the checkout owner; unset preserves existing service identity.
-    user: "${FIGHT_AGENT_OS_USER:-}"
+    # Runtime wrappers supply the host identity; explicit installation owners take precedence.
+    user: "${FIGHT_AGENT_OS_USER:-${FIGHT_AGENT_OS_DEFAULT_USER:?Use the repository bin wrappers or set FIGHT_AGENT_OS_USER}}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,7 +84,7 @@ services:
     image: ${COMPOSE_PROJECT_NAME:-fight-agent-os}-diagrams
     build:
       context: ./etc/docker/diagrams
-    user: "${FIGHT_AGENT_OS_USER:-1000:1000}"
+    user: "${FIGHT_AGENT_OS_USER:-${FIGHT_AGENT_OS_DEFAULT_USER:?Use the repository bin wrappers or set FIGHT_AGENT_OS_USER}}"
     network_mode: none
     volumes: ["./docs:/docs"]
     read_only: true
@@ -97,7 +97,7 @@ services:
 
   https_php:
     restart: "on-failure:3"
-    user: "${FIGHT_AGENT_OS_USER:?Export the installation owner UID:GID before Compose operations}"
+    user: "${FIGHT_AGENT_OS_USER:-${FIGHT_AGENT_OS_DEFAULT_USER:?Use the repository bin wrappers or set FIGHT_AGENT_OS_USER}}"
     profiles: [https]
     init: true
     mem_limit: 2g

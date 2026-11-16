@@ -13,10 +13,10 @@ Mercure, so neither is started or advertised. Real email-provider enrollment rem
 
 ## Prepare explicitly
 
-Use Git, Docker/Compose and the existing repository wrappers. Export the installation owner's identity:
+Use Git, Docker/Compose and the existing repository wrappers. They default to your local user and group IDs;
+an explicit `FIGHT_AGENT_OS_USER` in the shell or installation environment file takes precedence.
 
 ```sh
-export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 # Main: create ignored .env and configure independent keys/passwords from .env.example first.
 ./bin/runtime setup
 # Inside a linked checkout, setup instead creates independent disposable task settings/secrets.

@@ -44,8 +44,10 @@ Create an ignored local configuration:
 ```sh
 cp .env.example .env
 chmod 600 .env
-export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ```
+
+The runtime wrappers automatically use your local user and group IDs. Set `FIGHT_AGENT_OS_USER`
+in the shell or `.env` only when the installation needs a different owner.
 
 Before startup, configure independent secrets and the access-token keyring in `.env`; example values
 are not credentials. Follow [access-token configuration](docs/engineering/ACCESS_TOKENS.md),

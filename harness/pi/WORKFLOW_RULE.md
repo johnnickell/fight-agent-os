@@ -11,6 +11,38 @@ requirements and exact commands. Check the wording before sending; no separate r
 `what`, `ask`, `ci` and `simplify` select inspection; `handoff` and `learn` select scratch work. None selects
 source repair or independent acceptance. An authorized cleanup uses the target's normal Work selection.
 
+## Graph-guided source discovery
+
+For codebase orientation, architecture, callers, dependencies and change impact, check for the selected
+project's `graphify-out/graph.json` before broad searches. When present, use a bounded Graphify query,
+path, explain or affected traversal first, then read the relevant current source. Use actual graph labels
+to narrow the question; unrelated or missing matches are a reason to use targeted native search, not to
+keep expanding a noisy traversal. Exact-file edits and Board-first work routing need no graph detour.
+Load the available Graphify skill for detailed query/maintenance guidance; its absence does not block
+bounded CLI queries. Qualify supported commands with `graphify --help`, not a guessed version contract.
+
+Check the selected graph's manifest/coverage against the relevant current files. Missing changed files,
+changed content hashes, removed source or an update marker mean stale/incomplete coverage; timestamps
+alone and a silent `graphify check-update` do not prove freshness. When stale, tell the user once what is
+missing and give a copyable refresh command with the actual project path. For structural code on a CLI
+that supports it: `graphify update '/absolute/project'`. For documentation/semantic refresh in Pi:
+`/skill:graphify /absolute/project --update`, following that skill's scoped backend/authority rules.
+After edits, report a newly stale graph with the same command. Do not silently rebuild, install hooks,
+start watchers or send source to a model. Existing graph results are navigation evidence; current source
+and accepted records decide correctness. Report unknown freshness honestly and continue source inspection.
+
+## Compact shell output
+
+The packaged RTK extension rewrites supported native bash commands through the installed `rtk rewrite`
+registry. Keep using native tools and repository `./bin/*` wrappers; never replace a container wrapper
+with a host tool just to obtain an RTK filter. Unsupported commands remain native. Native read/write/edit
+tools stay unchanged. Use `rtk proxy COMMAND` when exact unfiltered output matters, including parsing,
+migrations, destructive operations and release verification. `RTK_DISABLED=1` disables automatic rewriting;
+the explicitly selected deterministic shell policy also keeps its exact approved commands unchanged.
+When useful, wrap a repository command explicitly with `rtk test`, `rtk err` or `rtk summary`, preserving
+its arguments and runtime. Do not hide required warnings or treat filtered output as complete evidence.
+Inspect `rtk gain` for measured savings; never promise a percentage or run a command again just to measure it.
+
 ## Session-local workflow
 
 Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other installed skill
