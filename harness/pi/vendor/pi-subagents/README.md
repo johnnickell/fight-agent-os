@@ -28,6 +28,8 @@ is reference documentation, not our installation procedure or evidence that its 
   development lock records tested dependency identities, not an allowed Pi-version list.
 - Native `.mts` test config and task-private temporary/cache output allow the suite to run with read-only source.
   The canonical gate limits the suite to two workers and includes lint, typechecking and the full upstream tests.
+- The positive Git-detection test creates and removes its own initialized temporary repository instead of
+  assuming the test runner's current directory is a Git checkout. Branch and non-repository cases remain separate.
 
 ## Ownership and maintenance
 
