@@ -446,6 +446,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
+| — | [TASK-00604](00604-TASK.md) | Isolate the bundled Git-detection test from the current directory | — (standalone bug) | ready-for-human | — | — |
 
 ## Needs Triage
 
