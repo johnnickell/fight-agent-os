@@ -598,4 +598,12 @@
 | [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | done | [TICKET-00140](../tickets/00140-TICKET.md) |
 | [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | done | [TICKET-00141](../tickets/00141-TICKET.md) |
 | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | done | — |
+| [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | ready-for-agent | [TICKET-00142](../tickets/00142-TICKET.md) |
+| [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | ready-for-agent | [TICKET-00143](../tickets/00143-TICKET.md) |
+| [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
+| [TASK-00599](00599-TASK.md) | Publish the first shared frontend package and scoped skeleton handoff | needs-info | [TICKET-00144](../tickets/00144-TICKET.md) |
+| [TASK-00600](00600-TASK.md) | Adopt the shared React frontend in the Slim skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
+| [TASK-00601](00601-TASK.md) | Adopt the shared React frontend in the Laravel skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
+| [TASK-00602](00602-TASK.md) | Adopt the shared React frontend in the Yii skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
+| [TASK-00603](00603-TASK.md) | Adopt the shared React frontend in the CodeIgniter skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
 <!-- /planning:records -->

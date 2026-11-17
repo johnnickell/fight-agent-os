@@ -29,4 +29,5 @@
 | [EPIC-00024](00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | done | — |
 | [EPIC-00025](00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | done | — |
 | [EPIC-00026](00026-EPIC.md) | Compare related projects and recommend evidence-backed alignment work | done | — |
+| [EPIC-00027](00027-EPIC.md) | Release a shared React and Bootstrap frontend for the application suite | ready-for-agent | — |
 <!-- /planning:records -->

@@ -69,6 +69,16 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Shared frontend and earlier skeleton release:** [EPIC-00027](epics/00027-EPIC.md) records John's 2026-11-17
+React/TypeScript/Bootstrap direction, white-label library, stateful nested table controls and URL/history
+contract. EPIC/TICKET/TASK planning is complete for this first-release/adoption scope. Existing correction
+and human-administration TASKs are reprioritized, with TASK-00596–00603 supplying package/branding, table,
+Symfony integration, publication and four independent skeleton adoptions. The Board owns executable order.
+Actual Access Control released capabilities still need consumer qualification; TASK-00599 retains registry/
+namespace/publisher selection. Later Agent provisioning with one-time HMAC display awaits separate supplier
+qualification/decomposition and does not block the first package. EPIC-00018's comprehensive reference handoff
+remains separate; a qualified human-account release may reach the initial applications earlier.
+
 **TASK-00570 area-F acceptance checkpoint:** [The accepted TASK](tasks/00570-TASK.md#accepted-implementation-checkpoint--2026-11-06)
 records independent Review version 3 ACCEPT and documentation QA version 2 PASS on
 `226a054cef9812f84b674c1b73b990e5cbf96887` (26 passed / 0 failed / 0 incomplete / 1 visual/HTTPS N/A).
@@ -460,6 +470,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00024](epics/00024-EPIC.md) | Sync an accepted TASK with its updated base and refresh its PR | accepted-task-base-synchronization | done |
 | [EPIC-00025](epics/00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | root-browser-urls | done |
 | [EPIC-00026](epics/00026-EPIC.md) | Compare related projects and recommend evidence-backed alignment work | local-project-comparison | done |
+| [EPIC-00027](epics/00027-EPIC.md) | Release a shared React and Bootstrap frontend for the application suite | shared-frontend-first-release | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier

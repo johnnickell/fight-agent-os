@@ -61,6 +61,11 @@ The operator accepted confirmation as “delete this user in their current state
 
 ## Decisions and progress
 
+2026-11-17: [EPIC-00027](../epics/00027-EPIC.md) prioritizes the remaining backend assignment and browser
+administration TASKs for the earlier shared frontend release. TASK-00121 consumes the corrected audit/catalog/
+authentication suppliers. TASK-00123 implements its screens in the shared package, consuming TASK-00597's
+stateful table and URL protocol. Existing server policy and the separate email-change exclusion remain intact.
+
 TASK-00118 pagination-only correction has independent Review ACCEPT and QA PASS on `55c55ad`;
 publication and final checks are pending at this checkpoint. Current results are in the TASK and Land receipt.
 

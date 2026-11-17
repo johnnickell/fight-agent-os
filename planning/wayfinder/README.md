@@ -14,6 +14,12 @@
 
 ## Current routing
 
+John directly approved the [earlier shared frontend release](../epics/00027-EPIC.md) on 2026-11-17, including
+React/Bootstrap suite conventions, branding, stateful tables and independent skeleton adoption. Its first-release
+EPIC/TICKET/TASK decomposition is complete; use the Board for execution and the EPIC for the later Agent/HMAC
+extension. Existing closed maps remain closed. This distinct qualified package does not claim completion of
+the broader AccessControl reference-consumer handoff.
+
 Use the [Roadmap's current planning handoff](../ROADMAP.md#current-planning-handoff) and
 [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) after the planning merges.
 Existing maps retain their accepted scope and historical approvals; closed maps have no decision frontier.
