@@ -1,6 +1,6 @@
 ---
 name: graphify
-description: Query a project's Graphify knowledge graph for relationships and source orientation, or build and refresh explicitly selected graph scopes.
+description: Use existing Graphify graphs first for codebase orientation, architecture, callers, dependencies and change impact; report stale coverage with a refresh command, or refresh explicitly selected graph scopes.
 ---
 
 # Graphify
@@ -13,18 +13,28 @@ its knowledge graph is distinct from the Planning dependency DAG and the PHP exe
 
 ## Query and trace
 
-1. Resolve the requested project and narrowest relevant graph scope. Inspect existing `graphify-out/graph.json`,
+1. For source orientation and relationship questions, query an existing graph before broad searches; exact-file
+   edits and Board-first work routing need no graph detour. Resolve the project and narrowest relevant scope.
+   Inspect existing `graphify-out/graph.json`,
    manifest/build metadata and report where available. Record source revision/dirty state and freshness limits;
    a recent output timestamp alone does not prove every source was extracted. Never build a missing graph merely
    because someone asked a source question; use direct source inspection and disclose the limitation.
 2. Check the available CLI with `graphify --help`. When supported, use `graphify query "question" --graph PATH`,
    `graphify path "A" "B" --graph PATH` or `graphify explain "X" --graph PATH`, passing the selected graph explicitly.
    Read bounded output and inspect the cited source. Do not assume commands or schemas from another installed
-   version. If unavailable, continue with source reads rather than installing software as a query side effect.
+   version. Select terms from actual graph labels; prefer specific symbols over generic words such as "user".
+   Use supported `graphify affected "Symbol" --graph PATH` for reverse change-impact traversal. If unavailable,
+   continue with source reads rather than installing software as a query side effect.
 3. Distinguish extracted relationships from inferred/ambiguous ones and omissions. Verify consequential claims
    against current files, contracts and tests. Report graph scope/freshness, source locations, conclusion and
    uncertainty. Missing edges do not prove missing behavior. Do not save query memories or start watchers/hooks
    as a read-only query side effect.
+4. Compare relevant manifest content hashes/coverage with current source and inspect any update marker.
+   A silent `graphify check-update ROOT` only means no pending marker was reported; it does not prove complete
+   coverage. When changed, removed or missing relevant source makes the graph stale, notify the user once with
+   the reason and exact refresh command: `graphify update '/actual/project'` for supported structural updates,
+   or `/skill:graphify /actual/project --update` for scoped semantic maintenance. Recheck affected coverage after
+   edits and report newly stale graphs. If freshness cannot be established, say so and verify directly.
 
 ## Build or refresh
 

@@ -13,7 +13,6 @@ exact selector for its entire lifecycle:
 
 ```sh
 CHECKOUT="$(pwd -P)"
-export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/runtime --worktree "$CHECKOUT" inspect
 ```
 
