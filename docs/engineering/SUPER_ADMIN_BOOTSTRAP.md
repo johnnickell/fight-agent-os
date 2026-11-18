@@ -15,6 +15,12 @@ second Application gate. TASK-00576 owns that source correction; do not bypass c
 Console/raw-bus operations while waiting. The manual single-operator and retained partial-result/audit limits
 below remain truthful; this document does not upgrade them to atomic bootstrap or replay guarantees.
 
+The [TASK-00573 cutover decision](../../planning/tasks/00573-TASK.md#first-adoption-compatibility-hold) changes
+future `user.invited` audit to the canonical nil `SystemId`: it will record system issuance, not which operator
+ran bootstrap. Shell trust, explicit confirmation and separate commits still apply; historical rows retain their
+attribution. Access Control v0.9.0 cannot carry that System actor through the required Role assignment and its
+event. The cutover has not shipped; the executable procedure and attribution below are unchanged.
+
 ## Prepare and confirm
 
 Restrict shell, checkout, Docker and database access to trusted operators. Verify the intended Compose project
