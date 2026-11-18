@@ -11,6 +11,24 @@ Use bounded native discovery and direct file reads under the shared
 Graphify supplies derived navigation evidence. Source files and accepted planning records remain authoritative;
 its knowledge graph is distinct from the Planning dependency DAG and the PHP execution state machine.
 
+## Semantic model
+
+`/skill:graphify` uses **`openai-codex/gpt-6.1-terra`** for semantic document extraction by default,
+through the existing authenticated Pi/Codex account. `--model <exact-model-id>` overrides the extraction
+model for that invocation; a bare ID keeps the `openai-codex` provider. For example:
+
+```text
+/skill:graphify /actual/project --update
+/skill:graphify /actual/project --update --model gpt-6-luna
+```
+
+An override must be available in the active host; the example does not establish Luna access. This choice
+does not change the main chat's model. Read the native dispatch and exact-model checks in
+[refresh guidance](references/refresh.md) before extraction. Never infer the model from Graphify CLI defaults,
+API-key presence or the parent agent. Never switch providers/models automatically, including after a failure.
+Missing authentication, model access or dispatch capability leaves semantic coverage incomplete and names
+the missing prerequisite; it does not become a Gemini approval request.
+
 ## Query and trace
 
 1. For source orientation and relationship questions, query an existing graph before broad searches; exact-file
@@ -38,8 +56,10 @@ its knowledge graph is distinct from the Planning dependency DAG and the PHP exe
 
 ## Build or refresh
 
-An explicit build/update request authorizes the selected graph output, not global installation, hooks, model
-changes or uploading unrelated private files. Read [refresh guidance](references/refresh.md) before mutation.
+An explicit semantic build/update request authorizes the selected files and graph output through the default
+or explicitly overridden extraction model above. It does not authorize changing global model settings,
+installation, hooks, another provider or uploading unrelated private files.
+Read [refresh guidance](references/refresh.md) before mutation.
 Keep repository scratch under ignored `.runs/` and verify the generated output's ignore policy before creation.
 Do not delete existing graph caches or silently overwrite a different scope. If scope or external-processing
 authority is missing, ask for that decision while continuing safe source inspection.
