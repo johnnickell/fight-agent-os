@@ -103,8 +103,11 @@ The Common DBAL consumer adoption is independently accepted under
 [TASK-00572](../tasks/00572-TASK.md#accepted-implementation-checkpoint--2026-11-10): released Common v1.5.0,
 source/lock `06fb5cd3720af9cf8295198f74040d95b64c5155`, direct shared-Connection composition and real PostgreSQL
 failure/concurrency/recovery qualification. Unused ORM scaffolding/direct dependency is removed; the required
-Role audit decorator remains. TASK-00573 still owns the separate explicit package-handler audit capability
-hold, so this TICKET is not complete. Publication/merge are separate from implementation acceptance.
+Role audit decorator remains. Current supplier source now has explicit Role-handler audit and typed Role subjects,
+superseding the older absence observation below; see the
+[source recheck](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
+TASK-00573 still owns actual tagged adoption, required audit storage/rollback proof and decorator replacement.
+Its hold remains, so this TICKET is not complete. Publication/merge are separate from implementation acceptance.
 
 The decomposition and supplier observations below are historical planning checkpoints, not current TASK status.
 
@@ -119,7 +122,8 @@ John approved this third requirement area under EPIC-00023 and the two complete 
 
 Both are `kind: chore`, have TASK-00564 as their sole local blocker and retain `needs-info` pending qualification.
 Common v1.5.0 now supplies the DBAL boundary; TASK-00572 owns its deliberate adoption and actual PostgreSQL proof.
-Access Control develop still lacks explicit Role audit, but existing upstream TASK-00122/00153/00167/00168 cover
+At that historical inspection Access Control lacked explicit Role audit (superseded by the source refresh above);
+existing upstream TASK-00122/00153/00167/00168 cover
 its evidence, handlers and conformance/composition. TASK-00573 owns tagged consumer adoption, not another supplier
 feature plan. Agent OS's required audit must be explicitly enabled and cannot become optional/no-op. Local tag and
 plan inspection do not establish installed consumer behavior or independent acceptance.

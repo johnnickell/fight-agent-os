@@ -98,15 +98,17 @@ The maintainer approved five dependency-ordered TASKs:
 - [TASK-00260](../tasks/00260-TASK.md): accessible real browser administration and creation from the eight
   reviewed managed templates, incorporating the separately owned Triage definition without claiming role work.
 
-TASK-00256/00257/00259 are `ready-for-agent` only behind unfinished blockers. TASK-00258 retains `needs-info`:
-inspected `AgentProvisioningRequest` contains name and destination, the service generates the Agent ID and commits
-internally, and complete Permission replacement owns a separate package transaction. TASK-00253 retains supported
-one-Team initial binding; TASK-00258 additionally qualifies exact template/scope/reference and initial-
-assignment coordination. The target uses adapter-generated typed Agent identity, registered package/owned handlers, collection
-repositories and generic handler-owned transactions/required audit. The inspected internal ID/service behavior
-above is a capability gap, not a future design mandate. No nested outer transaction, subscriber repair, hidden audit policy, vendor edit or
-internal coordinator call can manufacture a public guarantee. Any supported separate assignment phase needs
-truthful incomplete state and actual activation/use exclusion; a committed Agent must never be teamless.
+TASK-00256/00257/00259 are `ready-for-agent` only behind unfinished blockers. TASK-00258 retains `needs-info`
+for tagged provisioning/assignment APIs and actual owned binding/reference/recovery qualification. Under the
+[maintainer amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment),
+Agent OS owns Team assignment and template Permission application, with separate transactions for package Agent
+creation, owned Team assignment and package Permission application. This supersedes the earlier atomic binding
+seam and prohibition on any teamless Agent at package commit. Completed setup still has one Team and exact bound
+revision/scope/complete initial Permissions; partial or uncertain setup cannot activate/use or appear complete.
+Agent OS recovers the same retained intent and reports earlier commits truthfully. Teams/templates remain owned
+here, not moved upstream. The target retains typed entry-generated identity and public registered handlers; no
+nested transaction, vendor mutation or internal coordinator call supplies a fictional all-in-one guarantee.
+Historical service-shape observations and earlier decomposition receipts are not current supplier qualification.
 
 TASK-00260 retains `needs-info` for a precise reviewed Triage definition/registration primitive under TASK-00200/
 EPIC-00012 and TICKET-00075's existing owners. Hand that definition to seed/resource authority independently of

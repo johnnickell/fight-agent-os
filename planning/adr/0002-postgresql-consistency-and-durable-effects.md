@@ -5,6 +5,18 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly reaccepted by the human maintainer after the package-owned delivery revision under TASK-00011 on 2026-09-24
 
+## Maintainer audit ownership clarification
+
+[ADR 0001's audit amendment](0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+supersedes atomic Agent creation/Team/template/Permission composition and a package reviewed-source/no-op audit
+requirement. Creation, owned Team assignment and Permission application commit separately; Agent OS owns truthful
+partial completion, use exclusion and recovery. Agent OS owns template review/reconciliation evidence, while
+AccessControl owns actual Permission changes and their audit. No cross-owner atomic review transaction is required.
+This does not weaken required state/audit atomicity within an owner or required old-mailbox notice-intent atomicity.
+Supported notice participation and exact request-ID cancellation are agreed but not implemented/released; actual
+supplier release, Composer adoption, consumer persistence and runtime qualification remain required. Earlier
+source observations below retain their historical subjects, not current absence claims.
+
 ## EPIC-00023 transaction and admission amendment — TASK-00564
 
 Under the approved [EPIC-00023](../epics/00023-EPIC.md),

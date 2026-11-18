@@ -22,6 +22,17 @@ excluded with maintainer approval; ownership/amendment paths for conflicts are r
 surfaces; and an approved next bounded EPIC destination is linked. Done is **planning handoff**, not live
 AccessControl adoption, actual Agent qualification, starter certification, production enrollment or release.
 
+## Current maintainer amendment
+
+The [ADR 0001 audit amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+owns the updated decisions and current source recheck. This closed map stays closed. Its decomposition observations
+below are historical wherever they require atomic creation/Team/template/Permission composition, one Team at Agent
+commit, package reviewed-source/no-op audit, or describe now-implemented supplier capabilities as absent.
+Agent OS owns separate-phase Team/template setup and recovery plus template review/reconciliation evidence;
+AccessControl owns Permission mutation/actual-change audit. The three agreed supplier amendments (redundant
+invitation/recovery authorization removal, atomic owned old-mailbox intent participation and exact request-ID
+cancellation) are not implemented or released. No status, dependency or qualification hold is cleared by this update.
+
 ## Notes
 
 ### Established facts (not new approval)
@@ -224,7 +235,8 @@ The maintainer then approved [TICKET-00062](../tickets/00062-TICKET.md)'s five-T
 At that approval TASK-00253–00255 retained `needs-info` for the supported creation/membership seam, actual
 session/commitment participants and named-Agent creation; the subsequent creation mapping below resolves
 TASK-00255's direct mapping only. The package's internal issuance transaction does not imply atomic Team
-binding; unknown seams block creation rather than permit committed orphan Agents or post-commit repair.
+binding. **Superseded:** this original creation-time orphan prohibition is replaced by separate-phase owned
+setup/recovery with incomplete-use exclusion under the maintainer amendment above.
 
 TASK-00244/00247/00250 now consume TASK-00253 and TASK-00231 consumes TASK-00254's real writer chain. These
 mappings do not clear actual contract/participant qualification holds. Creation/current-use consume early Team
@@ -245,7 +257,8 @@ in addition to TASK-00253's one-Team-at-creation seam. The inspected provision r
 its service generates identity and commits internally, and full Permission replacement owns a separate transaction.
 Sequential calls, outer nesting, hidden audit policy or post-commit orphan repair do not establish the required
 binding or safe completion. Any supported intermediate assignment phase must remain incomplete and unable to
-activate/use; no committed Agent may be teamless. TASK-00260 retains the exact Triage-definition/registration
+activate/use. **Superseded:** the original Team-at-Agent-commit requirement and combined seam above no longer
+apply; completed setup still has one Team under the maintainer amendment. TASK-00260 retains the exact Triage-definition/registration
 primitive handoff to the existing seed/resource owner, not the completed diagnosis that itself needs an Agent.
 
 TASK-00247/00250/00255/00200/00206 now consume TASK-00258. TASK-00255 becomes `ready-for-agent` behind these
@@ -358,8 +371,8 @@ panel; [TASK-00280](../tasks/00280-TASK.md) delivers self request;
 At that checkpoint, TASK-00280 consumed TASK-00274/00277 and retained `needs-info` for unmapped TICKET-00068
 issuance/cipher/provider/recovery suppliers, alongside the unresolved notice seam. TASK-00281 retains `needs-info` for supported exact-
 intent/generation fencing, original-outcome observation and required atomic self-cancellation audit. The inspected
-cancel command takes only actor/target IDs and selects the latest eligible change; its handler audits only
-administrator calls. A UI revision/preflight or TASK-00273's separate request/confirmation seam does not establish
+cancel command takes only actor/target IDs and selects the latest eligible change. **Source refresh:** current
+self-service audit exists when enabled; the agreed exact request-ID cancellation is still unimplemented/unreleased. A UI revision/preflight or TASK-00273's separate request/confirmation seam does not establish
 these guarantees. Seek supported owner/tagged resolution, never hidden repository policy or nested transactions.
 
 The administration callback cannot authenticate supplied actor IDs and skips actor == target; shared trusted
@@ -420,10 +433,9 @@ omits the optional validity query. Deliberate protected POST submits the same se
 rate controls and explicit public Action classification, not a new password form or administrator bypass.
 
 TASK-00289 retains `needs-info` for atomic notice/reservation guarantees and actual operational qualification.
-The inspected `confirmEmail()` checks latest usable grant, credential and destination equality without explicitly
-comparing the bound reservation revision or calling `matchesReservation()`. TASK-00273/00275 now carry exact
-binding/supported-writer/same-address-ABA qualification; this is not a demonstrated exploit or upstream repair
-authority. Missing support holds, without vendor patches, copied policy, hidden repository effects, preflight-only
+**Superseded source observation:** current confirmation does call `matchesReservation()` with reservation
+revision. TASK-00273/00275 retain tagged-contract/supported-writer/ABA and atomic notice participation qualification;
+the agreed notice seam is still unimplemented/unreleased. See the current amendment above. Missing support holds, without vendor patches, copied policy, hidden repository effects, preflight-only
 checks or nested transactions. The service returns `void` and emits after commit; unknown acknowledgement or
 post-commit failure is not rollback or permission for replay.
 
@@ -683,10 +695,11 @@ TICKET-00078 maps [TASK-00303](../tasks/00303-TASK.md)'s one unranked browser/AP
 Add Missing/Auto-sync outcome after TASK-00300, TASK-00241 and TASK-00250. TASK-00259's safe inspection and
 TASK-00256's separate assignment authority remain upstream; no competing Agent/Permission catalog is added.
 
-It stays needs-info for supported atomic current-caller/template/scope authorization, complete-set assignment,
-required reviewed-source audit and original-outcome composition, including no-op races. The public package
-replacement transaction/event is not proof of these consumer guarantees. Missing seams require owner resolution,
-not vendor patches, internal-coordinator calls, nested transactions or event-only audit. Refresh affected writer/
+**Superseded hold formulation:** no atomic current-caller/template/scope authorization or package review/no-op
+audit seam is required. Current caller admission is at entry; Agent OS owns template review/reconciliation/no-change
+evidence, AccessControl replacement/actual-change audit. It stays needs-info for tagged APIs and real consumer
+reference/scope/evidence/runtime qualification under those separate owners. No vendor patch, internal coordinator,
+nested transaction or event-only audit supplies that proof. Refresh affected writer/
 cohort evidence without making qualification primitives depend on this finished UI.
 
 Add Missing preserves extras and validates the complete resulting set; Auto-sync confirms additions/removals and
