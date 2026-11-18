@@ -144,4 +144,7 @@
 | [TICKET-00139](00139-TICKET.md) | Reconcile JSON-managed authority and access defaults | done | [EPIC-00025](../epics/00025-EPIC.md) |
 | [TICKET-00140](00140-TICKET.md) | Resolve comparison projects and permitted local settings | done | [EPIC-00026](../epics/00026-EPIC.md) |
 | [TICKET-00141](00141-TICKET.md) | Compare related projects and deliver polished alignment reports | done | [EPIC-00026](../epics/00026-EPIC.md) |
+| [TICKET-00142](00142-TICKET.md) | Share white-label React and Bootstrap account journeys | ready-for-agent | [EPIC-00027](../epics/00027-EPIC.md) |
+| [TICKET-00143](00143-TICKET.md) | Browse shared stateful tables with restorable URL queries | ready-for-agent | [EPIC-00027](../epics/00027-EPIC.md) |
+| [TICKET-00144](00144-TICKET.md) | Release the shared frontend and adopt it in independent framework skeletons | ready-for-agent | [EPIC-00027](../epics/00027-EPIC.md) |
 <!-- /planning:records -->

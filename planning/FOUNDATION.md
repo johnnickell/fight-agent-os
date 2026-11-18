@@ -25,6 +25,14 @@ execution, Planning, administration, production enrollment and certification bou
 
 ## Accepted direction
 
+The [2026-11-17 shared frontend plan](epics/00027-EPIC.md) adds an earlier application-suite destination:
+one React/TypeScript/Bootstrap npm library, white-label human account/admin UI and stateful sortable/paginated
+tables with optional search and restorable URL queries. Search is for application-specific queries only;
+all Access Control features keep free-text search disabled. No Tailwind. Agent OS is the first consumer and
+project-symfony the first receiving skeleton; other frameworks adopt independently. This is planned work,
+not an implemented library or skeleton-readiness claim. Agent provisioning with one-time HMAC display is
+retained for a later release and does not block this first handoff.
+
 This open-source application is a software factory: software to build software. Its planning, agent execution,
 review and delivery ambitions concern engineering work; they do not include a general-purpose personal AI
 operating system or an Internet homepage. The latter belong to a separate future project, not this roadmap.

@@ -55,4 +55,10 @@ Read Views must not expose member lists or internal tokens, grant/hash/audit/per
 
 ## Decisions and progress
 
+2026-11-17: [EPIC-00027](../epics/00027-EPIC.md) prioritizes remaining delegation and Roles/Permissions UI.
+TASK-00127 consumes corrected audit/catalog/authentication suppliers. TASK-00128 implements shared-library
+screens using TASK-00597's whole-dataset table query and URL contract, rather than pagination-only or copied
+application controls. TASK-00597 owns the scoped read/API extension; package-owned mutation/tier policy stays
+unchanged. The first package release does not require the later complete EPIC-00018 reference bundle.
+
 Human-approved TASK-00116 expansion of EPIC-00004. TASK-00126 qualifies the required upstream contract and consumer adapters before TASK-00036 reconciles stable protected managed authority. The selected upstream release may remove duplicate handler permission checks; cross-user session, email-change administration and pending-invitation correction actor/target authorization callbacks are separate and retained per upstream WF-013, subject to tagged contract verification. Treat tier eligibility as a required package invariant subject to consumer release qualification; Agent OS keeps delegation unavailable until that guarantee is verified and protects actor/scope at its own entry boundaries. TASK-00124's former pending-review implementation checkpoint is historical; consult its own accepted evidence. Remaining delegation/UI work and TASK-00573's actual Role audit replacement retain separate owners; this planning correction qualifies no supplier or source.
