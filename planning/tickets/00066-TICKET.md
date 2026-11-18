@@ -79,6 +79,13 @@ enrolled before advertising the notices as operational.
 
 ## Decisions and progress
 
+The [maintainer audit amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+records approved but unimplemented/unreleased supplier participation for atomic request/confirmation old-mailbox
+notice intent. Agent OS owns storage, sending and recovery. Current source has self-service request/cancel audit
+when enabled and confirmation reservation-revision comparison; earlier contrary source observations below are
+superseded. Required storage, tagged release, Composer adoption, real atomic notice integration and runtime/provider
+qualification remain open. No hold is cleared by approval or a planned v0.9.0.
+
 Approved as area 1 of EPIC-00015's four-TICKET split after
 [WF-032](../wayfinder/tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md). Supplies a hard
 integration gate to [TICKET-00067](00067-TICKET.md) and [TICKET-00069](00069-TICKET.md). Package credential

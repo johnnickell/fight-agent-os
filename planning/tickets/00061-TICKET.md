@@ -36,7 +36,10 @@ Common-owned Tools, attributes for owned Tools, and rejection when both declare 
 Preserve exact complete registry identity, conjunctive nonempty requirements, one request-bound provider/context
 and fresh later requests. Binding creates no grants or data scope; TASK-00089/00090 remain separate scoped-read
 suppliers, including independently admitted protected detail and metadata-only results. Their implemented,
-accepted, tagged/minimum contracts remain to qualify; do not duplicate catalogs or assume the planned API shipped.
+accepted, tagged/minimum contracts remain to qualify. The
+[current source recheck](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+confirms external bindings and scoped-read ports now exist; the older source-absence assumptions are superseded.
+Do not duplicate catalogs or infer released/adopted/host-client qualification from source availability.
 
 ## Use cases
 

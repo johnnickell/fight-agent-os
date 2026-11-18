@@ -63,8 +63,10 @@ role name, signed request or captured preview is not current authority. Even Sup
 Protect final full expected-state comparison and complete-set tier/reference validation against concurrent
 Agent assignment, Permission removal/promotion, template selection and scope changes, including desired-state
 no-ops. Compose through supported package contracts without copied lifecycle policy, nested outer transactions
-or audit-repository side effects. A missing supported complete-set/reference/reviewed-source-audit seam blocks exposure pending explicit owner
-resolution and qualification of the tagged locked package. Caller authentication/permission/Project admission stays
+or audit-repository side effects. Agent OS owns reviewed-source history/reconciliation evidence, including reviewed
+no-change outcomes; AccessControl owns replacement and audit of actual Permission changes. Do not require package
+audit to carry Team/template/Project reviews or fabricate no-op changes. Qualify tagged replacement/reference/audit
+contracts and owned consistency/evidence separately; missing actual guarantees still block exposure. Caller authentication/permission/Project admission stays
 at adapters; ordinary admitted reconciliation may finish after caller revocation. Retain complete assignment,
 tier/reference, expected-state and credential-writer fences for actual consistency, not a second Application gate. Do not infer concurrency safety from preflight
 reads or package fixtures. Safe failures distinguish denial, invalid set, stale preview, storage failure and
@@ -121,14 +123,15 @@ TASK-00256's distinct assignment authority and initial creation/assignment are u
 outcome owns versioned preview, Add Missing and Auto-sync, their explicit confirmations, recovery and evidence;
 no inspection-only, infrastructure or proof TASK is added.
 
-Status `needs-info` retains supported registered-handler complete-set assignment, template/Project-scope
-consistency, required reviewed-source audit and truthful fresh-query outcome handling. Use direct package messages
-and collection repositories with generic handler-owned transactions; no wrapper grant service or original-response
-journal. Ordinary caller-revocation serialization is not a supplier hold. The inspected public replacement command
-carries actor/Agent/expected assignment revision/IDs, not the full consumer review intent; its internal coordinator
-owns a transaction and its handler publishes afterward. Preflight checks, internal-coordinator calls, outer
-transactions or post-commit audit cannot supply the missing guarantee. No-op races require explicit qualification.
-These are unqualified integration contracts, not a demonstrated deployed exploit or permission to patch vendor code.
+Status `needs-info` retains tagged complete-set replacement/actual-change audit, owned template/Project-scope
+consistency, review evidence and truthful fresh-query outcome qualification. The
+[maintainer amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+supersedes the combined package reviewed-source-audit seam, including no-ops. Agent OS records reviews and
+reconciliation/no-change outcomes; AccessControl need not store review facts or invent a change for a no-op.
+Current source has the public replacement handler own transaction/audit, not its internal staging coordinator;
+initial Permission-assignment revision is 1, not 0. Use public messages and each owner's handler-owned boundary,
+not nested transactions or internal calls. Qualify no-op/reference races and incomplete evidence/uncertainty
+without requiring one cross-owner commit. Earlier supplier observations/receipts remain historical, not acceptance.
 
 Add Missing preserves extras and validates the complete resulting assignment; Auto-sync explicitly confirms
 removals and requires the complete eligible desired set. Bound and compared revisions remain separate. Neither

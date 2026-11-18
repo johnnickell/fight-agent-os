@@ -26,8 +26,13 @@ consume the bounded operation budget and dispatch the existing package command t
 Unknown mutation targets return generic 403. A request admitted before revocation may finish; the next request
 is freshly checked. No second blanket Application gate or revocation-through-commit serialization is promised.
 
-The package's mandatory correction callback binding trusts adapter-admitted in-process dispatch. It is not an
-independent public entry point, ambient trust flag or grant from a service's presence. Every actual nontrusted
+The currently installed package's mandatory correction callback binding trusts adapter-admitted in-process
+dispatch. The maintainer agreed removal of redundant invitation/registration-recovery authorization under
+AccessControl ADR 0010, but current supplier handlers still call those ports: TASK-00577's conflict hold remains
+until the amendment ships and is qualified/adopted. See the
+[ownership/source amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
+Do not implement a null/no-op shim to bypass the installed contract. This binding is not an independent public
+entry point, ambient trust flag or grant from a service's presence. Every actual nontrusted
 Console/MCP/other entry must establish its own actor, permission and scope before dispatch. Package business
 invariants, generation fences and required transaction/audit atomicity remain package-owned.
 

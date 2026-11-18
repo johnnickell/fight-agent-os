@@ -32,6 +32,18 @@ corrections. A missing supplier holds only its affected integration, not unrelat
 retain their own compatibility obligations; deliberate Agent OS breaks still require needed-data preservation,
 migration or explicitly authorized disposal.
 
+## Agent setup, review and supplier qualification
+
+Follow [Agent setup and review ownership](STANDARDS.md#agent-setup-and-template-review-ownership) and the
+[revision-linked maintainer amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
+Agent OS owns separate-phase Team/template setup, incomplete-use exclusion and recovery, and template review/
+reconciliation evidence including no-change. AccessControl owns Permission mutation and actual-change audit.
+Do not ask the supplier to own Teams/templates, commit all three setup stages together or record review no-ops
+as Permission changes. Current supplier source has bindings/scoped reads, email-change self-audit/revision checks
+and Role audit; tagged release/adoption and consumer evidence remain separate. Redundant invitation/recovery
+admission removal, old-mailbox atomic intent participation and exact request-ID cancellation remain unimplemented/
+unreleased gaps. No planning refresh clears real qualification holds.
+
 ## Current Workspace and technical-reference cutover
 
 TASK-00574 replaces the extracted mixed-store paths with `Domain/Workspace/Workspace` (root, ID, repository,
@@ -59,8 +71,10 @@ relationships/projections, not a mirrored raw ledger. Common TASK-00205 is appro
 activity target/timing/result facts, not implementation acceptance or tagged availability. Required audit/reference/
 lifecycle guarantees and richer history/accounting remain separate consumer obligations with explicit holds.
 [TASK-00245](../../planning/tasks/00245-TASK.md#external-tool-supplier-and-scope) consumes AccessControl TASK-00084's
-approved map-plus-attributes design and separate TASK-00089/00090 scoped reads; current source remains attribute-only.
-These are planned integrations, not installed capabilities, grants, dependency updates or Common release gates.
+map-plus-attributes design and separate TASK-00089/00090 scoped reads. Current AccessControl source now supplies
+external bindings and scoped-read ports, superseding the earlier attribute-only observation. Actual tagged-release,
+Composer-adoption and consumer/host admission qualification remain open; source availability is not an installed
+consumer capability, grant, dependency update or Common release gate.
 
 ## Current automated boundary
 

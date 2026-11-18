@@ -5,6 +5,65 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly accepted by the human maintainer under TASK-00009 on 2026-09-23
 
+## Maintainer AccessControl audit amendment
+
+The maintainer explicitly approved the ownership below after the audit of AccessControl
+`14b009627a0052fece8a4409b77b35c4b4196e78` and Agent OS
+`4796ca0bedf7eb0c0f8768f0f9fb0728565de737`. Those revisions are historical audit references, not permanent
+supplier facts. This amendment supersedes conflicting creation/reconciliation requirements in TASK-00253,
+TASK-00258, TASK-00303 and their parents; earlier approvals and verification receipts remain history.
+
+- **Creation:** Agent OS owns Team assignment and template Permission application. Package Agent creation,
+  owned Team assignment and package Permission application use separate transactions. AccessControl need not
+  commit all three atomically or ensure exactly one Team at Agent commit. Teams and templates stay in Agent OS.
+  Agent OS records partial completion, blocks activation/use while setup is incomplete and recovers the same
+  retained intent without duplicate issuance or a false rollback/completion claim. Completed setup has one Team;
+  deliberate unassignment of an established Agent is still forbidden.
+- **Reconciliation:** Agent OS owns template review history and reconciliation evidence, including reviewed
+  no-change outcomes. AccessControl owns complete Permission replacement and audit of actual Permission changes.
+  Its audit need not contain Team/template/Project review facts; a no-op must not fabricate a mutation. Qualify
+  each owner's actual consistency boundary and report incomplete evidence/uncertain attribution truthfully,
+  rather than requiring one cross-owner transaction or inferring success from matching current state.
+- **Agreed supplier work, not implemented or released:** remove redundant invitation and registration-recovery
+  authorization checks under AccessControl ADR 0010. Permission is checked at entry; an admitted ordinary request
+  may finish after concurrent revocation, while later requests check afresh. Supply supported participation for
+  consumers to save required old-mailbox notification intent atomically with email-change request/confirmation;
+  Agent OS retains notice storage, sending and recovery. Make `CancelEmailChange` identify the exact email-change
+  request ID so stale cancellation cannot cancel a newer request. These are approved supplier changes, not APIs
+  consumers may assume already exist. Real business consistency and required audit/notice atomicity remain.
+
+### Current source check and remaining qualification
+
+Rechecked clean checkouts at AccessControl `c2971971c271ecf7020bb9025b3a7e470d75b9a4` and Agent OS
+`2ca8f636541bb26b98c59ca9720ba1212068bf9c`. At final recheck AccessControl had advanced to
+`c760244fcdc740cfc315081b6ecb8713218fe71c` with no committed tree difference from the inspected revision.
+Concurrent supplier planning edits were present and left untouched; the inspected source findings are unchanged.
+AccessControl paths below are relative to that supplier:
+
+| Current source evidence | Planning consequence |
+|---|---|
+| `src/Adapter/Mcp/Tool/Agent/AgentToolPermissionCatalog.php` accepts external bindings; `AgentDetailScope`, `AgentTaskReadScope` and `AgentNoticeReadPolicy` expose scoped-read ports | TASK-00245 no longer waits for source implementation of these ports; tagged contract and real host/client admission still need qualification |
+| `EmailChangeGrant/CommandHandler/RequestEmailChangeHandler` and `CancelEmailChangeHandler` record self-service audit when audit storage is enabled | TASK-00273/00280/00281 must enable and qualify real required storage, not describe self-audit as absent |
+| `Application/AccessControl/EmailChangeGrant/EmailChangeConfirmation.php` calls `matchesReservation()` with the current reservation revision | TASK-00289 retains tagged/consumer race qualification, not a claim that this comparison is absent |
+| `Domain/AccessControl/Agent/Agent.php::provision()` starts Permission-assignment revision at 1; `ReplaceAgentPermissionsHandler` owns transaction/audit and delegates staging to an internal coordinator | TASK-00303 uses positive assignment revisions and the public handler; credential revision 0 is a different contract |
+| Role create/rename/remove handlers support typed Role audit; managed-policy preview, required detail reads, strict bounded pages, synchronous authentication/session/password operations and explicit credential status/discovery contracts exist | TASK-00573 and TASK-00576–00581 still need actual tagged-contract adoption and consumer proof, not blanket source-absence claims |
+
+Unqualified method names in this table are under `src/Application/AccessControl/` unless a full path is given.
+Current correction/recovery handlers still invoke `InvitationAdministrationAuthorization` and
+`RegistrationRecoveryAuthorization`; no supported old-mailbox notification participant was found in the email-change
+operations; `CancelEmailChange` still carries only actor/User IDs. The three agreed amendments above remain gaps.
+
+Local supplier tags end at v0.8.0 and the changes are under `Unreleased`; no v0.9.0 tag was found locally.
+This is not remote release verification. A planned v0.9.0 is not release evidence. The Agent OS Composer lock
+and consumer code are unchanged by this planning update. Keep every existing status, dependency and qualification
+hold until the owning work records exact qualifying tag/source/transitive requirements, deliberate Composer
+adoption, consumer implementation, real PostgreSQL/runtime evidence and independent acceptance as applicable.
+Optional supplier audit injection alone is not durable required audit. No workflow or upstream work is started here.
+
+Planning-only verification: `./bin/planning-check --write` refreshed the Board; `./bin/planning-check` passed
+with 775 records, 507 active and current generated views; `git diff --check` passed. No product build, runtime
+qualification, dependency adoption, independent acceptance or release verification was performed by this update.
+
 ## EPIC-00023 architecture amendment — TASK-00564
 
 John's approved [EPIC-00023](../epics/00023-EPIC.md) changes the following requirements of this ADR.
@@ -65,8 +124,10 @@ The page's management controls need both. Every new nontrusted entry must implem
 dispatch; a caller-supplied actor is not authority. The configured in-process bus is trusted, not a public API.
 
 Ordinary admitted work may finish after concurrent revocation. No second Application permission lookup or
-revocation-through-commit serialization is required for this scoped path. The package correction callback
-binding explicitly trusts adapter-admitted dispatch; it carries no ambient permission flag or transaction wrapper.
+revocation-through-commit serialization is required for this scoped path. The historical package correction callback
+binding trusts adapter-admitted dispatch; its redundant authorization contract is superseded by the maintainer audit
+amendment above, but remains installed behavior until the agreed supplier change is released and adopted. It carries
+no ambient permission flag or transaction wrapper.
 Package handlers still own lifecycle, uniqueness, generation comparison, atomic user/grant/audit writes and
 post-commit events. Actual business locks and bounded throttle transactions remain necessary.
 

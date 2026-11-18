@@ -24,6 +24,17 @@ handler/event ownership; only its concrete transaction composition has changed.
 atomic Role audit. Its inferred audit design is pending replacement under TASK-00573, not approved as the final
 architecture and not removed merely because DBAL is now available.
 
+## Planned Agent and email-change boundaries
+
+The [maintainer amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+requires separate transactions for package Agent creation, owned Team assignment and package Permission application.
+Agent OS owns truthful partial completion, use exclusion and same-intent recovery; do not manufacture an all-three
+transaction. Template review/reconciliation/no-change evidence belongs to Agent OS, actual Permission-change audit
+to AccessControl. Required state/audit atomicity remains within each owner, not a combined package review journal.
+Current Role-handler audit support still needs tagged adoption and consumer replacement proof before removing the
+existing decorator. Supported atomic owned old-mailbox intent participation remains agreed but unimplemented/
+unreleased; required request/confirmation notice atomicity is not removed by the Agent setup decision.
+
 ## Completion and failure recovery
 
 - `commitTransactional(callable): mixed` preserves the callback result. Aggregate, required audit and justified

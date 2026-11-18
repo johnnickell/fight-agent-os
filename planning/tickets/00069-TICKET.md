@@ -141,12 +141,13 @@ protection, not a second mailbox secret. No password/new-email form, actor/recip
 login/reset/reissue or new validity/history API is added. Exact input and secrets stay out of ordinary diagnostics,
 markup, persistence, screenshots, audit and shared client messages.
 
-**Observed qualification hold:** the inspected `AuthenticationService::confirmEmail()` checks latest usable grant,
-credential and destination equality but does not explicitly compare the bound reservation revision or call
-`matchesReservation()`. Exact generation/reservation fencing across supported writers and same-address successor/
-ABA cases must be qualified through TASK-00273/00275. This is not a demonstrated exploit or authority to patch
-upstream. Missing guarantees require separate owner/tagged-contract resolution, never copied package policy,
-nontransactional prechecks, hidden repository side effects or an outer nested transaction.
+**Source observation superseded:** current `EmailChangeConfirmation::confirmEmail()` compares the current
+reservation revision through `matchesReservation()`. See the
+[revision-linked recheck](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
+TASK-00273/00275 still qualify tagged/locked generation fencing, supported-writer and same-address successor/ABA
+behavior. Supported atomic owned old-mailbox intent participation is agreed but not implemented or released.
+No copied package check, preflight, hidden repository policy or nested transaction substitutes for that contract;
+Composer adoption, required audit and actual consumer/operational evidence remain open.
 
 The service also returns `void` and publishes its event after commit. TASK-00275 remains owner of atomic grant/
 User/authentication/session/audit/completion-intent coordination and exact original-recipient binding. Required

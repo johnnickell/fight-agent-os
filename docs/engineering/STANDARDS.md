@@ -107,6 +107,26 @@ not the approved audit design. Preserve required Role mutation/audit atomicity u
 replacement is qualified; DBAL support alone does not supply audit. See
 [TICKET-00133](../../planning/tickets/00133-TICKET.md) for supplier and adoption ownership.
 
+### Agent setup and template review ownership
+
+Under the [maintainer audit amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment),
+Agent OS owns Team assignment and template Permission application. Package Agent creation, owned Team assignment
+and package Permission application use separate transactions; do not require one Team at package Agent commit or
+an all-three atomic supplier seam. Completed setup has one Team. Agent OS records partial/uncertain completion,
+excludes activation/use until setup is complete and recovers the same retained intent without duplicate issuance.
+Teams and templates do not move into AccessControl.
+
+Agent OS owns template review history and reconciliation evidence, including reviewed no-change outcomes.
+AccessControl owns Permission replacement and audit of actual changes, not Team/template/Project review facts.
+Do not fabricate changes for no-ops or require a combined package review/assignment transaction. Preserve each
+owner's real reference, expected-state, required-audit and recovery guarantees; incomplete evidence and uncertain
+attribution must remain visible. Tagged-release adoption and consumer/runtime qualification are separate work.
+
+The same amendment records three approved but unimplemented/unreleased supplier changes: remove redundant
+invitation/registration-recovery authorization under AccessControl ADR 0010; support atomic owned old-mailbox
+intent participation with email request/confirmation; and cancel by exact email-change request ID. Do not assume
+these capabilities exist or clear holds from approval or a planned tag. Agent OS retains notice storage/sending/recovery.
+
 ### Shared services and bus dispatch
 
 Use the existing container's shared registrations for stateless services, command/query handlers, buses and

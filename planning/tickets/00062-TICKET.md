@@ -93,12 +93,13 @@ The maintainer approved five dependency-ordered TASKs:
 - [TASK-00255](../tasks/00255-TASK.md): accessible real browser Team/Project/default/roster administration,
   consuming the actual named-Agent creation owner rather than duplicating provisioning.
 
-TASK-00251/00252 are `ready-for-agent` behind their unfinished blockers. TASK-00253 retains `needs-info` for the
-supported initial creation/membership integration and actual participant mapping: the inspected package service
-generates the Agent ID and commits issuance internally, so a Team binding cannot be assumed from an outer
-transaction or post-commit subscriber. A missing public seam blocks creation, not permission for an orphaned
-Agent, hidden audit side effect, vendor patch or inferred upstream approval. TICKET-00063 consumes the supported
-primitive and retains actual named-Agent creation.
+TASK-00251/00252 are `ready-for-agent` behind their unfinished blockers. TASK-00253 retains `needs-info` for tagged
+provisioning, owned Team-assignment/recovery and actual admission-participant qualification. The maintainer's
+[ownership amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
+supersedes the original exactly-one-Team-at-Agent-commit and atomic creation/membership seam requirements.
+Agent OS owns Team assignment separately from package creation and Permission application. Incomplete setup is
+truthfully recorded and cannot activate/use; completed setup has one Team. TICKET-00063 owns named creation.
+Earlier decomposition approval/receipts below remain history, not qualification of these transactions.
 
 TICKET-00093 now maps TASK-00369's narrow applicable Workflow commitment/capacity/resource participants into
 TASK-00254 independently of final Team selectors, roles or consumer loops. TASK-00254 retains `needs-info` for

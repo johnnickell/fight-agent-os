@@ -54,7 +54,11 @@ approved and linked rather than inferred from this map.
 
 ## Resolution
 
-Approved in the WF-035 interview:
+Approved in the WF-035 interview, with a later
+[maintainer audit amendment](../../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment):
+one-Team membership describes completed setup/current use, not a Team-at-package-Agent-commit invariant.
+Agent OS owns separate-phase Team/template setup, partial-completion handling and recovery. The original
+interview and closure remain history; no live qualification follows from this clarification.
 
 - **Team identity and administration:** a Team may serve one or several registered Repositories; a Repository
   may have one or several Teams and one authorized default Team. One Agent belongs to exactly one Team at a time;

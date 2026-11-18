@@ -83,6 +83,10 @@ responses; no silent overwrite. Audit distinguishes self request/cancel and admi
 
 ## Decisions and progress
 
+Current source supports self-service request/cancel audit when enabled; required consumer audit storage remains
+unqualified. Atomic owned old-mailbox intent participation and exact request-ID cancellation are approved supplier
+work, not implemented/released contracts. The source refresh below changes no status, dependency or runtime hold.
+
 Approved as area 2 of EPIC-00015's four-TICKET split. Requires
 [TICKET-00066](00066-TICKET.md)'s atomic notice boundary and
 [TICKET-00068](00068-TICKET.md)'s credential provider/recovery before advertising usable request; relies on
@@ -128,9 +132,11 @@ panel uses the shared `/me` owner and volatile generation-fenced data, not a sto
 The inspected `CancelEmailChange` takes only actor/target IDs and selects the latest eligible grant inside its
 own transaction. Expected-state repository comparisons protect that loaded state, not the change the human
 reviewed earlier; a browser revision/preflight cannot prevent delayed intent from cancelling a successor.
-The handler audits only administrator cancellation. TASK-00281 must qualify supported exact-intent fencing,
-original-outcome observation and atomic required self audit, obtaining separate owner/tagged-contract resolution
-if absent. TASK-00273's request/confirmation seam does not automatically resolve cancellation. No nested
+The earlier administrative-only audit observation is superseded: current source audits self-cancellation when
+enabled. The maintainer agreed cancellation must identify the exact email-change request ID, but this is not
+implemented or released. TASK-00281 must qualify that contract, original-outcome observation and required atomic
+self audit against the real tag/lock/consumer, not a guessed parameter. See the
+[ownership/source amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment). TASK-00273's request/confirmation seam does not automatically resolve cancellation. No nested
 transaction, copied handler, hidden audit-repository policy or after-commit audit workaround is permitted.
 
 Request and cancellation remain separate paths after safe status. TASK-00280 waits for qualified old-notice and

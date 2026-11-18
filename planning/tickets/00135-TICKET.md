@@ -134,9 +134,10 @@ portfolio/upstream gate; orders do not add unstated technical dependencies or ch
 
 ### Precise supplier holds
 
-The current lock selects Common v1.4.1 (`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`) and Access Control v0.8.0
-(`319738255e682d587642b67856039f882b9588d6`). Common v1.5.0 is the released capability baseline to qualify;
-its local tag resolves to `06fb5cd3720af9cf8295198f74040d95b64c5155`. This planning update changes no dependency.
+The rechecked lock selects Common v1.5.0 (`06fb5cd3720af9cf8295198f74040d95b64c5155`) and Access Control
+v0.8.0 (`319738255e682d587642b67856039f882b9588d6`). The earlier Common v1.4.1 observation is historical;
+TASK-00572 adopted v1.5.0. This planning update changes no dependency. Actual selected AccessControl transitive
+requirements must still be qualified; current supplier source requires Common `^1.5.1`, not the old baseline alone.
 
 John selected Common's existing error categories and safe boundary as the shared approach, with only genuinely
 application-specific additions. Remove superseded local workarounds rather than retain parallel classifiers.
@@ -145,9 +146,15 @@ Common's QueryBus intentionally returns `mixed`. Callers use the known query-to-
 `@var` annotations, including generic element types. Neither a generic bus redesign nor removal of `mixed` is a
 supplier prerequisite. An annotation documents a qualified contract; it does not establish the handler's behavior.
 
-Access Control develop `0878fc24e616a4b777e211b1c237ff720d64403c` contains breaking changes and accepted unfinished
-plans. John intends to complete its planned work before the next release; no future version number is selected.
-Use these existing supplier owners, then qualify the actual tagged release and consumer behavior:
+The historical AccessControl `0878fc24` observations are superseded where noted in the
+[maintainer audit amendment/current source check](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
+Current `c2971971c271ecf7020bb9025b3a7e470d75b9a4` supplies managed-policy preview, required reads/strict pages,
+explicit status absence, synchronous authentication/session/password operations, bounded delivery discovery and
+Role-handler audit. These are no longer all future capabilities. Local tags end at v0.8.0; a planned v0.9.0 does
+not establish release or adoption. The agreed ADR 0010 removal of redundant invitation/registration-recovery
+checks is still unimplemented/unreleased, so TASK-00577's timing conflict remains. Keep all six statuses,
+dependencies and tagged/Composer/consumer/runtime holds. Existing supplier owner references below are provenance,
+not instructions to repeat implemented work; qualify the actual released contracts and real consumer behavior:
 
 - TASK-00576: managed-policy and required User/Role/Permission reads; AC TASK-00131/00135/00140.
 - TASK-00577: explicit invitation status absence, generation/address/recovery outcomes and intentional failures;
@@ -162,9 +169,9 @@ Use these existing supplier owners, then qualify the actual tagged release and c
 - TASK-00581: exact due/expired/status purpose/generation/progress/absence and worker/provider failures;
   AC TASK-00133/00138 and related audit work.
 
-AC TASK-00132's older Common result-validation hold must be reassessed against released `ResultSet::strict()`.
-It validates construction-time bounds; AC still owns request/page agreement, exact elements and session scope.
-The shared mutable list is not a snapshot. No additional Common feature requirement was demonstrated by this sample.
+AC now uses `ResultSet::strict()` and checks requested pagination in the inspected catalog handlers, superseding
+its older result-validation source hold. Construction-time bounds do not replace exact elements/session scope or
+real tagged/consumer qualification; the shared mutable list is not a snapshot. No new Common bus feature is required.
 
 Each affected TASK owns selection and qualification of actual supported tagged APIs, source/signatures, transitive
 requirements, deliberate manifest/lock changes and real Agent OS composition. Recheck supplier availability before
