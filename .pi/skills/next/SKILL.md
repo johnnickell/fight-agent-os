@@ -65,10 +65,19 @@ Use this stage routing once evidence supports it:
 | Accepted work with applicable QA satisfied or justified overall N/A | `/skill:land TASK-NNNNN`, subject to existing publication authority |
 | Unknown/stale subject, uncertain findings or contradictory reports | Name the evidence owner and exact reconciliation/reassessment needed; do not infer a stage verdict |
 
-Use supplied capability metadata/bindings to confirm availability before printing a command. Reading a second
-skill's full instructions is not required merely to recommend it; load them when invoked. If command shape or
-availability is unclear, inspect only its synopsis or name the missing capability. Do not make unsupported
-claims about its behavior. Invoking `build` carries its defined authority; recommending it grants none.
+Confirm command availability from the session's supplied capability metadata/bindings or configured skill
+sources, not only the model-visible skill list. Pi omits skills with `disable-model-invocation: true` from
+automatic selection while retaining explicit `/skill:<name>` invocation. Absence from that list alone does
+not mean a skill is missing. For an omitted command, use the active session's command inventory or resolve
+its configured skill source and inspect only the relevant frontmatter and invocation synopsis. A file in
+an unconfigured source does not establish availability; if registration or command shape remains unclear,
+name that uncertainty instead of claiming the skill is absent or recommending a reinstall/settings change.
+
+A confirmed explicit-only skill such as Build can be recommended with its supported command. Preserve
+`disable-model-invocation: true`; do not invoke it automatically or change configuration during routing.
+Reading a second skill's full instructions is not required merely to recommend it; load them when invoked.
+Do not make unsupported claims about its behavior. Invoking `build` carries its defined authority;
+recommending it grants none.
 
 For evidence-only exceptions, read only the relevant policy section if the selected handoff requires it:
 [optional hosted checks](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks),
