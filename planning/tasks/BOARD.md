@@ -25,7 +25,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | — (standalone bug) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -671,4 +671,5 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | [TICKET-00140 — Resolve comparison projects and permitted local settings](../tickets/00140-TICKET.md) | done | — | [PR #274](https://github.com/johnnickell/fight-agent-os/pull/274) |
 | — | [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | [TICKET-00141 — Compare related projects and deliver polished alignment reports](../tickets/00141-TICKET.md) | done | — | [PR #278](https://github.com/johnnickell/fight-agent-os/pull/278) |
 | — | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | — (standalone chore) | done | — | [PR #277](https://github.com/johnnickell/fight-agent-os/pull/277) |
+| — | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | — (standalone bug) | done | — | [PR #290](https://github.com/johnnickell/fight-agent-os/pull/290) |
 <!-- /planning:board -->
