@@ -25,7 +25,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 

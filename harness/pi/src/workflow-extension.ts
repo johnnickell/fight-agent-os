@@ -35,7 +35,10 @@ export default function installWorkflow(pi: ExtensionAPI) {
     failure = failure === 'workflow-role-persistence-failed' ? failure :
       error instanceof Error && 'code' in error && typeof error.code === 'string' ? error.code : 'workflow-unavailable';
     publishWorkflow(ctx.sessionManager, new WorkflowAccess('review', { checkout: ctx.cwd }));
-    if (ctx.mode === 'tui') ctx.ui.notify(`Fight workflow held: ${failure}. Correct the interactive workflow selection; persistence failures require storage repair and reload. Native tools remain unchanged.`, 'warning');
+    const recovery = failure === 'workflow-skill-not-loaded'
+      ? 'Check the skill name and whether Pi loaded it, then correct the interactive selection.'
+      : 'Correct the interactive workflow selection; persistence failures require storage repair and reload.';
+    if (ctx.mode === 'tui') ctx.ui.notify(`Fight workflow held: ${failure}. ${recovery} Native tools remain unchanged.`, 'warning');
   };
   pi.registerTool({ name: 'fight_workflow_status', label: 'Inspect Fight workflow',
     description: 'Inspect session-local workflow skill, effect, subject, selected checkout and trusted stage binding. Read-only; no provider access or file-tool gate.',
@@ -71,7 +74,9 @@ export default function installWorkflow(pi: ExtensionAPI) {
     // SDK input may report "interactive" but is not an operator selection.
     if (isSdkSession(ctx.sessionManager) || failure === 'workflow-role-persistence-failed') return;
     try {
-      if (workflow.input(event.text, event.source, persistRole)) {
+      const hasSkill = (name: string) => pi.getCommands().some(command =>
+        command.source === 'skill' && command.name === `skill:${name}`);
+      if (workflow.input(event.text, event.source, hasSkill, persistRole)) {
         failure = undefined; publishWorkflow(ctx.sessionManager, workflow);
       }
     } catch (error) { hold(ctx, error); }

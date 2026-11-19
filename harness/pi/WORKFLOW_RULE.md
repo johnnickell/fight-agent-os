@@ -49,8 +49,11 @@ Inspect `rtk gain` for measured savings; never promise a percentage or run a com
 
 ## Session-local workflow
 
-Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other installed skill
-invocations select responsibilities. Pass `--checkout /absolute/selected/checkout` when specifying an exact path
+Interactive `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`, `/skill:sync` and other reserved Fight
+skills select responsibilities when Pi has loaded them and the request is valid. Pi expands loaded standalone
+skills with non-reserved names without changing Fight's selection, checkpoint history or holds. A skill's text
+cannot grant authority or authorize unrelated changes. See [standalone skill setup](WORKFLOW.md#standalone-project-skills).
+Pass `--checkout /absolute/selected/checkout` when specifying an exact path
 at invocation. Honor a checkout choice already given in the current request, including a choice to create an
 isolated worktree. Apply the owning skill's checkout rules and continue in the same run.
 A trusted process launcher supplies role, task and checkout. A launcher takes precedence on every startup/reload.
@@ -82,7 +85,7 @@ Review/QA owners by profile or prompt. An execution status is never independent 
   reports. Delegate accepted-work integration and same-PR delivery through the existing process-stage path;
   the sole SDK stage route requires actual Build selection and is unavailable to Sync.
 
-Other installed skills retain their owning instructions and effect shown by `fight_workflow_status`.
+Other reserved Fight skills retain their owning instructions and effect shown by `fight_workflow_status`.
 For an explicitly assigned release assessment, the provider's release protocol uses version-owned reports and
 runs under `.runs/handoffs/release-<version>/`; only the independent stage owner writes its report. This adds no
 release support to a TASK-only dispatcher and grants no source repair, self-acceptance or publication authority.

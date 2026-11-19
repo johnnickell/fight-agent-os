@@ -351,7 +351,17 @@ final class SessionLifecycleApiTest extends TestCase
     public function testCookieSources(): void
     {
         $credential = $this->login();
-        $badCookies = [null, 'bad', strtoupper($credential), '"'.$credential.'"', '%61'.$credential,
+        // Keep the correlation ID independent of the malformed credential checked for leakage.
+        $correlationId = 'bad'.str_repeat('0', 29);
+        $response = $this->request(
+            'refresh',
+            'malformed-refresh-cookie',
+            headers: ['X-Correlation-ID' => $correlationId]
+        );
+        self::assertSame($correlationId, $response->getHeaderLine('X-Correlation-ID'));
+        $this->assertDeleted($response, 401, 'refresh');
+
+        $badCookies = [null, strtoupper($credential), '"'.$credential.'"', '%61'.$credential,
             $credential.'; '.BrowserSessionCookies::REFRESH_NAME.'='.$credential];
         foreach ($badCookies as $bad) {
             $this->assertDeleted($this->request('refresh', $bad), 401, 'refresh');
