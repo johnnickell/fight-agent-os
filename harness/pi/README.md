@@ -42,9 +42,12 @@ Install only what the selected path needs. Nothing here installs tools or change
 The packaged RTK extension uses Pi's native `tool_call` hook and the installed RTK rewrite registry.
 Supported bash commands are rewritten automatically; unsupported commands, native file tools and repository
 wrappers retain their execution paths. No separate RTK Pi hook is needed alongside this package. Missing or
-failing RTK warns once and leaves commands native. `rtk proxy COMMAND` requests raw output;
-`RTK_DISABLED=1 pi` disables rewriting for a session. Explicit `--fight-tool-policy` selection disables the
-optimizer so approved script arguments remain exact. RTK changes output presentation, not permissions.
+failing RTK warns once and leaves commands native. Rewrites that turn shell assignments into RTK commands
+are rejected: the original script runs unchanged and RTK remains available for subsequent commands.
+`rtk proxy COMMAND` requests raw output; use `rtk proxy bash -c 'script'` when a script must execute unchanged.
+Keep RTK enabled by default. `RTK_DISABLED=1 pi` is an operator-requested session opt-out, not an agent recovery
+step. Explicit `--fight-tool-policy` selection disables the optimizer so approved script arguments remain
+exact. RTK changes output presentation, not permissions.
 Use `rtk gain` to inspect actual recorded savings. No RTK installation, filter trust or global settings change
 runs automatically. The integration follows the [upstream Pi hook](https://github.com/rtk-ai/rtk/tree/develop/hooks/pi)
 and is qualified against installed capabilities rather than a pinned Pi version.
