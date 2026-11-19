@@ -10,11 +10,11 @@ registered handlers; TASK-00576 owns that cutover. Existing `ConsoleUserOperatio
 `AuthenticatedRoleAssignment` below are not target templates. Keep their checks and partial-result/audit limits
 until verified replacement; this documentation grants no untrusted raw-bus access or additional atomicity.
 
-The [TASK-00573 cutover decision](../../planning/tasks/00573-TASK.md#first-adoption-compatibility-hold) changes
-future `user.invited` audit to the canonical nil `SystemId`: it will record system issuance, not which operator
-ran the command. Shell trust and atomic invitation audit still apply; historical rows retain their attribution.
-The release cannot yet carry that System actor through `AssignRoleToUser` and its event. The cutover has not
-shipped; the instructions and attribution below still describe the installed application.
+The [TASK-00573 cutover decision](../../planning/tasks/00573-TASK.md#selected-release-and-current-qualification-hold)
+uses the canonical nil `SystemId` for future `user:invite` and `user:role:add` operations. `user.invited` will
+record system issuance, not which operator ran the command. Shell trust and atomic invitation audit still apply;
+historical rows retain their attribution. Access Control v0.10.0 carries the System actor through assignment and
+its event, but Agent OS has not adopted it. The instructions and attribution below remain current.
 
 ## Prepare the intended installation
 
