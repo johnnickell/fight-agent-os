@@ -37,8 +37,12 @@ The packaged RTK extension rewrites supported native bash commands through the i
 registry. Keep using native tools and repository `./bin/*` wrappers; never replace a container wrapper
 with a host tool just to obtain an RTK filter. Unsupported commands remain native. Native read/write/edit
 tools stay unchanged. Use `rtk proxy COMMAND` when exact unfiltered output matters, including parsing,
-migrations, destructive operations and release verification. `RTK_DISABLED=1` disables automatic rewriting;
-the explicitly selected deterministic shell policy also keeps its exact approved commands unchanged.
+migrations, destructive operations and release verification. Keep RTK enabled by default: do not add or export
+`RTK_DISABLED=1` unless the user explicitly requests it. For a rewrite failure, report the concrete failure and
+use an explicit RTK adapter or `rtk proxy bash -c 'script'` for the affected script. Do not disable RTK for
+unrelated commands. The extension rejects rewrites that turn shell assignments into RTK commands, preserves
+the original script and warns once per session. The explicitly selected deterministic shell policy also
+keeps its exact approved commands unchanged.
 When useful, wrap a repository command explicitly with `rtk test`, `rtk err` or `rtk summary`, preserving
 its arguments and runtime. Do not hide required warnings or treat filtered output as complete evidence.
 Inspect `rtk gain` for measured savings; never promise a percentage or run a command again just to measure it.

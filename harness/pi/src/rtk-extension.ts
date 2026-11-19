@@ -8,10 +8,9 @@ export default function installRtk(pi: ExtensionAPI) {
   // Custom bash executors (including the deterministic policy) own their exact inputs.
   const disabled = () => process.env.RTK_DISABLED === '1' ||
     pi.getAllTools().find(tool => tool.name === 'bash')?.sourceInfo?.source !== 'builtin';
-  const warn = (ctx: ExtensionContext) => {
+  const warn = (ctx: ExtensionContext, message = 'RTK rewriting is unavailable; native shell commands remain unchanged. Check rtk rewrite --help.') => {
     if (warned) return;
     warned = true;
-    const message = 'RTK rewriting is unavailable; native shell commands remain unchanged. Check rtk rewrite --help.';
     if (ctx.hasUI) ctx.ui.notify(message, 'warning');
     else console.error(message);
   };
@@ -35,7 +34,14 @@ export default function installRtk(pi: ExtensionAPI) {
       });
       if (ctx.signal?.aborted) return;
       if (!result.killed && [0, 3].includes(result.code) && result.stdout.trim()) {
-        event.input.command = result.stdout.trim();
+        const rewritten = result.stdout.trim();
+        // RTK can mistake an assignment value containing "task-" for a command.
+        // Preserve the complete original script rather than losing its shell state.
+        if (/(?:^|[;&|\n])\s*rtk\s+[A-Za-z_][A-Za-z0-9_]*=/.test(rewritten)) {
+          warn(ctx, 'RTK tried to rewrite a shell assignment; this script remains unchanged. Use explicit RTK adapters or rtk proxy bash -c for this script. RTK remains enabled.');
+          return;
+        }
+        event.input.command = rewritten;
       } else if (result.killed || result.code !== 1) warn(ctx);
     } catch { if (!ctx.signal?.aborted) warn(ctx); }
   });

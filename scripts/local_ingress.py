@@ -17,7 +17,7 @@ from resource_lifecycle.resources import Hold, query, registrations, require, ru
 
 PROJECT = NETWORK = 'fight-local-ingress'
 OWNER = 'io.fight.ingress.owner'
-NGINX = 'nginx:1.30.6-alpine@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951'
+NGINX = 'nginx:1.30.7-alpine@sha256:bef154735288bc38d99fac41ae63730684bcc661503673a04a0f9bc526ba8598'
 GENERATOR = 'nginxproxy/docker-gen:0.15.0@sha256:dec247f03aedb22b968e5a1d092bef09d78b85998dc08706f723e4210d553e5d'
 ROOT = Path(__file__).resolve().parent.parent
 
