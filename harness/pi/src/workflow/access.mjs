@@ -79,31 +79,37 @@ export class WorkflowAccess {
       Object.assign(this, next); this.revision++;
     }
   }
-  input(text, source, persist) {
-    if (source !== 'interactive') return;
-    const selected = /^\/skill:([a-z-]+)(?:\s|$)([\s\S]*)$/.exec(text);
-    if (!selected) return;
-    if (!Object.hasOwn(skillEffects, selected[1])) throw new Unavailable('unknown-workflow-role');
+  input(text, source, hasSkill, persist) {
+    if (source !== 'interactive' || !text.startsWith('/skill:')) return;
+    // Match Pi's expansion token: only a literal space separates the name from its arguments.
+    const separator = text.indexOf(' ');
+    const skill = separator === -1 ? text.slice(7) : text.slice(7, separator);
+    const args = separator === -1 ? '' : text.slice(separator + 1);
+    if (!Object.hasOwn(skillEffects, skill)) {
+      if (!hasSkill(skill)) throw new Unavailable('workflow-skill-not-loaded');
+      return;
+    }
     // Sync selects exactly one TASK; extra subjects/options must not broaden integration authority.
-    const sync = selected[1] === 'sync';
-    const syncInput = sync ? /^\s*(TASK-\d{5})(?:\s+--checkout\s+("[^"\r\n]+"|'[^'\r\n]+'|\/[^\s"']+))?\s*$/.exec(selected[2]) : null;
+    const sync = skill === 'sync';
+    const syncInput = sync ? /^\s*(TASK-\d{5})(?:\s+--checkout\s+("[^"\r\n]+"|'[^'\r\n]+'|\/[^\s"']+))?\s*$/.exec(args) : null;
     if (sync && !syncInput) throw new Unavailable('workflow-subject-required');
-    const releaseAssessment = releaseAssessor(selected[1]) && /^\s*release(?:\s|$)/.test(selected[2]);
-    const taskId = sync ? syncInput[1] : selected[1] === 'release' || releaseAssessment ? (() => {
-      const version = selected[2].trim().split(/\s+/)[releaseAssessment ? 1 : 0];
+    const releaseAssessment = releaseAssessor(skill) && /^\s*release(?:\s|$)/.test(args);
+    const taskId = sync ? syncInput[1] : skill === 'release' || releaseAssessment ? (() => {
+      const version = args.trim().split(/\s+/)[releaseAssessment ? 1 : 0];
       if (!version && !releaseAssessment) return null;
       const normalized = releaseVersion(version);
       if (!normalized) throw new Unavailable('workflow-subject-required');
       return releaseAssessment ? 'release ' + normalized : normalized;
-    })() : selected[2].match(/\b(?:TASK|TICKET|EPIC|WF)-\d{3,5}\b/)?.[0] ??
-      (/^[A-Za-z0-9][A-Za-z0-9._-]{0,95}(?:\s|$)/.exec(selected[2])?.[0].trim() ?? null);
-    if (taskId !== null && !scopedSubject(selected[1], taskId)) throw new Unavailable('workflow-subject-required');
-    const checkout = (sync ? syncInput[2] : /(?:^|\s)--checkout\s+(.+)$/.exec(selected[2])?.[1])?.replace(/^(?:"(.*)"|'(.*)')$/, '$1$2');
+    })() : args.match(/\b(?:TASK|TICKET|EPIC|WF)-\d{3,5}\b/)?.[0] ??
+      (/^[A-Za-z0-9][A-Za-z0-9._-]{0,95}(?:\s|$)/.exec(args)?.[0].trim() ?? null);
+    if (taskId !== null && !scopedSubject(skill, taskId)) throw new Unavailable('workflow-subject-required');
+    const checkout = (sync ? syncInput[2] : /(?:^|\s)--checkout\s+(.+)$/.exec(args)?.[1])?.replace(/^(?:"(.*)"|'(.*)')$/, '$1$2');
     if (checkout !== undefined && (!isAbsolute(checkout) || /[\x00-\x1f\x7f]/.test(checkout))) throw new Unavailable('workflow-checkout-required');
+    if (!hasSkill(skill)) throw new Unavailable('workflow-skill-not-loaded');
     this.requested = { taskId, checkout: checkout ? resolve(checkout) :
-      resolvesCheckout(selected[1]) && taskId !== null ? null : this.defaultCheckout,
-      mode: sync ? 'default' : /\b(query|trace)\b/.test(selected[2]) ? 'query' : /\b(status|preview|dry-run)\b/.test(selected[2]) ? 'status' : 'default' };
-    try { this.select(selected[1], persist); } finally { this.requested = undefined; }
+      resolvesCheckout(skill) && taskId !== null ? null : this.defaultCheckout,
+      mode: sync ? 'default' : /\b(query|trace)\b/.test(args) ? 'query' : /\b(status|preview|dry-run)\b/.test(args) ? 'status' : 'default' };
+    try { this.select(skill, persist); } finally { this.requested = undefined; }
     return true;
   }
 }

@@ -607,4 +607,5 @@
 | [TASK-00602](00602-TASK.md) | Adopt the shared React frontend in the Yii skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
 | [TASK-00603](00603-TASK.md) | Adopt the shared React frontend in the CodeIgniter skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
 | [TASK-00604](00604-TASK.md) | Isolate the bundled Git-detection test from the current directory | ready-for-human | — |
+| [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | done | — |
 <!-- /planning:records -->
