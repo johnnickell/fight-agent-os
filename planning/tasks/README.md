@@ -575,7 +575,7 @@
 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | done | [TICKET-00133](../tickets/00133-TICKET.md) |
-| [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | in-progress | [TICKET-00133](../tickets/00133-TICKET.md) |
+| [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | done | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | done | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
