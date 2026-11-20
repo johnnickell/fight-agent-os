@@ -79,8 +79,10 @@ bootstrap-specific locking does not remove package-owned consistency protections
 
 Success stdout is one JSON line with `status: bootstrap_complete`, `admission`, `invitation`, `assignment`, `audit`
 and `user_id`. Failure stdout is empty; stderr reports bounded step facts with `status: partial_or_uncertain` and
-inspection/retry guidance. `admission` is `admitted`, `refused` or `unknown`; it is a presence-check result, not a
-stored claim or an authentication credential. A target ID is shown only when this invocation's intended pending
+inspection/retry guidance. `admission` is `admitted`, `refused` or `unknown`. The handler can report its presence-check
+result directly; after a void dispatch, only this invocation's completion evidence proves it passed the check.
+An absent target alone cannot distinguish a skipped handler from an admitted invocation. Admission is not a stored
+claim or an authentication credential. A target ID is shown only when this invocation's intended pending
 invitation is confirmed. Invitation/assignment facts are `confirmed`, `missing` or `unknown`; audit is `confirmed`
 or `unconfirmed`. Quiet/silent behavior follows Symfony Console.
 

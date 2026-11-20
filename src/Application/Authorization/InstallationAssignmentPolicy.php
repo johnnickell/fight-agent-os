@@ -52,14 +52,18 @@ final readonly class InstallationAssignmentPolicy
     {
         $this->requireInstallation();
         $user = $this->requireUser($userId);
+        /** @var RoleView $role */
         $role = $this->queryBus->fetch(new GetRoleById($roleId));
+        // @phpstan-ignore instanceof.alwaysTrue (A query filter can skip or replace the supplier result.)
         if (!$role instanceof RoleView) {
             throw new LogicException('The requested role is unavailable.');
         }
         InstallationManagedPolicy::requireAdditiveRole($roleId, $role);
         foreach ($role->getPermissionIds() as $permissionId) {
+            /** @var PermissionView $permission */
             $permission = $this->queryBus->fetch(new GetPermissionById($permissionId));
             if (
+                // @phpstan-ignore instanceof.alwaysTrue (A query filter can skip or replace the supplier result.)
                 !$permission instanceof PermissionView || !$permission->getPermissionId()->equals($permissionId)
                 || $permission->getTier() !== PermissionTier::ADMIN_SAFE
             ) {
@@ -75,7 +79,9 @@ final readonly class InstallationAssignmentPolicy
      */
     public function requireUser(UserId $userId): UserView
     {
+        /** @var UserView $user */
         $user = $this->queryBus->fetch(new GetUserById($userId));
+        // @phpstan-ignore instanceof.alwaysTrue (A query filter can skip or replace the supplier result.)
         if (!$user instanceof UserView || !$user->getUserId()->equals($userId)) {
             throw new LogicException('The target user is unavailable.');
         }

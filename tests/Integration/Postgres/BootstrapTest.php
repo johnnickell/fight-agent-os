@@ -44,10 +44,12 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Command\CommandFilter;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\EventMessage;
 use Fight\Common\Domain\Utility\ClassName;
@@ -57,6 +59,7 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Tests\Support\AccessClock;
 
 /**
@@ -399,6 +402,50 @@ final class BootstrapTest extends TestCase
             self::assertNotSame('', $marker);
             self::assertStringNotContainsString($marker, $safe);
         }
+    }
+
+    /**
+     * Reports unknown admission when a configured filter skips the bootstrap handler
+     */
+    public function testOuterFilterVetoDoesNotConfirmAdmission(): void
+    {
+        self::assertTrue($this->bootstrap($this->command())->isComplete());
+        $tables = ['users', 'roles', 'permissions', 'user_role_assignments', 'activation_grants', 'audit_evidence'];
+        $counts = fn(): array => array_map(
+            fn(string $table): int => (int) $this->connection->fetchOne('SELECT count(*) FROM '.$table),
+            $tables
+        );
+        $before = $counts();
+        $events = $this->events;
+        $providerCalls = $this->providerCalls;
+        $filter = $this->createStub(CommandFilter::class);
+        $filter->method('process')->willReturnCallback(static function (CommandMessage $message, callable $next): void {
+            if (!$message->payload() instanceof BootstrapSuperAdmin) {
+                $next($message);
+            }
+        });
+        $this->container->get('messaging.command.bus')->addFilter($filter);
+        $stdout = new BufferedOutput();
+        $stderr = new BufferedOutput();
+        $output = $this->createStub(ConsoleOutput::class);
+        $output->method('write')->willReturnCallback($stdout->write(...));
+        $output->method('writeln')->willReturnCallback($stdout->writeln(...));
+        $output->method('getErrorOutput')->willReturn($stderr);
+        self::assertSame(1, $this->container->get(SafeConsoleApplication::class)->run(new ArgvInput([
+            'console', 'user:bootstrap-super-admin', '--internal', '--confirm-bootstrap',
+            '--operator='.UserId::generate(), '--email=skipped@example.test'
+        ]), $output));
+        self::assertSame('', $stdout->fetch());
+        $result = json_decode($stderr->fetch(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('partial_or_uncertain', $result['status']);
+        self::assertSame('unknown', $result['admission']);
+        self::assertSame('missing', $result['invitation']);
+        self::assertSame('missing', $result['assignment']);
+        self::assertSame('unconfirmed', $result['audit']);
+        self::assertArrayNotHasKey('user_id', $result);
+        self::assertSame($before, $counts());
+        self::assertSame($events, $this->events);
+        self::assertSame($providerCalls, $this->providerCalls);
     }
 
     /**

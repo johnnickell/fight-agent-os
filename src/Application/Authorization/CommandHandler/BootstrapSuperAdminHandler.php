@@ -83,7 +83,9 @@ final readonly class BootstrapSuperAdminHandler implements CommandHandler
             InstallationManagedPolicy::requireReconciled($this->queries->fetch(
                 new PreviewManagedPolicy($policy)
             ), $policy);
+            /** @var RoleView $role */
             $role = $this->queries->fetch(new GetRoleById($roleId));
+            // @phpstan-ignore instanceof.alwaysTrue (A query filter can skip or replace the supplier result.)
             if (!$role instanceof RoleView || !$role->getRoleId()->equals($roleId) || !$role->isManaged()) {
                 throw new LogicException('Managed bootstrap authority is unavailable.');
             }
@@ -103,7 +105,8 @@ final readonly class BootstrapSuperAdminHandler implements CommandHandler
             // An exception never proves rollback across independently committed package steps.
         }
         try {
-            $state = $this->progress->inspect($command);
+            $observed = $this->progress->inspect($command);
+            $state = new BootstrapState('admitted', $observed->invitation, $observed->assignment, $observed->audit);
         } catch (Throwable) {
             $state = new BootstrapState('admitted');
         }

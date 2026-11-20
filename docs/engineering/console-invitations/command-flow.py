@@ -5,7 +5,7 @@ from diagrams import Cluster, Diagram, Edge, Node
 
 with Diagram(
     "Trusted Console invitations and assignment | implementation\n"
-    "Numbered arrows show runtime calls; the dotted arrow marks inspection.",
+    "Numbered arrows show runtime calls; dotted arrows mark inspection.",
     filename=str(Path(__file__).with_suffix("")),
     outformat="png", show=False, direction="TB",
     graph_attr={"fontname": "DejaVu Sans", "fontsize": "16", "pad": "0.3", "splines": "spline"},
@@ -26,3 +26,4 @@ with Diagram(
     use_case >> Edge(label="2. Nested commands via CommandBus\nIndependent package commits") >> package
     use_case >> Edge(label="3. Handler-owned evidence transaction") >> audit
     use_case >> Edge(label="After failure, or before\nbootstrap step 3", style="dotted") >> read
+    entry >> Edge(label="4. After CommandBus returns\nConfirm before success", style="dotted") >> read

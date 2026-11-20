@@ -46,10 +46,10 @@ final readonly class PostgresBootstrapProgress implements BootstrapProgress
             $command->userId->toString()
         ]);
         if ($user === false) {
-            return new BootstrapState('admitted', 'missing', 'missing');
+            return new BootstrapState('unknown', 'missing', 'missing');
         }
         if ($user['email'] !== $command->email->toString() || $user['state'] !== 'pending_activation') {
-            return new BootstrapState('admitted');
+            return new BootstrapState('unknown');
         }
         $roles = $this->inspection->fetchFirstColumn('SELECT role_id FROM user_role_assignments WHERE user_id = ?', [
             $command->userId->toString()
@@ -61,8 +61,9 @@ SQL,
             [$command->operator->auditActorId, $command->userId->toString(), 'user.bootstrap_completed']
         ) !== false;
 
+        // Target state alone cannot show that the handler passed its presence check.
         return new BootstrapState(
-            'admitted',
+            $completed ? 'admitted' : 'unknown',
             'confirmed',
             $roles === [InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID] ? 'confirmed' : 'missing',
             $completed ? 'confirmed' : 'unconfirmed'
