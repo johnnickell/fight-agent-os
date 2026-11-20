@@ -15,11 +15,11 @@ second Application gate. TASK-00576 owns that source correction; do not bypass c
 Console/raw-bus operations while waiting. The manual single-operator and retained partial-result/audit limits
 below remain truthful; this document does not upgrade them to atomic bootstrap or replay guarantees.
 
-The [TASK-00573 cutover decision](../../planning/tasks/00573-TASK.md#selected-release-and-current-qualification-hold)
-uses the canonical nil `SystemId` for future bootstrap invitation and assignment. `user.invited` will record
-system issuance, not which operator ran bootstrap. Shell trust, explicit confirmation and separate commits still
-apply; historical rows retain their attribution. Access Control v0.10.0 carries the System actor through assignment
-and its event, but Agent OS has not adopted it. The executable procedure and attribution below are unchanged.
+Under the [TASK-00573 cutover](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption),
+bootstrap invitation and assignment use the canonical nil `SystemId`. Package `user.invited` and
+`user.role_assigned` facts identify the system, not the shell operator. Agent OS records the operator separately in
+`user.bootstrap_completed`. Shell trust, explicit confirmation and separate commits still apply; historical rows
+keep their original attribution.
 
 ## Prepare and confirm
 
@@ -49,14 +49,15 @@ is available. The pending user must complete normal activation.
 3. Dispatch package `InvitePendingUser`. Its transaction owns pending/passwordless identity, seven-day activation
    grant, encrypted recoverable delivery and `user.invited` audit. Postcommit delivery may start **before elevation**.
 4. Dispatch package `AssignRoleToUser` for the stable Super Admin ID with the canonical nil `SystemId` as actor.
-   The package owns the transaction, reference checks and publication after commit.
+   The package owns the transaction and reference checks, records `user.role_assigned` with the membership change,
+   and publishes the assignment event after commit.
 5. Independently inspect the exact pending target/email and exact Super Admin membership, then append
    `user.bootstrap_completed` in a separate audit transaction. Fresh inspection must confirm all required facts
    before success is reported.
 
-Completion audit uses `bootstrap:OPERATOR_UUID`. Package invitation audit and the assignment event identify the
-system, not the operator or the pending target. No new
-`user.bootstrap_claimed` evidence or singleton claim is written. Existing `installation_bootstrap` rows and old
+Completion audit uses `bootstrap:OPERATOR_UUID`. The package invitation audit, assignment audit and assignment
+event identify the system as actor, not the operator or the pending target. No new `user.bootstrap_claimed`
+evidence or singleton claim is written. Existing `installation_bootstrap` rows and old
 audit records remain untouched as historical evidence; runtime neither reads them for admission nor deletes them.
 The historical migration and its immutable table remain for database compatibility, not as an active retry blocker.
 
@@ -123,10 +124,9 @@ credential URLs, tokens or provider secrets, including at verbose levels. Packag
 private diagnostic material; no operator-facing failure subscriber is installed. Docker errors outside PHP remain
 a separate operational boundary.
 
-The selected `composer.lock` records Access Control **v0.8.0**
-(`319738255e682d587642b67856039f882b9588d6`) and Common **v1.3.0**
-(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). TASK-00564 changes no dependency and does not establish fresh
-v0.8.0 Console qualification.
+The selected `composer.lock` records Access Control **v0.11.0**
+(`6258682512e2c8d76a3fa655dd633167bd8f55b6`) and Common **v1.5.1**
+(`c73690164a9f112dbf14d774c56a7c01519b88aa`).
 
 ### Historical TASK-00446 qualification — 2026-10-15
 

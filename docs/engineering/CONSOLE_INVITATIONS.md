@@ -10,11 +10,11 @@ registered handlers; TASK-00576 owns that cutover. Existing `ConsoleUserOperatio
 `AuthenticatedRoleAssignment` below are not target templates. Keep their checks and partial-result/audit limits
 until verified replacement; this documentation grants no untrusted raw-bus access or additional atomicity.
 
-The [TASK-00573 cutover decision](../../planning/tasks/00573-TASK.md#selected-release-and-current-qualification-hold)
-uses the canonical nil `SystemId` for future `user:invite` and `user:role:add` operations. `user.invited` will
-record system issuance, not which operator ran the command. Shell trust and atomic invitation audit still apply;
-historical rows retain their attribution. Access Control v0.10.0 carries the System actor through assignment and
-its event, but Agent OS has not adopted it. The instructions and attribution below remain current.
+Under the [TASK-00573 cutover](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption),
+`user:invite` and `user:role:add` use the canonical nil `SystemId` for package commands. Package `user.invited`
+and `user.role_assigned` facts identify the system, not the shell operator. Agent OS records the operator
+separately in `user.console_role_assigned`. Shell trust and atomic invitation audit still apply; historical
+rows keep their original attribution.
 
 ## Prepare the intended installation
 
@@ -49,7 +49,8 @@ Application dispatches public `InvitePendingUser`, then public `AssignRoleToUser
 `ROLE_USER`. Each normal package handler owns its independent canonical DBAL transaction and normal postcommit
 events. The first commit atomically records the pending/passwordless identity, email claim, seven-day activation
 grant, encrypted recoverable delivery state and `user.invited` audit. Its delivery subscriber may attempt email
-**before assignment**. The second business commit adds `ROLE_USER`; it cannot roll back the first.
+**before assignment**. The second business commit adds `ROLE_USER` with its package audit; it cannot roll back
+the first.
 
 Success stdout is one JSON line: canonical `email`, safe `user_id`, and `status: "invited"`. It means both business
 steps, ordinary pending-state verification and separate role evidence completed, not email arrival or activation.
@@ -93,10 +94,11 @@ that case; absence of a target in output does **not** prove the invitation faile
 
 A postcommit event exception can leave invitation or membership committed. Application reads public safe state
 before reporting it; it does not infer rollback from an exception. Assignment failure retains first-step audit,
-grant and delivery, even if mail was already offered. Audit failure retains membership. Preserve the safe output,
-inspect intended persisted state, correct reconciled authority if necessary through its owning operation, then use
-the existing target's corrective command in a **fresh process**. Never blindly reinvite, regenerate credentials or
-create a replacement identity. Neither a failed transaction nor a failed event supplies proof of the current state.
+grant and delivery, even if mail was already offered. If the separate confirmation audit fails after assignment,
+membership remains. Preserve the safe output, inspect intended persisted state, correct reconciled authority if
+necessary through its owning operation, then use the existing target's corrective command in a **fresh process**.
+Never blindly reinvite, regenerate credentials or create a replacement identity. Neither a failed transaction
+nor a failed event supplies proof of the current state.
 
 Delivery recovery is independent of role correction. The package's bounded due-work runner finds the same durable
 generation after lost events, failed claims/outcomes or restart. Provider invocation occurs outside transactions.
@@ -106,19 +108,20 @@ is durable at-least-once attempts, not exactly once.
 ## Audit boundary and repeat semantics
 
 `user.invited` remains atomic with invitation/grant/delivery material in the first package transaction.
-The installed package assignment handler has no AuditEvidenceRepository. Application therefore verifies additive
-membership after the independent assignment returns, then uses a **third, separate audit transaction** to append
+The configured package handler writes `user.role_assigned` atomically with a real membership change and publishes
+`RoleAssignedToUser` after commit. Both use the system actor; an unchanged assignment writes neither. Agent OS
+verifies additive membership after the assignment returns, then uses a **separate audit transaction** to append
 `user.console_role_assigned`, with actor `console:OPERATOR_UUID`, subject target UUID and bounded context
 `{role_id: ROLE_UUID, result: "membership_confirmed"}`. This records an observed confirmation, not an atomic
 assignment/audit fact. Extra delivery claim/outcome bookkeeping transactions are separate too: “two steps” means
 two business transactions, not exactly two physical commits overall.
 
-A crash or postcommit exception between assignment and audit can leave membership with no role evidence. A failed
-or uncertain audit is non-success; no automatic rollback, audit replay or exactly-once evidence claim is made.
-A fresh corrective invocation dispatches the idempotent package assignment, verifies retained membership and
-appends its own attributed confirmation. **Every successful repeat adds one confirmation audit row**, even if no
-membership changed. It does not backfill a historical actor or assert that an interrupted earlier assignment was
-audited. An audit commit whose acknowledgement is lost may produce duplicate confirmation evidence on repeat;
+A crash or postcommit exception can leave membership and its package audit committed without the separate
+operator confirmation. Failed or uncertain confirmation is non-success; no automatic rollback, audit replay or
+exactly-once evidence claim is made. A fresh corrective invocation dispatches the idempotent package assignment,
+verifies retained membership and appends its own attributed confirmation. **Every successful repeat adds one confirmation audit row**, even if no
+membership changed. It does not backfill a historical actor or claim the operator's confirmation was recorded for an earlier
+interrupted invocation. An audit commit whose acknowledgement is lost may produce duplicate confirmation evidence on repeat;
 trusted investigation, not this CLI, resolves historical gaps. No repository hook, participant, deferred-event
 buffer or transaction decorator manufactures atomicity.
 
@@ -171,10 +174,9 @@ suppresses PHP engine display/logging and interactive suggestions. Docker can re
 PHP: never capture verbose private configuration. Normal package `CommandFailedEvent` remains private diagnostic
 material; no operator-facing logging subscriber is registered, and one must not be added without sanitization.
 
-The selected `composer.lock` records Access Control **v0.8.0**
-(`319738255e682d587642b67856039f882b9588d6`), Common **v1.3.0**
-(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`) and Symfony Console **v8.1.6**. TASK-00564 changes no dependency
-and does not establish fresh v0.8.0 Console qualification.
+The selected `composer.lock` records Access Control **v0.11.0**
+(`6258682512e2c8d76a3fa655dd633167bd8f55b6`), Common **v1.5.1**
+(`c73690164a9f112dbf14d774c56a7c01519b88aa`) and Symfony Console **v8.1.11**.
 
 ### Historical TASK-00446 qualification — 2026-10-15
 
