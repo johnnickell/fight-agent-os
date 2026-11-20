@@ -70,7 +70,7 @@ enrolled before advertising the notices as operational.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00273](../tasks/00273-TASK.md) | Qualify supported atomic notice coordination | needs-info |
+| [TASK-00273](../tasks/00273-TASK.md) | Qualify supported atomic notice coordination | ready-for-agent |
 | [TASK-00274](../tasks/00274-TASK.md) | Record an old-mailbox notice with each accepted request | ready-for-agent |
 | [TASK-00275](../tasks/00275-TASK.md) | Record completion notices without losing the original recipient | ready-for-agent |
 | [TASK-00276](../tasks/00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | ready-for-agent |
@@ -79,12 +79,10 @@ enrolled before advertising the notices as operational.
 
 ## Decisions and progress
 
-The [maintainer audit amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment)
-records approved but unimplemented/unreleased supplier participation for atomic request/confirmation old-mailbox
-notice intent. Agent OS owns storage, sending and recovery. Current source has self-service request/cancel audit
-when enabled and confirmation reservation-revision comparison; earlier contrary source observations below are
-superseded. Required storage, tagged release, Composer adoption, real atomic notice integration and runtime/provider
-qualification remain open. No hold is cleared by approval or a planned v0.9.0.
+[Adopted Access Control v0.11.0](../tasks/00573-TASK.md#approved-access-control-v0110-adoption) provides the
+in-transaction old-mailbox notice participant for request and confirmation. Agent OS still owns notice storage,
+sending and recovery. TASK-00273 can now qualify the contract; required storage, consumer atomicity and runtime
+provider qualification remain open.
 
 Approved as area 1 of EPIC-00015's four-TICKET split after
 [WF-032](../wayfinder/tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md). Supplies a hard
@@ -100,8 +98,8 @@ The maintainer approved these five independently reviewable slices:
 
 | TASK | Outcome | Blockers and holds |
 |---|---|---|
-| [TASK-00273](../tasks/00273-TASK.md) | Qualify supported atomic notice coordination | `needs-info`: actual supported package seam/owner resolution and any tagged release remain unmapped; no allocated TASK blocker |
-| [TASK-00274](../tasks/00274-TASK.md) | Record an old-mailbox notice with each accepted request | TASK-00273 and TASK-00283; ready behind the unresolved notice contract, not exposed |
+| [TASK-00273](../tasks/00273-TASK.md) | Qualify supported atomic notice coordination | No TASK blocker; qualify the released participant in Agent OS |
+| [TASK-00274](../tasks/00274-TASK.md) | Record an old-mailbox notice with each accepted request | TASK-00273 and TASK-00283; no exposure before capture and operational qualification |
 | [TASK-00275](../tasks/00275-TASK.md) | Record completion notices without losing the original recipient | TASK-00274, including the qualified seam transitively |
 | [TASK-00276](../tasks/00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | TASK-00274 and TASK-00040's shared mail capability; independent of completion capture |
 | [TASK-00277](../tasks/00277-TASK.md) | Operate scheduled notice recovery and safe inspection | TASK-00275, TASK-00276, TASK-00024 and TASK-00284; `needs-info` for actual provider/schedule, protected target and retention/failure-policy enrollment |

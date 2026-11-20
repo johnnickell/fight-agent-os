@@ -105,12 +105,12 @@ their own prerequisites are satisfied; this TICKET does not imply a monolithic r
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00576](../tasks/00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | needs-info |
-| [TASK-00577](../tasks/00577-TASK.md) | Correct HTTP invitation issuance status and recovery | needs-info |
-| [TASK-00578](../tasks/00578-TASK.md) | Correct directory authority catalogs and existing Role administration | needs-info |
-| [TASK-00579](../tasks/00579-TASK.md) | Correct authentication session and CSRF ownership | needs-info |
-| [TASK-00580](../tasks/00580-TASK.md) | Correct activation and password capabilities | needs-info |
-| [TASK-00581](../tasks/00581-TASK.md) | Correct credential recovery expiry and mail ownership | needs-info |
+| [TASK-00576](../tasks/00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | ready-for-agent |
+| [TASK-00577](../tasks/00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent |
+| [TASK-00578](../tasks/00578-TASK.md) | Correct directory authority catalogs and existing Role administration | ready-for-agent |
+| [TASK-00579](../tasks/00579-TASK.md) | Correct authentication session and CSRF ownership | ready-for-agent |
+| [TASK-00580](../tasks/00580-TASK.md) | Correct activation and password capabilities | ready-for-agent |
+| [TASK-00581](../tasks/00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -132,12 +132,11 @@ accepted. TASK-00577 consumes TASK-00576's corrected transport-neutral installat
 five do not depend on one another. There is no blanket Project, DBAL, Role-audit, delivery-runner or complete
 portfolio/upstream gate; orders do not add unstated technical dependencies or change other TASK priorities.
 
-### Precise supplier holds
+### Adopted supplier and remaining qualification
 
-The rechecked lock selects Common v1.5.0 (`06fb5cd3720af9cf8295198f74040d95b64c5155`) and Access Control
-v0.8.0 (`319738255e682d587642b67856039f882b9588d6`). The earlier Common v1.4.1 observation is historical;
-TASK-00572 adopted v1.5.0. This planning update changes no dependency. Actual selected AccessControl transitive
-requirements must still be qualified; current supplier source requires Common `^1.5.1`, not the old baseline alone.
+[TASK-00573](../tasks/00573-TASK.md#approved-access-control-v0110-adoption) adopted Access Control v0.11.0
+and Common v1.5.1. The tagged contracts clear the supplier holds for TASK-00576–00581. Existing dependencies
+remain; each TASK still owns verification of its corrected Agent OS paths.
 
 John selected Common's existing error categories and safe boundary as the shared approach, with only genuinely
 application-specific additions. Remove superseded local workarounds rather than retain parallel classifiers.
@@ -146,20 +145,15 @@ Common's QueryBus intentionally returns `mixed`. Callers use the known query-to-
 `@var` annotations, including generic element types. Neither a generic bus redesign nor removal of `mixed` is a
 supplier prerequisite. An annotation documents a qualified contract; it does not establish the handler's behavior.
 
-The historical AccessControl `0878fc24` observations are superseded where noted in the
-[maintainer audit amendment/current source check](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
-Current `c2971971c271ecf7020bb9025b3a7e470d75b9a4` supplies managed-policy preview, required reads/strict pages,
-explicit status absence, synchronous authentication/session/password operations, bounded delivery discovery and
-Role-handler audit. These are no longer all future capabilities. Local tags end at v0.8.0; a planned v0.9.0 does
-not establish release or adoption. The agreed ADR 0010 removal of redundant invitation/registration-recovery
-checks is still unimplemented/unreleased, so TASK-00577's timing conflict remains. Keep all six statuses,
-dependencies and tagged/Composer/consumer/runtime holds. Existing supplier owner references below are provenance,
-not instructions to repeat implemented work; qualify the actual released contracts and real consumer behavior:
+The release supplies managed-policy preview, required reads and strict pages, explicit status absence,
+synchronous authentication/session/password operations, bounded delivery discovery and Role-handler audit.
+It also removes the redundant invitation and registration-recovery authorization checks under ADR 0010.
+Supplier references below are provenance; verify the real consumer behavior rather than repeating upstream work:
 
 - TASK-00576: managed-policy and required User/Role/Permission reads; AC TASK-00131/00135/00140.
 - TASK-00577: explicit invitation status absence, generation/address/recovery outcomes and intentional failures;
-  AC TASK-00133/00137/00138 and related audit work. Resolve the invitation-correction permission-timing mismatch
-  described in TASK-00577 before adoption; never satisfy a required port with a no-op.
+  AC TASK-00133/00137/00138 and related audit work. Verify request-time permission and the corrected HTTP
+  paths after TASK-00576.
 - TASK-00578: required detail reads, exact page/identity contracts and Role mutations; AC TASK-00131/00132/00140.
   TASK-00573 owns explicit Role audit. Preserve unavailable Agent operation behavior while updating moved contracts.
 - TASK-00579: session owner/current-session/page contracts and direct synchronous authentication/session operations;
