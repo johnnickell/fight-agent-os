@@ -632,5 +632,7 @@ acceptance remains offline and does not update trust stores. Rebuild the image t
 Builds disclose Storybook's >500 kB tool-chunk warnings (not production application chunks), React-Bootstrap
 `use client` directive-preservation warnings in the browser-only catalog, and Rolldown plugin-timing warnings
 when emitted. None is suppressed. The inherited ESLint 9 installation deprecation remains. Caches, static output, coverage, browser failure screenshots and captures are
-ignored under `.runs/build/reports/client/`. The otherwise read-only install's `node_modules/.cache/` and `.vite-temp/`
-mount `.runs/cache/client/dependency-cache/` and `.runs/cache/client/vite-temp/` respectively during checks.
+ignored under `.runs/`: reports use `.runs/build/reports/client/` and tool caches use `.runs/cache/client/`.
+Storybook commands set `CACHE_DIR` to that cache location. Vitest and Storybook's Vite builder use the pinned
+Node runtime's native TypeScript config loading, so no temporary config is written under `node_modules`.
+Installed dependencies stay read-only during checks, with no nested cache mounts or host cache placeholders.

@@ -13,6 +13,22 @@ verify_install=yes
 storage_checked=no
 case "${1:-}" in
     setup)
+        # Reuse the locked installation instead of replacing dependencies beneath active checks.
+        if [ -f client/node_modules/.fight-install.json ] && ./bin/client versions; then
+            echo 'Frontend installation is current; dependencies were not replaced.'
+            exit 0
+        fi
+        consumers=$(./bin/runtime docker compose ps --all --status running --status created \
+            --status restarting --status paused --status removing --services web composer)
+        if [ -n "$consumers" ]; then
+            echo 'Frontend installation needs replacement, but this checkout has active tooling containers.' >&2
+            echo 'Finish active checks and one-off web/composer commands, then run from this checkout:' >&2
+            echo '  ./bin/runtime docker compose stop web' >&2
+            echo '  ./bin/client setup' >&2
+            echo '  ./bin/up --worktree "$PWD"  # In main, use ./bin/up' >&2
+            echo 'Do not delete cache directories or remove their filesystem protections.' >&2
+            exit 1
+        fi
         ./bin/runtime storage-admit --protect-image "$image"
         storage_checked=yes
         ./bin/runtime docker pull "$image"
@@ -58,17 +74,8 @@ if [ "$verify_install" = yes ]; then
     fi
     set -- sh -c 'node scripts/dependencies.mjs && exec "$@"' -- "$@"
 fi
-# Only explicit maintenance/fix commands can write source/dependencies. Vite and
-# Storybook need two writable cache mounts beneath the otherwise read-only install.
-if [ "$source_mode" = readonly ]; then
-    ./bin/runtime paths client/node_modules/.cache client/node_modules/.vite-temp \
-        .runs/cache/client/dependency-cache .runs/cache/client/vite-temp
-    set -- --mount "type=bind,source=$(pwd)/.runs/cache/client/dependency-cache,target=/app/client/node_modules/.cache" \
-        --mount "type=bind,source=$(pwd)/.runs/cache/client/vite-temp,target=/app/client/node_modules/.vite-temp" \
-        "$image" "$@"
-else
-    set -- "$image" "$@"
-fi
+# Tool caches live under .runs; installed dependencies need no nested writable mounts.
+set -- "$image" "$@"
 # Only the interactive catalog publishes a port, restricted to host loopback.
 exec ./bin/runtime docker run --rm --pull=never --network="$network" ${port:+--publish "$port"} --read-only \
     --user "$(id -u):$(id -g)" --cap-drop=ALL --security-opt=no-new-privileges:true \
