@@ -275,15 +275,15 @@
 | [TASK-00270](00270-TASK.md) | Complete the named Hotfix Engineer's controlled handoff | ready-for-agent | [TICKET-00065](../tickets/00065-TICKET.md) |
 | [TASK-00271](00271-TASK.md) | Integrate managed Agents with a qualified library release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
 | [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
-| [TASK-00273](00273-TASK.md) | Qualify supported atomic notice coordination | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00273](00273-TASK.md) | Qualify supported atomic notice coordination | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00274](00274-TASK.md) | Record an old-mailbox notice with each accepted request | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00275](00275-TASK.md) | Record completion notices without losing the original recipient | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00276](00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00277](00277-TASK.md) | Operate scheduled notice recovery and safe inspection | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00278](00278-TASK.md) | Enforce current email-change authority | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
 | [TASK-00279](00279-TASK.md) | Inspect current pending changes safely | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
-| [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
-| [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
 | [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
 | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
 | [TASK-00284](00284-TASK.md) | Enroll one shared real mail transport | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
@@ -291,7 +291,7 @@
 | [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
 | [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
 | [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | ready-for-agent | [TICKET-00069](../tickets/00069-TICKET.md) |
-| [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | needs-info | [TICKET-00069](../tickets/00069-TICKET.md) |
+| [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | ready-for-agent | [TICKET-00069](../tickets/00069-TICKET.md) |
 | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
 | [TASK-00291](00291-TASK.md) | Provision missing Features atomically through protected operations | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
 | [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
@@ -578,12 +578,12 @@
 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | done | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | done | [TICKET-00134](../tickets/00134-TICKET.md) |
-| [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | done | [TICKET-00136](../tickets/00136-TICKET.md) |
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |

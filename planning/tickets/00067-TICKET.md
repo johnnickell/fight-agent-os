@@ -76,16 +76,16 @@ responses; no silent overwrite. Audit distinguishes self request/cancel and admi
 |---|---|---|
 | [TASK-00278](../tasks/00278-TASK.md) | Enforce current email-change authority | ready-for-agent |
 | [TASK-00279](../tasks/00279-TASK.md) | Inspect current pending changes safely | ready-for-agent |
-| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | needs-info |
-| [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | needs-info |
+| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | ready-for-agent |
+| [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | ready-for-agent |
 | [TASK-00282](../tasks/00282-TASK.md) | Administer another user's email change from user detail | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-Current source supports self-service request/cancel audit when enabled; required consumer audit storage remains
-unqualified. Atomic owned old-mailbox intent participation and exact request-ID cancellation are approved supplier
-work, not implemented/released contracts. The source refresh below changes no status, dependency or runtime hold.
+[Adopted Access Control v0.11.0](../tasks/00573-TASK.md#approved-access-control-v0110-adoption) supplies
+atomic old-mailbox intent participation and exact grant-ID cancellation. Required audit and the corrected
+consumer paths still need qualification.
 
 Approved as area 2 of EPIC-00015's four-TICKET split. Requires
 [TICKET-00066](00066-TICKET.md)'s atomic notice boundary and
@@ -95,7 +95,7 @@ Approved as area 2 of EPIC-00015's four-TICKET split. Requires
 approval, not a retroactive EPIC-00004 rewrite. No permission grant or request endpoint was created here.
 
 TICKET-00066's approved split supplies [TASK-00274](../tasks/00274-TASK.md)'s atomic request-notice capture
-behind [TASK-00273](../tasks/00273-TASK.md)'s unresolved supported public contract, and
+behind [TASK-00273](../tasks/00273-TASK.md)'s qualification of the released contract, and
 [TASK-00277](../tasks/00277-TASK.md)'s operational notice readiness. Map those concrete prerequisites to this
 TICKET's exposure TASKs alongside TICKET-00068's now-allocated TASK-00283–00287 credential primitives. Current self/
 admin authority, the protected Permission/callback, safe pending status and cancellation remain owned here;
@@ -112,8 +112,8 @@ The maintainer approved five independently reviewable slices:
 |---|---|---|
 | [TASK-00278](../tasks/00278-TASK.md) | Enforce current email-change authority | TASK-00036 and TASK-00117; complete managed policy extension and all supported caller checks, no mutation exposure |
 | [TASK-00279](../tasks/00279-TASK.md) | Inspect current pending changes safely | TASK-00278 and TASK-00051; scoped query/API and real read-only account panel |
-| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | TASK-00279, TASK-00274, TASK-00277 and TASK-00287; supplier mapping resolved, existing notice-contract and operational qualification holds remain |
-| [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | TASK-00279; `needs-info` for supported exact-intent/generation fencing and atomic self-cancellation audit |
+| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | TASK-00279, TASK-00274, TASK-00277 and TASK-00287; existing capture and operational prerequisites remain |
+| [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | TASK-00279; verify exact-intent fencing and required atomic self-cancellation audit |
 | [TASK-00282](../tasks/00282-TASK.md) | Administer another user's email change from user detail | TASK-00280, TASK-00281 and TASK-00123; complete protected cross-user API/UI integration behind their unresolved holds |
 
 TASK-00278 extends the complete stable managed catalog rather than replacing it with a one-Permission policy.
@@ -129,15 +129,11 @@ inventing a second authority. GET does not expire, repair, send or mutate. Issue
 cancelled and unknown remain distinct; absent or incoherent evidence is not a successful empty state. The account
 panel uses the shared `/me` owner and volatile generation-fenced data, not a stored draft or private URL state.
 
-The inspected `CancelEmailChange` takes only actor/target IDs and selects the latest eligible grant inside its
-own transaction. Expected-state repository comparisons protect that loaded state, not the change the human
-reviewed earlier; a browser revision/preflight cannot prevent delayed intent from cancelling a successor.
-The earlier administrative-only audit observation is superseded: current source audits self-cancellation when
-enabled. The maintainer agreed cancellation must identify the exact email-change request ID, but this is not
-implemented or released. TASK-00281 must qualify that contract, original-outcome observation and required atomic
-self audit against the real tag/lock/consumer, not a guessed parameter. See the
-[ownership/source amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment). TASK-00273's request/confirmation seam does not automatically resolve cancellation. No nested
-transaction, copied handler, hidden audit-repository policy or after-commit audit workaround is permitted.
+`CancelEmailChange` now requires the exact grant ID and rejects a successor inside its transaction. A browser
+revision or preflight is not a substitute. TASK-00281 still owns verification of the actual consumer path,
+original-outcome observation and required atomic self audit. TASK-00273's request/confirmation participant
+does not cover cancellation. No nested transaction, copied handler, hidden audit-repository policy or
+post-commit audit workaround is permitted.
 
 Request and cancellation remain separate paths after safe status. TASK-00280 waits for qualified old-notice and
 new-mail delivery; **TASK-00281 does not depend on sending readiness or TASK-00280**. Provider failure cannot

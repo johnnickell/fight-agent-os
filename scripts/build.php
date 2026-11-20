@@ -252,7 +252,7 @@ try {
     $writeEvidence($run.'/before.json', $before);
     if (!extension_loaded('xdebug') || !is_file($root.'/client/node_modules/.fight-install.json')) {
         throw new RuntimeException(
-            'Missing coverage/frontend setup. Run ./bin/up and ./bin/client setup explicitly.'
+            'Missing coverage/frontend setup. Run ./bin/client setup before web; see docs/engineering/BUILD.md.'
         );
     }
 

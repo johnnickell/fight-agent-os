@@ -74,7 +74,7 @@ not authorize other commands, including reset or fresh login.
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00288](../tasks/00288-TASK.md) | Open confirmation links without changing account state | ready-for-agent |
-| [TASK-00289](../tasks/00289-TASK.md) | Confirm explicitly and return to fresh login | needs-info |
+| [TASK-00289](../tasks/00289-TASK.md) | Confirm explicitly and return to fresh login | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -124,7 +124,7 @@ credential/provider/recovery and authentication boundaries rather than adding a 
 | TASK | Outcome | Blockers and holds |
 |---|---|---|
 | [TASK-00288](../tasks/00288-TASK.md) | Open confirmation links without changing account state | TASK-00285 and TASK-00051; ready behind unfinished producer/public-frame foundations |
-| [TASK-00289](../tasks/00289-TASK.md) | Confirm explicitly and return to fresh login | TASK-00288, TASK-00275, TASK-00277, TASK-00287, TASK-00282 and TASK-00063; `needs-info` for supported atomic notice/reservation guarantees and actual operational qualification |
+| [TASK-00289](../tasks/00289-TASK.md) | Confirm explicitly and return to fresh login | TASK-00288, TASK-00275, TASK-00277, TASK-00287, TASK-00282 and TASK-00063; waits for notice capture and operational qualification |
 
 TASK-00288 consumes the fixed producer path/encoding and reuses TASK-00043's qualified fragment bootstrap through
 the existing public frame. Capture is bounded, volatile and promptly removed from history before ordinary page
@@ -141,13 +141,11 @@ protection, not a second mailbox secret. No password/new-email form, actor/recip
 login/reset/reissue or new validity/history API is added. Exact input and secrets stay out of ordinary diagnostics,
 markup, persistence, screenshots, audit and shared client messages.
 
-**Source observation superseded:** current `EmailChangeConfirmation::confirmEmail()` compares the current
-reservation revision through `matchesReservation()`. See the
-[revision-linked recheck](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
-TASK-00273/00275 still qualify tagged/locked generation fencing, supported-writer and same-address successor/ABA
-behavior. Supported atomic owned old-mailbox intent participation is agreed but not implemented or released.
-No copied package check, preflight, hidden repository policy or nested transaction substitutes for that contract;
-Composer adoption, required audit and actual consumer/operational evidence remain open.
+[Adopted Access Control v0.11.0](../tasks/00573-TASK.md#approved-access-control-v0110-adoption) supplies
+an in-transaction notice participant and checks the current reservation revision. TASK-00273/00275 still
+qualify required audit, notice capture and competing-writer behavior in Agent OS. A copied package check,
+preflight, hidden repository policy or nested transaction does not substitute for that contract. Operational
+qualification remains separate.
 
 The service also returns `void` and publishes its event after commit. TASK-00275 remains owner of atomic grant/
 User/authentication/session/audit/completion-intent coordination and exact original-recipient binding. Required

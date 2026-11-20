@@ -15,9 +15,9 @@ ignored cache pointer, not another acceptance report. Old receipts without these
 
 The fingerprint covers sorted project paths, file bytes, permissions and symlink targets plus their resolved
 contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `.runs/`, `var/`, IDE state,
-`.DS_Store`, legacy `client/dist/` and `public/build/`, and the two disposable frontend cache mounts
-(`client/node_modules/.cache/` and `.vite-temp/`). Current generated OpenAPI, validation and live client-build
-inputs under `var/` are fingerprinted explicitly. Missing inputs, unreadable or special files and cyclic links
+`.DS_Store`, legacy `client/dist/` and `public/build/`, and the two legacy frontend cache directories
+(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. Current generated OpenAPI, validation
+and live client-build inputs under `var/` are fingerprinted explicitly. Missing inputs, unreadable or special files and cyclic links
 disable caching; they are never silently omitted. Ordinary Markdown records under `planning/` are excluded from
 the application fingerprint: tasks, tickets, epics, progress notes and generated planning views do not rebuild
 unchanged application inputs. Every invocation first runs a fresh, read-only planning check, including cache hits.
@@ -113,11 +113,35 @@ Use up again after environment or image/configuration changes. It never installs
 ingress or enrolls trust. [Shared ingress operations](LOCAL_INGRESS.md) now provides the explicit supplier
 commands and main opt-in; its live TLS/full-stack qualification and independent acceptance remain incomplete.
 Never silently refresh a service inside acceptance.
-Before reinstalling frontend dependencies in an already-running project, stop only `web`
-(`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.
+`./bin/client setup` validates an existing install receipt, runtime and installed dependency versions first.
+A matching installation is reused without npm installation or cache-directory replacement, including while
+`web` is running. Receipt validation is staleness detection, not a complete dependency-content integrity check.
+If installation is missing or stale, setup refuses replacement while this checkout's `web` or `composer`
+containers are active, including starting, paused and one-off commands. Finish active checks and one-off
+commands, then use:
+
+```sh
+./bin/runtime docker compose stop web
+./bin/client setup
+./bin/up --worktree "$PWD"  # Inside a linked worktree; main uses ./bin/up
+```
+
+Install before starting tooling in a fresh worktree. Tool caches now live under `.runs/cache/client/`;
+Storybook uses `CACHE_DIR`, and Vitest/Vite load configuration natively without writing into `node_modules`.
+The Compose and focused client wrappers no longer create or mount `.cache` or `.vite-temp` inside dependencies.
+When adopting this change in an existing worktree, rerun `./bin/runtime setup` before recreating `web` so its
+generated Compose override also loses the old mounts. Existing installation secrets are retained.
+Old macOS deny-delete ACLs can survive container teardown; they require a separately authorized, exact-path
+permission repair before a necessary reinstall. Setup does not remove those ACLs, delete directories by hand,
+or restart shared Docker. Preserve a valid installation whenever possible.
 Do not replace dependencies beneath a live gate. A stopped web service or missing tooling setup
 fails with an explicit setup instruction; the build wrapper does not compare Compose configuration hashes.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
+
+The CLI and FPM Dockerfiles copy non-secret PHP configuration and loader code with explicit `0644` permissions.
+This keeps them readable by the selected runtime UID even when host checkout files are `0600`. Rebuild affected
+images and explicitly recreate affected services after adopting Dockerfile changes. `task.env` and mounted
+secret files retain their private permissions; do not change them to repair image configuration.
 
 Critical browser smoke also requires the selected project's initially empty disposable Mailpit, the CLI image's
 matching FPM binary/OpenSSL/NSS tools, and explicit [browser gateway setup](BROWSER_SMOKE.md) using the existing
@@ -213,7 +237,7 @@ PID 1 to reap orphaned Node/build/browser children after normal checks, rather t
 repeated gate runs. The maintenance service inherits this boundary. Enabling init on an existing service requires
 the explicit `./bin/up` refresh above; restarting the old container alone does not apply changed configuration.
 No PID ceiling is raised, and acceptance never restarts the service to recover its budget.
-Only ignored `.runs/`, `var/` and two frontend dependency-cache mounts are writable. The dedicated guarded
+Only ignored `.runs/` and `var/` are writable under the source mount. The dedicated guarded
 PostgreSQL test service is disposable; development data is not migrated
 or reset. Normal backend completion/failure after a successful reset cleans the guarded test schema again. Focused
 PostgreSQL iteration therefore needs `./bin/database test-reset` after coverage cleanup.

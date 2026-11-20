@@ -46,9 +46,10 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && docker-php-ext-enable xdebug \
     && rm -rf /tmp/xdebug /tmp/xdebug.tgz /var/lib/apt/lists/*
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-COPY etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
-COPY etc/docker/php/runtime-secrets.php /usr/local/etc/php/runtime-secrets.php
-COPY etc/docker/php/runtime-secrets.ini /usr/local/etc/php/conf.d/zz-runtime-secrets.ini
+# Non-secret configuration must be readable by the selected runtime UID, even with a private host umask.
+COPY --chmod=0644 etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
+COPY --chmod=0644 etc/docker/php/runtime-secrets.php /usr/local/etc/php/runtime-secrets.php
+COPY --chmod=0644 etc/docker/php/runtime-secrets.ini /usr/local/etc/php/conf.d/zz-runtime-secrets.ini
 WORKDIR /app
 
 # Preserve the distro executable path without retaining its affected Git package.
