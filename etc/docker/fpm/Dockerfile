@@ -10,9 +10,10 @@ RUN apt-get update \
     && (cd /tmp/xdebug && phpize && ./configure --enable-xdebug && make -j"$(nproc)" && make install) \
     && docker-php-ext-enable xdebug \
     && rm -rf /tmp/xdebug /tmp/xdebug.tgz /var/lib/apt/lists/*
-COPY etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
-COPY etc/docker/php/runtime-secrets.php /usr/local/etc/php/runtime-secrets.php
-COPY etc/docker/php/runtime-secrets.ini /usr/local/etc/php/conf.d/zz-runtime-secrets.ini
-COPY etc/docker/fpm/local.ini /usr/local/etc/php/conf.d/zzz-fpm-local.ini
-COPY etc/docker/fpm/zz-local.conf /usr/local/etc/php-fpm.d/zz-local.conf
+# Non-secret configuration must be readable by the selected runtime UID, even with a private host umask.
+COPY --chmod=0644 etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
+COPY --chmod=0644 etc/docker/php/runtime-secrets.php /usr/local/etc/php/runtime-secrets.php
+COPY --chmod=0644 etc/docker/php/runtime-secrets.ini /usr/local/etc/php/conf.d/zz-runtime-secrets.ini
+COPY --chmod=0644 etc/docker/fpm/local.ini /usr/local/etc/php/conf.d/zzz-fpm-local.ini
+COPY --chmod=0644 etc/docker/fpm/zz-local.conf /usr/local/etc/php-fpm.d/zz-local.conf
 WORKDIR /app
