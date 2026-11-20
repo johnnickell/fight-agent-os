@@ -34,6 +34,27 @@ hold. Historical planning approvals and usage receipts are preserved, not reinte
 The [source-linked runtime view](../../docs/engineering/native-workflow/README.md) shows the surviving suppliers
 and native-tool independence at the implementation revision.
 
+## Standalone project skills
+
+Start `pi` from the project root and approve native project trust if prompted, after reviewing the project
+resources Pi will load. Put each project skill in `.pi/skills/<name>/SKILL.md`, with matching `name` and a
+`description` in YAML frontmatter. For nickell-jobs, start Pi from the `nickell-jobs` root and use:
+
+| Skill file (relative to the project root) | Interactive Pi command |
+|---|---|
+| `.pi/skills/job-search-workspace/SKILL.md` | `/skill:job-search-workspace` |
+| `.pi/skills/payroll-leads/SKILL.md` | `/skill:payroll-leads` |
+| `.pi/skills/screened-opportunities/SKILL.md` | `/skill:screened-opportunities` |
+
+No Fight settings, planning records, or special frontmatter are needed for these commands. If Pi does not
+list a skill, check project trust, the file's frontmatter and Pi's resource diagnostics, then `/reload`.
+Pi reports collisions and decides which resource wins; use distinct names. Fight still validates reserved
+names such as `work` and `sync`, regardless of which resource Pi loads for them.
+
+Standalone skills do not select, clear, or restore Fight authority. Project trust allows Pi to load the skill;
+it does not authorize access to unrelated data, exemption from project rules, or edits to the project. Follow
+the skill's data and operation limits. For engineering changes, use the project's normal approved Work path.
+
 ## Retained state
 
 Do **not** delete or rewrite `~/Library/Application Support/Fight Agent OS/jev/`. It may contain connection/file

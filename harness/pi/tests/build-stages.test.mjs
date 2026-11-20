@@ -69,7 +69,7 @@ test('an interactive Build can dispatch into its selected sibling worktree witho
   const f = fixture(t), foreign = fixture(t), checkout = join(f.root, 'isolated');
   execFileSync('git', ['-C', f.root, 'worktree', 'add', '-b', 'feature/isolated', checkout], { stdio: 'ignore' });
   const workflow = new WorkflowAccess('local', { checkout: f.root });
-  workflow.input('/skill:build TASK-00561', 'interactive');
+  workflow.input('/skill:build TASK-00561', 'interactive', name => name === 'build');
   publishWorkflow(f.ctx.sessionManager, workflow);
 
   const request = { ...f.request, checkout, branch: 'feature/isolated', record: join(checkout, 'work-items/task.md') };

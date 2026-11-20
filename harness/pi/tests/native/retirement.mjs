@@ -130,8 +130,14 @@ manager.appendCustomEntry('fight-workflow-role-v3', { sessionId: manager.getSess
   role: 'land', skill: 'land', taskId: 'TASK-00586', checkout: root, mode: 'default' });
 const sessionFile = manager.getSessionFile(), original = readFileSync(sessionFile, 'utf8');
 const settingsManager = sdk.SettingsManager.inMemory();
+const skillPaths = ['work', 'review', 'build', 'land', 'job-search'].map(name => {
+  const file = join(fixture, 'skills', name, 'SKILL.md');
+  put(file, `---\nname: ${name}\ndescription: Synthetic workflow routing fixture\n---\nNo external operations.\n`);
+  return file;
+});
 const loader = new sdk.DefaultResourceLoader({ cwd: root, agentDir, settingsManager, noExtensions: true, noSkills: true,
-  noThemes: true, noPromptTemplates: true, noContextFiles: true, additionalExtensionPaths: [join(harness, 'src/workflow-extension.ts')] });
+  noThemes: true, noPromptTemplates: true, noContextFiles: true, additionalSkillPaths: skillPaths,
+  additionalExtensionPaths: [join(harness, 'src/workflow-extension.ts')] });
 await loader.reload(); assert.deepEqual(loader.getExtensions().errors, []);
 const { session } = await sdk.createAgentSession({ cwd: root, agentDir, modelRuntime: runtime,
   settingsManager, resourceLoader: loader, sessionManager: sdk.SessionManager.open(sessionFile) });
@@ -146,13 +152,24 @@ assert.equal((await status()).workflow.skill, 'review');
 await session.reload();
 assert.equal((await status()).workflow.skill, 'review');
 assert.ok(readFileSync(sessionFile, 'utf8').startsWith(original));
+// An invalid reserved request holds authority; a loaded standalone skill can't clear it.
+await session.extensionRunner.emitInput('/skill:sync', undefined, 'interactive');
+const held = await status(), heldEntries = readFileSync(sessionFile, 'utf8');
+assert.equal(held.reason, 'workflow-subject-required');
+await session.extensionRunner.emitInput('/skill:job-search Demo', undefined, 'interactive');
+assert.deepEqual(await status(), held);
+assert.equal(readFileSync(sessionFile, 'utf8'), heldEntries);
+await session.extensionRunner.emitInput(`/skill:review TASK-00586 --checkout ${root}`, undefined, 'interactive');
+assert.equal((await status()).state, 'active');
 // A real file persistence refusal cannot leave Build authority published or heal without reload.
 chmodSync(sessionFile, 0o400);
 await session.extensionRunner.emitInput(`/skill:build TASK-00586 --checkout ${root}`, undefined, 'interactive');
 assert.equal((await status()).state, 'held');
 assert.equal((await status()).reason, 'workflow-role-persistence-failed');
-await session.extensionRunner.emitInput('/skill:land TASK-00586', undefined, 'interactive');
-assert.equal((await status()).state, 'held');
+for (const text of ['/skill:land TASK-00586', '/skill:job-search Demo']) {
+  await session.extensionRunner.emitInput(text, undefined, 'interactive');
+  assert.equal((await status()).reason, 'workflow-role-persistence-failed');
+}
 chmodSync(sessionFile, 0o600);
 await session.reload();
 assert.equal((await status()).state, 'active');
