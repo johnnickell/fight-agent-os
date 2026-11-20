@@ -3,6 +3,8 @@
 TASK-00057 implements `GET /api/v1/me/sessions` and `/account/sessions`.
 TASK-00058 adds confirmed other-owned revocation; its independent Review and behavioral QA remain pending.
 
+See the [source-verified request flow](owned-sessions/README.md) for the HTTP, bus and package boundaries.
+
 ## Authority and wire contract
 
 `ApiActionSecurity` creates a fresh package `CurrentPrincipalProvider` and enforces the action's exact
