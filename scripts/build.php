@@ -250,6 +250,15 @@ $before = null;
 try {
     $before = $snapshot();
     $writeEvidence($run.'/before.json', $before);
+    $exitCode = $execute(
+        'Pi dependency preparation',
+        ['node', 'harness/pi/scripts/dependencies.mjs', 'check'],
+        $root,
+        $cache->frontendEnvironment($run.'/home')
+    );
+    if ($exitCode !== 0) {
+        throw new RuntimeException('Pi dependencies are not prepared; run ./bin/pi-dependencies setup.');
+    }
     if (!extension_loaded('xdebug') || !is_file($root.'/client/node_modules/.fight-install.json')) {
         throw new RuntimeException(
             'Missing coverage/frontend setup. Run ./bin/client setup before web; see docs/engineering/BUILD.md.'
