@@ -11,7 +11,7 @@ use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;

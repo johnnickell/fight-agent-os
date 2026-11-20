@@ -4,24 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Sessions\BrowserFamily;
-use App\Application\Sessions\DeviceClass;
-use App\Application\Sessions\DeviceDescriptor;
-use App\Application\Sessions\ReadOwnedSessions;
-use App\Application\Sessions\SessionPresentation;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
+use App\Application\Security\Session\BrowserFamily;
+use App\Application\Security\Session\DeviceClass;
+use App\Application\Security\Session\DeviceDescriptor;
+use App\Application\Security\Session\SessionPresentation;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
@@ -37,7 +33,6 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
@@ -152,7 +147,7 @@ final class OwnedSessionsApiTest extends TestCase
     /**
      * Proves exact permission rather than Role membership or an administrative read permission
      */
-    public function testExactPermissionAndNonHttpBoundary(): void
+    public function testRequiresExactSelfServiceReadPermission(): void
     {
         self::assertSame(401, $this->request('', false)->getStatusCode());
         $this->connection->executeStatement(<<<'SQL'
@@ -160,8 +155,6 @@ DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions 
 SQL);
         self::assertSame(403, $this->request()->getStatusCode());
         self::assertSame(0, $this->probe->count());
-        $this->expectException(PermissionDenied::class);
-        $this->container->get(ReadOwnedSessions::class)->read($this->provider());
     }
 
     /**
@@ -339,7 +332,7 @@ SQL);
             $this->session->getAbsoluteExpiresAt()->modify('+1 year')
         );
         $id = $this->session->getId()->toString();
-        self::assertSame('Chrome', $store->descriptors([$id])[$id]->browser->value);
+        self::assertSame('Chrome', $store->descriptors([$id])[$id]->browserFamily->value);
         self::assertSame([], $store->descriptors([]));
         $this->connection->executeStatement(
             'ALTER TABLE session_presentation ADD CONSTRAINT presentation_abort CHECK (FALSE) NOT VALID'
@@ -412,23 +405,6 @@ SQL);
         $this->connection->transactional(fn() => RefreshSessionRecords::insert($this->connection, $session));
 
         return $session;
-    }
-
-    /**
-     * Builds a fresh non-HTTP provider through authoritative package resolution
-     */
-    private function provider(): CurrentPrincipalProvider
-    {
-        $context = new AuthenticationContext(
-            $this->actor->getId(),
-            $this->session->getId(),
-            $this->actor->getAuthenticationVersion()
-        );
-
-        return new CurrentPrincipalProvider(
-            new RequestAuthenticationContext($context),
-            $this->container->get(AuthoritativePrincipalResolver::class)
-        );
     }
 
     /**

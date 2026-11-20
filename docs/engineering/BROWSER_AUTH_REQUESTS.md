@@ -21,6 +21,9 @@ The API pipeline is scoped Common safe errors/correlation → explicit native tr
 `auth.guard.login`, `auth.guard.refresh` or `auth.guard.logout` → Action. These guards require the validated
 JSON attribute; attaching them without source validation fails closed. They combine `BrowserMutationGuard`,
 endpoint shape and independently committed admission. They never call an authentication service themselves.
+The shared browser guard belongs to the HTTP security configuration, not to activation. The public CSRF
+bootstrap still dispatches `GetCsrfProof` on the configured query bus and maps its typed `CsrfProofView` to
+HTTP proof and nonce-cookie controls. The same guard also serves existing activation and password callers.
 No blanket public-route exemption, new bootstrap, credential store or permissive CORS policy is supplied. The login integration independently qualifies raw server `HTTP_HOST` when Slim's reconstructed Host drops a nondefault port; a matching configured URI is still mandatory.
 
 | Boundary | Accepted | Rejected before Action dispatch |

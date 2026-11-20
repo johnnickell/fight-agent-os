@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
 use App\Adapter\Http\Api\Auth\BearerCredential;
-use App\Adapter\Http\Middleware\Api\Auth\AccessTokenAuthentication;
+use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
+use App\Application\Authorization\PermissionGuard;
 use DateInterval;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\RefreshCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
@@ -28,9 +31,11 @@ use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationTo
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -49,9 +54,13 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Interfaces\RouteInterface;
+use Slim\Interfaces\RouteParserInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Factory\StreamFactory;
+use Slim\Routing\RouteContext;
+use Slim\Routing\RoutingResults;
 use Tests\Support\AccessTokens;
 
 /**
@@ -153,7 +162,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         });
         $request = new ServerRequestFactory()->createServerRequest('GET', '/api/v1/owned')
             ->withHeader('Authorization', 'Bearer '.$token);
-        self::assertSame(204, $authentication->process($request, $next)->getStatusCode());
+        self::assertSame(204, $authentication->process($this->routed($request), $next)->getStatusCode());
         self::assertNull($request->getAttribute(AuthenticationContext::class));
         self::assertTrue($this->connection->transactional(
             fn() => $this->sessions->replace($session, $session->revoke())
@@ -281,12 +290,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         $valid = $this->fixture->signed(json_encode($claims, JSON_THROW_ON_ERROR));
         $users = $this->createStub(UserRepository::class);
         $users->method('getById')->willThrowException(new \RuntimeException('SQL TOKEN KEY STACK PRIVATE MARKER'));
-        $authentication = new AccessTokenAuthentication(new BearerCredential(), new AuthenticateAccessToken(
-            $this->fixture->jwt,
-            $users,
-            $this->sessions,
-            $this->fixture->clock
-        ));
+        $authentication = $this->authentication($users);
         $this->assertUnauthorized($authentication, $request->withHeader('Authorization', 'Bearer '.$valid), $next);
     }
 
@@ -452,23 +456,46 @@ final class AccessTokenAuthenticationTest extends TestCase
     }
 
     /**
-     * Creates the actual authentication middleware without registering a synthetic endpoint
+     * Creates the production admission middleware with the guarded test repositories
      */
-    private function authentication(): AccessTokenAuthentication
+    private function authentication(?UserRepository $users = null): ApiActionSecurity
     {
-        return new AccessTokenAuthentication(new BearerCredential(), new AuthenticateAccessToken(
-            $this->fixture->jwt,
-            $this->users,
-            $this->sessions,
-            $this->fixture->clock
-        ));
+        $users ??= $this->users;
+        $permissions = $this->createStub(PermissionRepository::class);
+
+        return new ApiActionSecurity(
+            new BearerCredential(),
+            new AuthenticateAccessToken($this->fixture->jwt, $users, $this->sessions, $this->fixture->clock),
+            new AuthoritativePrincipalResolver(
+                $users,
+                $this->sessions,
+                $this->createStub(RoleRepository::class),
+                $permissions,
+                $this->fixture->clock
+            ),
+            $permissions,
+            new PermissionGuard()
+        );
+    }
+
+    /**
+     * Supplies the matched authentication-only action to the middleware
+     */
+    private function routed(ServerRequestInterface $request): ServerRequestInterface
+    {
+        $route = $this->createStub(RouteInterface::class);
+        $route->method('getCallable')->willReturn(ReadCurrentPrincipalAction::class.':handle');
+
+        return $request->withAttribute(RouteContext::ROUTE, $route)
+            ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
+            ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
     }
 
     /**
      * Proves correlated sanitized HTTP failures and absence of sensitive log events
      */
     private function assertUnauthorized(
-        AccessTokenAuthentication $authentication,
+        ApiActionSecurity $authentication,
         ServerRequestInterface $request,
         RequestHandlerInterface $next
     ): void {
@@ -479,7 +506,7 @@ final class AccessTokenAuthenticationTest extends TestCase
              * Constructs RequestHandler
              */
             public function __construct(
-                private readonly AccessTokenAuthentication $authentication,
+                private readonly ApiActionSecurity $authentication,
                 private readonly RequestHandlerInterface $next
             ) {
             }
@@ -492,7 +519,7 @@ final class AccessTokenAuthenticationTest extends TestCase
                 return $this->authentication->process($request, $this->next);
             }
         };
-        $response = $failure->process($request, $pipeline);
+        $response = $failure->process($this->routed($request), $pipeline);
         self::assertSame(401, $response->getStatusCode());
         self::assertSame(
             ['status' => 'fail', 'data' => ['message' => 'Authentication required.']],

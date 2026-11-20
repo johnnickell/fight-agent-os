@@ -7,11 +7,14 @@ namespace App\Adapter\Http\Action\Api\V1\Sessions;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Sessions\SessionRevocationResponder;
-use App\Application\Sessions\RevokeOwnedSession;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Command\RevokeSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\StateConflict;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -29,8 +32,11 @@ final readonly class RevokeOwnedSessionAction
     /**
      * Constructs RevokeOwnedSessionAction
      */
-    public function __construct(private RevokeOwnedSession $sessions, private SessionRevocationResponder $responder)
-    {
+    public function __construct(
+        private RefreshSessionRepository $refreshSessionRepository,
+        private CommandBus $commandBus,
+        private SessionRevocationResponder $responder
+    ) {
     }
 
     /**
@@ -43,12 +49,12 @@ final readonly class RevokeOwnedSessionAction
         description: <<<'TEXT'
             Requires Bearer and exact current DELETE_OWN_SESSIONS, never DELETE_SESSIONS or a Role bypass.
             Actor and current session derive exclusively from the request-scoped principal. Only the canonical
-            path target and an empty JSON object are accepted. Package RevokeSession owns usability, ownership,
-            current-session exclusion, optimistic replacement and RefreshSessionRevoked. Cross-user administration
-            is always denied; no administrative reason or logout-everywhere capability exists here.
+            path target and an empty JSON object are accepted. The action admits only an owned target before
+            dispatch. Package RevokeSession owns usability, ownership, current-session exclusion, optimistic
+            replacement, audit and RefreshSessionRevoked. This route cannot perform administrative revocation.
             Current target returns 409 fail with public intent use_logout and directs to Logout.
-            All other unknown, cross-user, expired,
-            revoked or competing targets return identical 409 Conflict. without target details. Refetch the list
+            Unknown, cross-user, expired, revoked or competing targets return identical 409 responses without
+            target details. Refetch the list
             after success or conflict. Only target is revoked; target access and refresh fail authoritatively.
             No credential is returned. All responses are no-store. Cross-device push is not provided.
             TEXT,
@@ -95,8 +101,17 @@ final readonly class RevokeOwnedSessionAction
         if (!preg_match('/\A[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\z/D', $value)) {
             throw new ValidationException(['session_id' => ['Invalid value.']]);
         }
-        $target = RefreshSessionId::fromString($value);
+        $targetId = RefreshSessionId::fromString($value);
+        $principal = $provider->getCurrentPrincipal();
+        $target = $this->refreshSessionRepository->getById($targetId);
+        if (
+            $target === null || !$target->getId()->equals($targetId)
+            || !$target->getUserId()->equals($principal->getUserId())
+        ) {
+            throw new StateConflict();
+        }
+        $command = new RevokeSession($principal->getUserId(), $principal->getRefreshSessionId(), $targetId, null);
 
-        return $this->responder->respond(fn() => $this->sessions->revoke($provider, $target));
+        return $this->responder->respond(fn() => $this->commandBus->execute($command));
     }
 }

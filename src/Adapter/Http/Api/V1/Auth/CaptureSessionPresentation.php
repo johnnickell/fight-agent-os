@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Api\V1\Auth;
 
-use App\Application\Sessions\BrowserFamily;
-use App\Application\Sessions\DeviceClass;
-use App\Application\Sessions\DeviceDescriptor;
-use App\Application\Sessions\SessionPresentation;
+use App\Application\Security\Session\BrowserFamily;
+use App\Application\Security\Session\DeviceClass;
+use App\Application\Security\Session\DeviceDescriptor;
+use App\Application\Security\Session\SessionPresentation;
 use Fight\AccessControl\Application\AccessControl\User\Security\TokenSet;
 use Psr\Http\Message\ServerRequestInterface;
 use SensitiveParameter;

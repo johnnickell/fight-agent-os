@@ -7,10 +7,12 @@ namespace App\Adapter\Http\Action\Api\V1\Sessions;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Sessions\OwnedSessionsResponder;
-use App\Application\Sessions\ReadOwnedSessions;
+use App\Application\Security\Session\SessionPage;
+use App\Domain\Security\Session\Query\ListOwnedSessions;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -26,7 +28,7 @@ final readonly class ListOwnedSessionsAction
     /**
      * Constructs ListOwnedSessionsAction
      */
-    public function __construct(private ReadOwnedSessions $sessions, private OwnedSessionsResponder $responder)
+    public function __construct(private QueryBus $queryBus, private OwnedSessionsResponder $responder)
     {
     }
 
@@ -78,10 +80,15 @@ final readonly class ListOwnedSessionsAction
         /** @var array{page?: string, per_page?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 
-        return $this->responder->respond($this->sessions->read(
-            $provider,
+        $principal = $provider->getCurrentPrincipal();
+        /** @var SessionPage $page */
+        $page = $this->queryBus->fetch(new ListOwnedSessions(
+            $principal->getUserId(),
+            $principal->getRefreshSessionId(),
             (int) ($input['page'] ?? '1'),
             (int) ($input['per_page'] ?? '25')
         ));
+
+        return $this->responder->respond($page);
     }
 }

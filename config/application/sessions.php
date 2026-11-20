@@ -12,11 +12,9 @@ use App\Adapter\Http\Responder\Api\V1\Sessions\OwnedSessionsResponder;
 use App\Adapter\Http\Responder\Api\V1\Sessions\SessionRevocationResponder;
 use App\Adapter\Persistence\SessionPresentation\PostgresSessionPresentation;
 use App\Application\Authorization\InstallationAuthority;
-use App\Application\Authorization\PermissionGuard;
 use App\Application\Authorization\SessionAdministrationDecision;
-use App\Application\Sessions\ReadOwnedSessions;
-use App\Application\Sessions\RevokeOwnedSession;
-use App\Application\Sessions\SessionPresentation;
+use App\Application\Security\Session\QueryHandler\ListOwnedSessionsHandler;
+use App\Application\Security\Session\SessionPresentation;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\CommandHandler\RevokeSessionHandler;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\QueryHandler\ListActiveSessionsHandler;
@@ -55,14 +53,11 @@ return static function (Container $container): void {
     $container->get('messaging.command.router')->registerHandlers([
         RevokeSessionHandler::commandRegistration() => RevokeSessionHandler::class
     ]);
-    $container->set(RevokeOwnedSession::class, static fn(Container $container) => new RevokeOwnedSession(
-        $container->get(PermissionGuard::class),
-        $container->get(CommandBus::class)
-    ));
     $container->set(SessionRevocationResponder::class, static fn(Container $container) =>
         new SessionRevocationResponder($container->get(JSendResponseFactory::class)));
     $container->set(RevokeOwnedSessionAction::class, static fn(Container $container) => new RevokeOwnedSessionAction(
-        $container->get(RevokeOwnedSession::class),
+        $container->get(RefreshSessionRepository::class),
+        $container->get(CommandBus::class),
         $container->get(SessionRevocationResponder::class)
     ));
     $container->set(PruneSessionPresentationCommand::class, static fn(Container $container) =>
@@ -77,17 +72,17 @@ return static function (Container $container): void {
         $container->get('sessions.authorization.read')
     ));
     $container->get('messaging.query.router')->registerHandlers([
-        ListActiveSessionsHandler::queryRegistration() => ListActiveSessionsHandler::class
+        ListActiveSessionsHandler::queryRegistration() => ListActiveSessionsHandler::class,
+        ListOwnedSessionsHandler::queryRegistration()  => ListOwnedSessionsHandler::class
     ]);
-    $container->set(ReadOwnedSessions::class, static fn(Container $container) => new ReadOwnedSessions(
-        $container->get(PermissionGuard::class),
+    $container->set(ListOwnedSessionsHandler::class, static fn(Container $container) => new ListOwnedSessionsHandler(
         $container->get(QueryBus::class),
         $container->get(SessionPresentation::class)
     ));
     $container->set(OwnedSessionsResponder::class, static fn(Container $container) =>
         new OwnedSessionsResponder($container->get(JSendResponseFactory::class)));
     $container->set(ListOwnedSessionsAction::class, static fn(Container $container) => new ListOwnedSessionsAction(
-        $container->get(ReadOwnedSessions::class),
+        $container->get(QueryBus::class),
         $container->get(OwnedSessionsResponder::class)
     ));
 };

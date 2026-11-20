@@ -102,7 +102,7 @@ version numbers alone are not acceptance. Shared repositories and Doctrine trans
 Controlled real PostgreSQL duplicate activation, activation/resend/correction winner orders, rollback at grant,
 user and session writes, and independently committed admission are exercised with bounded barriers, not sleeps.
 
-TICKET-00017 should reuse `BrowserMutationGuard`, the configured package `AuthenticationService`/token policy,
+TICKET-00017 should reuse `BrowserMutationGuard`, the configured package `UserAuthentication` and shared token policy,
 `SessionResponder`, `SessionAccessData`, `ApiClient.post()` and `MemoryAccessToken`. The registered login throttle
 now uses TASK-00045's independently committed rolling email admission; see
 [browser request controls](BROWSER_AUTH_REQUESTS.md). Shared cookie/session responders support remembered

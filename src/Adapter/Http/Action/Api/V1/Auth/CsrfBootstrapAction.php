@@ -139,10 +139,8 @@ final readonly class CsrfBootstrapAction
             $nonce = HmacCsrfProofs::validNonce($pair[1]) ? $pair[1] : null;
         }
 
+        /** @var CsrfProofView $result */
         $result = $this->queries->fetch(new GetCsrfProof($nonce));
-        if (!$result instanceof CsrfProofView) {
-            throw new \UnexpectedValueException('Unexpected CSRF query result.');
-        }
 
         return $this->responder->respond($result);
     }

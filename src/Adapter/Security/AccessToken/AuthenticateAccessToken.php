@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Security\AccessToken;
+namespace App\Adapter\Security\AccessToken;
 
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;

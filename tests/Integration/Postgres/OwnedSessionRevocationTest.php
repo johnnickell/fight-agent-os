@@ -4,20 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Sessions\RevokeOwnedSession;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
@@ -37,7 +33,6 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Service\Container;
@@ -265,9 +260,25 @@ final class OwnedSessionRevocationTest extends TestCase
     }
 
     /**
-     * Requires exact authoritative self-service permission at HTTP and non-HTTP entrypoints
+     * Rejects a foreign target at the self-service entry without invoking administrative authorization
      */
-    public function testPermissionAndPrincipalOnlyCommand(): void
+    public function testSelfServiceNeverInvokesAdministrativeAuthorization(): void
+    {
+        $foreign = $this->session($this->user('other@example.test'));
+        $authorization = $this->createMock(SessionAdministrationAuthorization::class);
+        $authorization->expects(self::never())->method('assertCanManageSessions');
+        $this->container->set('sessions.authorization.revoke', static fn() => $authorization);
+
+        $this->check($this->request($foreign->getId()->toString()), 409);
+        self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
+            $foreign->getId()->toString()
+        ]));
+    }
+
+    /**
+     * Requires exact authoritative self-service permission at the HTTP entry
+     */
+    public function testRequiresExactSelfServicePermission(): void
     {
         $target = $this->session($this->actor);
         $this->check($this->request($target->getId()->toString(), authenticated: false), 401);
@@ -275,8 +286,9 @@ final class OwnedSessionRevocationTest extends TestCase
 DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'DELETE_OWN_SESSIONS')
 SQL);
         $this->check($this->request($target->getId()->toString()), 403);
-        $this->expectException(PermissionDenied::class);
-        $this->container->get(RevokeOwnedSession::class)->revoke($this->provider(), $target->getId());
+        self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
+            $target->getId()->toString()
+        ]));
     }
 
     /**
@@ -781,21 +793,6 @@ SQL);
         $claims['auth_version'] = $session->getAuthenticationVersion();
 
         return $this->tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
-    }
-
-    /**
-     * Resolves the non-HTTP principal against actual persisted authority
-     */
-    private function provider(): CurrentPrincipalProvider
-    {
-        return new CurrentPrincipalProvider(
-            new RequestAuthenticationContext(new AuthenticationContext(
-                $this->actor->getId(),
-                $this->current->getId(),
-                $this->actor->getAuthenticationVersion()
-            )),
-            $this->container->get(AuthoritativePrincipalResolver::class)
-        );
     }
 
     /**
