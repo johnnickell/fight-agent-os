@@ -54,7 +54,7 @@ final readonly class RevokeUserSessionAction
             Requires current DELETE_SESSIONS and package actor/target authorization. Self targets use
             /me/sessions or Logout. Only a bounded secret-free reason is accepted. Actor/current session
             are principal-derived. The session must belong to the explicit path user; ownership is immutable.
-            The reason is required but is not stored in audit or logged. The package handler commits revocation
+            The package handler stores the validated reason only in protected audit and commits revocation
             and required audit together before events. Unknown, wrong-owner, expired, revoked or competing
             sessions return generic 409. Target access/refresh fails after commit.
             All responses are no-store. Never enter credentials or other private information in the reason.

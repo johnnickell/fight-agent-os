@@ -106,8 +106,9 @@ failure/concurrency/recovery qualification. Unused ORM scaffolding/direct depend
 Role audit decorator remains. Current supplier source now has explicit Role-handler audit and typed Role subjects,
 superseding the older absence observation below; see the
 [source recheck](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
-TASK-00573 still owns actual tagged adoption, required audit storage/rollback proof and decorator replacement.
-Its hold remains, so this TICKET is not complete. Publication/merge are separate from implementation acceptance.
+TASK-00573 owns the v0.11.0 tagged adoption, required audit storage/rollback proof and decorator replacement.
+The earlier missing-release holds are historical. This TICKET remains open pending the consumer verification
+and independent assessment recorded under TASK-00573. Publication and merge are separate.
 
 The decomposition and supplier observations below are historical planning checkpoints, not current TASK status.
 

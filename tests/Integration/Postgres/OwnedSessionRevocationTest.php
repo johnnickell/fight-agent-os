@@ -22,6 +22,7 @@ use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\Session
 use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Event\RefreshSessionRevoked;
@@ -60,6 +61,8 @@ use Tooling\OpenApi\Document;
 final class OwnedSessionRevocationTest extends TestCase
 {
     use \Tests\Support\SecretObservability;
+
+    private const string ADMINISTRATIVE_REASON = 'Test investigation marker';
 
     private Connection $connection;
     private Container $container;
@@ -277,12 +280,14 @@ SQL);
     }
 
     /**
-     * Commits typed administrative audit without retaining the required reason
+     * Commits and hydrates typed administrative audit with the validated reason
      */
     public function testPackageAdministrativeAudit(): void
     {
         $target = $this->session($this->user('other@example.test'));
-        $this->checkAdmin($this->adminRequest($target), 200, 'delete');
+        $response = $this->adminRequest($target, body: '{"reason":"  '.self::ADMINISTRATIVE_REASON.'  "}');
+        $this->checkAdmin($response, 200, 'delete');
+        self::assertSame(['status' => 'success', 'data' => null], $this->body($response));
         self::assertSame(1, $this->events);
         self::assertTrue($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
             $target->getId()->toString()
@@ -302,9 +307,11 @@ SQL);
         self::assertEquals([
             'session_id' => $target->getId()->toString(),
             'before'     => $target->getRevision(),
-            'after'      => $target->getRevision() + 1
+            'after'      => $target->getRevision() + 1,
+            'reason'     => self::ADMINISTRATIVE_REASON
         ], $context['facts']);
         self::assertArrayNotHasKey('reason', $context);
+        self::assertEquals($context, AuditEvidence::fromArray($context)->toArray());
     }
 
     /**
@@ -656,7 +663,7 @@ SQL);
     private function adminRequest(
         RefreshSession $target,
         string $method = 'DELETE',
-        string $body = '{"reason":"Test investigation marker"}',
+        string $body = '{"reason":"'.self::ADMINISTRATIVE_REASON.'"}',
         ?UserId $user = null,
         string $query = ''
     ): ResponseInterface {
@@ -673,9 +680,11 @@ SQL);
 
         $response = $this->app->handle($request);
         $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [
-            substr($request->getHeaderLine('Authorization'), 7),
-            'Test investigation marker'
+            substr($request->getHeaderLine('Authorization'), 7)
         ]);
+        self::assertStringNotContainsString(self::ADMINISTRATIVE_REASON, (string) $response->getBody());
+        self::assertStringNotContainsString(self::ADMINISTRATIVE_REASON, serialize($response->getHeaders()));
+        self::assertStringNotContainsString(self::ADMINISTRATIVE_REASON, serialize($this->journeyLogs->getRecords()));
 
         return $response;
     }

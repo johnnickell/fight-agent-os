@@ -63,7 +63,7 @@ final readonly class SessionRevocationResponder
         try {
             $operation();
         } catch (Throwable $failure) {
-            // Access Control v0.10.1 exposes these refusals through shared exception classes.
+            // Access Control exposes these refusals through shared exception classes.
             // Keep the match narrow so, for example, an entry permission denial remains 403.
             match ([$failure::class, $failure->getMessage()]) {
                 [

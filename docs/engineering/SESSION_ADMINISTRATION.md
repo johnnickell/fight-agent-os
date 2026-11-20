@@ -35,9 +35,8 @@ Deletion requires a reason trimmed by package `SessionRevocationReason`, 1–500
 rejects control characters and its existing audit policy's credential/secret/authorization/URL terms before
 mutation. Never put credentials or private information in a reason: lexical checks are not a universal secret
 detector. Under the [TASK-00122 amendment](../../planning/tasks/00122-TASK.md#current-amendment--task-00573),
-the reason is required at entry but is not persisted or logged. Existing audit history, including reasons
-recorded under the original contract, is retained under its existing protections. Do not log the request body
-or the package failure event's original command, which can still carry the transient reason.
+the validated reason is stored in protected audit only. It is not returned in HTTP or logged. Do not log
+request bodies or package failure events' original commands, which can carry the reason.
 
 ## Qualified package and transaction boundary
 
@@ -56,11 +55,17 @@ see [current transaction composition and failure recovery](TRANSACTIONS.md). No 
 therefore checks the selected session's owner against the path user before dispatch. Session ownership is
 immutable: `PostgresRefreshSessionRepository::replace` rejects owner/ID changes and compares complete expected
 state/revision. The package handler rereads usable state and invokes its actor/actual-owner callback, then
-optimistically replaces only that session. The TASK-00573 draft uses Access Control v0.10.1 and Common
-v1.5.1: `RevokeSessionHandler` writes `AuditSessionRevocation` in the same generic transaction as the write.
-The `refresh_session.administratively_revoked` action records the successful outcome with typed actor and
-target user, session ID, before/after revisions and recording time, not the reason. No consumer transaction
-wraps package dispatch. TASK-00573 tracks the outstanding consumer qualification.
+optimistically replaces only that session. With Access Control v0.11.0 and Common v1.5.1,
+`RevokeSessionHandler` writes `AuditSessionRevocation` in the same generic transaction as the session change.
+The `refresh_session.administratively_revoked` action records typed actor and target user, session ID,
+before/after revisions, recording time and the validated `facts.reason`. Self-service audit has no reason.
+No consumer transaction wraps package dispatch.
+
+Earlier records are unchanged and remain readable under the same audit protections. The v0.10.1 typed
+administrative payload has no reason; older flat records use `refresh_session_id` and may carry their original
+reason. Read historical records in their stored format. v0.11.0 `AuditEvidence::fromArray` requires a reason
+for typed administrative revocation, so do not pass earlier reasonless or flat rows to that hydrator or
+supply a reason that was never recorded.
 
 The configured `DbalTransactionalUnitOfWork` uses the exact shared DBAL connection directly;
 both session and audit repositories use that same registered connection and require an enclosing transaction.

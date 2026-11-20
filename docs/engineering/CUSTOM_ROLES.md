@@ -46,11 +46,15 @@ the returned generated UUID, revision and custom Role view, rather than comparin
 A lost creation response may leave a Role whose ID the caller has not received; reconcile the authorized catalog instead
 of retrying creation. The service is not mounted as new UI.
 
-## v0.10.1 source cutover
+See the [Role mutation ownership diagram](custom-roles/README.md) for the protected entry, configured bus
+and handler-owned transaction.
 
-TASK-00573 selects Access Control **v0.10.1** (`57a693e39dd1aef9f753a1ab9b089be6eb48396c`) and Common
-**v1.5.1** (`c73690164a9f112dbf14d774c56a7c01519b88aa`), with manifest constraints `0.10.*` and `1.5.*`.
+## v0.11.0 source cutover
+
+TASK-00573 selects Access Control **v0.11.0** (`6258682512e2c8d76a3fa655dd633167bd8f55b6`) and Common
+**v1.5.1** (`c73690164a9f112dbf14d774c56a7c01519b88aa`), with manifest constraints `0.11.*` and `1.5.*`.
 This release of Access Control requires Common `^1.5.1`. See TASK-00573 for consumer verification status.
+
 ### Email-change grant upgrade
 
 `Version20261119155505` discards legacy email-change grants, pending and terminal, on upgrade from the previous

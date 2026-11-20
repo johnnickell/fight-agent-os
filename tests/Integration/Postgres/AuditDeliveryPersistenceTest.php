@@ -36,6 +36,7 @@ use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeRequest
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRevision;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -425,10 +426,36 @@ SQL
         self::assertSame($this->userId->toString(), $row['actor_id']);
         self::assertSame($evidence->action()->value, $row['action']);
         $stored = json_decode((string) $row['context'], true, flags: JSON_THROW_ON_ERROR);
-        self::assertEquals(['session_id' => $session->toString(), 'before' => 0, 'after' => 1], $stored['facts']);
+        self::assertEquals([
+            'session_id' => $session->toString(), 'before' => 0, 'after' => 1, 'reason' => 'Approved investigation'
+        ], $stored['facts']);
+    }
+
+    /**
+     * Preserves historical audit payloads without inventing missing facts
+     */
+    public function testSessionAuditAppendPreservesHistoricalRecords(): void
+    {
+        $sessionId = RefreshSessionId::generate();
+        $typed = $this->sessionRevokedEvidence($sessionId)->toArray();
+        unset($typed['facts']['reason']);
+        $legacy = ['refresh_session_id' => $sessionId->toString(), 'reason' => 'Original investigation'];
+        foreach ([$typed, $legacy] as $context) {
+            $this->connection->insert('audit_evidence', [
+                'actor_id'     => $this->userId->toString(),
+                'action'       => AuditAction::SESSION_ADMINISTRATIVELY_REVOKED->value,
+                'subject_type' => 'user',
+                'subject_id'   => $this->userId->toString(),
+                'context'      => json_encode($context, JSON_THROW_ON_ERROR)
+            ]);
+        }
+        $history = $this->connection->fetchAllAssociative('SELECT * FROM audit_evidence ORDER BY id');
         $this->commit(fn() => $this->audit->add($this->sessionRevokedEvidence(RefreshSessionId::generate())));
-        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-        self::assertSame($row, $this->connection->fetchAssociative('SELECT * FROM audit_evidence ORDER BY id LIMIT 1'));
+        $rows = $this->connection->fetchAllAssociative('SELECT * FROM audit_evidence ORDER BY id');
+        self::assertCount(3, $rows);
+        self::assertSame($history, array_slice($rows, 0, 2));
+        self::assertEquals($typed, json_decode((string) $rows[0]['context'], true, flags: JSON_THROW_ON_ERROR));
+        self::assertEquals($legacy, json_decode((string) $rows[1]['context'], true, flags: JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -767,7 +794,7 @@ SQL);
     }
 
     /**
-     * Records a session revocation without retaining a free-text reason
+     * Records typed administrative revocation evidence
      */
     private function sessionRevokedEvidence(RefreshSessionId $sessionId): AuditEvidence
     {
@@ -776,7 +803,7 @@ SQL);
             new AuditSubject($this->userId),
             AuditAction::SESSION_ADMINISTRATIVELY_REVOKED,
             $this->now,
-            new AuditSessionRevocation($sessionId, 0, 1),
+            new AuditSessionRevocation($sessionId, 0, 1, SessionRevocationReason::fromString('Approved investigation')),
             null
         );
     }

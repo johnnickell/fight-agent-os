@@ -3,7 +3,7 @@
 ## Current composition
 
 TASK-00572 introduced Common's canonical DBAL transaction adapter at v1.5.0. TASK-00573's source adopts
-Common **v1.5.1** with Access Control **v0.10.1**; see the [Role runbook](CUSTOM_ROLES.md#v0101-source-cutover)
+Common **v1.5.1** with Access Control **v0.11.0**; see the [Role runbook](CUSTOM_ROLES.md#v0110-source-cutover)
 for exact source references, migration constraints and the consumer verification record.
 
 [Shared persistence composition](../../config/common/persistence.php) binds the canonical

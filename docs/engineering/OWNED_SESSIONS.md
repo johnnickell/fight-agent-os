@@ -107,8 +107,8 @@ TASK-00122 replaces the former deny-all handler composition with distinct operat
 callbacks for the separate [administrative API](SESSION_ADMINISTRATION.md). Its trusted raw bus can now perform
 reasoned authorized administration; it is not a public entry. Self-service still grants no administration.
 
-TASK-00573 adopts Fight Access Control v0.10.1, source/Composer lock reference
-`57a693e39dd1aef9f753a1ab9b089be6eb48396c`. The package owns usability, current-session exclusion,
+TASK-00573 adopts Fight Access Control v0.11.0, source/Composer lock reference
+`6258682512e2c8d76a3fa655dd633167bd8f55b6`. The package owns usability, current-session exclusion,
 ownership, optimistic target replacement, required atomic audit and post-commit `RefreshSessionRevoked`.
 This release uses shared Common exception classes. The revocation response maps only the known package
 refusals to the public conflict contract, not ordinary entry permission or validation failures.
