@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class CatalogInput
 {
     /**
-     * Requires verified invocation-bound authentication for Application revalidation
+     * Reads the verified request authentication established by the HTTP gate
      */
     public static function authentication(ServerRequestInterface $request): AuthenticationContext
     {

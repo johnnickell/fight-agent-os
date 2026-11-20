@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Authority;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\CatalogResponder;
-use App\Application\Authorization\ReadAuthorityCatalogs;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Permission\Query\GetPermissionById;
+use Fight\AccessControl\Domain\AccessControl\Permission\Query\PermissionView;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -25,8 +29,11 @@ final readonly class GetPermissionAction
     /**
      * Constructs GetPermissionAction
      */
-    public function __construct(private ReadAuthorityCatalogs $catalogs, private CatalogResponder $responder)
-    {
+    public function __construct(
+        private QueryBus $queryBus,
+        private InstallationPermissionAdmission $installationAuthority,
+        private CatalogResponder $responder
+    ) {
     }
 
     /**
@@ -66,7 +73,10 @@ final readonly class GetPermissionAction
     )]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $authentication = CatalogInput::authentication($request);
+        $this->installationAuthority->assertInstallationPermission(
+            CatalogInput::authentication($request)->getUserId(),
+            PermissionName::fromString('READ_PERMISSIONS')
+        );
         try {
             $id = PermissionId::fromString(
                 (string) RouteContext::fromRequest($request)->getRoute()?->getArgument('permissionId')
@@ -75,6 +85,9 @@ final readonly class GetPermissionAction
             throw new ValidationException(['permission_id' => ['Invalid value.']]);
         }
 
-        return $this->responder->respond($this->catalogs->permission($authentication, $id));
+        /** @var PermissionView $view */
+        $view = $this->queryBus->fetch(new GetPermissionById($id));
+
+        return $this->responder->respond($view);
     }
 }

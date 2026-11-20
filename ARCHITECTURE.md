@@ -69,8 +69,9 @@ a current human merge action. Other capability states are unchanged.
   pending restoration requires terminal invitation authority and issues fresh internal activation authority
   without disclosure. No browser administration UI is added;
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/admin/users` and
-  `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
-  complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
+  `GET /api/v1/users` requires exact authoritative `READ_USERS`, then dispatches the owned `ListDirectoryUsers`
+  query. Its handler joins package `ListUsers` and `GetRoleById` into a typed safe page. The browser fences
+  volatile directory pages with the sole cache (TASK-00059,
   independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`);
   TASK-00061's [ordinary invitation form](docs/engineering/ORDINARY_INVITATIONS.md) uses exact INVITE_USERS,
   a fixed ordinary API request and strict safe-ID projection; directory/status invalidation and READ_USERS-only

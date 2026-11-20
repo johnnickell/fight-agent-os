@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence\Repository;
+namespace App\Adapter\Persistence\AccessControl\Agent;
 
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;

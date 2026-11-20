@@ -11,6 +11,7 @@ use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
 use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
@@ -58,9 +59,9 @@ final readonly class BootstrapOperation
         try {
             $policy = $this->managedPolicyCatalog->load();
             $this->commands->execute(new ReconcileManagedPolicy($policy));
-            InstallationManagedPolicy::requireReconciled($this->queries->fetch(
-                new PreviewManagedPolicy($policy)
-            ), $policy);
+            /** @var ManagedPolicyPlan $plan */
+            $plan = $this->queries->fetch(new PreviewManagedPolicy($policy));
+            InstallationManagedPolicy::assertReconciled($plan, $policy);
             $role = $this->queries->fetch(new GetRoleById($roleId));
             if (!$role instanceof RoleView || !$role->getRoleId()->equals($roleId) || !$role->isManaged()) {
                 throw new LogicException('Managed bootstrap authority is unavailable.');

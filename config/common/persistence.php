@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Persistence\AccessControl\Agent\PostgresAgentRepository;
+use App\Adapter\Persistence\AccessControl\Feature\PostgresFeatureRepository;
+use App\Adapter\Persistence\AccessControl\Permission\PostgresPermissionRepository;
+use App\Adapter\Persistence\AccessControl\Role\PostgresRoleRepository;
+use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresActivationGrantRepository;
-use App\Adapter\Persistence\Repository\PostgresAgentRepository;
 use App\Adapter\Persistence\Repository\PostgresAuditEvidenceRepository;
 use App\Adapter\Persistence\Repository\PostgresEmailChangeGrantRepository;
-use App\Adapter\Persistence\Repository\PostgresFeatureRepository;
 use App\Adapter\Persistence\Repository\PostgresPasswordResetGrantRepository;
-use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
-use App\Adapter\Persistence\Repository\PostgresRoleRepository;
-use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Domain\Authorization\MembershipEvidenceRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;

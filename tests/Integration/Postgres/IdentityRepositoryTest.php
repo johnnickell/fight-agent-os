@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Persistence\AccessControl\Role\PostgresRoleRepository;
+use App\Adapter\Persistence\AccessControl\User\PersistedUser;
+use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Adapter\Persistence\Hydration\PersistedUser;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
-use App\Adapter\Persistence\Repository\PostgresRoleRepository;
-use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;

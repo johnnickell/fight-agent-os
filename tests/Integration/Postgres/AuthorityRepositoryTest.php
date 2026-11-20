@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
+use App\Adapter\Authorization\InstallationSessionAdministration;
+use App\Adapter\Persistence\AccessControl\Agent\PostgresAgentRepository;
+use App\Adapter\Persistence\AccessControl\Feature\PostgresFeatureRepository;
+use App\Adapter\Persistence\AccessControl\Permission\PostgresPermissionRepository;
+use App\Adapter\Persistence\AccessControl\Role\PostgresRoleRepository;
+use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
-use App\Adapter\Persistence\Repository\PostgresAgentRepository;
-use App\Adapter\Persistence\Repository\PostgresFeatureRepository;
-use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
-use App\Adapter\Persistence\Repository\PostgresRoleRepository;
-use App\Adapter\Persistence\Repository\PostgresUserRepository;
-use App\Application\Authorization\InstallationAuthority;
-use App\Application\Authorization\SessionAdministrationDecision;
 use App\Application\Authorization\UnavailableEmailChangeAdministration;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -363,9 +363,9 @@ final class AuthorityRepositoryTest extends TestCase
             new AuthorizationReferenceFences($this->connection),
             new AuthenticationAuthorityFences($this->connection)
         );
-        $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
-        $readCallback = SessionAdministrationDecision::forRead($authority);
-        $revokeCallback = SessionAdministrationDecision::forRevocation($authority);
+        $authority = new InstallationPermissionAdmission($users, $this->roles, $this->permissions);
+        $readCallback = InstallationSessionAdministration::forRead($authority);
+        $revokeCallback = InstallationSessionAdministration::forRevocation($authority);
         $emailCallback = new UnavailableEmailChangeAdministration();
 
         $this->connection->beginTransaction();

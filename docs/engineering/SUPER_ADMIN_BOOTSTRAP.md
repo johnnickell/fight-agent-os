@@ -9,7 +9,7 @@ a normal invitation conflict, not an implicit resend, reset or resume.
 This TASK-00446 policy supersedes TASK-00038/TICKET-00015's permanent-claim/no-retry, concurrent admission and
 command-specific composition requirements. Their old implementation reports remain historical evidence.
 
-This runbook describes current source, including the existing `AuthenticatedRoleAssignment` admission path.
+This runbook describes the trusted Console bootstrap path.
 The [approved architecture contract](STANDARDS.md#architecture) puts entry admission in adapters, not a blanket
 second Application gate. TASK-00576 owns that source correction; do not bypass current checks or expose trusted
 Console/raw-bus operations while waiting. The manual single-operator and retained partial-result/audit limits
@@ -99,17 +99,13 @@ registration does not execute a command, reconcile policy, require the unused de
 See [shared services and dispatch](STANDARDS.md#shared-services-and-bus-dispatch).
 
 **Raw package bus dispatch is trusted in-process infrastructure, not an authenticated API.** TASK-00446 removes
-the old raw `AssignRoleToUser` authentication filter, not merely its name. Authenticated/nontrusted assignment
-must invoke `AuthenticatedRoleAssignment::assign()`: it freshly resolves the authoritative principal, matches
-actor, requires exact `MANAGE_USER_ROLES`, and additionally exact `ASSIGN_SUPER_ADMIN` for stable or
-package-semantic Super Admin. Unknown, stale, revoked, absent or mismatched authority fails before dispatch.
-Role names identify a protected target, never grant authority. The default authentication provider refuses;
-a future authenticated adapter must inject verified invocation-bound context, not mutate a shared global principal.
+the old raw `AssignRoleToUser` authentication filter. TASK-00578 removes its unused authenticated forwarding
+service. A future authenticated assignment adapter must establish current actor, operation and target admission
+before dispatch. Role names identify a protected target, never grant authority.
 
 There is currently no HTTP/Agent assignment consumer, raw-message forwarding endpoint or role-administration UI.
-The existing `/me` and authentication middleware are read/security paths, not assignment entry points. Tests that
-previously dispatched raw assignments as authenticated callers now invoke this explicit use case. Trusted console
-orchestration dispatches package messages through the same bus without fabricating a browser principal. Installed
+The existing `/me` and authentication middleware are read/security paths, not assignment entry points.
+Trusted Console orchestration dispatches package messages through the same bus without fabricating a browser principal. Installed
 filters/handlers are trusted code, not a separate hostile-caller boundary; no terminal intent scope protects
 arbitrary transformations of package messages. Never forward untrusted raw messages into this graph.
 

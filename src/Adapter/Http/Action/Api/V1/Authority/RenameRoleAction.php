@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Authority;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Api\V1\Authority\RoleMutationInput;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\RoleMutationResponder;
-use App\Application\Authorization\ManageCustomRoles;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Command\RenameCustomRole;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,8 +32,12 @@ final readonly class RenameRoleAction
     /**
      * Constructs RenameRoleAction
      */
-    public function __construct(private ManageCustomRoles $roles, private RoleMutationResponder $responder)
-    {
+    public function __construct(
+        private CommandBus $commandBus,
+        private QueryBus $queryBus,
+        private InstallationPermissionAdmission $installationAuthority,
+        private RoleMutationResponder $responder
+    ) {
     }
 
     /**
@@ -85,13 +97,27 @@ final readonly class RenameRoleAction
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $authentication = CatalogInput::authentication($request);
+        $actorId = CatalogInput::authentication($request)->getUserId();
+        $this->installationAuthority->assertInstallationPermission(
+            $actorId,
+            PermissionName::fromString('UPDATE_ROLES')
+        );
         /** @var array{name: string, expected_revision: string} $input */
         $input = $request->getAttribute(JsonBody::class);
         $id = RoleMutationInput::id($request);
         $name = RoleMutationInput::name($input['name']);
         $revision = RoleMutationInput::revision($input['expected_revision']);
 
-        return $this->responder->respond(fn() => $this->roles->rename($authentication, $id, $name, $revision));
+        return $this->responder->respond(function () use ($actorId, $id, $name, $revision): RoleView {
+            $this->commandBus->execute(new RenameCustomRole($actorId, $id, $name, $revision));
+            try {
+                /** @var RoleView $view */
+                $view = $this->queryBus->fetch(new GetRoleById($id));
+            } catch (ResourceNotFound $error) {
+                throw new LogicException('The Role mutation outcome requires reconciliation.', previous: $error);
+            }
+
+            return $view;
+        });
     }
 }

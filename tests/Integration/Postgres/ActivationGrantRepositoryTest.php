@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\ActivationGrantRecords;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Hydration\PersistedActivationGrant;
@@ -11,7 +12,6 @@ use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\Repository\PostgresActivationGrantRepository;
-use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;

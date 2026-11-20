@@ -7,15 +7,10 @@ namespace App\Adapter\Http\Action\Api\V1\Users;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
-use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
-use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
-use Fight\AccessControl\Domain\AccessControl\User\Query\ListUsers;
-use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
+use App\Application\AccessControl\User\View\UserDirectoryPage;
+use App\Domain\AccessControl\User\Query\ListDirectoryUsers;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Messaging\Query\QueryBus;
-use Fight\Common\Domain\Repository\Pagination;
-use Fight\Common\Domain\Repository\ResultSet;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,7 +25,7 @@ final readonly class ListUsersAction
      * Constructs ListUsersAction
      */
     public function __construct(
-        private QueryBus $queries,
+        private QueryBus $queryBus,
         private UserDirectoryResponder $responder
     ) {
     }
@@ -84,33 +79,12 @@ final readonly class ListUsersAction
         /** @var array{page?: string, per_page?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 
-        $page = (int) ($input['page'] ?? '1');
-        $perPage = (int) ($input['per_page'] ?? '25');
-        $users = $this->queries->fetch(new ListUsers(new Pagination($page, $perPage)));
-        if (
-            !$users instanceof ResultSet
-            || $users->itemType() !== UserView::class
-            || $users->page() !== $page
-            || $users->perPage() !== $perPage
-            || $users->count() > $perPage
-        ) {
-            throw new LogicException('User directory is unavailable.');
-        }
-        $ids = [];
-        foreach ($users->records() as $user) {
-            foreach ($user->getRoleIds() as $id) {
-                $ids[$id->toString()] = $id;
-            }
-        }
-        $roles = [];
-        foreach ($ids as $id) {
-            $role = $this->queries->fetch(new GetRoleById($id));
-            if (!$role instanceof RoleView || !$role->getRoleId()->equals($id)) {
-                throw new LogicException('User role presentation is unavailable.');
-            }
-            $roles[] = $role;
-        }
+        /** @var UserDirectoryPage $page */
+        $page = $this->queryBus->fetch(new ListDirectoryUsers(
+            (int) ($input['page'] ?? '1'),
+            (int) ($input['per_page'] ?? '25')
+        ));
 
-        return $this->responder->respond($users, $roles);
+        return $this->responder->respond($page);
     }
 }

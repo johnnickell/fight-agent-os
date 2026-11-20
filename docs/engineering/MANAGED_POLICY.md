@@ -17,6 +17,10 @@ TASK-00462 exercises this additive catalog on the unchanged current lock: Fight 
 [`JsonManagedPolicy`](../../src/Adapter/Authorization/JsonManagedPolicy.php) reads both required files and
 [`InstallationManagedPolicy`](../../src/Domain/Authorization/InstallationManagedPolicy.php) validates the
 installation defaults and independent live application references into the supported package `ManagedPolicy`.
+Console assignment and bootstrap use the canonical `PreviewManagedPolicy` query and compare the typed plan
+with the desired installation policy. HTTP catalog and Role entries check protected scope with
+[`InstallationPermissionAdmission`](../../src/Adapter/Authorization/InstallationPermissionAdmission.php);
+the package cross-user session handlers keep their separate read and revocation authorization callbacks.
 No PHP definition or expanded Super Admin membership catalog remains. The original foundation catalog was
 [TICKET-00015](../../planning/tickets/00015-TICKET.md)'s 22 permissions; TASK-00591 preserves identities and
 ordinary defaults while applying EPIC-00025's complete-Super-Admin amendment:

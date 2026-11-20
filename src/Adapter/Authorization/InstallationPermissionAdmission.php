@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Authorization;
+namespace App\Adapter\Authorization;
 
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
@@ -16,14 +16,14 @@ use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 
 /**
- * Class InstallationAuthority
+ * Class InstallationPermissionAdmission
  *
  * Checks current installation-wide human authority before package dispatch
  */
-final readonly class InstallationAuthority
+final readonly class InstallationPermissionAdmission
 {
     /**
-     * Constructs InstallationAuthority
+     * Constructs InstallationPermissionAdmission
      */
     public function __construct(
         private UserRepository $users,

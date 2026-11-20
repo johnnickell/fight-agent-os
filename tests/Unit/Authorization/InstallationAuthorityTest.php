@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Authorization;
 
-use App\Application\Authorization\InstallationAuthority;
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use ArrayObject;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
@@ -121,7 +121,7 @@ final class InstallationAuthorityTest extends TestCase
     /**
      * Creates current package authority snapshots behind injectable repository ports
      *
-     * @return array{InstallationAuthority, User, User, Permission, Role, ArrayObject<int, Role>}
+     * @return array{InstallationPermissionAdmission, User, User, Permission, Role, ArrayObject<int, Role>}
      */
     private function authority(PermissionTier $tier = PermissionTier::SUPER_ADMIN_ONLY): array
     {
@@ -159,7 +159,7 @@ final class InstallationAuthorityTest extends TestCase
         $permissions->method('getByName')->willReturn($permission);
 
         return [
-            new InstallationAuthority($users, $roles, $permissions),
+            new InstallationPermissionAdmission($users, $roles, $permissions),
             $actor, $target, $permission, $role, $designated
         ];
     }
