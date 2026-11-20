@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Authorization;
+namespace App\Adapter\Authorization;
 
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
@@ -11,17 +11,17 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 
 /**
- * Class SessionAdministrationDecision
+ * Class InstallationSessionAdministration
  *
  * Checks the intent-specific installation permission and target before cross-user session access
  */
-final readonly class SessionAdministrationDecision implements SessionAdministrationAuthorization
+final readonly class InstallationSessionAdministration implements SessionAdministrationAuthorization
 {
     /**
-     * Constructs SessionAdministrationDecision
+     * Constructs InstallationSessionAdministration
      */
     private function __construct(
-        private InstallationAuthority $authority,
+        private InstallationPermissionAdmission $authority,
         private PermissionName $required
     ) {
     }
@@ -29,7 +29,7 @@ final readonly class SessionAdministrationDecision implements SessionAdministrat
     /**
      * Creates the callback for the cross-user session read handler
      */
-    public static function forRead(InstallationAuthority $authority): self
+    public static function forRead(InstallationPermissionAdmission $authority): self
     {
         return new self($authority, PermissionName::fromString('READ_SESSIONS'));
     }
@@ -37,7 +37,7 @@ final readonly class SessionAdministrationDecision implements SessionAdministrat
     /**
      * Creates the callback for the cross-user session revocation handler
      */
-    public static function forRevocation(InstallationAuthority $authority): self
+    public static function forRevocation(InstallationPermissionAdmission $authority): self
     {
         return new self($authority, PermissionName::fromString('DELETE_SESSIONS'));
     }

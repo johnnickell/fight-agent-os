@@ -4,22 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\Http\Action\Api\V1\Authority\GetPermissionAction;
-use App\Adapter\Http\Action\Api\V1\Authority\GetRoleAction;
-use App\Adapter\Http\Action\Api\V1\Authority\ListPermissionsAction;
-use App\Adapter\Http\Action\Api\V1\Authority\ListRolesAction;
-use App\Adapter\Http\Responder\Api\V1\Authority\CatalogResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Authorization\ReadAuthorityCatalogs;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
@@ -43,7 +36,6 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -309,60 +301,14 @@ final class AuthorityCatalogApiTest extends TestCase
     }
 
     /**
-     * Rechecks changed protected policy after HTTP's early gate at every Application entry
+     * Refuses changed protected policy on the next HTTP request without dispatching the catalog query
      */
-    public function testConcurrentPermissionChange(): void
+    public function testChangedProtectedTier(): void
     {
-        // Establishes a valid early HTTP snapshot, then commits a change on the independent connection.
         $this->assertResponse($this->request('/api/v1/roles'), 200);
         $this->connection->executeStatement("UPDATE permissions SET tier = 'ADMIN_SAFE' WHERE name = 'READ_ROLES'");
-        $authentication = new AuthenticationContext($this->actor->getId(), $this->session->getId(), 1);
-        try {
-            $this->container->get(ReadAuthorityCatalogs::class)->roles($authentication);
-            self::fail('Changed protected tier was accepted.');
-        } catch (PermissionDenied) {
-            $this->assertQueries(1);
-        }
         $this->assertResponse($this->request('/api/v1/roles'), 403);
         $this->assertQueries(1);
-    }
-
-    /**
-     * Denies a permission removal committed between HTTP authorization and each actual Action
-     */
-    #[DataProvider('dispatchRaces')]
-    public function testChangeAfterEarlyGate(string $action, string $path, string $permission): void
-    {
-        $this->container->set($action, function (Container $container) use ($action, $permission) {
-            $this->connection->executeStatement(
-                'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
-                [$permission]
-            );
-
-            return new $action(
-                $container->get(ReadAuthorityCatalogs::class),
-                $container->get(CatalogResponder::class)
-            );
-        });
-        $this->assertResponse($this->request($path), 403);
-        $this->assertQueries(0);
-    }
-
-    /**
-     * Supplies every real catalog Action and its distinct protected read capability
-     *
-     * @return iterable<array{class-string, string, string}>
-     */
-    public static function dispatchRaces(): iterable
-    {
-        yield [ListRolesAction::class, '/api/v1/roles', 'READ_ROLES'];
-        yield [GetRoleAction::class, '/api/v1/roles/'.RoleId::generate()->toString(), 'READ_ROLES'];
-        yield [ListPermissionsAction::class, '/api/v1/permissions', 'READ_PERMISSIONS'];
-        yield [
-            GetPermissionAction::class,
-            '/api/v1/permissions/'.PermissionId::generate()->toString(),
-            'READ_PERMISSIONS'
-        ];
     }
 
     /**
@@ -380,7 +326,7 @@ final class AuthorityCatalogApiTest extends TestCase
     }
 
     /**
-     * Creates from a name only and returns the generated identity and revision actually persisted
+     * Creates from a name only and returns just the generated identity actually persisted
      */
     public function testNameOnlyCreation(): void
     {
@@ -390,7 +336,8 @@ final class AuthorityCatalogApiTest extends TestCase
         self::assertNotNull($stored);
         self::assertSame('ROLE_GENERATED', $stored->getName()->toString());
         self::assertFalse($stored->isManaged());
-        self::assertSame($stored->getRevision()->toString(), $created['revision']);
+        self::assertSame(['role_id' => $id->toString()], $created);
+        $this->assertQueries(0);
         self::assertSame($id->toString(), $this->connection->fetchOne(
             "SELECT subject_id FROM audit_evidence WHERE action = 'role.created'"
         ));
@@ -433,14 +380,15 @@ final class AuthorityCatalogApiTest extends TestCase
         self::assertIsArray($legacyRow);
         $created = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_CUSTOM'], 201);
         $id = $created['data']['role_id'];
-        $revision = $created['data']['revision'];
+        $before = $this->assertResponse($this->request('/api/v1/roles/'.$id), 200)['data'];
+        $revision = $before['revision'];
         $same = $this->mutation(
             'PATCH',
             '/api/v1/roles/'.$id,
             ['name' => 'ROLE_CUSTOM', 'expected_revision' => $revision],
             200
         );
-        self::assertSame($created['data'], $same['data']);
+        self::assertSame($before, $same['data']);
         self::assertSame(2, $this->roleAuditCount());
         $renamed = $this->mutation(
             'PATCH',
@@ -497,14 +445,15 @@ SQL, [$id]);
     {
         $created = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_CUSTOM'], 201);
         $id = $created['data']['role_id'];
+        $revision = $this->assertResponse($this->request('/api/v1/roles/'.$id), 200)['data']['revision'];
         $current = $this->mutation(
             'PATCH',
             '/api/v1/roles/'.$id,
-            ['name' => 'ROLE_RENAMED', 'expected_revision' => $created['data']['revision']],
+            ['name' => 'ROLE_RENAMED', 'expected_revision' => $revision],
             200
         );
         $body = $method === 'DELETE' ? ['confirm' => true] : ['name' => 'ROLE_RENAMED'];
-        $body['expected_revision'] = $created['data']['revision'];
+        $body['expected_revision'] = $revision;
         $this->mutation($method, '/api/v1/roles/'.$id, $body, 409);
         self::assertSame($current['data']['revision'], $this->connection->fetchOne(
             'SELECT revision FROM roles WHERE id = ?',
@@ -532,6 +481,7 @@ SQL, [$id]);
     {
         $created = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_CUSTOM'], 201);
         $id = $created['data']['role_id'];
+        $revision = $this->assertResponse($this->request('/api/v1/roles/'.$id), 200)['data']['revision'];
         $this->connection->executeStatement(
             'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name <> ?)',
             [$required]
@@ -539,24 +489,12 @@ SQL, [$id]);
         $path = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/'.$id;
         $body = match ($method) {
             'POST' => ['name' => 'ROLE_OTHER'],
-            'PATCH' => ['name' => 'ROLE_RENAMED', 'expected_revision' => $created['data']['revision']],
-            default => ['confirm' => true, 'expected_revision' => $created['data']['revision']]
+            'PATCH' => ['name' => 'ROLE_RENAMED', 'expected_revision' => $revision],
+            default => ['confirm' => true, 'expected_revision' => $revision]
         };
         $this->mutation($method, $path, $body, $method === 'POST' ? 201 : 200);
         $this->connection->executeStatement('DELETE FROM role_permissions');
         $this->mutation($method, $path, $body, 403);
-        $authentication = new AuthenticationContext($this->actor->getId(), $this->session->getId(), 1);
-        try {
-            $this->container->get(\App\Application\Authorization\ManageCustomRoles::class)->create(
-                $authentication,
-                RoleName::fromString('ROLE_DENIED')
-            );
-            self::fail('Direct Application caller bypassed authorization.');
-        } catch (PermissionDenied) {
-            self::assertSame(0, (int) $this->connection->fetchOne(
-                "SELECT count(*) FROM roles WHERE name = 'ROLE_DENIED'"
-            ));
-        }
     }
 
     /**
@@ -616,10 +554,11 @@ SQL, [$id]);
         $this->container->get(Connection::class)->transactional(
             fn() => $this->container->get(UserRepository::class)->add($user)
         );
+        $revision = $this->assertResponse($this->request('/api/v1/roles/'.$id), 200)['data']['revision'];
         $this->mutation(
             'DELETE',
             '/api/v1/roles/'.$id,
-            ['confirm' => true, 'expected_revision' => $created['data']['revision']],
+            ['confirm' => true, 'expected_revision' => $revision],
             409
         );
         self::assertSame($id, $this->connection->fetchOne('SELECT id FROM roles WHERE id = ?', [$id]));
@@ -635,13 +574,14 @@ SQL, [$id]);
     {
         $created = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_ORIGINAL'], 201)['data'];
         $id = $created['role_id'];
+        $revision = $this->assertResponse($this->request('/api/v1/roles/'.$id), 200)['data']['revision'];
         $before = $this->connection->fetchAssociative('SELECT * FROM roles WHERE id = ?', [$id]);
         $logs = $this->captureExpectedFailure();
         $path = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/'.$id;
         $body = match ($method) {
             'POST' => ['name' => 'ROLE_ROLLBACK'],
-            'PATCH' => ['name' => 'ROLE_ROLLBACK', 'expected_revision' => $created['revision']],
-            default => ['confirm' => true, 'expected_revision' => $created['revision']]
+            'PATCH' => ['name' => 'ROLE_ROLLBACK', 'expected_revision' => $revision],
+            default => ['confirm' => true, 'expected_revision' => $revision]
         };
         $this->connection->executeStatement(<<<'SQL'
 ALTER TABLE audit_evidence ADD CONSTRAINT role_audit_test_abort CHECK (subject_type <> 'role') NOT VALID

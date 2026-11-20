@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
-use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
-use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
+use App\Application\AccessControl\User\QueryHandler\ListDirectoryUsersHandler;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
@@ -184,7 +183,7 @@ final class UserDirectoryApiTest extends TestCase
             [ArrayParameterType::STRING]
         );
         $this->check($this->request(), ($mask & 1) ? 200 : 403);
-        self::assertSame(($mask & 1) ? 2 : 0, $this->probe->count());
+        self::assertSame(($mask & 1) ? 3 : 0, $this->probe->count());
     }
 
     /**
@@ -387,7 +386,7 @@ final class UserDirectoryApiTest extends TestCase
     {
         $logs = new TestHandler();
         $this->container->get('http.failure.logger')->setHandlers([$logs]);
-        $this->container->set(ListUsersAction::class, function (Container $c): ListUsersAction {
+        $this->container->set(ListDirectoryUsersHandler::class, function (Container $c): ListDirectoryUsersHandler {
             $bus = $c->get(QueryBus::class);
             $queries = $this->createStub(QueryBus::class);
             $queries->method('fetch')->willReturnCallback(static function (Query $query) use ($bus): mixed {
@@ -398,16 +397,13 @@ final class UserDirectoryApiTest extends TestCase
                 return $bus->fetch($query);
             });
 
-            return new ListUsersAction(
-                $queries,
-                $c->get(UserDirectoryResponder::class)
-            );
+            return new ListDirectoryUsersHandler($queries);
         });
         self::assertSame(
             ['status' => 'error', 'message' => 'Internal server error.'],
             $this->check($this->request(), 500)
         );
-        self::assertSame(1, $this->probe->count());
+        self::assertSame(2, $this->probe->count());
         self::assertCount(1, $logs->getRecords());
         $record = $logs->getRecords()[0];
         self::assertSame('HTTP request failed.', $record->message);

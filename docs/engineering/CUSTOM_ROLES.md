@@ -7,20 +7,19 @@ registration, managed-policy editing or User assignment endpoint is enabled by t
 
 | Operation | Endpoint | Exact protected permission | JSON input | Success |
 |---|---|---|---|---|
-| Create | `POST /api/v1/roles` | `CREATE_ROLES` | `name` only | 201, current safe Role with generated `role_id` and `revision` |
+| Create | `POST /api/v1/roles` | `CREATE_ROLES` | `name` only | 201, generated `role_id` only |
 | Rename | `PATCH /api/v1/roles/{roleId}` | `UPDATE_ROLES` | `name`, `expected_revision` | 200, current safe Role |
 | Remove | `DELETE /api/v1/roles/{roleId}` | `DELETE_ROLES` | `expected_revision`, `confirm: true` | 200, null data |
 
 Send a Bearer credential and a closed JSON object. Actor, membership, managed ownership and grant fields are never
 caller inputs. Creation also rejects a caller-supplied `role_id`: send, for example, `{"name":"ROLE_CUSTOM"}`.
-`ManageCustomRoles::create(authentication, name)` authorizes `CREATE_ROLES` before generating the new identity with
-package `RoleId::generate()`. The package command receives that generated ID; callers obtain it and the revision
-from the safe response, then use the existing route ID and exact revision for rename/removal. The early Action gate and `ManageCustomRoles` independently require current invocation authentication
-and the exact installation-managed `SUPER_ADMIN_ONLY` Permission. Mutation does not additionally require
-`READ_ROLES`, `READ_PERMISSIONS` or another mutation permission. Non-HTTP consumers must use this Application service;
-the package bus remains trusted internal infrastructure, not an authenticated entry point.
+The HTTP gate authenticates and checks the exact operation permission. Each Action verifies the permission’s
+protected installation assignment and dispatches the package command directly. Creation generates and supplies
+`RoleId::generate()` before dispatch, then returns that same ID without a lookup. A caller with `READ_ROLES`
+can read the current Role and its revision for rename/removal. Mutations do not themselves require catalog
+permissions. The package bus is trusted internal infrastructure, not an authenticated entry point.
 
-Names and identifiers use the package value objects. Catalog detail/list and mutation Views expose a required
+Names and identifiers use package value objects. Catalog detail/list and the rename response expose a required
 `revision` alongside `role_id`, `name`, `managed`, never Permission membership or persistence internals. Carry the exact
 displayed token to rename/removal. The package compares it and retains complete-state persistence fences through
 commit. A stale same-name request also conflicts; a current same-name rename validates without writing, changing
@@ -42,7 +41,8 @@ reading across the cutover. Only new typed records can be hydrated as package `A
 a 500 is not proof of rollback. Reconcile current state under current authorization, never blindly replay. There is
 no outbox or guaranteed replay. `CustomRoleService` refetches authority after every attempted network mutation,
 including conflict/uncertainty, and preserves the caller's displayed token without retry. Its name-only create validates
-the returned generated UUID, revision and custom Role view, rather than comparing against a nonexistent caller ID.
+the returned generated UUID and expects no other data. Rename reads current Role state after dispatch, not an
+immutable record of the mutation.
 A lost creation response may leave a Role whose ID the caller has not received; reconcile the authorized catalog instead
 of retrying creation. The service is not mounted as new UI.
 

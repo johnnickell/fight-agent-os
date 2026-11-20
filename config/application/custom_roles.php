@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Action\Api\V1\Authority\CreateRoleAction;
 use App\Adapter\Http\Action\Api\V1\Authority\RemoveRoleAction;
 use App\Adapter\Http\Action\Api\V1\Authority\RenameRoleAction;
 use App\Adapter\Http\Responder\Api\V1\Authority\RoleMutationResponder;
-use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Authorization\InstallationAuthority;
-use App\Application\Authorization\ManageCustomRoles;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\CreateCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\RemoveCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\RenameCustomRoleHandler;
@@ -45,18 +43,19 @@ return static function (Container $container): void {
     $container->get('messaging.command.router')->registerHandlers([
         RemoveCustomRoleHandler::commandRegistration() => RemoveCustomRoleHandler::class
     ]);
-    $container->set(ManageCustomRoles::class, static fn(Container $container) => new ManageCustomRoles(
-        $container->get(AuthenticatedPermissions::class),
-        $container->get(InstallationAuthority::class),
-        $container->get(CommandBus::class),
-        $container->get(QueryBus::class)
-    ));
     $container->set(RoleMutationResponder::class, static fn(Container $container) =>
         new RoleMutationResponder($container->get(JSendResponseFactory::class)));
-    foreach ([CreateRoleAction::class, RenameRoleAction::class, RemoveRoleAction::class] as $action) {
+    foreach ([CreateRoleAction::class, RemoveRoleAction::class] as $action) {
         $container->set($action, static fn(Container $container) => new $action(
-            $container->get(ManageCustomRoles::class),
+            $container->get(CommandBus::class),
+            $container->get(InstallationPermissionAdmission::class),
             $container->get(RoleMutationResponder::class)
         ));
     }
+    $container->set(RenameRoleAction::class, static fn(Container $container) => new RenameRoleAction(
+        $container->get(CommandBus::class),
+        $container->get(QueryBus::class),
+        $container->get(InstallationPermissionAdmission::class),
+        $container->get(RoleMutationResponder::class)
+    ));
 };

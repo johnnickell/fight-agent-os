@@ -22,7 +22,7 @@ with Diagram(
 ):
     with Cluster("Agent OS | protected HTTP and admission", graph_attr={"bgcolor": "#eef4fa"}):
         actions = Node("CreateRoleAction / RenameRoleAction / RemoveRoleAction", nodeid="actions")
-        admission = Node("ManageCustomRoles", nodeid="admission")
+        admission = Node("InstallationPermissionAdmission", nodeid="admission")
     with Cluster("Fight Access Control | mutation and audit coordination", graph_attr={"bgcolor": "#eff8ee"}):
         handlers = Node("CreateCustomRoleHandler / RenameCustomRoleHandler\nRemoveCustomRoleHandler", nodeid="handlers")
         events = Node("CustomRoleCreated / CustomRoleRenamed\nCustomRoleRemoved", nodeid="events")
@@ -31,8 +31,8 @@ with Diagram(
         transaction = Node("DbalTransactionalUnitOfWork", nodeid="transaction")
         role = Node("PostgresRoleRepository", nodeid="role")
         audit = Node("PostgresAuditEvidenceRepository", nodeid="audit")
-    actions >> step("1. Delegate admitted request") >> admission
-    admission >> step("2. Dispatch indirectly via configured CommandBus") >> handlers
+    actions >> step("1. Check protected installation scope") >> admission
+    actions >> step("2. Dispatch through configured CommandBus") >> handlers
     handlers >> step("3. Run handler callback in transaction") >> transaction
     handlers >> step("4a. Write Role in callback") >> role
     handlers >> step("4b. Append audit in callback") >> audit

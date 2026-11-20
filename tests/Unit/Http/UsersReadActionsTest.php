@@ -9,6 +9,8 @@ use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
+use App\Application\AccessControl\User\QueryHandler\ListDirectoryUsersHandler;
+use App\Domain\AccessControl\User\Query\ListDirectoryUsers;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
@@ -25,8 +27,10 @@ use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Messaging\Query\Query;
+use Fight\Common\Domain\Messaging\Query\QueryMessage;
 use Fight\Common\Domain\Repository\ResultSet;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use InvalidArgumentException;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -71,7 +75,10 @@ final class UsersReadActionsTest extends TestCase
         $this->target = User::invite(UserId::generate(), EmailAddress::fromString('target@example.test'), $now);
         $this->result = UserView::fromUser($this->target);
         $bus = $this->createStub(QueryBus::class);
-        $bus->method('fetch')->willReturnCallback(function (Query $query): mixed {
+        $bus->method('fetch')->willReturnCallback(function (Query $query) use ($bus): mixed {
+            if ($query instanceof ListDirectoryUsers) {
+                return (new ListDirectoryUsersHandler($bus))->handle(QueryMessage::create($query));
+            }
             $this->queries[] = $query;
             if ($query instanceof GetUserById) {
                 self::assertTrue($query->getUserId()->equals($this->target->getId()));
@@ -81,6 +88,7 @@ final class UsersReadActionsTest extends TestCase
 
                 return match ($this->fault) {
                     'missing-role' => null,
+                    'missing-reference' => throw new ResourceNotFound(),
                     'wrong-role' => 'private-result-marker',
                     'aliased-role' => RoleView::fromRole(Role::define(
                         RoleId::generate(),
@@ -201,10 +209,9 @@ final class UsersReadActionsTest extends TestCase
      */
     public static function roleFailures(): iterable
     {
-        foreach ([false, true] as $detail) {
-            foreach (['missing-role', 'wrong-role', 'aliased-role'] as $fault) {
-                yield [$detail, $fault];
-            }
+        yield [false, 'missing-reference'];
+        foreach (['missing-role', 'wrong-role', 'aliased-role'] as $fault) {
+            yield [true, $fault];
         }
     }
 
@@ -228,33 +235,45 @@ final class UsersReadActionsTest extends TestCase
     }
 
     /**
-     * Refuses malformed or unbounded package pages
+     * Preserves page intent across the owned query message representation
      */
-    #[DataProvider('badPages')]
-    public function testPackagePageFailure(string $fault): void
+    public function testDirectoryQueryRoundTrip(): void
     {
-        $this->result = match ($fault) {
-            'type' => 'private-query-marker',
-            'records' => new ResultSet(1, 25, 0, ArrayList::of('string')),
-            'page' => new ResultSet(2, 25, 0, ArrayList::of(UserView::class)),
-            'size' => new ResultSet(1, 100, 0, ArrayList::of(UserView::class)),
-            default => new ResultSet(1, 25, 26, ArrayList::of(UserView::class)->replace(
-                array_fill(0, 26, UserView::fromUser($this->target))
-            ))
-        };
-        $this->expectException(LogicException::class);
-        $this->directory->handle($this->request);
+        $payload = ['page' => 1000, 'per_page' => 100];
+        self::assertSame($payload, ListDirectoryUsers::fromArray($payload)->toArray());
     }
 
     /**
-     * Supplies invalid page categories
-     *
-     * @return iterable<array{string}>
+     * Refuses work beyond the directory bounds even without an HTTP request
      */
-    public static function badPages(): iterable
+    #[DataProvider('invalidDirectoryPages')]
+    public function testDirectoryRejectsInvalidBounds(int $page, int $perPage): void
     {
-        foreach (['type', 'records', 'page', 'size', 'overflow'] as $fault) {
-            yield [$fault];
-        }
+        $this->expectException(InvalidArgumentException::class);
+        new ListDirectoryUsers($page, $perPage);
+    }
+
+    /**
+     * Supplies values immediately outside each bound
+     *
+     * @return iterable<array{int, int}>
+     */
+    public static function invalidDirectoryPages(): iterable
+    {
+        yield [0, 1];
+        yield [1001, 1];
+        yield [1, 0];
+        yield [1, 101];
+    }
+
+    /**
+     * Does not return two directory entries for the same User identity
+     */
+    public function testDuplicateDirectoryIdentity(): void
+    {
+        $user = UserView::fromUser($this->target);
+        $this->result = new ResultSet(1, 25, 2, ArrayList::of(UserView::class)->replace([$user, $user]));
+        $this->expectException(LogicException::class);
+        $this->directory->handle($this->request);
     }
 }

@@ -580,7 +580,7 @@
 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | done | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |

@@ -15,8 +15,9 @@ route never grants a read. No new identity, principal, session or authorization 
 
 Fight Access Control owns identity pagination and safe `UserView` production. The existing PostgreSQL user
 repository fixes ordering to `created_at ASC, id ASC`; callers supply no ordering expression. The Action
-collects the union of assigned role IDs and dispatches public package `GetRoleById` for each unique reference.
-The Responder maps only already-fetched `UserView`/`RoleView` values; it performs no repository lookup. Missing,
+uses the registered `ListDirectoryUsers` query. Its handler fetches the canonical `ListUsers` page and
+calls `GetRoleById` for each unique assigned Role. It returns a typed page of joined User and Role Views;
+the Responder maps those Views into HTTP data without a lookup. Missing,
 unexpected or duplicate returned references, duplicate assignments/identities or duplicate resolved names
 fail the whole response with a sanitized system failure, not an incomplete role list. Each user's assignments
 are sorted by exact role name. An empty assignment remains empty; it does not imply `ROLE_USER`.

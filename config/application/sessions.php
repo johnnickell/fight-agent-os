@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
+use App\Adapter\Authorization\InstallationSessionAdministration;
 use App\Adapter\Console\PruneSessionPresentationCommand;
 use App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction;
 use App\Adapter\Http\Action\Api\V1\Sessions\ListUserSessionsAction;
@@ -11,8 +13,6 @@ use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Responder\Api\V1\Sessions\OwnedSessionsResponder;
 use App\Adapter\Http\Responder\Api\V1\Sessions\SessionRevocationResponder;
 use App\Adapter\Persistence\SessionPresentation\PostgresSessionPresentation;
-use App\Application\Authorization\InstallationAuthority;
-use App\Application\Authorization\SessionAdministrationDecision;
 use App\Application\Security\Session\QueryHandler\ListOwnedSessionsHandler;
 use App\Application\Security\Session\SessionPresentation;
 use Doctrine\DBAL\Connection;
@@ -30,9 +30,9 @@ use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
     $container->set('sessions.authorization.read', static fn(Container $container) =>
-        SessionAdministrationDecision::forRead($container->get(InstallationAuthority::class)));
+        InstallationSessionAdministration::forRead($container->get(InstallationPermissionAdmission::class)));
     $container->set('sessions.authorization.revoke', static fn(Container $container) =>
-        SessionAdministrationDecision::forRevocation($container->get(InstallationAuthority::class)));
+        InstallationSessionAdministration::forRevocation($container->get(InstallationPermissionAdmission::class)));
     $container->set(ListUserSessionsAction::class, static fn(Container $container) => new ListUserSessionsAction(
         $container->get(QueryBus::class),
         $container->get(OwnedSessionsResponder::class)

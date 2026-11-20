@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Authority;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\CatalogResponder;
-use App\Application\Authorization\ReadAuthorityCatalogs;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -25,8 +29,11 @@ final readonly class GetRoleAction
     /**
      * Constructs GetRoleAction
      */
-    public function __construct(private ReadAuthorityCatalogs $catalogs, private CatalogResponder $responder)
-    {
+    public function __construct(
+        private QueryBus $queryBus,
+        private InstallationPermissionAdmission $installationAuthority,
+        private CatalogResponder $responder
+    ) {
     }
 
     /**
@@ -67,13 +74,19 @@ final readonly class GetRoleAction
     )]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $authentication = CatalogInput::authentication($request);
+        $this->installationAuthority->assertInstallationPermission(
+            CatalogInput::authentication($request)->getUserId(),
+            PermissionName::fromString('READ_ROLES')
+        );
         try {
             $id = RoleId::fromString((string) RouteContext::fromRequest($request)->getRoute()?->getArgument('roleId'));
         } catch (Throwable) {
             throw new ValidationException(['role_id' => ['Invalid value.']]);
         }
 
-        return $this->responder->respond($this->catalogs->role($authentication, $id));
+        /** @var RoleView $view */
+        $view = $this->queryBus->fetch(new GetRoleById($id));
+
+        return $this->responder->respond($view);
     }
 }
