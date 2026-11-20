@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Authority;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\CatalogResponder;
-use App\Application\Authorization\ReadAuthorityCatalogs;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\ListRoles;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Domain\Repository\Pagination;
+use Fight\Common\Domain\Repository\ResultSet;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,8 +29,11 @@ final readonly class ListRolesAction
     /**
      * Constructs ListRolesAction
      */
-    public function __construct(private ReadAuthorityCatalogs $catalogs, private CatalogResponder $responder)
-    {
+    public function __construct(
+        private QueryBus $queryBus,
+        private InstallationPermissionAdmission $installationAuthority,
+        private CatalogResponder $responder
+    ) {
     }
 
     /**
@@ -66,10 +75,16 @@ final readonly class ListRolesAction
         /** @var array{page?: string, per_page?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 
-        return $this->responder->respond($this->catalogs->roles(
-            CatalogInput::authentication($request),
+        $this->installationAuthority->assertInstallationPermission(
+            CatalogInput::authentication($request)->getUserId(),
+            PermissionName::fromString('READ_ROLES')
+        );
+        /** @var ResultSet<RoleView> $page */
+        $page = $this->queryBus->fetch(new ListRoles(new Pagination(
             (int) ($input['page'] ?? '1'),
             (int) ($input['per_page'] ?? '25')
-        ));
+        )));
+
+        return $this->responder->respond($page);
     }
 }

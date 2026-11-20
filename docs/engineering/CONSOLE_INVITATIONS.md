@@ -6,9 +6,9 @@ from historical TASK-00037/00038 acceptance. No public HTTP or browser role-admi
 
 The procedures below describe current source. The approved
 [architecture contract](STANDARDS.md#architecture) places admission in entry adapters and coordination in
-registered handlers; TASK-00576 owns that cutover. Existing `ConsoleUserOperation` and
-`AuthenticatedRoleAssignment` below are not target templates. Keep their checks and partial-result/audit limits
-until verified replacement; this documentation grants no untrusted raw-bus access or additional atomicity.
+registered handlers; TASK-00576 owns that cutover. The current `ConsoleUserOperation` is not a target
+template. Keep its checks and partial-result/audit limits until verified replacement; this documentation grants
+no untrusted raw-bus access or additional atomicity.
 
 Under the [TASK-00573 cutover](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption),
 `user:invite` and `user:role:add` use the canonical nil `SystemId` for package commands. Package `user.invited`
@@ -145,9 +145,8 @@ intent/claim scope protects arbitrary filter rewrites. Membership confirmation r
 not proof that a void bus dispatch executed a mutation: an already-present role remains membership-idempotent.
 Throwing dispatch failures remain non-success, including repeats. Missing new membership cannot be reported as
 success. Queries must still return matching identities and exact desired policy definitions, not merely an empty
-unchanged plan. Authenticated/nontrusted assignment must use `AuthenticatedRoleAssignment::assign()` for fresh
-principal/actor/exact permission checks; never forward raw messages from HTTP or Agent tools. No such assignment
-endpoint currently exists. Trusted machine/process access remains the CLI boundary; future managed Agent CLI
+unchanged plan. No authenticated HTTP or Agent assignment endpoint exists; never forward raw messages
+from those entries. Trusted machine/process access remains the CLI boundary; future managed Agent CLI
 exclusion is not implemented by service registration.
 
 The supported installation writer supplies only `InstallationManagedPolicy::create()` via the shipped

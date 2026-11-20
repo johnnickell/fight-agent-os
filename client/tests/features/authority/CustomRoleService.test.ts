@@ -37,15 +37,10 @@ function setup(status: number, data: unknown) {
 
 describe('CustomRoleService', () => {
   it('sends only a name, accepts the generated identity with 201 and refetches authority', async () => {
-    const { service, load, fetch } = setup(201, {
-      role_id: roleId,
-      name: 'ROLE_CUSTOM',
-      managed: false,
-      revision
-    });
+    const { service, load, fetch } = setup(201, { role_id: roleId });
     expect(await service.create('ROLE_CUSTOM')).toMatchObject({
       ok: true,
-      value: displayed
+      value: { roleId }
     });
     const init = fetch.mock.calls[0]?.[1] as RequestInit;
     expect(init.method).toBe('POST');
@@ -109,18 +104,11 @@ describe('CustomRoleService', () => {
   it.each([
     { role_id: 'invalid' },
     { role_id: undefined },
-    { revision: 'invalid' },
-    { revision: undefined },
+    { revision },
     { managed: true },
     { permission_ids: [] }
-  ])('rejects malformed or non-custom creation data %j without replaying', async (patch) => {
-    const { service, fetch, load } = setup(201, {
-      role_id: roleId,
-      name: 'ROLE_CUSTOM',
-      managed: false,
-      revision,
-      ...patch
-    });
+  ])('rejects malformed or extra creation data %j without replaying', async (patch) => {
+    const { service, fetch, load } = setup(201, { role_id: roleId, ...patch });
     expect(await service.create('ROLE_CUSTOM')).toMatchObject({
       ok: false,
       error: { kind: 'protocol' }
@@ -150,13 +138,8 @@ describe('CustomRoleService', () => {
     expect(load).toHaveBeenCalledOnce();
   });
 
-  it('rejects an unexpected creation status even with a valid generated view', async () => {
-    const { service, fetch, load } = setup(200, {
-      role_id: roleId,
-      name: 'ROLE_CUSTOM',
-      managed: false,
-      revision
-    });
+  it('rejects an unexpected creation status even with a valid generated identity', async () => {
+    const { service, fetch, load } = setup(200, { role_id: roleId });
     expect(await service.create('ROLE_CUSTOM')).toMatchObject({
       ok: false,
       error: { kind: 'protocol' }

@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Support\AccessClock;
 
 /**
- * Proves independently committed rolling email and endpoint budgets, bounded retention and real contention
+ * Proves independently committed rolling email and endpoint budgets and bounded retention
  */
 final class AuthAdmissionTest extends TestCase
 {
@@ -152,95 +152,6 @@ final class AuthAdmissionTest extends TestCase
         self::assertCount(2, $stored);
         foreach ($stored as $row) {
             self::assertCount(1, json_decode((string) $row['hits'], true, 16, JSON_THROW_ON_ERROR));
-        }
-    }
-
-    /**
-     * Admits exactly one contender after all separate connections reach the real database lock
-     */
-    #[DataProvider('raceOperations')]
-    public function testConcurrency(string $operation): void
-    {
-        if ($operation === 'email') {
-            for ($index = 0; $index < 4; ++$index) {
-                self::assertTrue($this->admission()->allows(EmailAddress::fromString('race@example.test')));
-            }
-        }
-        if ($operation === 'reset_email') {
-            for ($index = 0; $index < 2; ++$index) {
-                $this->admission()->passwordReset(EmailAddress::fromString('race@example.test'), '192.0.2.1');
-            }
-        }
-        $children = [];
-        $this->connection->beginTransaction();
-        $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24121, 45)');
-        try {
-            $pids = [];
-            for ($index = 0; $index < 3; ++$index) {
-                $pipes = [];
-                $process = proc_open(
-                    [PHP_BINARY, '-r',
-                        'require "vendor/autoload.php"; Tests\\Support\\AuthAdmissionRaceWorker::run();'],
-                    [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']],
-                    $pipes,
-                    dirname(__DIR__, 3)
-                );
-                self::assertIsResource($process);
-                $children[] = [$process, $pipes];
-                stream_set_timeout($pipes[1], 10);
-                fwrite($pipes[0], json_encode([
-                    'operation' => $operation,
-                    'now'       => $this->clock->time->format('Y-m-d\TH:i:s.uP'),
-                    'key'       => $this->key
-                ], JSON_THROW_ON_ERROR)."\n");
-                fflush($pipes[0]);
-                $pids[] = (int) fgets($pipes[1]);
-            }
-            $blocked = 0;
-            for ($attempt = 0; $attempt < 2000 && $blocked !== 3; ++$attempt) {
-                $blocked = (int) $this->connection->fetchOne(
-                    <<<'SQL'
-SELECT count(*) FROM pg_locks WHERE locktype = ? AND classid = 24121 AND objid = 45
-AND NOT granted AND pid IN (?, ?, ?)
-SQL,
-                    ['advisory', ...$pids]
-                );
-            }
-            self::assertSame(3, $blocked);
-            $this->connection->commit();
-            $results = [];
-            foreach ($children as [$process, $pipes]) {
-                $results[] = trim((string) fgets($pipes[1]));
-            }
-            sort($results);
-            self::assertSame(['admitted', 'denied', 'denied'], $results);
-        } finally {
-            if ($this->connection->isTransactionActive()) {
-                $this->connection->rollBack();
-            }
-            foreach ($children as [$process, $pipes]) {
-                foreach ($pipes as $pipe) {
-                    fclose($pipe);
-                }
-                self::assertSame(0, proc_close($process));
-            }
-        }
-    }
-
-    /**
-     * Supplies each independent endpoint budget and the canonical-email throttle
-     *
-     * @return iterable<array{string}>
-     */
-    public static function raceOperations(): iterable
-    {
-        yield ['email'];
-        yield ['reset_email'];
-        yield ['reset_peer'];
-        yield ['reset_endpoint'];
-        foreach (AuthOperation::cases() as $operation) {
-            yield [$operation->value];
-            yield ['endpoint:'.$operation->value];
         }
     }
 

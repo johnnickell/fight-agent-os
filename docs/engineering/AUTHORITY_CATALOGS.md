@@ -9,17 +9,15 @@ TASK-00124 adds four read-only, JWT-by-default API Actions:
 | `/api/v1/permissions` | `READ_PERMISSIONS` | `permission_id`, `name`, `tier`, `managed` |
 | `/api/v1/permissions/{permissionId}` | `READ_PERMISSIONS` | Same permission fields |
 
-The matched-Action gate authenticates and checks exact current permission names before Action construction.
-`ReadAuthorityCatalogs` independently resolves invocation-bound authentication and all current principal
-references, then requires the managed `SUPER_ADMIN_ONLY` installation permission and its current assignment
-before package query dispatch. Role names or JWT role claims alone confer no authority. All real callers,
-including future non-HTTP consumers, must use that Application boundary; the raw package bus remains trusted
-in-process infrastructure, not an authenticated forwarding API.
+The matched-Action gate authenticates and checks the exact current permission before Action construction.
+The Action checks that permission’s protected installation assignment for the verified actor, then dispatches
+its package query directly. Role names or JWT role claims alone confer no authority. The raw package bus
+remains trusted in-process infrastructure, not an authenticated forwarding API.
 
 Lists accept only `page` (1–1000, default 1) and `per_page` (1–100, default 25), as validated query strings.
 Ordering is fixed to `created_at ASC, id ASC`; caller-selected ordering/filtering is unavailable.
-Application also bounds numeric pagination for non-HTTP callers. Package `ListRoles`/`ListPermissions` return
-safe Views through the configured query bus; get operations use package `GetRoleById`/`GetPermissionById`.
+Package `ListRoles`/`ListPermissions` return strict pages of safe Views through the configured query bus;
+`GetRoleById`/`GetPermissionById` return required safe Views or report absence.
 IDs must parse as package UUID identifiers. Invalid inputs fail safely without catalog dispatch.
 
 Successful JSend `data` is the record above or a page with exactly `page`, `per_page`, `total_pages`,
@@ -51,8 +49,7 @@ Focused checks (prepared, exclusively owned runtime):
 
 ```sh
 ./bin/database test-reset
-./bin/phpunit tests/Unit/Authorization/ReadAuthorityCatalogsTest.php
-./bin/phpunit tests/Integration/Postgres/AuthorityCatalogApiTest.php
+./bin/runtime docker compose run --rm -e APP_ENV=test web php vendor/bin/phpunit tests/Integration/Postgres/AuthorityCatalogApiTest.php
 ./bin/client test
 ./bin/openapi export
 ./bin/openapi check

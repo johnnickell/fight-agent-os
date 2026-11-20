@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Persistence\AccessControl\Permission\PostgresPermissionRepository;
+use App\Adapter\Persistence\AccessControl\Role\PostgresRoleRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
-use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
-use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -70,7 +70,7 @@ final class RoleRevisionConformanceTest extends RoleRevisionConformance
                 $now
             );
             $user->assignRole($role->getId(), $now);
-            $users = new \App\Adapter\Persistence\Repository\PostgresUserRepository(
+            $users = new \App\Adapter\Persistence\AccessControl\User\PostgresUserRepository(
                 $this->connection,
                 new AuthorizationReferenceFences($this->connection),
                 new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($this->connection)

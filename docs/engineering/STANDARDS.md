@@ -153,9 +153,8 @@ The raw bus is trusted in-process composition infrastructure, not an authenticat
 owns [admission](#entry-admission-and-authorization-timing) before dispatch. Trusted operators use the same bus
 without pretending to authenticate as browser users. Never forward untrusted raw messages, authorize by service
 presence, install ambient trust flags/intent scopes or create an alternate bus to grant Console authority.
-Today's `AuthenticatedRoleAssignment::assign()` is the existing nontrusted assignment admission path; do not
-bypass its checks before its owning correction moves that responsibility to adapters. It is not a normative
-second Application gate. [Console](CONSOLE_INVITATIONS.md) and [bootstrap](SUPER_ADMIN_BOOTSTRAP.md) runbooks
+There is no authenticated User Role assignment entry. Any future entry must establish its own current
+actor, operation and target admission. [Console](CONSOLE_INVITATIONS.md) and [bootstrap](SUPER_ADMIN_BOOTSTRAP.md) runbooks
 retain their current executable procedures and partial-result limits. Machine/process access is today's Console
 trust boundary; managed Agent shell/CLI exclusion is not implemented by container registration.
 

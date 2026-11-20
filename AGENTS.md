@@ -19,7 +19,9 @@ Keep verification proportional to the changed behavior. Each added check must co
 existing checks do not already cover. Do not duplicate dependency installation, validation, test suites or
 release lanes for unchanged inputs. Reuse qualifying build evidence; run dependency preparation only on a
 cache miss. Validate tooling with its owning commands, without adding tests of wrappers, checks or release
-machinery. Investigate flaky failures; do not hide them with retries or accept a warm rerun as proof that a
+machinery. Avoid tests that pass only with favorable scheduling, sleeps, or tight wall-clock limits.
+Investigate flaky failures. Replace a flaky test with deterministic coverage, or remove it and record the
+coverage lost. Do not hide flakes with retries or longer timeouts, or accept a warm rerun as proof that a
 clean build works. Expand release certification only for an explicitly approved compatibility requirement.
 
 For execution or substantive planning changes, load the applicable guidance below. The read-only routing

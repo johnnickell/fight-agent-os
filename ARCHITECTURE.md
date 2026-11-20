@@ -34,9 +34,9 @@ is renamed by this documentation change. Unfinished individual plans remain TICK
 
 ## Implementation inventory and historical checkpoints
 
-For TASK-00059, [the authoritative TASK](planning/tasks/00059-TASK.md) records current acceptance provenance and
-merged/integrated PR #172. Its pending-merge wording below remains a historical implementation checkpoint, not
-a current human merge action. Other capability states are unchanged.
+[TASK-00059](planning/tasks/00059-TASK.md) records acceptance and integration of the original user directory
+in PR #172. [TASK-00578](planning/tasks/00578-TASK.md) replaces its server projection and requires separate
+independent acceptance.
 
 - `src/Domain/`: business state, invariants, value objects, and capability interfaces as introduced
 - `src/Application/`: command/query handlers and application coordination as introduced
@@ -69,9 +69,10 @@ a current human merge action. Other capability states are unchanged.
   pending restoration requires terminal invitation authority and issues fresh internal activation authority
   without disclosure. No browser administration UI is added;
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/admin/users` and
-  `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
-  complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
-  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`);
+  `GET /api/v1/users` requires exact authoritative `READ_USERS`, then dispatches the owned `ListDirectoryUsers`
+  query. Its handler joins package `ListUsers` and `GetRoleById` into a typed safe page (TASK-00578).
+  The browser retains the single authority cache that fences volatile directory pages, introduced by
+  [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172);
   TASK-00061's [ordinary invitation form](docs/engineering/ORDINARY_INVITATIONS.md) uses exact INVITE_USERS,
   a fixed ordinary API request and strict safe-ID projection; directory/status invalidation and READ_USERS-only
   continuation reuse the same client graph. It does not replace the existing PHP issuance composition owned by

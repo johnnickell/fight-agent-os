@@ -50,6 +50,22 @@ final class RoleMutationResponderTest extends TestCase
     }
 
     /**
+     * Returns only the supplied creation identity
+     */
+    public function testCreationReturnsOnlyIdentity(): void
+    {
+        $id = RoleId::generate();
+        $response = $this->responder()->respond(static fn(): RoleId => $id, 201);
+
+        self::assertSame(201, $response->getStatusCode());
+        self::assertSame(['status' => 'success', 'data' => ['role_id' => $id->toString()]], json_decode(
+            (string) $response->getBody(),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        ));
+    }
+
+    /**
      * Returns an empty success envelope for removal
      */
     public function testRemovedRole(): void

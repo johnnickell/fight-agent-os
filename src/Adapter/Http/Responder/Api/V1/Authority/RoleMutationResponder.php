@@ -8,6 +8,7 @@ use App\Adapter\Persistence\PersistenceConflict;
 use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Exception\RoleConflictException;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Error\Exception\PreconditionFailed;
 use Fight\Common\Application\Error\Exception\RuleViolation;
@@ -41,7 +42,7 @@ final readonly class RoleMutationResponder
     /**
      * Maps only known atomic conflicts without rendering package or storage diagnostics
      *
-     * @param callable(): ?RoleView $operation
+     * @param callable(): (RoleId|RoleView|null) $operation
      */
     public function respond(callable $operation, int $status = 200): ResponseInterface
     {
@@ -58,7 +59,11 @@ final readonly class RoleMutationResponder
         }
 
         return $this->responses->fromEnvelope(
-            JSendEnvelope::success($view === null ? null : new CatalogData($view)),
+            JSendEnvelope::success(match (true) {
+                $view instanceof RoleId => new RoleCreatedData($view),
+                $view instanceof RoleView => new CatalogData($view),
+                default => null
+            }),
             $status,
             ['Cache-Control' => 'no-store']
         );

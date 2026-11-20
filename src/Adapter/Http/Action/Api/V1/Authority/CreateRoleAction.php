@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Authority;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Api\V1\Authority\RoleMutationInput;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\RoleMutationResponder;
-use App\Application\Authorization\ManageCustomRoles;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Command\CreateCustomRole;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,8 +28,11 @@ final readonly class CreateRoleAction
     /**
      * Constructs CreateRoleAction
      */
-    public function __construct(private ManageCustomRoles $roles, private RoleMutationResponder $responder)
-    {
+    public function __construct(
+        private CommandBus $commandBus,
+        private InstallationPermissionAdmission $installationAuthority,
+        private RoleMutationResponder $responder
+    ) {
     }
 
     /**
@@ -58,8 +65,8 @@ final readonly class CreateRoleAction
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'Current safe role',
-                content: new OA\JsonContent(ref: '#/components/schemas/CatalogRoleSuccess')
+                description: 'Server-assigned Role identity',
+                content: new OA\JsonContent(ref: '#/components/schemas/RoleCreatedSuccess')
             ),
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
@@ -78,11 +85,21 @@ final readonly class CreateRoleAction
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $authentication = CatalogInput::authentication($request);
+        $actorId = CatalogInput::authentication($request)->getUserId();
+        $this->installationAuthority->assertInstallationPermission(
+            $actorId,
+            PermissionName::fromString('CREATE_ROLES')
+        );
         /** @var array{name: string} $input */
         $input = $request->getAttribute(JsonBody::class);
         $name = RoleMutationInput::name($input['name']);
 
-        return $this->responder->respond(fn() => $this->roles->create($authentication, $name), 201);
+        $roleId = RoleId::generate();
+
+        return $this->responder->respond(function () use ($actorId, $roleId, $name): RoleId {
+            $this->commandBus->execute(new CreateCustomRole($actorId, $roleId, $name));
+
+            return $roleId;
+        }, 201);
     }
 }

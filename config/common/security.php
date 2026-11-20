@@ -2,13 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Security\Password\Argon2idPasswords;
-use App\Adapter\Security\UnauthenticatedContextProvider;
-use App\Application\Authorization\AuthenticatedRoleAssignment;
-use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\UnavailableEmailChangeAdministration;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\Service\EmailChangeAdministrationAuthorization;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
@@ -17,7 +13,6 @@ use Fight\Common\Adapter\Auth\Hmac\HmacRequestService;
 use Fight\Common\Application\Auth\RequestService;
 use Fight\Common\Application\Auth\Security\PasswordHasher;
 use Fight\Common\Application\Auth\Security\PasswordValidator;
-use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Service\Container;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -33,25 +28,15 @@ return static function (Container $container): void {
         return $value;
     };
 
-    $container->set(AuthenticationContextProvider::class, static fn(): AuthenticationContextProvider =>
-        new UnauthenticatedContextProvider());
-    $container->set(AuthenticatedRoleAssignment::class, static fn(Container $container) =>
-        new AuthenticatedRoleAssignment(
-            $container->get(AuthenticationContextProvider::class),
-            $container->get(AuthoritativePrincipalResolver::class),
-            $container->get(RoleRepository::class),
-            $container->get(CommandBus::class)
-        ));
     $container->set(ValidatorInterface::class, static function (): ValidatorInterface {
         return Validation::createValidator();
     });
-    $container->set(InstallationAuthority::class, static function (Container $container): InstallationAuthority {
-        return new InstallationAuthority(
+    $container->set(InstallationPermissionAdmission::class, static fn(Container $container) =>
+        new InstallationPermissionAdmission(
             $container->get(UserRepository::class),
             $container->get(RoleRepository::class),
             $container->get(PermissionRepository::class)
-        );
-    });
+        ));
     $container->set(
         EmailChangeAdministrationAuthorization::class,
         static fn(): EmailChangeAdministrationAuthorization => new UnavailableEmailChangeAdministration()

@@ -113,7 +113,7 @@ final class InstallationManagedPolicy
     /**
      * Validates that the complete installation authority is reconciled
      */
-    public static function requireReconciled(ManagedPolicyPlan $plan, ManagedPolicy $policy): void
+    public static function assertReconciled(ManagedPolicyPlan $plan, ManagedPolicy $policy): void
     {
         $actual = [
             array_map(static fn($item): array => $item->getDefinition()->toArray(), $plan->getPermissions()),

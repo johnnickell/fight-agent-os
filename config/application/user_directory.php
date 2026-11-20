@@ -6,6 +6,7 @@ use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
+use App\Application\AccessControl\User\QueryHandler\ListDirectoryUsersHandler;
 use Fight\AccessControl\Application\AccessControl\User\QueryHandler\ListUsersHandler;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
@@ -15,8 +16,11 @@ use Fight\Common\Application\Service\Container;
 return static function (Container $container): void {
     $container->set(ListUsersHandler::class, static fn(Container $container) =>
         new ListUsersHandler($container->get(UserRepository::class)));
+    $container->set(ListDirectoryUsersHandler::class, static fn(Container $container) =>
+        new ListDirectoryUsersHandler($container->get(QueryBus::class)));
     $container->get('messaging.query.router')->registerHandlers([
-        ListUsersHandler::queryRegistration() => ListUsersHandler::class
+        ListUsersHandler::queryRegistration()          => ListUsersHandler::class,
+        ListDirectoryUsersHandler::queryRegistration() => ListDirectoryUsersHandler::class
     ]);
     $container->set(UserDetailResponder::class, static fn(Container $container) =>
         new UserDetailResponder($container->get(JSendResponseFactory::class)));

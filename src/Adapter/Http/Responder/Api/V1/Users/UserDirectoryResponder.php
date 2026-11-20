@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Users;
 
-use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
-use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
+use App\Application\AccessControl\User\View\UserDirectoryPage;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
-use Fight\Common\Domain\Repository\ResultSet;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 
@@ -86,19 +84,11 @@ final readonly class UserDirectoryResponder
 
     /**
      * Returns only approved safe directory fields without storage or shared-cache reuse
-     *
-     * @param ResultSet $users
-     * @param array $roles
-     *
-     * @phpstan-param ResultSet<UserView> $users
-     * @phpstan-param list<RoleView> $roles
      */
-    public function respond(ResultSet $users, array $roles): ResponseInterface
+    public function respond(UserDirectoryPage $page): ResponseInterface
     {
-        $presentation = UserRoleData::map($users->records(), $roles);
-
         return $this->responses->fromEnvelope(
-            JSendEnvelope::success(new UserDirectoryData(['users' => $users, 'roles' => $presentation])),
+            JSendEnvelope::success(new UserDirectoryData($page)),
             200,
             ['Cache-Control' => 'no-store']
         );
