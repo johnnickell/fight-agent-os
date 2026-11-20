@@ -51,6 +51,7 @@ use Slim\Psr7\Factory\StreamFactory;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
 use Tests\Support\AccessClock;
+use Throwable;
 
 /**
  * Protects trusted session action inputs and safe responses after route permission admission
@@ -174,7 +175,7 @@ final class SessionActionsTest extends TestCase
      * Preserves administrative target admission and package denial mapping
      */
     #[DataProvider('administrativeRefusals')]
-    public function testAdministrativeRefusal(string $case, string $exception): void
+    public function testAdministrativeRefusal(string $case, Throwable $exception): void
     {
         $queries = $this->createMock(QueryBus::class);
         if ($case === 'denied') {
@@ -190,20 +191,20 @@ final class SessionActionsTest extends TestCase
             default   => UserId::generate()->toString()
         };
         $action = new ListUserSessionsAction($queries, new OwnedSessionsResponder($this->responses));
-        $this->expectException($exception);
+        $this->expectException($exception::class);
         $action->handle($this->request('userId', $value));
     }
 
     /**
      * Supplies separate administrative admission and authorization outcomes
      *
-     * @return iterable<array{string, class-string<\Throwable>}>
+     * @return iterable<array{string, Throwable}>
      */
     public static function administrativeRefusals(): iterable
     {
-        yield ['invalid', ValidationException::class];
-        yield ['self', PermissionDenied::class];
-        yield ['denied', PermissionDenied::class];
+        yield ['invalid', new ValidationException(['user_id' => ['Invalid value.']])];
+        yield ['self', new PermissionDenied()];
+        yield ['denied', new PermissionDenied()];
     }
 
     /**
@@ -232,7 +233,7 @@ final class SessionActionsTest extends TestCase
      * Rejects inadmissible targets before any revocation command can run
      */
     #[DataProvider('ownedRefusals')]
-    public function testOwnedRevocationRefusal(string $case, string $exception): void
+    public function testOwnedRevocationRefusal(string $case, Throwable $exception): void
     {
         $target = RefreshSessionId::generate();
         $sessions = $this->createMock(RefreshSessionRepository::class);
@@ -253,22 +254,22 @@ final class SessionActionsTest extends TestCase
         if ($case === 'unauthenticated') {
             $request = $request->withoutAttribute(CurrentPrincipalProvider::class);
         }
-        $this->expectException($exception);
+        $this->expectException($exception::class);
         $action->handle($request);
     }
 
     /**
      * Supplies failures that must not reach revocation dispatch
      *
-     * @return iterable<array{string, class-string<\Throwable>}>
+     * @return iterable<array{string, Throwable}>
      */
     public static function ownedRefusals(): iterable
     {
-        yield ['unauthenticated', AuthenticationRequired::class];
-        yield ['invalid', ValidationException::class];
-        yield ['missing', StateConflict::class];
-        yield ['foreign', StateConflict::class];
-        yield ['aliased', StateConflict::class];
+        yield ['unauthenticated', new AuthenticationRequired()];
+        yield ['invalid', new ValidationException(['session_id' => ['Invalid value.']])];
+        yield ['missing', new StateConflict()];
+        yield ['foreign', new StateConflict()];
+        yield ['aliased', new StateConflict()];
     }
 
     /**
