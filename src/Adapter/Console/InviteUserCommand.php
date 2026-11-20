@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
-use App\Application\Invitation\ConsoleUserOperation;
+use App\Application\Authorization\IncompleteMembership;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\MembershipProgress;
+use App\Domain\Authorization\OperatorMembershipEvidence;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
-use App\Domain\Invitation\ConsoleInvitationInput;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Domain\Value\Identifier\Uuid;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -32,8 +36,10 @@ final class InviteUserCommand extends Command
     /**
      * Constructs InviteUserCommand
      */
-    public function __construct(private readonly ConsoleUserOperation $operation)
-    {
+    public function __construct(
+        private readonly CommandBus $commandBus,
+        private readonly MembershipProgress $membershipProgress
+    ) {
         parent::__construct();
     }
 
@@ -57,10 +63,8 @@ final class InviteUserCommand extends Command
             if (!$input->getOption('internal') || $this->hasRepeatedOptions($input)) {
                 throw new \InvalidArgumentException('Invalid invitation options.');
             }
-            $invitation = new ConsoleInvitationInput(
-                (string) $input->getOption('operator'),
-                (string) $input->getOption('email')
-            );
+            $operator = TrustedOperatorInput::operator((string) $input->getOption('operator'), 'console');
+            $email = TrustedOperatorInput::email((string) $input->getOption('email'));
         } catch (Throwable) {
             $error->writeln(self::USAGE, OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET);
 
@@ -69,25 +73,34 @@ final class InviteUserCommand extends Command
 
         try {
             $userId = UserId::generate();
-            $outcome = $this->operation->run(new InviteOrdinaryUser($invitation, $userId));
-            if (!$outcome->success) {
-                ConsoleUserOutput::failure(
-                    $error,
-                    $outcome,
-                    $invitation->operatorId->toString(),
-                    InstallationManagedPolicy::USER_ROLE_ID,
-                    self::FAILURE_MESSAGE
-                );
-
-                return self::FAILURE;
+            $invocationId = Uuid::comb();
+            $this->commandBus->execute(new InviteOrdinaryUser($operator, $email, $userId, $invocationId));
+            $state = $this->membershipProgress->inspect(OperatorMembershipEvidence::membershipConfirmed(
+                $operator,
+                $userId,
+                RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID),
+                $invocationId
+            ), $email);
+            if (!$state->isComplete()) {
+                throw new IncompleteMembership($state);
             }
             $output->writeln(json_encode([
-                'email'   => $invitation->email->toString(),
+                'email'   => $email->toString(),
                 'user_id' => $userId->toString(),
                 'status'  => 'invited'
             ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);
 
             return self::SUCCESS;
+        } catch (IncompleteMembership $failure) {
+            ConsoleUserOutput::failure(
+                $error,
+                $failure->state,
+                $operator->operatorId->toString(),
+                InstallationManagedPolicy::USER_ROLE_ID,
+                self::FAILURE_MESSAGE
+            );
+
+            return self::FAILURE;
         } catch (Throwable) {
             $error->writeln(self::FAILURE_MESSAGE, OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET);
 

@@ -1,14 +1,10 @@
 # Trusted console invitations and role correction
 
-Ordinary invitation uses two independent package business steps and a narrowly trusted corrective command.
-TASK-00446 simplifies their composition and Application sequencing; its fresh independent Review/QA are separate
-from historical TASK-00037/00038 acceptance. No public HTTP or browser role-administration surface is introduced.
-
-The procedures below describe current source. The approved
-[architecture contract](STANDARDS.md#architecture) places admission in entry adapters and coordination in
-registered handlers; TASK-00576 owns that cutover. Existing `ConsoleUserOperation` and
-`AuthenticatedRoleAssignment` below are not target templates. Keep their checks and partial-result/audit limits
-until verified replacement; this documentation grants no untrusted raw-bus access or additional atomicity.
+Ordinary invitation uses two independent package business steps and a separate operator confirmation audit.
+The existing corrective command adds an eligible role to a known user without issuing another invitation.
+Console owns local admission, input parsing and output; registered handlers own the use cases. No public
+HTTP or browser role-administration entry, permission or additional atomicity is introduced.
+See the [command flow](console-invitations/README.md) for the ownership and commit boundaries.
 
 Under the [TASK-00573 cutover](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption),
 `user:invite` and `user:role:add` use the canonical nil `SystemId` for package commands. Package `user.invited`
@@ -85,15 +81,16 @@ safe repeat: it confirms observed membership, not that this invocation necessari
 | `2` | Invalid input, with fixed usage/parser diagnostic and no operation dispatch |
 
 Failure stdout is empty. If Application can inspect the intended target safely after failure, stderr is a JSON
-line with `status: "partial_or_uncertain"`, `user_id`, `role_id`, `assignment: "confirmed"` or `"missing"`, and
-`audit: "confirmed"` or `"unconfirmed"`. A failed invitation also includes an exact `correction` command for that
+line with `status: "partial_or_uncertain"`, `user_id`, `role_id`, `assignment` (`"confirmed"`, `"missing"` or
+`"unknown"`), and `audit` (`"confirmed"` or `"unconfirmed"`). A failed invitation also includes an exact `correction` command for that
 known target and managed ROLE_USER. A failed correction reports state but does not recommend a rejected role.
 No target is asserted when the authoritative read fails, returns absent/wrong identity, or does not match the
 invited pending email/state: stderr instead uses a fixed failure/uncertainty diagnostic. Inspect trusted state in
 that case; absence of a target in output does **not** prove the invitation failed to commit.
 
-A postcommit event exception can leave invitation or membership committed. Application reads public safe state
-before reporting it; it does not infer rollback from an exception. Assignment failure retains first-step audit,
+A post-commit event exception can leave invitation or membership committed. A separate PostgreSQL connection
+reads a committed, read-only snapshot of the target, membership and exact invocation audit. This read does not
+need a usable write transaction. An exception never proves rollback. Assignment failure retains first-step audit,
 grant and delivery, even if mail was already offered. If the separate confirmation audit fails after assignment,
 membership remains. Preserve the safe output, inspect intended persisted state, correct reconciled authority if
 necessary through its owning operation, then use the existing target's corrective command in a **fresh process**.
@@ -112,7 +109,7 @@ The configured package handler writes `user.role_assigned` atomically with a rea
 `RoleAssignedToUser` after commit. Both use the system actor; an unchanged assignment writes neither. Agent OS
 verifies additive membership after the assignment returns, then uses a **separate audit transaction** to append
 `user.console_role_assigned`, with actor `console:OPERATOR_UUID`, subject target UUID and bounded context
-`{role_id: ROLE_UUID, result: "membership_confirmed"}`. This records an observed confirmation, not an atomic
+`{role_id: ROLE_UUID, result: "membership_confirmed", invocation_id: INVOCATION_UUID}`. This records an observed confirmation, not an atomic
 assignment/audit fact. Extra delivery claim/outcome bookkeeping transactions are separate too: “two steps” means
 two business transactions, not exactly two physical commits overall.
 
@@ -121,18 +118,21 @@ operator confirmation. Failed or uncertain confirmation is non-success; no autom
 exactly-once evidence claim is made. A fresh corrective invocation dispatches the idempotent package assignment,
 verifies retained membership and appends its own attributed confirmation. **Every successful repeat adds one confirmation audit row**, even if no
 membership changed. It does not backfill a historical actor or claim the operator's confirmation was recorded for an earlier
-interrupted invocation. An audit commit whose acknowledgement is lost may produce duplicate confirmation evidence on repeat;
-trusted investigation, not this CLI, resolves historical gaps. No repository hook, participant, deferred-event
-buffer or transaction decorator manufactures atomicity.
+interrupted invocation. If the audit commit acknowledgement is lost, the CLI can confirm completion only if the
+committed snapshot proves the requested state and finds this invocation’s audit. A prior repeat or historical
+row without an invocation ID cannot prove it. Each fresh invocation still commits its own audit; no audit is
+replayed. No repository hook, deferred-event buffer or transaction decorator manufactures atomicity.
 
 ## Shared dispatch and supported writer boundary
 
-[`ConsoleUserOperation`](../../src/Application/Invitation/ConsoleUserOperation.php) owns installation/eligible-role
-policy, package sequencing, partial-state inspection and separate audit coordination. Symfony adapters only map
-validated input and render safe results. The operation directly dispatches package messages through the one
-configured command bus; queries use the configured query bus. Package handlers retain normal transaction/event
-capabilities. The old cyclic operation/owned-handler forwarding, command intent and terminal guard pipelines are
-removed, not renamed. No direct handler call, outer/joining UoW or copied package business policy is introduced.
+[`InviteOrdinaryUserHandler`](../../src/Application/Authorization/CommandHandler/InviteOrdinaryUserHandler.php)
+and [`AddUserRoleHandler`](../../src/Application/Authorization/CommandHandler/AddUserRoleHandler.php) run through
+the configured command bus and dispatch package commands through that same bus. The shared
+[`InstallationAssignmentPolicy`](../../src/Application/Authorization/InstallationAssignmentPolicy.php) checks current
+installation, user, role and permission references through the query bus. Console supplies typed intent, including
+the generated invitation user ID and a fresh audit invocation ID. It uses the committed snapshot to distinguish
+completed work from a dispatch that returned without executing. Package handlers retain their own transactions and
+events. No direct handler call, outer transaction or copy of package business policy is introduced.
 
 `config/services.php` loads all common/application modules, including lazy Console registrations, for both HTTP
 and Console. The normal Console application contains invitation, additive role and bootstrap commands together.
@@ -143,7 +143,7 @@ Raw package messages and installed filters are trusted in-process infrastructure
 hostile-transformer boundary. Application validates its input/current references and inspects outcomes; no ambient
 intent/claim scope protects arbitrary filter rewrites. Membership confirmation records observed additive state,
 not proof that a void bus dispatch executed a mutation: an already-present role remains membership-idempotent.
-Throwing dispatch failures remain non-success, including repeats. Missing new membership cannot be reported as
+Throwing package dispatch failures remain non-success, including repeats. Missing new membership cannot be reported as
 success. Queries must still return matching identities and exact desired policy definitions, not merely an empty
 unchanged plan. Authenticated/nontrusted assignment must use `AuthenticatedRoleAssignment::assign()` for fresh
 principal/actor/exact permission checks; never forward raw messages from HTTP or Agent tools. No such assignment

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Bootstrap;
+namespace App\Application\Authorization\CommandHandler;
 
+use App\Application\Authorization\IncompleteBootstrap;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Authorization\ManagedPolicyCatalog;
+use App\Domain\Authorization\MembershipEvidenceRepository;
+use App\Domain\Bootstrap\BootstrapEvidence;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
@@ -19,41 +22,60 @@ use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Command\CommandHandler;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Repository\TransactionalUnitOfWork;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
+use InvalidArgumentException;
 use LogicException;
 use Throwable;
 
 /**
- * Class BootstrapOperation
+ * Class BootstrapSuperAdminHandler
  *
  * Coordinates a trusted manual bootstrap with independent package commits and inspected outcomes
  */
-final readonly class BootstrapOperation
+final readonly class BootstrapSuperAdminHandler implements CommandHandler
 {
     /**
-     * Constructs BootstrapOperation
+     * Constructs BootstrapSuperAdminHandler
      */
     public function __construct(
         private CommandBus $commands,
         private QueryBus $queries,
         private UserRepository $users,
         private BootstrapProgress $progress,
-        private ManagedPolicyCatalog $managedPolicyCatalog
+        private ManagedPolicyCatalog $managedPolicyCatalog,
+        private TransactionalUnitOfWork $transactionalUnitOfWork,
+        private MembershipEvidenceRepository $membershipEvidenceRepository
     ) {
     }
 
     /**
-     * Runs bootstrap only after an authoritative absence check permits the manual attempt
+     * @inheritDoc
      */
-    public function run(BootstrapSuperAdmin $command): BootstrapState
+    public static function commandRegistration(): string
     {
+        return BootstrapSuperAdmin::class;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function handle(CommandMessage $commandMessage): void
+    {
+        $command = $commandMessage->payload();
+        if (!$command instanceof BootstrapSuperAdmin) {
+            throw new InvalidArgumentException('Unexpected bootstrap command.');
+        }
         $roleId = RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID);
         try {
-            if ($this->users->hasRoleAssignment($roleId)) {
-                return new BootstrapState('refused');
-            }
+            $hasSuperAdmin = $this->users->hasRoleAssignment($roleId);
         } catch (Throwable) {
-            return new BootstrapState('unknown');
+            throw new IncompleteBootstrap(new BootstrapState('unknown'));
+        }
+        if ($hasSuperAdmin) {
+            throw new IncompleteBootstrap(new BootstrapState('refused'));
         }
         try {
             $policy = $this->managedPolicyCatalog->load();
@@ -66,16 +88,27 @@ final readonly class BootstrapOperation
                 throw new LogicException('Managed bootstrap authority is unavailable.');
             }
             $systemId = SystemId::generate();
-            $this->commands->execute(new InvitePendingUser($systemId, $command->userId, $command->input->email));
+            $this->commands->execute(new InvitePendingUser($systemId, $command->userId, $command->email));
             $this->commands->execute(new AssignRoleToUser($systemId, $command->userId, $roleId));
-            $this->progress->complete($command);
+            $state = $this->progress->inspect($command);
+            if ($state->invitation !== 'confirmed' || $state->assignment !== 'confirmed') {
+                throw new LogicException('Bootstrap completion is unavailable.');
+            }
+            $this->transactionalUnitOfWork->commitTransactional(
+                fn() => $this->membershipEvidenceRepository->add(BootstrapEvidence::completed($command))
+            );
+
+            return;
         } catch (Throwable) {
             // An exception never proves rollback across independently committed package steps.
         }
         try {
-            return $this->progress->inspect($command);
+            $state = $this->progress->inspect($command);
         } catch (Throwable) {
-            return new BootstrapState('admitted');
+            $state = new BootstrapState('admitted');
+        }
+        if (!$state->isComplete()) {
+            throw new IncompleteBootstrap($state);
         }
     }
 }

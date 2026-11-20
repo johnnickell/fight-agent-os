@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Adapter\Persistence\Repository;
 
 use App\Domain\Authorization\MembershipEvidenceRepository;
+use App\Domain\Authorization\OperatorMembershipEvidence;
 use App\Domain\Bootstrap\BootstrapEvidence;
-use App\Domain\Invitation\ConsoleRoleEvidence;
 use App\Domain\Invitation\InvitationRoleEvidence;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
@@ -31,8 +31,9 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
     /**
      * @inheritDoc
      */
-    public function add(AuditEvidence|BootstrapEvidence|ConsoleRoleEvidence|InvitationRoleEvidence $evidence): void
-    {
+    public function add(
+        AuditEvidence|BootstrapEvidence|OperatorMembershipEvidence|InvitationRoleEvidence $evidence
+    ): void {
         if (!$this->connection->isTransactionActive()) {
             throw new LogicException('Audit evidence requires an enclosing transaction.');
         }
@@ -49,15 +50,18 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
             $actorId = (string) $evidence->actorId;
             $action = match (true) {
                 $evidence instanceof BootstrapEvidence      => 'user.bootstrap_completed',
-                $evidence instanceof ConsoleRoleEvidence    => 'user.console_role_assigned',
+                $evidence instanceof OperatorMembershipEvidence  => 'user.console_role_assigned',
                 $evidence instanceof InvitationRoleEvidence => 'user.invitation_role_confirmed'
             };
             $subjectType = 'user';
             $subjectId = $evidence->userId->toString();
-            // Preserve the existing owned facts and historical row shape.
+            // Keep historical facts; new operator confirmations identify their invocation.
             $context = $evidence instanceof BootstrapEvidence ? (object) [] : [
                 'role_id' => $evidence->roleId->toString(),
-                'result'  => 'membership_confirmed'
+                'result'  => 'membership_confirmed',
+                ...($evidence instanceof OperatorMembershipEvidence ? [
+                    'invocation_id' => $evidence->invocationId->toString()
+                ] : [])
             ];
         }
 

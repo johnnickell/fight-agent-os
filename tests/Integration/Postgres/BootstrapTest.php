@@ -7,11 +7,11 @@ namespace Tests\Integration\Postgres;
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Application\Authorization\AuthenticatedRoleAssignment;
-use App\Application\Bootstrap\BootstrapOperation;
+use App\Application\Authorization\IncompleteBootstrap;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\TrustedOperator;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
-use App\Domain\Invitation\ConsoleInvitationInput;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -46,6 +46,7 @@ use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\EventMessage;
@@ -148,7 +149,7 @@ final class BootstrapTest extends TestCase
             $context = json_decode($row['context'], true, flags: JSON_THROW_ON_ERROR);
             if ($row['action'] === 'user.bootstrap_completed') {
                 self::assertSame([], $context);
-                self::assertSame('bootstrap:'.$command->input->operatorId, $row['actor_id']);
+                self::assertSame('bootstrap:'.$command->operator->operatorId, $row['actor_id']);
                 continue;
             }
             self::assertInstanceOf(SystemId::class, AuditEvidence::fromArray($context)->actorId());
@@ -223,12 +224,12 @@ final class BootstrapTest extends TestCase
         $old = $this->command();
         $this->connection->insert('installation_bootstrap', [
             'singleton'   => true,
-            'operator_id' => (string) $old->input->operatorId,
+            'operator_id' => $old->operator->operatorId->toString(),
             'target_id'   => (string) $old->userId,
             'email'       => 'historical@example.test'
         ]);
         $this->connection->insert('audit_evidence', [
-            'actor_id'     => 'bootstrap:'.$old->input->operatorId,
+            'actor_id'     => $old->operator->auditActorId,
             'action'       => 'user.bootstrap_claimed',
             'subject_id'   => (string) $old->userId,
             'subject_type' => 'user',
@@ -473,16 +474,23 @@ SQL);
      */
     public function testLostCompletionAcknowledgement(): void
     {
-        $actual = $this->container->get(BootstrapProgress::class);
-        $progress = $this->createStub(BootstrapProgress::class);
-        $progress->method('complete')->willReturnCallback(static function (BootstrapSuperAdmin $command) use (
+        $actual = $this->container->get(TransactionalUnitOfWork::class);
+        $transactionalUnitOfWork = $this->createStub(TransactionalUnitOfWork::class);
+        $transactionalUnitOfWork->method('isClosed')->willReturnCallback($actual->isClosed(...));
+        $transactionalUnitOfWork->method('commitTransactional')->willReturnCallback(function (callable $write) use (
             $actual
-        ): void {
-            $actual->complete($command);
-            throw new RuntimeException('private-acknowledgement-marker');
+        ): mixed {
+            $result = $actual->commitTransactional($write);
+            if ($this->connection->fetchOne("SELECT 1 FROM audit_evidence WHERE action = 'user.bootstrap_completed'")) {
+                throw new RuntimeException('private-acknowledgement-marker');
+            }
+
+            return $result;
         });
-        $progress->method('inspect')->willReturnCallback($actual->inspect(...));
-        $this->container->set(BootstrapProgress::class, static fn(): BootstrapProgress => $progress);
+        $this->container->set(
+            TransactionalUnitOfWork::class,
+            static fn(): TransactionalUnitOfWork => $transactionalUnitOfWork
+        );
         self::assertTrue($this->bootstrap($this->command())->isComplete());
         self::assertSame(1, (int) $this->connection->fetchOne(
             "SELECT count(*) FROM audit_evidence WHERE action = 'user.bootstrap_completed'"
@@ -497,12 +505,7 @@ SQL);
         $command = $this->command();
         $progress = $this->container->get(BootstrapProgress::class);
         self::assertSame('missing', $progress->inspect($command)->invitation);
-        try {
-            $progress->complete($command);
-            self::fail('Missing membership cannot complete.');
-        } catch (\LogicException) {
-            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-        }
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
         self::assertTrue($this->bootstrap($command)->isComplete());
         $this->connection->executeStatement("UPDATE users SET email = 'changed@example.test' WHERE id = ?", [
             (string) $command->userId
@@ -515,7 +518,13 @@ SQL);
      */
     private function bootstrap(BootstrapSuperAdmin $command): \App\Domain\Bootstrap\BootstrapState
     {
-        return $this->container->get(BootstrapOperation::class)->run($command);
+        try {
+            $this->container->get(CommandBus::class)->execute($command);
+        } catch (IncompleteBootstrap $failure) {
+            return $failure->state;
+        }
+
+        return $this->container->get(BootstrapProgress::class)->inspect($command);
     }
 
     /**
@@ -559,8 +568,11 @@ SQL);
      */
     private function command(): BootstrapSuperAdmin
     {
+        $operatorId = UserId::generate();
+
         return new BootstrapSuperAdmin(
-            new ConsoleInvitationInput((string) UserId::generate(), 'first@example.test'),
+            new TrustedOperator($operatorId, 'bootstrap:'.$operatorId->toString()),
+            \Fight\Common\Domain\Value\Internet\EmailAddress::fromString('first@example.test'),
             UserId::generate()
         );
     }

@@ -6,13 +6,15 @@ namespace Tests\Unit\Bootstrap;
 
 use App\Adapter\Console\BootstrapSuperAdminCommand;
 use App\Adapter\Console\SafeConsoleApplication;
-use App\Application\Bootstrap\BootstrapOperation;
+use App\Application\Authorization\CommandHandler\BootstrapSuperAdminHandler;
+use App\Application\Authorization\IncompleteBootstrap;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\MembershipEvidenceRepository;
+use App\Domain\Authorization\TrustedOperator;
 use App\Domain\Bootstrap\BootstrapEvidence;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
-use App\Domain\Invitation\ConsoleInvitationInput;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyChangeAction;
@@ -27,7 +29,10 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Domain\Messaging\Command\Command;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
+use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -42,6 +47,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 final class BootstrapTest extends TestCase
 {
     private BootstrapState $state;
+    private BootstrapProgress $bootstrapProgress;
     private bool $superAdmin = false;
     /** @var list<class-string> */
     private array $effects = [];
@@ -53,15 +59,15 @@ final class BootstrapTest extends TestCase
     {
         $command = $this->command();
         $operation = $this->operation();
-        self::assertTrue($operation->run($command)->isComplete());
+        self::assertTrue($this->runBootstrap($operation, $command)->isComplete());
         self::assertSame([
             ReconcileManagedPolicy::class, InvitePendingUser::class, AssignRoleToUser::class
         ], $this->effects);
-        self::assertSame('refused', $operation->run($this->command())->admission);
+        self::assertSame('refused', $this->runBootstrap($operation, $this->command())->admission);
         self::assertCount(3, $this->effects);
         self::assertSame($command->toArray(), BootstrapSuperAdmin::fromArray($command->toArray())->toArray());
         $evidence = BootstrapEvidence::completed($command);
-        self::assertSame('bootstrap:'.$command->input->operatorId, $evidence->actorId);
+        self::assertSame('bootstrap:'.$command->operator->operatorId, $evidence->actorId);
         self::assertTrue($evidence->userId->equals($command->userId));
     }
 
@@ -71,7 +77,7 @@ final class BootstrapTest extends TestCase
     public function testPresenceQueryFailure(): void
     {
         $operation = $this->operation('presence');
-        self::assertSame('unknown', $operation->run($this->command())->admission);
+        self::assertSame('unknown', $this->runBootstrap($operation, $this->command())->admission);
         self::assertSame([], $this->effects);
     }
 
@@ -81,7 +87,7 @@ final class BootstrapTest extends TestCase
     #[DataProvider('failures')]
     public function testFailures(string $phase, string $invitation, string $assignment): void
     {
-        $result = $this->operation($phase)->run($this->command());
+        $result = $this->runBootstrap($this->operation($phase), $this->command());
         self::assertFalse($result->isComplete());
         self::assertSame('admitted', $result->admission);
         self::assertSame($invitation, $result->invitation);
@@ -102,6 +108,7 @@ final class BootstrapTest extends TestCase
         yield ['invite_event', 'confirmed', 'missing'];
         yield ['assign', 'confirmed', 'missing'];
         yield ['assign_event', 'confirmed', 'confirmed'];
+        yield ['assign_veto', 'confirmed', 'missing'];
         yield ['audit', 'confirmed', 'confirmed'];
         yield ['inspection', 'unknown', 'unknown'];
     }
@@ -112,9 +119,25 @@ final class BootstrapTest extends TestCase
     public function testPartialAttemptDoesNotConsumeAdmission(): void
     {
         $operation = $this->operation('assign');
-        self::assertSame('missing', $operation->run($this->command())->assignment);
-        self::assertSame('admitted', $operation->run($this->command())->admission);
+        self::assertSame('missing', $this->runBootstrap($operation, $this->command())->assignment);
+        self::assertSame('admitted', $this->runBootstrap($operation, $this->command())->admission);
         self::assertCount(6, $this->effects);
+    }
+
+    /**
+     * Rejects a different command payload before any package work
+     */
+    public function testRejectsOtherCommandPayload(): void
+    {
+        $operation = $this->operation();
+        $command = $this->command();
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unexpected bootstrap command.');
+        $operation->execute(new InvitePendingUser(
+            \Fight\AccessControl\Domain\AccessControl\Audit\SystemId::generate(),
+            $command->userId,
+            $command->email
+        ));
     }
 
     /**
@@ -133,7 +156,7 @@ final class BootstrapTest extends TestCase
     {
         $command = $this->command();
         $this->expectException(InvalidArgumentException::class);
-        new BootstrapSuperAdmin($command->input, $command->input->operatorId);
+        new BootstrapSuperAdmin($command->operator, $command->email, $command->operator->operatorId);
     }
 
     /**
@@ -146,7 +169,7 @@ final class BootstrapTest extends TestCase
     {
         $application = new SafeConsoleApplication();
         $application->setAutoExit(false);
-        $application->addCommand(new BootstrapSuperAdminCommand($this->operation()));
+        $application->addCommand(new BootstrapSuperAdminCommand($this->operation(), $this->bootstrapProgress));
         $output = new BufferedOutput();
         $exit = $application->run(new ArgvInput(['console', 'user:bootstrap-super-admin', ...$extra, '-vvv']), $output);
         self::assertSame(2, $exit);
@@ -177,7 +200,8 @@ final class BootstrapTest extends TestCase
     public function testConsoleOutcomes(): void
     {
         foreach (['', 'assign', 'inspection', 'presence'] as $phase) {
-            $tester = new CommandTester(new BootstrapSuperAdminCommand($this->operation($phase)));
+            $commandBus = $this->operation($phase);
+            $tester = new CommandTester(new BootstrapSuperAdminCommand($commandBus, $this->bootstrapProgress));
             self::assertSame($phase === '' ? 0 : 1, $tester->execute([
                 '--internal'          => true,
                 '--confirm-bootstrap' => true,
@@ -194,9 +218,29 @@ final class BootstrapTest extends TestCase
     }
 
     /**
+     * Redacts unavailable inspection after a successful void dispatch
+     */
+    public function testConsoleRedactsInspectionException(): void
+    {
+        $progress = $this->createStub(BootstrapProgress::class);
+        $progress->method('inspect')->willThrowException(new RuntimeException('private-inspection-diagnostic'));
+        $tester = new CommandTester(new BootstrapSuperAdminCommand($this->createStub(CommandBus::class), $progress));
+        self::assertSame(1, $tester->execute([
+            '--internal'          => true,
+            '--confirm-bootstrap' => true,
+            '--operator'          => (string) UserId::generate(),
+            '--email'             => 'user@example.test'
+        ]));
+        self::assertSame(
+            'Bootstrap outcome is uncertain; inspect trusted state before another manual attempt.'."\n",
+            $tester->getDisplay()
+        );
+    }
+
+    /**
      * Observes owned policy and safe outcomes without copying package transaction behavior
      */
-    private function operation(string $failure = ''): BootstrapOperation
+    private function operation(string $failure = ''): CommandBus
     {
         $this->state = new BootstrapState('admitted', 'missing', 'missing');
         $this->superAdmin = false;
@@ -234,7 +278,9 @@ final class BootstrapTest extends TestCase
             );
         });
         $progress = $this->createStub(BootstrapProgress::class);
-        $progress->method('complete')->willReturnCallback(function () use ($failure): void {
+        $this->bootstrapProgress = $progress;
+        $membershipEvidenceRepository = $this->createStub(MembershipEvidenceRepository::class);
+        $membershipEvidenceRepository->method('add')->willReturnCallback(function () use ($failure): void {
             if ($failure === 'audit') {
                 throw new RuntimeException('private-marker');
             }
@@ -267,6 +313,9 @@ final class BootstrapTest extends TestCase
                 if ($failure === 'assign') {
                     throw new RuntimeException('private-marker');
                 }
+                if ($failure === 'assign_veto') {
+                    return;
+                }
                 $this->superAdmin = true;
                 $this->state = new BootstrapState('admitted', 'confirmed', 'confirmed');
                 if ($failure === 'assign_event') {
@@ -275,13 +324,40 @@ final class BootstrapTest extends TestCase
             }
         });
 
-        return new BootstrapOperation(
+        $transactionalUnitOfWork = $this->createStub(TransactionalUnitOfWork::class);
+        $transactionalUnitOfWork->method('commitTransactional')->willReturnCallback(
+            static fn(callable $operation): mixed => $operation()
+        );
+
+        $handler = new BootstrapSuperAdminHandler(
             $bus,
             $queries,
             $users,
             $progress,
-            new \App\Adapter\Authorization\JsonManagedPolicy()
+            new \App\Adapter\Authorization\JsonManagedPolicy(),
+            $transactionalUnitOfWork,
+            $membershipEvidenceRepository
         );
+        $commandBus = $this->createStub(CommandBus::class);
+        $commandBus->method('execute')->willReturnCallback(
+            static fn(Command $command) => $handler->handle(CommandMessage::create($command))
+        );
+
+        return $commandBus;
+    }
+
+    /**
+     * Collects the command failure facts or inspects successful dispatch
+     */
+    private function runBootstrap(CommandBus $commandBus, BootstrapSuperAdmin $command): BootstrapState
+    {
+        try {
+            $commandBus->execute($command);
+        } catch (IncompleteBootstrap $failure) {
+            return $failure->state;
+        }
+
+        return $this->bootstrapProgress->inspect($command);
     }
 
     /**
@@ -289,8 +365,11 @@ final class BootstrapTest extends TestCase
      */
     private function command(): BootstrapSuperAdmin
     {
+        $operatorId = UserId::generate();
+
         return new BootstrapSuperAdmin(
-            new ConsoleInvitationInput((string) UserId::generate(), 'first@example.test'),
+            new TrustedOperator($operatorId, 'bootstrap:'.$operatorId->toString()),
+            EmailAddress::fromString('first@example.test'),
             UserId::generate()
         );
     }

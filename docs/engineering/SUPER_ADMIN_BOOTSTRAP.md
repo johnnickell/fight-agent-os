@@ -9,11 +9,10 @@ a normal invitation conflict, not an implicit resend, reset or resume.
 This TASK-00446 policy supersedes TASK-00038/TICKET-00015's permanent-claim/no-retry, concurrent admission and
 command-specific composition requirements. Their old implementation reports remain historical evidence.
 
-This runbook describes current source, including the existing `AuthenticatedRoleAssignment` admission path.
-The [approved architecture contract](STANDARDS.md#architecture) puts entry admission in adapters, not a blanket
-second Application gate. TASK-00576 owns that source correction; do not bypass current checks or expose trusted
-Console/raw-bus operations while waiting. The manual single-operator and retained partial-result/audit limits
-below remain truthful; this document does not upgrade them to atomic bootstrap or replay guarantees.
+Console owns local admission and explicit confirmation. The registered bootstrap handler owns installation
+eligibility, package dispatch and the separate completion audit. This does not change the existing
+`AuthenticatedRoleAssignment` admission path or expose trusted Console/raw-bus operations. Bootstrap remains
+manual, non-atomic and not replayable.
 
 Under the [TASK-00573 cutover](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption),
 bootstrap invitation and assignment use the canonical nil `SystemId`. Package `user.invited` and
@@ -43,6 +42,10 @@ is available. The pending user must complete normal activation.
 
 ## Independent steps, not an atomic result
 
+The Console generates the target User ID, formats trusted operator attribution and sends the typed
+`BootstrapSuperAdmin` command through the configured bus. Its registered handler coordinates the steps below.
+The Console inspects committed facts before reporting success and owns the JSON, exit code and recovery guidance.
+
 1. Query authoritative assignments to the stable installed Super Admin ID. Any assignment or lookup failure
    refuses **before mutation**, including policy reconciliation. Assume no simultaneous bootstrap operator.
 2. Reconcile the fixed `InstallationManagedPolicy`, verify its exact public preview and stable managed role.
@@ -51,9 +54,10 @@ is available. The pending user must complete normal activation.
 4. Dispatch package `AssignRoleToUser` for the stable Super Admin ID with the canonical nil `SystemId` as actor.
    The package owns the transaction and reference checks, records `user.role_assigned` with the membership change,
    and publishes the assignment event after commit.
-5. Independently inspect the exact pending target/email and exact Super Admin membership, then append
-   `user.bootstrap_completed` in a separate audit transaction. Fresh inspection must confirm all required facts
-   before success is reported.
+5. Inspect the exact pending target/email and exact Super Admin membership on a separate read-only connection.
+   The handler then appends `user.bootstrap_completed` using the shared transaction service. This audit is its own
+   commit; it does not reopen the package transactions. Fresh inspection must confirm all required facts before
+   success is reported.
 
 Completion audit uses `bootstrap:OPERATOR_UUID`. The package invitation audit, assignment audit and assignment
 event identify the system as actor, not the operator or the pending target. No new `user.bootstrap_claimed`

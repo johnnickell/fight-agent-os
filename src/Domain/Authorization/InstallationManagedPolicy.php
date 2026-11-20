@@ -12,6 +12,8 @@ use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedRoleDefinition
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
+use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use LogicException;
@@ -134,6 +136,21 @@ final class InstallationManagedPolicy
             if ($item->getAction() !== ManagedPolicyChangeAction::UNCHANGED) {
                 throw new LogicException('Managed installation authority requires reconciliation.');
             }
+        }
+    }
+
+    /**
+     * Rejects elevated or unrelated managed roles for ordinary additive assignment
+     */
+    public static function requireAdditiveRole(RoleId $roleId, RoleView $role): void
+    {
+        if (
+            !$role->getRoleId()->equals($roleId)
+            || $roleId->toString() === self::SUPER_ADMIN_ROLE_ID
+            || $role->getName()->toString() === Role::SUPER_ADMIN_NAME
+            || ($role->isManaged() && $roleId->toString() !== self::USER_ROLE_ID)
+        ) {
+            throw new LogicException('The requested role is not eligible for additive assignment.');
         }
     }
 

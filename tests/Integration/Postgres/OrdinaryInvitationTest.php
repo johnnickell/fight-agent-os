@@ -16,6 +16,7 @@ use App\Application\Mail\MailDelivery;
 use App\Application\Mail\MailMessage;
 use App\Application\Mail\MailOutcome;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -626,7 +627,7 @@ SQL);
      */
     public static function filterVetoes(): iterable
     {
-        foreach ([InvitePendingUser::class, AssignRoleToUser::class] as $command) {
+        foreach ([InviteOrdinaryUser::class, InvitePendingUser::class, AssignRoleToUser::class] as $command) {
             yield [$command, true];
             yield [$command, false];
         }
@@ -868,6 +869,76 @@ SQL);
             "SELECT count(*) FROM audit_evidence WHERE action = 'user.console_role_assigned'"
         ));
         self::assertSame(1, $this->providerCalls);
+    }
+
+    /**
+     * Does not mistake an earlier confirmation for evidence of a failed repeat
+     */
+    public function testFailedRepeatDoesNotClaimOlderAudit(): void
+    {
+        [$user, $role] = $this->existingUserAndRole();
+        self::assertSame(0, $this->runRole($user, $role));
+        $this->connection->executeStatement(<<<'SQL'
+ALTER TABLE audit_evidence ADD CONSTRAINT invitation_test_abort
+CHECK (action <> 'user.console_role_assigned') NOT VALID
+SQL);
+        self::assertSame(1, $this->runRole($user, $role));
+        self::assertSame('', $this->output);
+        self::assertSame([
+            'status'     => 'partial_or_uncertain',
+            'user_id'    => $user,
+            'role_id'    => $role,
+            'assignment' => 'confirmed',
+            'audit'      => 'unconfirmed'
+        ], json_decode($this->error, true, flags: JSON_THROW_ON_ERROR));
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM audit_evidence WHERE action = 'user.console_role_assigned'"
+        ));
+    }
+
+    /**
+     * Confirms a newly committed invocation even when the writer loses its acknowledgement
+     */
+    public function testLostRoleAuditAcknowledgement(): void
+    {
+        [$user, $role] = $this->existingUserAndRole();
+        $actual = $this->container->get(TransactionalUnitOfWork::class);
+        $writer = $this->createStub(TransactionalUnitOfWork::class);
+        $writer->method('isClosed')->willReturnCallback($actual->isClosed(...));
+        $writerFailed = false;
+        $writer->method('commitTransactional')->willReturnCallback(function (callable $work) use (
+            $actual,
+            &$writerFailed
+        ): mixed {
+            $result = $actual->commitTransactional($work);
+            $audit = $this->connection->fetchOne(
+                "SELECT 1 FROM audit_evidence WHERE action = 'user.console_role_assigned'"
+            );
+            if ($audit !== false) {
+                $this->connection->beginTransaction();
+                $writerFailed = true;
+                // PostgreSQL leaves this connection unusable until rollback; the audit committed above.
+                $this->connection->executeStatement('SELECT 1 / 0');
+                throw new RuntimeException('private-acknowledgement-marker');
+            }
+
+            return $result;
+        });
+        $this->container->set(TransactionalUnitOfWork::class, static fn(): TransactionalUnitOfWork => $writer);
+        try {
+            self::assertSame(0, $this->runRole($user, $role));
+            self::assertTrue($writerFailed);
+            self::assertTrue($this->connection->isTransactionActive());
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+        }
+        self::assertSame('', $this->error);
+        self::assertSame('confirmed', json_decode($this->output, true, flags: JSON_THROW_ON_ERROR)['audit']);
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM audit_evidence WHERE action = 'user.console_role_assigned'"
+        ));
     }
 
     /**

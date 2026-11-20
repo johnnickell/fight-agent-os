@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Invitation;
 
 use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\InvitationConfirmationRequired;
-use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
 use App\Domain\Authorization\InstallationManagedPolicy;
@@ -419,7 +419,7 @@ final class InvitationApiTest extends TestCase
         return new IssueInvitation(
             $authority,
             $limiter,
-            new ConsoleAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
+            new InstallationAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
             $users,
             $commands,
             $queries,
