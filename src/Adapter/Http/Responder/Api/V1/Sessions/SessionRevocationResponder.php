@@ -65,17 +65,24 @@ final readonly class SessionRevocationResponder
         } catch (Throwable $failure) {
             // Access Control exposes these refusals through shared exception classes.
             // Keep the match narrow so, for example, an entry permission denial remains 403.
-            match ([$failure::class, $failure->getMessage()]) {
-                [
-                    RuleViolation::class,
-                    'The current refresh session cannot be revoked through self-service session management.'
-                ] => throw new CurrentSessionRevocation(previous: $failure),
+            $refusal = [$failure::class, $failure->getMessage()];
+            $currentSession = [
+                RuleViolation::class,
+                'The current refresh session cannot be revoked through self-service session management.'
+            ];
+            if ($refusal === $currentSession) {
+                throw new CurrentSessionRevocation(previous: $failure);
+            }
+            $conflicts = [
                 [ResourceNotFound::class, 'The refresh session is not authoritative.'],
                 [PermissionDenied::class, 'Session administration rejected.'],
                 [InvalidInput::class, 'Administrative session revocation requires a reason.']
-                    => throw new StateConflict(previous: $failure),
-                default => throw $failure
-            };
+            ];
+            if (in_array($refusal, $conflicts, true)) {
+                throw new StateConflict(previous: $failure);
+            }
+
+            throw $failure;
         }
 
         return $this->responses->fromEnvelope(JSendEnvelope::success(), 200, ['Cache-Control' => 'no-store']);
