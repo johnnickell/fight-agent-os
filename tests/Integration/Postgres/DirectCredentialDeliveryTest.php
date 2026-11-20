@@ -33,22 +33,27 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryI
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
-use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotRetryableException;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditAction;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditGrantOutcome;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
-use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Exception\CredentialDeliveryTransitionException;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\DeliverPasswordReset;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Exception\PasswordResetDeliveryException;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
@@ -210,7 +215,7 @@ final class DirectCredentialDeliveryTest extends TestCase
             return CredentialDeliveryOutcome::DELIVERED;
         });
         $this->container->get(EventDispatcher::class)->trigger(new UserInvited(
-            $this->userId->toString(),
+            $this->userId,
             $this->userId,
             $grant->getDelivery()->getId(),
             EmailAddress::fromString('delivery@example.test'),
@@ -236,7 +241,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         self::assertSame('permanent_failure', $this->row('activation')['delivery_status']);
         self::assertNull($this->row('activation')['delivery_ciphertext']);
         self::assertSame([], $this->queries()->fetch(new FindDueCredentialDeliveries($this->now, 10)));
-        $this->expectException(CredentialDeliveryTransitionException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatch('activation');
         } finally {
@@ -262,7 +267,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         self::assertSame('retry_pending', $before['delivery_status']);
         self::assertSame(1, (int) $before['delivery_attempt_count']);
         self::assertSame([], $this->queries()->fetch(new FindDueCredentialDeliveries($this->now, 10)));
-        $this->expectException(CredentialDeliveryTransitionException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatch($purpose);
         } finally {
@@ -289,7 +294,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         $before = $this->row($purpose);
         self::assertSame('delivered', $before['delivery_status']);
         self::assertNull($before['delivery_ciphertext']);
-        $this->expectException(CredentialDeliveryTransitionException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatch($purpose);
         } finally {
@@ -331,11 +336,7 @@ final class DirectCredentialDeliveryTest extends TestCase
 
             return CredentialDeliveryOutcome::DELIVERED;
         });
-        $exception = match ($purpose) {
-            'activation' => ActivationDeliveryNotRetryableException::class,
-            default => PasswordResetDeliveryException::class
-        };
-        $this->expectException($exception);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatchGrant($old);
         } finally {
@@ -368,10 +369,10 @@ final class DirectCredentialDeliveryTest extends TestCase
 
             return CredentialDeliveryOutcome::DELIVERED;
         });
-        $this->expectException(ActivationDeliveryNotRetryableException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->container->get(CommandBus::class)->execute(new DeliverUserInvitation(
-                $this->userId->toString(),
+                $this->userId,
                 $this->userId,
                 ActivationDeliveryId::generate()
             ));
@@ -404,10 +405,10 @@ final class DirectCredentialDeliveryTest extends TestCase
 
             return CredentialDeliveryOutcome::DELIVERED;
         });
-        $this->expectException(ActivationDeliveryNotRetryableException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->container->get(CommandBus::class)->execute(new DeliverUserInvitation(
-                $this->userId->toString(),
+                $this->userId,
                 $this->userId,
                 $grant->getDelivery()->getId()
             ));
@@ -433,7 +434,7 @@ final class DirectCredentialDeliveryTest extends TestCase
 
             return CredentialDeliveryOutcome::DELIVERED;
         });
-        $this->expectException(ActivationDeliveryNotRetryableException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatch('activation');
         } finally {
@@ -513,7 +514,7 @@ final class DirectCredentialDeliveryTest extends TestCase
             return CredentialDeliveryOutcome::DELIVERED;
         };
         $this->provider($probe);
-        $this->expectException(CredentialDeliveryTransitionException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatch('activation');
         } finally {
@@ -554,7 +555,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         $denied = false;
         try {
             $this->dispatch($purpose);
-        } catch (CredentialDeliveryTransitionException) {
+        } catch (StateConflict) {
             $denied = true;
         }
 
@@ -715,12 +716,12 @@ final class DirectCredentialDeliveryTest extends TestCase
         $this->container->set(DeliverUserInvitationHandler::class, fn(): DeliverUserInvitationHandler =>
             new DeliverUserInvitationHandler(
                 $this->container->get(ActivationGrantRepository::class),
-                $this->container->get(AuditEvidenceRepository::class),
                 $this->container->get(TransactionalUnitOfWork::class),
                 $this->activationCipher,
                 $this->container->get(CredentialDeliveryProvider::class),
                 $clock,
-                $this->container->get(EventDispatcher::class)
+                $this->container->get(EventDispatcher::class),
+                $this->container->get(AuditEvidenceRepository::class)
             ));
         $this->dispatch('activation');
         self::assertSame(array_fill(0, 2, $grant->getDelivery()->getId()->toString()), $ids);
@@ -772,7 +773,7 @@ final class DirectCredentialDeliveryTest extends TestCase
 
             return CredentialDeliveryOutcome::DELIVERED;
         });
-        $this->expectException(CredentialDeliveryTransitionException::class);
+        $this->expectException(StateConflict::class);
         try {
             $this->dispatch('activation');
         } finally {
@@ -989,7 +990,7 @@ final class DirectCredentialDeliveryTest extends TestCase
     #[DataProvider('purposes')]
     public function testRecoveryRetriesUntilPackageExpiry(string $purpose): void
     {
-        $this->seed($purpose);
+        $grant = $this->seed($purpose);
         $starts = [0, 60, 180, 420, 900, 1860];
         foreach ($starts as $index => $seconds) {
             $this->container->get(Clock::class)->time = $this->now->modify('+'.$seconds.' seconds');
@@ -1006,10 +1007,36 @@ final class DirectCredentialDeliveryTest extends TestCase
                 self::assertSame(0, $this->recover($worker)->run(1, 1)['discovered']);
             }
         }
-        self::assertSame('expired', $this->row($purpose)['delivery_status']);
-        self::assertNull($this->row($purpose)['delivery_ciphertext']);
+        $expired = $this->row($purpose);
+        self::assertSame('expired', $expired['delivery_status']);
+        self::assertNull($expired['delivery_ciphertext']);
         $runner = $this->recover($this->freshWorker(new NullCredentialDeliveryProvider()));
         self::assertSame(0, $runner->run(1, 1)['discovered']);
+
+        $action = $purpose === 'activation' ? AuditAction::INVITATION_DELIVERY_FAILED : (
+            AuditAction::PASSWORD_RESET_DELIVERY_FAILED
+        );
+        $terminalRows = $this->connection->fetchFirstColumn(
+            "SELECT context FROM audit_evidence WHERE action = ? AND subject_type = 'user' AND subject_id = ?
+              AND context->'facts'->>'delivery_status' = 'expired'",
+            [$action->value, $this->userId->toString()]
+        );
+        self::assertCount(1, $terminalRows);
+        self::assertIsString($terminalRows[0]);
+        $payload = json_decode($terminalRows[0], true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($payload);
+        $evidence = AuditEvidence::fromArray($payload);
+        self::assertInstanceOf(SystemId::class, $evidence->actorId());
+        $facts = $evidence->getFacts();
+        self::assertInstanceOf(AuditGrantOutcome::class, $facts);
+        self::assertSame(CredentialDeliveryStatus::EXPIRED, $facts->getDeliveryStatus());
+        self::assertSame(CredentialDeliveryFailure::RETRYABLE_PROVIDER, $facts->getFailure());
+        self::assertSame([
+            'kind'        => $purpose,
+            'id'          => $grant->getId()->toString(),
+            'revision'    => (int) $expired['revision'],
+            'delivery_id' => $grant->getDelivery()->getId()->toString()
+        ], $facts->getAfter()->toArray());
     }
 
     /**
@@ -1057,7 +1084,10 @@ final class DirectCredentialDeliveryTest extends TestCase
         self::assertSame([], $worker->get(QueryBus::class)->fetch(
             new FindExpiredCredentialDeliveries($this->now->modify('+2 hours'), 1)
         ));
-        self::assertSame('credential-recovery', $this->connection->fetchOne('SELECT actor_id FROM audit_evidence'));
+        self::assertSame(
+            SystemId::generate()->toString(),
+            $this->connection->fetchOne('SELECT actor_id FROM audit_evidence')
+        );
     }
 
     /**
@@ -1263,11 +1293,12 @@ SQL);
         self::assertSame('invalidated', $after->getStatus()->value);
         $latestId = $repo->getLatestByUserId($this->userId)->getDelivery()->getId()->toString();
         self::assertSame($new->getDelivery()->getId()->toString(), $latestId);
-        self::assertNull($this->queries()->fetch(new FindCredentialDeliveryStatus('activation', $oldId)));
-        self::assertNull($this->queries()->fetch(new FindCredentialDeliveryStatus(
-            'password_reset',
-            \Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId::generate()->toString()
-        )));
+        self::assertInstanceOf(CredentialDeliveryAbsent::class, $this->queries()->fetch(
+            new FindCredentialDeliveryStatus('activation', $oldId)
+        ));
+        self::assertInstanceOf(CredentialDeliveryAbsent::class, $this->queries()->fetch(
+            new FindCredentialDeliveryStatus('password_reset', PasswordResetDeliveryId::generate()->toString())
+        ));
         $safe = json_encode($after->toArray(), JSON_THROW_ON_ERROR);
         $markers = [
             $old->getCredentialHash(), $old->getDelivery()->getEncryptedMaterial()->reveal(),
@@ -1589,12 +1620,12 @@ SQL);
     {
         if ($grant instanceof ActivationGrant) {
             $command = new DeliverUserInvitation(
-                $this->userId->toString(),
+                $this->userId,
                 $this->userId,
                 $grant->getDelivery()->getId()
             );
         } else {
-            $command = new DeliverPasswordReset('anonymous', $this->userId, $grant->getDelivery()->getId());
+            $command = new DeliverPasswordReset(AnonymousId::generate(), $this->userId, $grant->getDelivery()->getId());
         }
         $this->container->get(CommandBus::class)->execute($command);
     }

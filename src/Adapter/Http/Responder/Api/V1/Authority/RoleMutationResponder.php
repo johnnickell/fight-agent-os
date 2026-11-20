@@ -6,8 +6,11 @@ namespace App\Adapter\Http\Responder\Api\V1\Authority;
 
 use App\Adapter\Persistence\PersistenceConflict;
 use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
+use Fight\AccessControl\Domain\AccessControl\Role\Exception\RoleConflictException;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\PreconditionFailed;
+use Fight\Common\Application\Error\Exception\RuleViolation;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use OpenApi\Attributes as OA;
@@ -44,7 +47,13 @@ final readonly class RoleMutationResponder
     {
         try {
             $view = $operation();
-        } catch (CustomRoleException | PersistenceConflict $failure) {
+        } catch (CustomRoleException | PersistenceConflict | RuleViolation $failure) {
+            throw new StateConflict(previous: $failure);
+        } catch (PreconditionFailed $failure) {
+            // The expected Role revision is a JSON field with an existing 409 contract, not an If-Match header.
+            if (!$failure->getPrevious() instanceof RoleConflictException) {
+                throw $failure;
+            }
             throw new StateConflict(previous: $failure);
         }
 

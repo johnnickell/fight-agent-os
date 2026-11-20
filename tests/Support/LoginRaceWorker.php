@@ -9,9 +9,9 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
-use Fight\AccessControl\Domain\AccessControl\User\Exception\LoginRejectedException;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\Common\Application\Auth\Security\TokenEncoder;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use RuntimeException;
 use SensitiveParameter;
 use Throwable;
@@ -67,9 +67,9 @@ final class LoginRaceWorker
             };
             $container->set(TokenEncoder::class, static fn(): TokenEncoder => $encoder);
             try {
-                $container->get(AuthenticationService::class)->login('login@example.test', $input['password'], false);
+                $container->get(UserAuthentication::class)->login('login@example.test', $input['password'], false);
                 echo "committed\n";
-            } catch (LoginRejectedException) {
+            } catch (AuthenticationRequired) {
                 echo "rejected\n";
             }
         } catch (Throwable) {

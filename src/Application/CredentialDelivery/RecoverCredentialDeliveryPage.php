@@ -7,17 +7,15 @@ namespace App\Application\CredentialDelivery;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
-use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotRetryableException;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\DueCredentialDelivery;
-use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Exception\CredentialDeliveryTransitionException;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\DeliverPasswordReset;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Exception\PasswordResetDeliveryException;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use InvalidArgumentException;
-use Throwable;
 
 /**
  * Class RecoverCredentialDeliveryPage
@@ -36,8 +34,8 @@ final readonly class RecoverCredentialDeliveryPage
     /**
      * Runs sequentially within operational capacity without selecting package lifecycle policy
      *
-     * Stops on a raced generation because a package transaction rollback closes the Doctrine manager
-     * A later invocation starts a fresh worker; unexpected failures propagate without being classified as contention
+     * Stops on package state conflict; a later invocation discovers current work again
+     * Unexpected failures propagate without being classified as contention
      *
      * @return array{discovered: int, offered: int, dispatched: int, contended: int, unsupported: int, stopped: bool}
      */
@@ -59,16 +57,17 @@ final readonly class RecoverCredentialDeliveryPage
             'unsupported' => 0,
             'stopped'     => false
         ];
+        $systemId = SystemId::generate();
         foreach ($work as $delivery) {
             $id = $delivery->getDeliveryId()->toString();
             $command = match ($delivery->getPurpose()) {
                 'activation' => new DeliverUserInvitation(
-                    'credential-recovery',
+                    $systemId,
                     $delivery->getUserId(),
                     ActivationDeliveryId::fromString($id)
                 ),
                 'password_reset' => new DeliverPasswordReset(
-                    'credential-recovery',
+                    $systemId,
                     $delivery->getUserId(),
                     PasswordResetDeliveryId::fromString($id)
                 ),
@@ -83,14 +82,7 @@ final readonly class RecoverCredentialDeliveryPage
             try {
                 $this->commands->execute($command);
                 $report['dispatched']++;
-            } catch (Throwable $failure) {
-                if (
-                    !$failure instanceof ActivationDeliveryNotRetryableException
-                    && !$failure instanceof PasswordResetDeliveryException
-                    && !$failure instanceof CredentialDeliveryTransitionException
-                ) {
-                    throw $failure;
-                }
+            } catch (StateConflict) {
                 $report['contended']++;
                 $report['stopped'] = true;
                 break;

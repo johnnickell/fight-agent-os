@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Responder\Api\V1\Sessions;
 
 use App\Adapter\Http\Api\Failure\CurrentSessionRevocation;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\CurrentRefreshSessionRevocationException;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionRevocationReasonRequiredException;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\InvalidInput;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
+use Fight\Common\Application\Error\Exception\RuleViolation;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use OpenApi\Attributes as OA;
@@ -63,19 +62,20 @@ final readonly class SessionRevocationResponder
     {
         try {
             $operation();
-        } catch (CurrentRefreshSessionRevocationException $failure) {
-            throw new CurrentSessionRevocation(previous: $failure);
         } catch (Throwable $failure) {
-            if (
-                !$failure instanceof RefreshSessionNotFoundException
-                && !$failure instanceof RefreshSessionConflictException
-                && !$failure instanceof SessionAdministrationAuthorizationException
-                && !$failure instanceof SessionRevocationReasonRequiredException
-            ) {
-                throw $failure;
-            }
-
-            throw new StateConflict(previous: $failure);
+            // Access Control v0.10.1 exposes these refusals through shared exception classes.
+            // Keep the match narrow so, for example, an entry permission denial remains 403.
+            match ([$failure::class, $failure->getMessage()]) {
+                [
+                    RuleViolation::class,
+                    'The current refresh session cannot be revoked through self-service session management.'
+                ] => throw new CurrentSessionRevocation(previous: $failure),
+                [ResourceNotFound::class, 'The refresh session is not authoritative.'],
+                [PermissionDenied::class, 'Session administration rejected.'],
+                [InvalidInput::class, 'Administrative session revocation requires a reason.']
+                    => throw new StateConflict(previous: $failure),
+                default => throw $failure
+            };
         }
 
         return $this->responses->fromEnvelope(JSendEnvelope::success(), 200, ['Cache-Control' => 'no-store']);

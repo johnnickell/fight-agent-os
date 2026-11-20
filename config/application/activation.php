@@ -17,13 +17,15 @@ use App\Application\Security\Password\PasswordSetting;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\RefreshCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\TokenIssuer;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationTokenPolicy;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
@@ -52,28 +54,54 @@ return static function (Container $container): void {
         new SessionRevocationService($container->get(RefreshSessionRepository::class)));
     $container->set(AuthenticationEvents::class, static fn(Container $container): AuthenticationEvents =>
         new AuthenticationEvents($container->get(EventDispatcher::class)));
-    $container->set(AuthenticationService::class, static fn(Container $container): AuthenticationService =>
-        new AuthenticationService(
+    $container->set(PasswordHash::class, static fn(Container $container): PasswordHash =>
+        PasswordHash::fromString($container->get(PasswordHasher::class)->hash(bin2hex(random_bytes(32)))));
+    $container->set(TokenIssuer::class, static fn(Container $container): TokenIssuer => new TokenIssuer(
+        $container->get(TokenEncoder::class),
+        $container->get(AuthenticationTokenPolicy::class)
+    ));
+    $container->set(UserAuthentication::class, static fn(Container $container): UserAuthentication =>
+        new UserAuthentication(
             $container->get(UserRepository::class),
             $container->get(ActivationGrantRepository::class),
-            $container->get(RefreshSessionRepository::class),
-            $container->get(SessionRevocationService::class),
             $container->get(TransactionalUnitOfWork::class),
             $container->get(Clock::class),
             $container->get(LoginThrottle::class),
             $container->get(RefreshCredentialGenerator::class),
             $container->get(PasswordHasher::class),
             $container->get(PasswordValidator::class),
-            $container->get(TokenEncoder::class),
-            $container->get(AuthenticationTokenPolicy::class),
-            PasswordHash::fromString($container->get(PasswordHasher::class)->hash(bin2hex(random_bytes(32)))),
+            $container->get(TokenIssuer::class),
+            $container->get(PasswordHash::class),
             $container->get(AuthenticationEvents::class),
+            $container->get(AuditEvidenceRepository::class)
+        ));
+    $container->set(SessionLifecycle::class, static fn(Container $container): SessionLifecycle => new SessionLifecycle(
+        $container->get(UserRepository::class),
+        $container->get(RefreshSessionRepository::class),
+        $container->get(SessionRevocationService::class),
+        $container->get(TransactionalUnitOfWork::class),
+        $container->get(Clock::class),
+        $container->get(RefreshCredentialGenerator::class),
+        $container->get(TokenIssuer::class),
+        $container->get(AuthenticationTokenPolicy::class),
+        $container->get(AuthenticationEvents::class),
+        $container->get(AuditEvidenceRepository::class)
+    ));
+    $container->set(PasswordManagement::class, static fn(Container $container): PasswordManagement =>
+        new PasswordManagement(
+            $container->get(UserRepository::class),
             $container->get(PasswordResetGrantRepository::class),
-            $container->get(AuditEvidenceRepository::class),
-            $container->get(EmailChangeGrantRepository::class)
+            $container->get(SessionRevocationService::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(Clock::class),
+            $container->get(PasswordHasher::class),
+            $container->get(PasswordValidator::class),
+            $container->get(PasswordHash::class),
+            $container->get(AuthenticationEvents::class),
+            $container->get(AuditEvidenceRepository::class)
         ));
     $container->set(ActivateInvitation::class, static fn(Container $container): ActivateInvitation =>
-        new ActivateInvitation($container->get(PasswordSetting::class), $container->get(AuthenticationService::class)));
+        new ActivateInvitation($container->get(PasswordSetting::class), $container->get(UserAuthentication::class)));
     $container->set(SessionResponder::class, static fn(Container $container): SessionResponder =>
         new SessionResponder(
             $container->get(JSendResponseFactory::class),

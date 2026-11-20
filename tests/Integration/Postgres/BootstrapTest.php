@@ -25,6 +25,8 @@ use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\Cre
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
@@ -139,16 +141,23 @@ final class BootstrapTest extends TestCase
             'SELECT actor_id, action, subject_id, context FROM audit_evidence ORDER BY action'
         );
         self::assertSame([
-            'user.bootstrap_completed', 'user.invitation_delivery.failed', 'user.invited'
+            'user.bootstrap_completed', 'user.invitation_delivery.failed', 'user.invited', 'user.role_assigned'
         ], array_column($audit, 'action'));
         foreach ($audit as $row) {
             self::assertSame((string) $command->userId, $row['subject_id']);
-            self::assertSame([], (array) json_decode($row['context'], true));
-            $prefix = $row['action'] === 'user.bootstrap_completed' ? 'bootstrap:' : 'console:';
-            self::assertSame($prefix.$command->input->operatorId, $row['actor_id']);
+            $context = json_decode($row['context'], true, flags: JSON_THROW_ON_ERROR);
+            if ($row['action'] === 'user.bootstrap_completed') {
+                self::assertSame([], $context);
+                self::assertSame('bootstrap:'.$command->input->operatorId, $row['actor_id']);
+                continue;
+            }
+            self::assertInstanceOf(SystemId::class, AuditEvidence::fromArray($context)->actorId());
+            self::assertSame(SystemId::generate()->toString(), $row['actor_id']);
         }
-        self::assertSame('console:'.$command->input->operatorId, $this->events[0]['actor_id']);
-        self::assertSame((string) $command->input->operatorId, $this->events[1]['actor_id']);
+        foreach ($this->events as $event) {
+            self::assertSame('system', $event['actor_kind']);
+            self::assertSame(SystemId::generate()->toString(), $event['actor_id']);
+        }
         self::assertSame('refused', $this->bootstrap($this->command())->admission);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
 
@@ -158,7 +167,7 @@ final class BootstrapTest extends TestCase
         self::assertCount(1, $due);
         self::assertSame($grant['delivery_id'], $due[0]->getDeliveryId()->toString());
         $worker->get(CommandBus::class)->execute(new DeliverUserInvitation(
-            'credential-recovery',
+            SystemId::generate(),
             $command->userId,
             $due[0]->getDeliveryId()
         ));
@@ -346,7 +355,7 @@ final class BootstrapTest extends TestCase
         $due = $worker->get(QueryBus::class)->fetch(new FindDueCredentialDeliveries($this->clock->now(), 10));
         self::assertCount(1, $due);
         $worker->get(CommandBus::class)->execute(new DeliverUserInvitation(
-            'credential-recovery',
+            SystemId::generate(),
             $due[0]->getUserId(),
             $due[0]->getDeliveryId()
         ));
@@ -407,7 +416,6 @@ final class BootstrapTest extends TestCase
             PasswordHash::fromString((string) password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT)),
             $this->clock->now()
         );
-        $actor->advanceAuthenticationAuthorityRevision();
         $session = RefreshSession::start(
             RefreshSessionId::generate(),
             $actor->getId(),

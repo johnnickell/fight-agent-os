@@ -25,7 +25,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -355,7 +355,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | Needed input or evidence | PR |
 |---|---|---|---|---|---|---|---|
-| 1 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | — | The v0.10.0 consumer draft still has incompatible live callers and fixtures; resolve delivery and email-change origin contracts, then qualify the exact task HTTPS gateway and full gate | — |
 | — | [TASK-00206](00206-TASK.md) | Confirm and repair a direct hotfix | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00204](00204-TASK.md), [TASK-00142](00142-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00258](00258-TASK.md) | Qualify actual protected hotfix host and named-Agent session composition with supported provisioning and current-use admission | — |
 | — | [TASK-00207](00207-TASK.md) | Independently verify and hand off a hotfix PR | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00206](00206-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00316](00316-TASK.md) | Qualify complete contribution evidence and fresh independent hotfix review through the real protected publication path | — |
 | — | [TASK-00209](00209-TASK.md) | Offer a verified hotfix merge-back | [TICKET-00054 — Merge a verified hotfix back under one authorization](../tickets/00054-TICKET.md) | needs-info | [TASK-00207](00207-TASK.md), [TASK-00317](00317-TASK.md) | Qualify trusted native provider merge identity and configured-base inclusion for the exact accepted hotfix head | — |

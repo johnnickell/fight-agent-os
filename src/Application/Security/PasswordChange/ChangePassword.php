@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Security\PasswordChange;
 
 use App\Application\Security\Password\PasswordSetting;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
-use Fight\AccessControl\Domain\AccessControl\User\Exception\PasswordChangeRejectedException;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use SensitiveParameter;
 use Throwable;
@@ -22,7 +22,7 @@ final readonly class ChangePassword
     /**
      * Constructs ChangePassword
      */
-    public function __construct(private PasswordSetting $passwords, private AuthenticationService $authentication)
+    public function __construct(private PasswordSetting $passwords, private PasswordManagement $passwordManagement)
     {
     }
 
@@ -38,8 +38,8 @@ final readonly class ChangePassword
             throw new PasswordChangePolicyRejected();
         }
         try {
-            $this->authentication->changePassword($authenticatedUserId, $currentPassword, $password);
-        } catch (PasswordChangeRejectedException) {
+            $this->passwordManagement->changePassword($authenticatedUserId, $currentPassword, $password);
+        } catch (AuthenticationRequired) {
             throw new StateConflict();
         } catch (Throwable) {
             // A post-commit event failure cannot safely be replayed.

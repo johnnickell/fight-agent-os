@@ -31,6 +31,8 @@ use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
@@ -175,27 +177,26 @@ SQL
             'SELECT actor_id, action, subject_id, context FROM audit_evidence ORDER BY action'
         );
         self::assertSame([
-            'user.console_role_assigned', 'user.invitation_delivery.failed', 'user.invited'
+            'user.console_role_assigned', 'user.invitation_delivery.failed', 'user.invited', 'user.role_assigned'
         ], array_column($audit, 'action'));
         foreach ($audit as $row) {
-            self::assertSame('console:'.$this->operator, $row['actor_id']);
             self::assertSame($result['user_id'], $row['subject_id']);
-            $expectedContext = [];
+            $context = json_decode($row['context'], true, flags: JSON_THROW_ON_ERROR);
             if ($row['action'] === 'user.console_role_assigned') {
-                $expectedContext = [
-                    'result' => 'membership_confirmed', 'role_id' => InstallationManagedPolicy::USER_ROLE_ID
-                ];
+                self::assertSame('console:'.$this->operator, $row['actor_id']);
+                self::assertSame('membership_confirmed', $context['result']);
+                self::assertSame(InstallationManagedPolicy::USER_ROLE_ID, $context['role_id']);
+                continue;
             }
-            self::assertSame(
-                $expectedContext,
-                (array) json_decode($row['context'], true, flags: JSON_THROW_ON_ERROR)
-            );
+            self::assertInstanceOf(SystemId::class, AuditEvidence::fromArray($context)->actorId());
+            self::assertSame(SystemId::generate()->toString(), $row['actor_id']);
         }
         self::assertSame([[0, 0, false]], $this->providerStates);
         self::assertCount(2, $this->events);
-        self::assertSame('console:'.$this->operator, $this->events[0]['actor_id']);
-        self::assertSame($this->operator, $this->events[1]['actor_id']);
-        self::assertNotSame($result['user_id'], $this->events[1]['actor_id']);
+        foreach ($this->events as $event) {
+            self::assertSame('system', $event['actor_kind']);
+            self::assertSame(SystemId::generate()->toString(), $event['actor_id']);
+        }
         $this->assertRedacted($grant, $audit);
 
         // A fresh worker discovers package-owned work without any consumer intent registration or original event.
@@ -208,7 +209,7 @@ SQL
         self::assertCount(1, $due);
         self::assertSame($grant['delivery_id'], $due[0]->getDeliveryId()->toString());
         $worker->get(SynchronousCommandBus::class)->execute(new DeliverUserInvitation(
-            'credential-recovery',
+            SystemId::generate(),
             UserId::fromString($result['user_id']),
             $due[0]->getDeliveryId()
         ));
@@ -274,7 +275,7 @@ SQL
             $due = $worker->get(QueryBus::class)->fetch(new FindDueCredentialDeliveries($this->clock->now(), 1));
             self::assertCount(1, $due);
             $worker->get(SynchronousCommandBus::class)->execute(new DeliverUserInvitation(
-                'credential-recovery',
+                SystemId::generate(),
                 $due[0]->getUserId(),
                 $due[0]->getDeliveryId()
             ));
@@ -454,7 +455,7 @@ SQL);
         $due = $worker->get(QueryBus::class)->fetch(new FindDueCredentialDeliveries($this->clock->now(), 10));
         self::assertCount(1, $due);
         $worker->get(SynchronousCommandBus::class)->execute(new DeliverUserInvitation(
-            'credential-recovery',
+            SystemId::generate(),
             $due[0]->getUserId(),
             $due[0]->getDeliveryId()
         ));
@@ -530,7 +531,7 @@ SQL);
         $due = $worker->get(QueryBus::class)->fetch(new FindDueCredentialDeliveries($this->clock->now(), 10));
         self::assertCount(1, $due);
         $worker->get(SynchronousCommandBus::class)->execute(new DeliverUserInvitation(
-            'credential-recovery',
+            SystemId::generate(),
             $due[0]->getUserId(),
             $due[0]->getDeliveryId()
         ));
@@ -676,7 +677,17 @@ SQL);
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM user_role_assignments'));
-        self::assertSame(4, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        $audit = $this->connection->fetchAllAssociative(
+            'SELECT subject_id, action FROM audit_evidence ORDER BY subject_id, action'
+        );
+        self::assertCount(6, $audit);
+        foreach ($this->connection->fetchFirstColumn('SELECT id FROM users ORDER BY id') as $index => $userId) {
+            self::assertSame([
+                ['subject_id' => $userId, 'action' => 'user.console_role_assigned'],
+                ['subject_id' => $userId, 'action' => 'user.invited'],
+                ['subject_id' => $userId, 'action' => 'user.role_assigned']
+            ], array_slice($audit, $index * 3, 3));
+        }
         self::assertFalse($this->connection->isTransactionActive());
         self::assertSame(0, $this->providerCalls);
     }
@@ -717,11 +728,21 @@ SQL);
         $expected = [$custom, InstallationManagedPolicy::USER_ROLE_ID];
         sort($expected);
         self::assertSame($expected, $roles);
-        self::assertSame(3, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-        foreach ($this->connection->fetchAllAssociative('SELECT * FROM audit_evidence') as $row) {
-            self::assertSame('console:'.$this->operator, $row['actor_id']);
+        $audit = $this->connection->fetchAllAssociative('SELECT * FROM audit_evidence ORDER BY action');
+        self::assertSame([
+            'user.console_role_assigned', 'user.console_role_assigned', 'user.console_role_assigned',
+            'user.role_assigned', 'user.role_assigned'
+        ], array_column($audit, 'action'));
+        foreach ($audit as $row) {
             self::assertSame($user, $row['subject_id']);
-            self::assertSame('membership_confirmed', json_decode($row['context'], true)['result']);
+            $context = json_decode($row['context'], true, flags: JSON_THROW_ON_ERROR);
+            if ($row['action'] === 'user.console_role_assigned') {
+                self::assertSame('console:'.$this->operator, $row['actor_id']);
+                self::assertSame('membership_confirmed', $context['result']);
+            } else {
+                self::assertInstanceOf(SystemId::class, AuditEvidence::fromArray($context)->actorId());
+                self::assertSame(SystemId::generate()->toString(), $row['actor_id']);
+            }
         }
         self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
         self::assertSame(0, $this->providerCalls);

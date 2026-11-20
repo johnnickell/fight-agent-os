@@ -8,7 +8,7 @@ use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\Common\Application\Attribute\Validation;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -26,7 +26,7 @@ final readonly class LoginAction
      * Constructs LoginAction
      */
     public function __construct(
-        private AuthenticationService $authentication,
+        private UserAuthentication $authentication,
         private SessionResponder $responder,
         private CaptureSessionPresentation $presentation
     ) {

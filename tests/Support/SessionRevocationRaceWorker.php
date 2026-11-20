@@ -10,13 +10,13 @@ use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Command\RevokeSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Event\RefreshSessionRevoked;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Repository\Pagination;
@@ -77,7 +77,10 @@ final readonly class SessionRevocationRaceWorker implements RefreshSessionReposi
                     $reason
                 ));
                 $status = 200;
-            } catch (RefreshSessionConflictException) {
+            } catch (StateConflict $failure) {
+                if ($failure->getMessage() !== 'The refresh session changed concurrently.') {
+                    throw $failure;
+                }
                 $status = 409;
             }
             echo json_encode(['status' => $status, 'events' => $events], JSON_THROW_ON_ERROR)."\n";

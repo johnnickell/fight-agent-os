@@ -101,10 +101,8 @@ explicit incomplete coverage and justified bounded reconciliation; post-commit e
 delivery nor convergence. This does not move required audit, safety restrictions, required reference/hold writes
 or durable external-effect intent out of their owning guarantees. Do not infer rollback from a post-commit failure.
 
-Common's DBAL-only transaction API and explicit Access Control Role-handler audit are capability prerequisites
-to qualify, not imports to guess. The current `RoleMutationUnitOfWork` consumer decorator is a correction target,
-not the approved audit design. Preserve required Role mutation/audit atomicity until its separately owned
-replacement is qualified; DBAL support alone does not supply audit. See
+Qualify the concrete transaction and required-audit contracts together. A DBAL boundary alone does not supply
+Role audit; the Access Control handler must receive real audit persistence on the same connection. See
 [TICKET-00133](../../planning/tickets/00133-TICKET.md) for supplier and adoption ownership.
 
 ### Agent setup and template review ownership

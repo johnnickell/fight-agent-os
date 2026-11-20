@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Security\Invitation\TrustedInvitationAdministration;
 use App\Adapter\Security\Password\Argon2idPasswords;
 use App\Adapter\Security\UnauthenticatedContextProvider;
 use App\Application\Authorization\AuthenticatedRoleAssignment;
 use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\UnavailableEmailChangeAdministration;
-use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\Service\EmailChangeAdministrationAuthorization;
@@ -54,8 +52,6 @@ return static function (Container $container): void {
             $container->get(PermissionRepository::class)
         );
     });
-    $container->set(InvitationAdministrationAuthorization::class, static fn(): InvitationAdministrationAuthorization =>
-        new TrustedInvitationAdministration());
     $container->set(
         EmailChangeAdministrationAuthorization::class,
         static fn(): EmailChangeAdministrationAuthorization => new UnavailableEmailChangeAdministration()

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
+use App\Adapter\Persistence\Hydration\PersistedUser;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
@@ -112,7 +113,6 @@ SQL
             ));
             $user = clone $emailChange;
             $emailChange->confirmEmailChange($this->clock('2026-10-01T12:00:05+00:00'));
-            $emailChange->advanceAuthenticationAuthorityRevision();
         }
         $other = $this->connection();
         $otherUsers = new PostgresUserRepository(
@@ -222,7 +222,6 @@ SQL
         $expected = $this->users->getById($user->getId());
         $replacement = clone $expected;
         $replacement->changePassword($this->passwordHash('new-secret'), $this->clock('2026-10-01T12:01:00+00:00'));
-        $replacement->advanceAuthenticationAuthorityRevision();
 
         self::assertTrue($this->unitOfWork->commitTransactional(
             fn(): bool => $this->users->replaceAuthenticationAuthority($expected, $replacement)
@@ -234,19 +233,31 @@ SQL
 
         $stale = clone $expected;
         $stale->changePassword($this->passwordHash('stale-secret'), $this->clock('2026-10-01T12:02:00+00:00'));
-        $stale->advanceAuthenticationAuthorityRevision();
         self::assertFalse($this->unitOfWork->commitTransactional(
             fn(): bool => $this->users->replaceAuthenticationAuthority($expected, $stale)
         ));
 
-        $missingRevision = clone $replacement;
-        $missingRevision->changePassword(
+        // The released password transition now advances the revision itself. Reconstitute an invalid
+        // replacement explicitly to exercise the repository's rejection of the missing increment.
+        $missingRevision = PersistedUser::reconstitute(
+            $replacement->getId(),
+            $replacement->getEmail(),
+            $replacement->getState(),
+            $replacement->getCreatedAt(),
+            $this->clock('2026-10-01T12:03:00+00:00'),
             $this->passwordHash('other-secret'),
-            $this->clock('2026-10-01T12:03:00+00:00')
+            $replacement->getAuthenticationVersion() + 1,
+            $replacement->getAuthenticationAuthorityRevision(),
+            $replacement->getRoleIds(),
+            $replacement->getAuthorizationAssignmentRevision(),
+            $replacement->getPendingEmailChange(),
+            $replacement->getEmailChangeReservationRevision(),
+            $replacement->getCanonicalEmailRevision()
         );
         self::assertFalse($this->unitOfWork->commitTransactional(
             fn(): bool => $this->users->replaceAuthenticationAuthority($replacement, $missingRevision)
         ));
+        self::assertUserEquals($replacement, $this->users->getById($user->getId()));
     }
 
     /**
@@ -258,7 +269,7 @@ SQL
         $this->commitAdd($user);
         $expected = $this->users->getById($user->getId());
         $replacement = clone $expected;
-        $replacement->advanceAuthenticationAuthorityRevision();
+        $replacement->recordSuccessfulLogin($this->clock('2026-10-01T12:05:00+00:00'));
         $session = $this->session($replacement, $this->clock('2026-10-01T12:05:00+00:00'));
 
         self::assertTrue($this->unitOfWork->commitTransactional(
@@ -355,7 +366,6 @@ SQL
         self::assertNotNull($expected);
         $reset = clone $expected;
         $reset->resetPassword($this->passwordHash('reset'), $this->clock('2026-10-01T12:15:00+00:00'));
-        $reset->advanceAuthenticationAuthorityRevision();
         $login = $this->withAdvancedAuthority($expected);
         $firstSession = $this->session($login, $this->clock('2026-10-01T12:16:00+00:00'));
 
@@ -395,7 +405,6 @@ SQL
             $secondSession = $this->session($secondLogin, $this->clock('2026-10-01T12:17:00+00:00'));
             $laterReset = clone $postReset;
             $laterReset->resetPassword($this->passwordHash('later-reset'), $this->clock('2026-10-01T12:18:00+00:00'));
-            $laterReset->advanceAuthenticationAuthorityRevision();
 
             $this->connection->beginTransaction();
             $competingConnection->beginTransaction();
@@ -525,7 +534,6 @@ SQL
 
         $confirming = clone $reserving;
         $confirming->confirmEmailChange($this->clock('2026-10-01T12:11:00+00:00'));
-        $confirming->advanceAuthenticationAuthorityRevision();
         self::assertTrue($this->unitOfWork->commitTransactional(
             fn(): bool => $this->users->replaceEmailChangeConfirmation($reserving, $confirming)
         ));
@@ -615,10 +623,8 @@ SQL
         $expected = $this->users->getById($user->getId());
         $winner = clone $expected;
         $winner->changePassword($this->passwordHash('winner'), $this->clock('2026-10-01T12:15:00+00:00'));
-        $winner->advanceAuthenticationAuthorityRevision();
         $loser = clone $expected;
         $loser->changePassword($this->passwordHash('loser'), $this->clock('2026-10-01T12:15:01+00:00'));
-        $loser->advanceAuthenticationAuthorityRevision();
 
         $competingConnection = $this->connection();
         $competingUsers = new PostgresUserRepository(
@@ -768,7 +774,6 @@ SQL
         ));
         $confirmed = clone $reserved;
         $confirmed->confirmEmailChange($this->clock('2026-10-01T12:02:00Z'));
-        $confirmed->advanceAuthenticationAuthorityRevision();
         self::assertTrue($this->connection->transactional(
             fn(): bool => $this->users->replaceEmailChangeConfirmation($reserved, $confirmed)
         ));
@@ -887,7 +892,7 @@ SQL
     private function withAdvancedAuthority(User $user): User
     {
         $replacement = clone $user;
-        $replacement->advanceAuthenticationAuthorityRevision();
+        $replacement->recordSuccessfulLogin($user->getUpdatedAt());
 
         return $replacement;
     }

@@ -48,14 +48,14 @@ is available. The pending user must complete normal activation.
 2. Reconcile the fixed `InstallationManagedPolicy`, verify its exact public preview and stable managed role.
 3. Dispatch package `InvitePendingUser`. Its transaction owns pending/passwordless identity, seven-day activation
    grant, encrypted recoverable delivery and `user.invited` audit. Postcommit delivery may start **before elevation**.
-4. Dispatch package `AssignRoleToUser` for the stable Super Admin ID with the explicit typed operator as actor.
-   Package transaction, reference checks and events are unchanged.
+4. Dispatch package `AssignRoleToUser` for the stable Super Admin ID with the canonical nil `SystemId` as actor.
+   The package owns the transaction, reference checks and publication after commit.
 5. Independently inspect the exact pending target/email and exact Super Admin membership, then append
    `user.bootstrap_completed` in a separate audit transaction. Fresh inspection must confirm all required facts
    before success is reported.
 
-Completion audit uses `bootstrap:OPERATOR_UUID`; package invitation/delivery audit uses `console:OPERATOR_UUID`.
-The assignment event carries the typed operator UUID, never the pending target as its own authorizer. No new
+Completion audit uses `bootstrap:OPERATOR_UUID`. Package invitation audit and the assignment event identify the
+system, not the operator or the pending target. No new
 `user.bootstrap_claimed` evidence or singleton claim is written. Existing `installation_bootstrap` rows and old
 audit records remain untouched as historical evidence; runtime neither reads them for admission nor deletes them.
 The historical migration and its immutable table remain for database compatibility, not as an active retry blocker.
@@ -79,7 +79,7 @@ stored claim or an authentication credential. A target ID is shown only when thi
 invitation is confirmed. Invitation/assignment facts are `confirmed`, `missing` or `unknown`; audit is `confirmed`
 or `unconfirmed`. Quiet/silent behavior follows Symfony Console.
 
-Exceptions can follow commits. Inspection uses an independent connection rather than a failed Doctrine manager.
+Exceptions can follow commits. Inspection uses an independent connection rather than the transaction that failed.
 Invitation/assignment/completion-audit failures retain every earlier committed step, including delivery work.
 A crash between assignment and completion audit can leave a Super Admin without completion evidence; later
 bootstrap then refuses. This command does not repair that audit gap. A failed invitation/assignment with **no**

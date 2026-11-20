@@ -35,7 +35,7 @@ All responses are no-store and pass through the existing correlation boundary.
 
 See [safe API failures](SAFE_HTTP_ERRORS.md) for the single diagnostics sink and Common policy/fallback.
 
-`AuthenticationService::refresh()` alone owns rotation, used-digest lookup, five-second conflict and replay
+`SessionLifecycle::refresh()` alone owns rotation, used-digest lookup, five-second conflict and replay
 revocation; the Action never retries. Rotation preserves session/owner/authentication version/remembered flag
 and original absolute deadline. Ordinary idle advances by one day and remembered idle by 30 days, capped at
 absolute expiry. Access JSON timing matches the JWT's downward-rounded integer 900-second lifetime. Ordinary

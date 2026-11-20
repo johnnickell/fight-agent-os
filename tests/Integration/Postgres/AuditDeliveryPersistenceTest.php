@@ -17,8 +17,12 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\QueryHandler\FindDueCredentialDeliveriesHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
-use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditAction;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditRoleRevisions;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditSessionRevocation;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditSubject;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
@@ -28,10 +32,12 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpire
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Command\ExpireEmailChange;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeCredential;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrant;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeRequestOrigin;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRevision;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Messaging\Command\CommandBus;
@@ -113,11 +119,13 @@ SQL
      */
     public function testAuditRoundTripsTypedSubjectsAndRollsBackWithOriginatingWork(): void
     {
-        $agent = AgentId::generate();
+        $roleId = RoleId::generate();
+        $role = $this->roleCreatedEvidence($roleId);
+        $session = $this->sessionRevokedEvidence(RefreshSessionId::generate());
         $before = new DateTimeImmutable($this->connection->fetchOne('SELECT clock_timestamp()'));
-        $this->commit(function () use ($agent): void {
-            $this->audit->add(AuditEvidence::record($this->userId->toString(), 'user.invited', $this->userId));
-            $this->audit->add(AuditEvidence::agentProvisioned($this->userId->toString(), $agent));
+        $this->commit(function () use ($role, $session): void {
+            $this->audit->add($role);
+            $this->audit->add($session);
         });
         $rows = $this->connection->fetchAllAssociative(
             'SELECT actor_id, action, subject_type, subject_id, context, recorded_at FROM audit_evidence ORDER BY id'
@@ -130,20 +138,22 @@ SQL
             self::assertLessThanOrEqual($after, $recorded);
         }
         self::assertSame($rows[0]['recorded_at'], $rows[1]['recorded_at']);
-        self::assertSame(['user', 'agent'], array_column($rows, 'subject_type'));
-        self::assertSame([$this->userId->toString(), $agent->toString()], array_column($rows, 'subject_id'));
-        self::assertSame(['user.invited', 'agent.provisioned'], array_column($rows, 'action'));
-        self::assertSame([$this->userId->toString(), $this->userId->toString()], array_column($rows, 'actor_id'));
-        self::assertSame(['{}', '{}'], array_column($rows, 'context'));
+        self::assertSame(['role', 'user'], array_column($rows, 'subject_type'));
+        self::assertSame([$roleId->toString(), $this->userId->toString()], array_column($rows, 'subject_id'));
+        self::assertSame([$role->action()->value, $session->action()->value], array_column($rows, 'action'));
+        self::assertSame(
+            [SystemId::generate()->toString(), $this->userId->toString()],
+            array_column($rows, 'actor_id')
+        );
+        foreach ([$role, $session] as $index => $evidence) {
+            $stored = json_decode((string) $rows[$index]['context'], true, flags: JSON_THROW_ON_ERROR);
+            self::assertSame($evidence->toArray(), AuditEvidence::fromArray($stored)->toArray());
+        }
         [$grant] = $this->grant();
         try {
             $this->commit(function () use ($grant): void {
                 self::assertTrue($this->changes->add($grant));
-                $this->audit->add(AuditEvidence::record(
-                    $this->userId->toString(),
-                    'user.email_change_administratively_requested',
-                    $this->userId
-                ));
+                $this->audit->add($this->roleCreatedEvidence(RoleId::generate()));
                 throw new RuntimeException('caller rollback');
             });
             self::fail('Expected caller rollback.');
@@ -152,58 +162,6 @@ SQL
         }
         self::assertNull($this->changes->getLatestByUserId($this->userId));
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-    }
-
-    /**
-     * Verifies invalid and secret bearing context does not write
-     */
-    public function testInvalidAndSecretBearingContextDoesNotWrite(): void
-    {
-        $invalid = new class (
-            $this->userId->toString(),
-            'user.invited',
-            $this->userId,
-            ['access_token' => 'private']
-        ) extends AuditEvidence {
-            /**
-             * Constructs an invalid audit evidence fixture
-             *
-             * @phpstan-param array<string, string> $context
-             */
-            public function __construct(string $actorId, string $action, UserId|AgentId $subjectId, array $context = [])
-            {
-                parent::__construct($actorId, $action, $subjectId, $context);
-            }
-        };
-        $this->assertAuditRejected($invalid);
-        $oversized = new class (str_repeat('a', 129), 'user.invited', $this->userId) extends AuditEvidence {
-            /**
-             * Constructs an invalid audit evidence fixture
-             *
-             * @phpstan-param array<string, string> $context
-             */
-            public function __construct(string $actorId, string $action, UserId|AgentId $subjectId, array $context = [])
-            {
-                parent::__construct($actorId, $action, $subjectId, $context);
-            }
-        };
-        $this->assertAuditRejected($oversized);
-        $secretActor = AuditEvidence::record('Bearer '.bin2hex(random_bytes(32)), 'user.invited', $this->userId);
-        $this->assertAuditRejected($secretActor);
-        $this->assertAuditRejected(AuditEvidence::record('anonymous', 'user.invited', $this->userId));
-        $this->assertAuditRejected(AuditEvidence::record('credential-recovery', 'user.invited', $this->userId));
-        $this->assertAuditRejected(AuditEvidence::record(
-            'credential-recovery',
-            'user.password_reset_requested',
-            $this->userId
-        ));
-        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-        $this->commit(fn() => $this->audit->add(AuditEvidence::record(
-            'anonymous',
-            'user.password_reset_requested',
-            $this->userId
-        )));
-        self::assertSame('anonymous', $this->connection->fetchOne('SELECT actor_id FROM audit_evidence'));
     }
 
     /**
@@ -304,7 +262,6 @@ SQL
             self::assertTrue($this->changes->add($change));
             self::assertTrue($activations->add($activation));
             self::assertTrue($resets->add($reset));
-            $this->audit->add(AuditEvidence::record($this->userId->toString(), 'user.invited', $this->userId));
         });
         $finder = new FindDueCredentialDeliveriesHandler($activations, $resets, $this->changes);
         // A new repository/connection observes committed work without a post-commit event.
@@ -385,6 +342,14 @@ SQL
         self::assertFalse($this->commit(fn(): bool => $this->changes->appendAfterTerminal($first, $successor)));
         $terminal = $first->expireAt($this->now->modify('+1 hour'));
         self::assertTrue($this->commit(fn(): bool => $this->changes->replace($first, $terminal)));
+        $stored = $this->changes->getLatestByUserId($this->userId);
+        self::assertNotNull($stored);
+        self::assertTrue($first->getRequestOrigin()->requesterId->equals($stored->getRequestOrigin()->requesterId));
+        self::assertSame('original@example.test', $stored->getRequestOrigin()->oldMailbox);
+        self::assertSame('audit@example.test', $this->connection->fetchOne(
+            'SELECT email FROM users WHERE id = ?',
+            [$this->userId->toString()]
+        ));
         $reused = EmailChangeGrant::issue(
             $this->userId,
             $raw,
@@ -392,7 +357,8 @@ SQL
             $this->now->modify('+1 hour'),
             EmailAddress::fromString('new@example.test'),
             'encrypted-email-change',
-            1
+            1,
+            $first->getRequestOrigin()
         );
         self::assertFalse($this->commit(fn(): bool => $this->changes->appendAfterTerminal($terminal, $reused)));
         self::assertTrue($this->commit(fn(): bool => $this->changes->appendAfterTerminal($terminal, $successor)));
@@ -452,30 +418,17 @@ SQL
     public function testSessionAuditContextIsExactBoundedAndAppendOnly(): void
     {
         $session = RefreshSessionId::generate();
-        $reason = SessionRevocationReason::fromString('Approved device review');
-        $evidence = AuditEvidence::administrativeSessionRevocation($this->userId, $this->userId, $session, $reason);
+        $evidence = $this->sessionRevokedEvidence($session);
         $this->commit(fn() => $this->audit->add($evidence));
         $row = $this->connection->fetchAssociative('SELECT * FROM audit_evidence');
         self::assertIsArray($row);
         self::assertSame($this->userId->toString(), $row['actor_id']);
-        self::assertSame($evidence->action(), $row['action']);
-        self::assertSame(
-            ['reason' => $reason->toString(), 'refresh_session_id' => $session->toString()],
-            json_decode((string) $row['context'], true, flags: JSON_THROW_ON_ERROR)
-        );
-        $this->commit(fn() => $this->audit->add($evidence));
+        self::assertSame($evidence->action()->value, $row['action']);
+        $stored = json_decode((string) $row['context'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertEquals(['session_id' => $session->toString(), 'before' => 0, 'after' => 1], $stored['facts']);
+        $this->commit(fn() => $this->audit->add($this->sessionRevokedEvidence(RefreshSessionId::generate())));
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-        $unicodeReason = SessionRevocationReason::fromString(str_repeat('🙂', 500));
-        $this->commit(fn() => $this->audit->add(AuditEvidence::administrativeSessionRevocation(
-            $this->userId,
-            $this->userId,
-            RefreshSessionId::generate(),
-            $unicodeReason
-        )));
-        self::assertSame($unicodeReason->toString(), (string) $this->connection->fetchOne(
-            "SELECT context->>'reason' FROM audit_evidence ORDER BY id DESC LIMIT 1"
-        ));
-        self::assertSame(3, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        self::assertSame($row, $this->connection->fetchAssociative('SELECT * FROM audit_evidence ORDER BY id LIMIT 1'));
     }
 
     /**
@@ -651,7 +604,7 @@ SQL
         $work = $container->get(QueryBus::class)->fetch($query);
         self::assertCount(1, $work);
         self::assertSame($grant->getId()->toString(), $work[0]->getEmailChangeGrantId()->toString());
-        $command = new ExpireEmailChange('credential-recovery', $this->userId, $grant->getId(), $at);
+        $command = new ExpireEmailChange(SystemId::generate(), $this->userId, $grant->getId(), $at);
         $container->get(CommandBus::class)->execute($command);
         $after = $this->connection->fetchAssociative('SELECT * FROM users WHERE id = ?', [$this->userId->toString()]);
         self::assertIsArray($after);
@@ -703,7 +656,7 @@ SQL
         $container = $this->expiryContainer();
         try {
             $container->get(CommandBus::class)->execute(new ExpireEmailChange(
-                'credential-recovery',
+                SystemId::generate(),
                 $this->userId,
                 $grant->getId(),
                 $this->now->modify('+1 hour')
@@ -729,7 +682,7 @@ SQL
 ALTER TABLE email_change_grants ADD CONSTRAINT expiry_test_abort CHECK (expired_at IS NULL) NOT VALID
 SQL);
         $command = new ExpireEmailChange(
-            'credential-recovery',
+            SystemId::generate(),
             $this->userId,
             $grant->getId(),
             $this->now->modify('+1 hour')
@@ -793,24 +746,39 @@ SQL);
             $this->now->modify('+1 hour'),
             EmailAddress::fromString('new@example.test'),
             'encrypted-email-change',
-            1
+            1,
+            new EmailChangeRequestOrigin(UserId::generate(), EmailAddress::fromString('original@example.test'))
         ), $credential];
     }
 
     /**
-     * Verifies the rejected audit record leaves no persisted evidence
+     * Records only the typed outcomes emitted by Role creation
      */
-    private function assertAuditRejected(AuditEvidence $evidence): void
+    private function roleCreatedEvidence(RoleId $roleId): AuditEvidence
     {
-        $this->connection->beginTransaction();
-        try {
-            $this->audit->add($evidence);
-            self::fail('Unsupported evidence must be rejected.');
-        } catch (InvalidArgumentException $exception) {
-            self::assertSame('Audit evidence contains unsupported public fields.', $exception->getMessage());
-        } finally {
-            $this->connection->rollBack();
-        }
+        return AuditEvidence::record(
+            SystemId::generate(),
+            new AuditSubject($roleId),
+            AuditAction::ROLE_CREATED,
+            $this->now,
+            new AuditRoleRevisions(null, RoleRevision::initial()),
+            null
+        );
+    }
+
+    /**
+     * Records a session revocation without retaining a free-text reason
+     */
+    private function sessionRevokedEvidence(RefreshSessionId $sessionId): AuditEvidence
+    {
+        return AuditEvidence::record(
+            $this->userId,
+            new AuditSubject($this->userId),
+            AuditAction::SESSION_ADMINISTRATIVELY_REVOKED,
+            $this->now,
+            new AuditSessionRevocation($sessionId, 0, 1),
+            null
+        );
     }
 
     /**

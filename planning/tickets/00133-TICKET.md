@@ -94,7 +94,7 @@ version. Coordinate overlapping composition/manifest edits once during TASK deco
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00572](../tasks/00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | done |
-| [TASK-00573](../tasks/00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info |
+| [TASK-00573](../tasks/00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

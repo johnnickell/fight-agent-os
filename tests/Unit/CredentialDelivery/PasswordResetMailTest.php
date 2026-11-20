@@ -86,7 +86,7 @@ final class PasswordResetMailTest extends TestCase
     public function testRoutingAndVersionOneMail(MailOutcome $outcome, CredentialDeliveryOutcome $expected): void
     {
         $grant = $this->grant();
-        $view = CredentialDeliveryStatusView::fromDelivery('password_reset', $grant->getDelivery(), 0);
+        $view = CredentialDeliveryStatusView::fromDelivery('password_reset', $grant->getDelivery(), 0, null);
         $queries = $this->createMock(QueryBus::class);
         $seenQueries = [];
         $queries->method('fetch')->willReturnCallback(static function (FindCredentialDeliveryStatus $query) use (
@@ -197,13 +197,23 @@ HTML;
                 'wrong type' => new \stdClass(),
                 'wrong purpose' => CredentialDeliveryStatusView::fromDelivery(
                     'activation',
-                    $grant->getDelivery(),
-                    0
+                    ActivationGrant::issue(
+                        \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
+                        $grant->getUserId(),
+                        ActivationCredential::fromString('synthetic'),
+                        $grant->getExpiresAt()->modify('-1 hour'),
+                        $grant->getExpiresAt(),
+                        EmailAddress::fromString('not-routing-authority@example.test'),
+                        'synthetic-ciphertext'
+                    )->getDelivery(),
+                    0,
+                    null
                 ),
                 default => CredentialDeliveryStatusView::fromDelivery(
                     'password_reset',
                     $this->grant()->getDelivery(),
-                    0
+                    0,
+                    null
                 )
             };
             $queries->method('fetch')->willReturn($result);
@@ -241,7 +251,8 @@ HTML;
         $queries->method('fetch')->willReturn(CredentialDeliveryStatusView::fromDelivery(
             'password_reset',
             $grant->getDelivery(),
-            0
+            0,
+            null
         ));
         $templates = $this->createMock(TemplateEngine::class);
         $templates->method('render')->willReturnCallback(static function (
@@ -295,9 +306,9 @@ HTML;
     }
 
     /**
-     * Routes only the fixed supported mail families and never queries routing for an unsupported purpose
+     * Preserves invitation routing and refuses the unsupported email-change mail family
      */
-    public function testFixedPurposeDispatchPreservesInvitationAndRefusesUnknownPurposes(): void
+    public function testFixedPurposeDispatchPreservesInvitationAndRefusesEmailChange(): void
     {
         $queries = $this->createMock(QueryBus::class);
         $queries->expects(self::never())->method('fetch');
@@ -339,16 +350,14 @@ HTML;
         $resets = $this->provider($queries, $mail);
         $provider = new CredentialMailProvider($invitations, $resets);
         $grant = $this->grant();
-        foreach (['email_change', 'unknown'] as $purpose) {
-            $invocation = new CredentialDeliveryInvocation(
-                $purpose,
-                $grant->getDelivery()->getId()->toString(),
-                EmailAddress::fromString('local@example.test'),
-                'synthetic',
-                null
-            );
-            self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $provider->deliver($invocation));
-        }
+        $unsupported = new CredentialDeliveryInvocation(
+            'email_change',
+            $grant->getDelivery()->getId()->toString(),
+            EmailAddress::fromString('local@example.test'),
+            'synthetic',
+            null
+        );
+        self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $provider->deliver($unsupported));
         $activation = new CredentialDeliveryInvocation(
             'activation',
             $activationGrant->getDelivery()->getId()->toString(),

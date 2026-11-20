@@ -19,19 +19,17 @@ use Fight\AccessControl\Application\AccessControl\Authorization\Service\Authenti
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Command\RevokeSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Event\RefreshSessionRevoked;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
@@ -192,9 +190,9 @@ final class OwnedSessionRevocationTest extends TestCase
     {
         $target = $this->session($this->actor);
         $this->check($this->request($target->getId()->toString()), 200);
-        $authentication = $this->container->get(AuthenticationService::class);
+        $authentication = $this->container->get(SessionLifecycle::class);
         $authentication->refresh($this->credentials[$this->current->getId()->toString()]);
-        $this->expectException(RefreshSessionNotFoundException::class);
+        $this->expectException(\Fight\Common\Application\Error\Exception\AuthenticationRequired::class);
         $authentication->refresh($this->credentials[$target->getId()->toString()]);
     }
 
@@ -279,17 +277,13 @@ SQL);
     }
 
     /**
-     * Qualifies the released package's reasoned audit in the real shared transaction
+     * Commits typed administrative audit without retaining the required reason
      */
     public function testPackageAdministrativeAudit(): void
     {
         $target = $this->session($this->user('other@example.test'));
-        $this->container->get(CommandBus::class)->execute(new RevokeSession(
-            $this->actor->getId(),
-            $this->current->getId(),
-            $target->getId(),
-            SessionRevocationReason::fromString('Explicit test reason')
-        ));
+        $this->checkAdmin($this->adminRequest($target), 200, 'delete');
+        self::assertSame(1, $this->events);
         self::assertTrue($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
             $target->getId()->toString()
         ]));
@@ -301,9 +295,16 @@ SQL);
         self::assertSame($target->getUserId()->toString(), $audit['subject_id']);
         self::assertNotEmpty($audit['recorded_at']);
         self::assertStringNotContainsString($target->getCredentialDigest(), $audit['context']);
-        self::assertSame([
-            'reason' => 'Explicit test reason', 'refresh_session_id' => $target->getId()->toString()
-        ], json_decode($audit['context'], true));
+        $context = json_decode($audit['context'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('refresh_session.administratively_revoked', $context['action']);
+        self::assertSame(['id' => $this->actor->getId()->toString(), 'kind' => 'user'], $context['actor']);
+        self::assertSame(['id' => $target->getUserId()->toString(), 'kind' => 'user'], $context['subject']);
+        self::assertEquals([
+            'session_id' => $target->getId()->toString(),
+            'before'     => $target->getRevision(),
+            'after'      => $target->getRevision() + 1
+        ], $context['facts']);
+        self::assertArrayNotHasKey('reason', $context);
     }
 
     /**
@@ -363,7 +364,7 @@ SQL);
             ], JSON_THROW_ON_ERROR)."\n");
             fflush($pipes[0]);
             self::assertSame('ready', trim((string) fgets($pipes[1])));
-            $authentication = $this->container->get(AuthenticationService::class);
+            $authentication = $this->container->get(SessionLifecycle::class);
             if ($winner === 'revoke') {
                 if ($administrative) {
                     self::assertSame(200, $this->adminRequest($target)->getStatusCode());
@@ -373,7 +374,10 @@ SQL);
             } elseif ($winner === 'refresh') {
                 $authentication->refresh($this->credentials[$target->getId()->toString()]);
             } elseif ($winner === 'logout') {
-                $authentication->logout($this->credentials[$target->getId()->toString()]);
+                $authentication->logout(
+                    $this->credentials[$target->getId()->toString()],
+                    AnonymousId::generate()
+                );
             } else {
                 $this->connection->executeStatement('UPDATE refresh_sessions SET idle_expires_at = ? WHERE id = ?', [
                     RefreshSessionRecords::date($this->tokens->clock->now()), $target->getId()->toString()
@@ -465,8 +469,8 @@ SQL);
         self::assertSame(1, (int) $this->connection->fetchOne(
             "SELECT count(*) FROM audit_evidence WHERE action = 'refresh_session.administratively_revoked'"
         ));
-        $this->expectException(RefreshSessionNotFoundException::class);
-        $this->container->get(AuthenticationService::class)->refresh($this->credentials[$target->getId()->toString()]);
+        $this->expectException(\Fight\Common\Application\Error\Exception\AuthenticationRequired::class);
+        $this->container->get(SessionLifecycle::class)->refresh($this->credentials[$target->getId()->toString()]);
     }
 
     /**
@@ -509,6 +513,9 @@ SQL);
         $this->checkAdmin($response, str_contains($body, 'Bearer ') ? 401 : 400, 'delete');
         self::assertStringNotContainsString('private-marker', (string) $response->getBody());
         self::assertSame(0, $this->events);
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM audit_evidence WHERE action = 'refresh_session.administratively_revoked'"
+        ));
         self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
             $target->getId()->toString()
         ]));
@@ -618,6 +625,13 @@ SQL);
             self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [
                 $target->getId()->toString()
             ]));
+            self::assertSame($target->getRevision(), (int) $this->connection->fetchOne(
+                'SELECT revision FROM refresh_sessions WHERE id = ?',
+                [$target->getId()->toString()]
+            ));
+            self::assertSame(0, (int) $this->connection->fetchOne(
+                "SELECT count(*) FROM audit_evidence WHERE action = 'refresh_session.administratively_revoked'"
+            ));
             self::assertSame(0, $this->events);
             self::assertStringNotContainsString('admin_audit_abort', (string) $response->getBody());
         } finally {
@@ -642,7 +656,7 @@ SQL);
     private function adminRequest(
         RefreshSession $target,
         string $method = 'DELETE',
-        string $body = '{"reason":"Security investigation"}',
+        string $body = '{"reason":"Test investigation marker"}',
         ?UserId $user = null,
         string $query = ''
     ): ResponseInterface {
@@ -659,7 +673,8 @@ SQL);
 
         $response = $this->app->handle($request);
         $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [
-            substr($request->getHeaderLine('Authorization'), 7)
+            substr($request->getHeaderLine('Authorization'), 7),
+            'Test investigation marker'
         ]);
 
         return $response;

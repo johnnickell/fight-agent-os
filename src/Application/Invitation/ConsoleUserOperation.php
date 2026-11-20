@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Application\Invitation;
 
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Invitation\Command\AddUserRole;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use App\Domain\Invitation\ConsoleRoleEvidence;
 use App\Domain\Invitation\ConsoleRoleInput;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
@@ -35,7 +36,7 @@ final readonly class ConsoleUserOperation
         private CommandBus $commands,
         private QueryBus $queries,
         private TransactionalUnitOfWork $transactions,
-        private AuditEvidenceRepository $audit,
+        private MembershipEvidenceRepository $membershipEvidenceRepository,
         private ConsoleAssignmentPolicy $policy
     ) {
     }
@@ -52,17 +53,18 @@ final readonly class ConsoleUserOperation
             $userId->toString(),
             InstallationManagedPolicy::USER_ROLE_ID
         );
+        $systemId = SystemId::generate();
         try {
             $this->policy->requireInstallation();
             if ($command instanceof InviteOrdinaryUser) {
                 $this->commands->execute(new InvitePendingUser(
-                    $command->input->actorId(),
+                    $systemId,
                     $userId,
                     $command->input->email
                 ));
             }
             $before = $this->policy->requireEligibleAssignment($input);
-            $this->commands->execute(new AssignRoleToUser($input->operatorId, $userId, $input->roleId));
+            $this->commands->execute(new AssignRoleToUser($systemId, $userId, $input->roleId));
             $this->confirmAndAudit($input, $before);
             $auditConfirmed = true;
         } catch (Throwable) {
@@ -112,7 +114,7 @@ final readonly class ConsoleUserOperation
         }
         // This is deliberately not the package assignment transaction: a crash can leave membership without evidence.
         $this->transactions->commitTransactional(
-            fn() => $this->audit->add(ConsoleRoleEvidence::membershipConfirmed($input))
+            fn() => $this->membershipEvidenceRepository->add(ConsoleRoleEvidence::membershipConfirmed($input))
         );
     }
 }

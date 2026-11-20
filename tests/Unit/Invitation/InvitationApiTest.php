@@ -12,17 +12,20 @@ use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationOperation;
 use App\Domain\Invitation\InvitationRatePolicy;
+use App\Domain\Invitation\InvitationRoleEvidence;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyChangeAction;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
@@ -73,7 +76,7 @@ final class InvitationApiTest extends TestCase
     private ?UserView $target = null;
     /** @var list<object> */
     private array $effects = [];
-    /** @var list<AuditEvidence> */
+    /** @var list<InvitationRoleEvidence> */
     private array $audits = [];
     /** @var list<InvitationOperation> */
     private array $admissions = [];
@@ -98,9 +101,9 @@ final class InvitationApiTest extends TestCase
             self::assertTrue($allowed);
             self::assertTrue($outcome->auditConfirmed);
             self::assertSame('confirmed', $outcome->assignment);
-            self::assertSame($mode->roleId()->toString(), $this->audits[0]->context()['role_id']);
-            self::assertSame($this->actor->getId()->toString(), $this->audits[0]->actorId());
-            self::assertSame($outcome->userId, $this->audits[0]->subjectId());
+            self::assertTrue($mode->roleId()->equals($this->audits[0]->roleId));
+            self::assertTrue($this->actor->getId()->equals($this->audits[0]->actorId));
+            self::assertSame($outcome->userId, $this->audits[0]->userId);
             self::assertInstanceOf(InvitePendingUser::class, $this->effects[0]);
             self::assertSame('new@example.test', $this->effects[0]->getEmail()->toString());
             self::assertInstanceOf(AssignRoleToUser::class, $this->effects[1]);
@@ -344,11 +347,16 @@ final class InvitationApiTest extends TestCase
                     throw new RuntimeException('private-marker');
                 }
 
-                return $this->fault === 'delivery-null' ? null : new InvitationDeliveryStatusView(
+                if ($this->fault === 'delivery-null') {
+                    return new CredentialDeliveryAbsent();
+                }
+
+                return new InvitationDeliveryStatusView(
                     $this->fault === 'delivery-wrong' ? UserId::generate() : $query->getUserId(),
                     CredentialDeliveryStatus::PENDING,
                     $now->modify('+7 days'),
-                    \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId::generate()
+                    ActivationDeliveryId::generate(),
+                    ActivationOrigin::PRIVATE_INVITATION
                 );
             }
             if ($this->fault === 'policy') {
@@ -370,7 +378,7 @@ final class InvitationApiTest extends TestCase
         $commands = $this->createStub(CommandBus::class);
         $commands->method('execute')->willReturnCallback(function ($command) use ($now): void {
             if ($this->fault === 'race') {
-                throw new DuplicateEmailException('private-marker');
+                throw new StateConflict(previous: new DuplicateEmailException('private-marker'));
             }
             if ($this->fault === 'origin' || ($this->fault === 'assignment' && $command instanceof AssignRoleToUser)) {
                 throw new RuntimeException('private-marker');
@@ -400,8 +408,8 @@ final class InvitationApiTest extends TestCase
         });
         $transactions = $this->createStub(TransactionalUnitOfWork::class);
         $transactions->method('commitTransactional')->willReturnCallback(static fn(callable $work) => $work());
-        $audit = $this->createStub(AuditEvidenceRepository::class);
-        $audit->method('add')->willReturnCallback(function (AuditEvidence $evidence): void {
+        $audit = $this->createStub(MembershipEvidenceRepository::class);
+        $audit->method('add')->willReturnCallback(function (InvitationRoleEvidence $evidence): void {
             if ($this->fault === 'audit') {
                 throw new RuntimeException('private-marker');
             }

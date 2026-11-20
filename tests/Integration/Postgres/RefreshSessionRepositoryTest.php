@@ -244,7 +244,7 @@ SQL
         $expectedUser = $this->users->getById($user->getId());
         self::assertNotNull($expectedUser);
         $replacementUser = clone $expectedUser;
-        $replacementUser->advanceAuthenticationAuthorityRevision();
+        $replacementUser->recordSuccessfulLogin($base->modify('+20 minutes'));
         $newSession = RefreshSession::start(
             RefreshSessionId::generate(),
             $user->getId(),
@@ -321,7 +321,7 @@ SQL
         $expectedUser = $this->users->getById($user->getId());
         self::assertNotNull($expectedUser);
         $replacementUser = clone $expectedUser;
-        $replacementUser->advanceAuthenticationAuthorityRevision();
+        $replacementUser->recordSuccessfulLogin($base->modify('+11 minutes'));
         $newSession = RefreshSession::start(
             RefreshSessionId::generate(),
             $user->getId(),
@@ -454,8 +454,8 @@ SQL
             $expected = $this->users->getById($user->getId());
             self::assertNotNull($expected);
             $replacement = clone $expected;
-            $replacement->advanceAuthenticationAuthorityRevision();
             $createdAt = $base->modify(sprintf('+%d minutes', $index));
+            $replacement->recordSuccessfulLogin($createdAt);
             $credential = $this->credential();
             $session = RefreshSession::start(
                 RefreshSessionId::generate(),

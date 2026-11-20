@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Security\Authentication;
 
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\RequestPasswordReset;
 use Fight\AccessControl\Domain\AccessControl\User\Event\RedactedCommandFailed;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
@@ -108,7 +108,7 @@ final readonly class AuthenticationEvents implements EventDispatcher
         }
         if (
             $event instanceof RedactedCommandFailed && in_array($event->getCommandClass(), [
-            AuthenticationService::class.'::refresh', AuthenticationService::class.'::logout'
+            SessionLifecycle::class.'::refresh', SessionLifecycle::class.'::logout'
             ], true)
         ) {
             return new RedactedCommandFailed($event->getCommandClass(), [], 'Authentication operation failed.');

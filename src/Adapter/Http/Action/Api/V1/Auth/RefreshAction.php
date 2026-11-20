@@ -8,9 +8,11 @@ use App\Adapter\Http\Api\V1\Auth\RefreshCookie;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionLifecycleResponder;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,7 +30,7 @@ final readonly class RefreshAction
      * Constructs RefreshAction
      */
     public function __construct(
-        private AuthenticationService $authentication,
+        private SessionLifecycle $sessionLifecycle,
         private RefreshCookie $cookie,
         private SessionLifecycleResponder $responder
     ) {
@@ -94,8 +96,8 @@ final readonly class RefreshAction
             return $this->responder->terminal();
         }
         try {
-            $result = $this->authentication->refresh($credential);
-        } catch (RefreshSessionNotFoundException) {
+            $result = $this->sessionLifecycle->refresh($credential, AnonymousId::generate());
+        } catch (AuthenticationRequired | RefreshSessionNotFoundException) {
             return $this->responder->terminal();
         } catch (Throwable $failure) {
             return $this->responder->unavailable($failure);

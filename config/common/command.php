@@ -7,7 +7,6 @@ use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\ResendInvitationDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\RetryInvitationDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
-use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\CommandHandler\ExpireEmailChangeHandler;
@@ -64,32 +63,31 @@ return static function (Container $container): void {
         RetryInvitationDeliveryHandler::class     => static fn(Container $container): RetryInvitationDeliveryHandler =>
             new RetryInvitationDeliveryHandler(
                 $container->get(ActivationGrantRepository::class),
-                $container->get(AuditEvidenceRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
                 $container->get(Clock::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             ),
         ResendInvitationDeliveryHandler::class    => static fn(Container $container): ResendInvitationDeliveryHandler =>
             new ResendInvitationDeliveryHandler(
                 $container->get(ActivationGrantRepository::class),
-                $container->get(AuditEvidenceRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
                 $container->get(ActivationCredentialGenerator::class),
                 $container->get(InvitationDeliveryCipher::class),
                 $container->get(Clock::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             ),
         CorrectPendingInvitationHandler::class    => static fn(Container $container): CorrectPendingInvitationHandler =>
             new CorrectPendingInvitationHandler(
                 $container->get(UserRepository::class),
                 $container->get(ActivationGrantRepository::class),
-                $container->get(InvitationAdministrationAuthorization::class),
-                $container->get(AuditEvidenceRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
                 $container->get(ActivationCredentialGenerator::class),
                 $container->get(InvitationDeliveryCipher::class),
                 $container->get(Clock::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             ),
         AssignRoleToUserHandler::class            => static fn(Container $container): AssignRoleToUserHandler =>
             new AssignRoleToUserHandler(
@@ -97,7 +95,8 @@ return static function (Container $container): void {
                 $container->get(RoleRepository::class),
                 $container->get(Clock::class),
                 $container->get(TransactionalUnitOfWork::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             ),
         ReconcileManagedPolicyHandler::class      => static function (
             Container $container
@@ -117,7 +116,8 @@ return static function (Container $container): void {
             return new ExpireInvitationDeliveryHandler(
                 $container->get(ActivationGrantRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             );
         },
         ExpirePasswordResetDeliveryHandler::class => static function (
@@ -126,7 +126,8 @@ return static function (Container $container): void {
             return new ExpirePasswordResetDeliveryHandler(
                 $container->get(PasswordResetGrantRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             );
         },
         ExpireEmailChangeHandler::class           => static function (Container $container): ExpireEmailChangeHandler {
@@ -134,7 +135,8 @@ return static function (Container $container): void {
                 $container->get(UserRepository::class),
                 $container->get(EmailChangeGrantRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             );
         },
         DeliverUserInvitationHandler::class       => static function (
@@ -142,12 +144,12 @@ return static function (Container $container): void {
         ): DeliverUserInvitationHandler {
             return new DeliverUserInvitationHandler(
                 $container->get(ActivationGrantRepository::class),
-                $container->get(AuditEvidenceRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
                 $container->get(InvitationDeliveryCipher::class),
                 $container->get(CredentialDeliveryProvider::class),
                 $container->get(Clock::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(AuditEvidenceRepository::class)
             );
         },
         DeliverPasswordResetHandler::class        => static function (
@@ -155,13 +157,13 @@ return static function (Container $container): void {
         ): DeliverPasswordResetHandler {
             return new DeliverPasswordResetHandler(
                 $container->get(PasswordResetGrantRepository::class),
-                $container->get(AuditEvidenceRepository::class),
                 $container->get(TransactionalUnitOfWork::class),
                 $container->get(PasswordResetDeliveryCipher::class),
                 $container->get(CredentialDeliveryProvider::class),
                 $container->get(Clock::class),
                 $container->get(EventDispatcher::class),
-                $container->get(UserRepository::class)
+                $container->get(UserRepository::class),
+                $container->get(AuditEvidenceRepository::class)
             );
         }
     ];

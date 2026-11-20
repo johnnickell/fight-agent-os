@@ -1,6 +1,6 @@
 # Installation session administration
 
-TASK-00122 adds API-only inspection and reasoned revocation of **another** installation user's active sessions.
+TASK-00122 adds API-only inspection and revocation of **another** installation user's active sessions.
 There is no administrative browser UI, Workspace/Project scope, logout-everywhere or lifetime editing.
 
 | Operation | Exact current permission | Input | Success |
@@ -34,7 +34,10 @@ Success and error responses are `Cache-Control: no-store`; the attribute-owned O
 Deletion requires a reason trimmed by package `SessionRevocationReason`, 1–500 Unicode characters. Agent OS
 rejects control characters and its existing audit policy's credential/secret/authorization/URL terms before
 mutation. Never put credentials or private information in a reason: lexical checks are not a universal secret
-detector. Reasons remain durable administrative evidence, not public response fields or diagnostics.
+detector. Under the [TASK-00122 amendment](../../planning/tasks/00122-TASK.md#current-amendment--task-00573),
+the reason is required at entry but is not persisted or logged. Existing audit history, including reasons
+recorded under the original contract, is retained under its existing protections. Do not log the request body
+or the package failure event's original command, which can still carry the transient reason.
 
 ## Qualified package and transaction boundary
 
@@ -53,11 +56,13 @@ see [current transaction composition and failure recovery](TRANSACTIONS.md). No 
 therefore checks the selected session's owner against the path user before dispatch. Session ownership is
 immutable: `PostgresRefreshSessionRepository::replace` rejects owner/ID changes and compares complete expected
 state/revision. The package handler rereads usable state and invokes its actor/actual-owner callback, then
-optimistically replaces only that session and appends `AuditEvidence::administrativeSessionRevocation` in its
-own single generic `TransactionalUnitOfWork`. The audit records actor, target user, target session, reason,
-action/outcome and database timestamp. No consumer transaction wraps package dispatch.
+optimistically replaces only that session. The TASK-00573 draft uses Access Control v0.10.1 and Common
+v1.5.1: `RevokeSessionHandler` writes `AuditSessionRevocation` in the same generic transaction as the write.
+The `refresh_session.administratively_revoked` action records the successful outcome with typed actor and
+target user, session ID, before/after revisions and recording time, not the reason. No consumer transaction
+wraps package dispatch. TASK-00573 tracks the outstanding consumer qualification.
 
-The configured Common v1.5.0 `DbalTransactionalUnitOfWork` uses the exact shared DBAL connection directly;
+The configured `DbalTransactionalUnitOfWork` uses the exact shared DBAL connection directly;
 both session and audit repositories use that same registered connection and require an enclosing transaction.
 The repository's conflict-recovery savepoint neither commits the outer transaction nor supplies a second
 transaction authority. PostgreSQL integration proves audit-write failure rolls session state back and no success

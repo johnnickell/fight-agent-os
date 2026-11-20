@@ -12,7 +12,7 @@ use App\Adapter\Http\Responder\Api\V1\Auth\ResetCompletionResponder;
 use App\Adapter\Security\Authentication\AuthAdmission;
 use App\Application\Security\Password\PasswordSetting;
 use App\Application\Security\PasswordReset\CompletePasswordReset;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Service\Container;
@@ -21,7 +21,7 @@ return static function (Container $container): void {
     $container->set(CompletePasswordReset::class, static fn(Container $container): CompletePasswordReset =>
         new CompletePasswordReset(
             $container->get(PasswordSetting::class),
-            $container->get(AuthenticationService::class)
+            $container->get(PasswordManagement::class)
         ));
     $container->set(ResetBrowserSession::class, static fn(Container $container): ResetBrowserSession =>
         new ResetBrowserSession(

@@ -30,12 +30,12 @@ return static function (Container $container): void {
         new RequestPasswordResetHandler(
             $container->get(UserRepository::class),
             $container->get(PasswordResetGrantRepository::class),
-            $container->get(AuditEvidenceRepository::class),
             $container->get(TransactionalUnitOfWork::class),
             $container->get(PasswordResetCredentialGenerator::class),
             $container->get(PasswordResetDeliveryCipher::class),
             $container->get(Clock::class),
-            $container->get(AuthenticationEvents::class)
+            $container->get(AuthenticationEvents::class),
+            $container->get(AuditEvidenceRepository::class)
         ));
     $container->get('messaging.command.router')->registerHandlers([
         RequestPasswordReset::class => RequestPasswordResetHandler::class

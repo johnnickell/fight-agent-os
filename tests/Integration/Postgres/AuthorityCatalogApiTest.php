@@ -22,6 +22,8 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
@@ -51,6 +53,7 @@ use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\TestHandler;
 use Monolog\Level;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Slim\App;
@@ -389,7 +392,7 @@ final class AuthorityCatalogApiTest extends TestCase
         self::assertFalse($stored->isManaged());
         self::assertSame($stored->getRevision()->toString(), $created['revision']);
         self::assertSame($id->toString(), $this->connection->fetchOne(
-            "SELECT subject_id FROM audit_evidence WHERE action = 'role.custom_created'"
+            "SELECT subject_id FROM audit_evidence WHERE action = 'role.created'"
         ));
         $other = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_ANOTHER'], 201)['data'];
         self::assertFalse($id->equals(RoleId::fromString($other['role_id'])));
@@ -415,6 +418,19 @@ final class AuthorityCatalogApiTest extends TestCase
      */
     public function testCustomRoleJourney(): void
     {
+        $legacyId = RoleId::generate()->toString();
+        $this->connection->insert('audit_evidence', [
+            'actor_id'     => $this->actor->getId()->toString(),
+            'action'       => 'role.custom_removed',
+            'subject_type' => 'role',
+            'subject_id'   => $legacyId,
+            'context'      => '{}'
+        ]);
+        $legacyRow = $this->connection->fetchAssociative(
+            'SELECT * FROM audit_evidence WHERE subject_id = ?',
+            [$legacyId]
+        );
+        self::assertIsArray($legacyRow);
         $created = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_CUSTOM'], 201);
         $id = $created['data']['role_id'];
         $revision = $created['data']['revision'];
@@ -425,7 +441,7 @@ final class AuthorityCatalogApiTest extends TestCase
             200
         );
         self::assertSame($created['data'], $same['data']);
-        self::assertSame(1, $this->roleAuditCount());
+        self::assertSame(2, $this->roleAuditCount());
         $renamed = $this->mutation(
             'PATCH',
             '/api/v1/roles/'.$id,
@@ -446,17 +462,30 @@ final class AuthorityCatalogApiTest extends TestCase
             200
         );
         self::assertFalse($this->connection->fetchOne('SELECT id FROM roles WHERE id = ?', [$id]));
+        self::assertSame($legacyRow, $this->connection->fetchAssociative(
+            'SELECT * FROM audit_evidence WHERE subject_id = ?',
+            [$legacyId]
+        ));
         $audits = $this->connection->fetchAllAssociative(<<<'SQL'
-SELECT actor_id, action, subject_id, context FROM audit_evidence WHERE subject_type = 'role' ORDER BY id
-SQL);
+SELECT actor_id, action, subject_id, context FROM audit_evidence
+WHERE subject_type = 'role' AND subject_id = ? ORDER BY id
+SQL, [$id]);
         self::assertSame(
-            ['role.custom_created', 'role.custom_renamed', 'role.custom_removed'],
+            ['role.created', 'role.renamed', 'role.removed'],
             array_column($audits, 'action')
         );
         foreach ($audits as $audit) {
             self::assertSame($this->actor->getId()->toString(), $audit['actor_id']);
             self::assertSame($id, $audit['subject_id']);
-            self::assertSame('{}', $audit['context']);
+            self::assertIsString($audit['context']);
+            $payload = json_decode($audit['context'], true, flags: JSON_THROW_ON_ERROR);
+            self::assertIsArray($payload);
+            $evidence = AuditEvidence::fromArray($payload);
+            self::assertEquals($payload, $evidence->toArray());
+            self::assertSame($audit['action'], $evidence->action()->value);
+            self::assertSame($id, $evidence->getSubject()->getId()->toString());
+            self::assertInstanceOf(UserId::class, $evidence->actorId());
+            self::assertSame($this->actor->getId()->toString(), $evidence->actorId()->toString());
         }
     }
 
@@ -599,19 +628,41 @@ SQL);
     /**
      * Rolls back Role persistence when required consumer audit fails
      */
-    public function testRoleAuditRollback(): void
+    #[TestWith(['POST'])]
+    #[TestWith(['PATCH'])]
+    #[TestWith(['DELETE'])]
+    public function testRoleAuditRollback(string $method): void
     {
+        $created = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_ORIGINAL'], 201)['data'];
+        $id = $created['role_id'];
+        $before = $this->connection->fetchAssociative('SELECT * FROM roles WHERE id = ?', [$id]);
         $logs = $this->captureExpectedFailure();
-        $audit = $this->createStub(\App\Domain\Authorization\RoleMutationAudit::class);
-        $audit->method('record')->willThrowException(new \RuntimeException('private audit diagnostics'));
-        $this->container->set(\App\Domain\Authorization\RoleMutationAudit::class, static fn() => $audit);
-        $response = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_ROLLBACK'], 500);
-        self::assertSame(['status' => 'error', 'message' => 'Internal server error.'], $response);
-        $this->assertSanitizedFailure($logs);
+        $path = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/'.$id;
+        $body = match ($method) {
+            'POST' => ['name' => 'ROLE_ROLLBACK'],
+            'PATCH' => ['name' => 'ROLE_ROLLBACK', 'expected_revision' => $created['revision']],
+            default => ['confirm' => true, 'expected_revision' => $created['revision']]
+        };
+        $this->connection->executeStatement(<<<'SQL'
+ALTER TABLE audit_evidence ADD CONSTRAINT role_audit_test_abort CHECK (subject_type <> 'role') NOT VALID
+SQL);
+        try {
+            self::assertSame(['status' => 'error', 'message' => 'Internal server error.'], $this->mutation(
+                $method,
+                $path,
+                $body,
+                500
+            ));
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT role_audit_test_abort');
+        }
+        self::assertCount(1, $logs->getRecords());
+        self::assertStringNotContainsString('role_audit_test_abort', $logs->getRecords()[0]->formatted);
+        self::assertSame($before, $this->connection->fetchAssociative('SELECT * FROM roles WHERE id = ?', [$id]));
         self::assertSame(0, (int) $this->connection->fetchOne(
             "SELECT count(*) FROM roles WHERE name = 'ROLE_ROLLBACK'"
         ));
-        self::assertSame(0, $this->roleAuditCount());
+        self::assertSame(1, $this->roleAuditCount());
     }
 
     /**
@@ -645,10 +696,10 @@ SQL);
             self::assertTrue($grants->add($grant));
         });
         if ($auditFails) {
-            $audit = $this->createStub(\Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository::class);
+            $audit = $this->createStub(AuditEvidenceRepository::class);
             $audit->method('add')->willThrowException(new \RuntimeException('private audit diagnostics'));
             $this->container->set(
-                \Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository::class,
+                AuditEvidenceRepository::class,
                 static fn() => $audit
             );
         }
@@ -704,7 +755,7 @@ SQL);
         $id = $this->connection->fetchOne("SELECT id FROM roles WHERE name = 'ROLE_COMMITTED'");
         self::assertIsString($id);
         self::assertSame($id, $this->connection->fetchOne(
-            "SELECT subject_id FROM audit_evidence WHERE action = 'role.custom_created'"
+            "SELECT subject_id FROM audit_evidence WHERE action = 'role.created'"
         ));
         self::assertSame(1, $this->roleAuditCount());
     }

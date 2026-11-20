@@ -14,12 +14,12 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetCredentialGenerator;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\RequestPasswordReset;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Event\PasswordResetCompleted;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
@@ -137,7 +137,7 @@ final class ResetCompletionApiTest extends TestCase
      */
     public function testSuccessRevokesEverySessionAndAdvancesAuthority(): void
     {
-        $auth = $this->container->get(AuthenticationService::class);
+        $auth = $this->container->get(UserAuthentication::class);
         $first = $auth->login('reset@example.test', $this->oldPassword, false);
         $second = $auth->login('reset@example.test', $this->oldPassword, true);
         $before = $this->connection->fetchAssociative('SELECT * FROM users');
@@ -189,9 +189,9 @@ final class ResetCompletionApiTest extends TestCase
                 // Expected authoritative rejection; reaching fail() above would fail this test.
             }
             try {
-                $auth->refresh($prior->getRefreshCredential()->toString());
+                $this->container->get(SessionLifecycle::class)->refresh($prior->getRefreshCredential()->toString());
                 self::fail('Old refresh survived reset.');
-            } catch (RefreshSessionNotFoundException) {
+            } catch (\Fight\Common\Application\Error\Exception\AuthenticationRequired) {
                 // Expected package rejection, not a local expiry shortcut.
             }
         }
@@ -211,7 +211,7 @@ final class ResetCompletionApiTest extends TestCase
         $this->container->get(Connection::class)->transactional(
             fn() => $this->container->get(UserRepository::class)->add($other)
         );
-        $session = $this->container->get(AuthenticationService::class)->login(
+        $session = $this->container->get(UserAuthentication::class)->login(
             'other@example.test',
             $this->oldPassword,
             false
@@ -223,7 +223,7 @@ final class ResetCompletionApiTest extends TestCase
             'SELECT count(*) FROM refresh_sessions WHERE revoked = true'
         ));
         $this->clock->time = $this->clock->time->modify('+1 second');
-        self::assertNotNull($this->container->get(AuthenticationService::class)->refresh(
+        self::assertNotNull($this->container->get(SessionLifecycle::class)->refresh(
             $session->getRefreshCredential()->toString()
         ));
     }
@@ -360,7 +360,7 @@ final class ResetCompletionApiTest extends TestCase
     #[DataProvider('writeTables')]
     public function testAtomicRollback(string $table): void
     {
-        $this->container->get(AuthenticationService::class)->login('reset@example.test', $this->oldPassword, false);
+        $this->container->get(UserAuthentication::class)->login('reset@example.test', $this->oldPassword, false);
         $before = $this->connection->fetchAssociative('SELECT * FROM users');
         $this->connection->executeStatement('TRUNCATE auth_rate_limits');
         $this->connection->executeStatement(
@@ -484,7 +484,7 @@ final class ResetCompletionApiTest extends TestCase
                 $outcomes[] = trim((string) fgets($pipes[1]));
             }
             self::assertSame('committed', $outcomes[0]);
-            self::assertSame($first === 'request' || $second === 'complete' ? 'conflict' : 'superseded', $outcomes[1]);
+            self::assertSame('conflict', $outcomes[1]);
             $rows = $this->connection->fetchAllAssociative('SELECT * FROM password_reset_grants ORDER BY generation');
             if ($first === 'request') {
                 self::assertCount(2, $rows);

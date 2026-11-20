@@ -32,8 +32,8 @@ Enroll a stable lowercase operator UUID once through the owning ID factory or a 
 identity mapping outside the command. Do not substitute the target ID or infer an operator from environment input.
 For the separate manually operated first Super Admin operation, read the
 [bootstrap runbook](SUPER_ADMIN_BOOTSTRAP.md); neither ordinary command can elevate or resume bootstrap.
-This bounded attribution does not require a database User or claim a logged-in principal. Package assignment uses
-the typed operator UUID as actor; durable console audit uses the distinct `console:UUID` namespace.
+This bounded attribution does not require a database User or claim a logged-in principal. Package invitation and
+assignment use the canonical nil `SystemId`; Agent OS membership evidence attributes the operator as `console:UUID`.
 
 ## Invite an ordinary pending user
 
@@ -46,7 +46,7 @@ lowercased before dispatch. Case-equivalent identities conflict without replacin
 role, permission, user-ID, password, provider or credential selector on invitation.
 
 Application dispatches public `InvitePendingUser`, then public `AssignRoleToUser` for the stable installed
-`ROLE_USER`. Each normal package handler owns its independent canonical Doctrine transaction and normal postcommit
+`ROLE_USER`. Each normal package handler owns its independent canonical DBAL transaction and normal postcommit
 events. The first commit atomically records the pending/passwordless identity, email claim, seven-day activation
 grant, encrypted recoverable delivery state and `user.invited` audit. Its delivery subscriber may attempt email
 **before assignment**. The second business commit adds `ROLE_USER`; it cannot roll back the first.
@@ -96,8 +96,7 @@ before reporting it; it does not infer rollback from an exception. Assignment fa
 grant and delivery, even if mail was already offered. Audit failure retains membership. Preserve the safe output,
 inspect intended persisted state, correct reconciled authority if necessary through its owning operation, then use
 the existing target's corrective command in a **fresh process**. Never blindly reinvite, regenerate credentials or
-create a replacement identity. A Doctrine rollback closes that container's manager; successful invocations may
-reuse shared instances, but a failed manager must not be resurrected.
+create a replacement identity. Neither a failed transaction nor a failed event supplies proof of the current state.
 
 Delivery recovery is independent of role correction. The package's bounded due-work runner finds the same durable
 generation after lost events, failed claims/outcomes or restart. Provider invocation occurs outside transactions.

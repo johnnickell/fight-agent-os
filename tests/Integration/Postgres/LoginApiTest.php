@@ -12,6 +12,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditAuthenticationOutcome;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 use Fight\AccessControl\Domain\AccessControl\User\Event\RedactedCommandFailed;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserLoggedIn;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
@@ -178,7 +180,21 @@ final class LoginApiTest extends TestCase
         $refresh = explode(';', explode('=', $cookies[0], 2)[1], 2)[0];
         self::assertStringNotContainsString($refresh, (string) $response->getBody());
         self::assertStringNotContainsString($this->nonce, $cookies[1]);
-        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        $audit = $this->connection->fetchAllAssociative(
+            'SELECT action, actor_id, subject_id, context FROM audit_evidence'
+        );
+        self::assertCount(1, $audit);
+        self::assertSame('user.logged_in', $audit[0]['action']);
+        self::assertSame($this->target->toString(), $audit[0]['actor_id']);
+        self::assertSame($this->target->toString(), $audit[0]['subject_id']);
+        self::assertIsString($audit[0]['context']);
+        self::assertStringNotContainsString($refresh, $audit[0]['context']);
+        self::assertStringNotContainsString($data['access_token'], $audit[0]['context']);
+        $payload = json_decode($audit[0]['context'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($payload);
+        $facts = AuditEvidence::fromArray($payload)->getFacts();
+        self::assertInstanceOf(AuditAuthenticationOutcome::class, $facts);
+        self::assertSame($session['id'], $facts->toArray()['session_id']);
     }
 
     /**

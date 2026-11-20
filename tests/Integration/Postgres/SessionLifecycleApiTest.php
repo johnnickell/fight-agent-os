@@ -15,7 +15,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Event\CurrentSessionLoggedOut;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\Event\RedactedCommandFailed;
@@ -491,7 +491,6 @@ final class SessionLifecycleApiTest extends TestCase
                         self::assertTrue($users->replaceLifecycleState($expected, $replacement));
                     } else {
                         $replacement->changePassword($expected->getPasswordHash(), $this->clock->now());
-                        $replacement->advanceAuthenticationAuthorityRevision();
                         self::assertTrue($users->replaceAuthenticationAuthority($expected, $replacement));
                     }
                 });
@@ -546,7 +545,7 @@ final class SessionLifecycleApiTest extends TestCase
      */
     private function login(bool $remember = false): string
     {
-        return $this->container->get(AuthenticationService::class)->login(
+        return $this->container->get(UserAuthentication::class)->login(
             'session@example.test',
             $this->password,
             $remember

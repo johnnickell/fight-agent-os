@@ -161,6 +161,8 @@ SQL,
             $fields['user_id'],
             $fields['credential_digest'],
             $fields['email_change_reservation_revision'],
+            $fields['requester_id'],
+            $fields['old_mailbox'],
             $fields['expires_at'],
             $fields['delivery_id'],
             $fields['delivery_email'],
@@ -266,6 +268,8 @@ SQL,
             && $left->getExpiredAt() == $right->getExpiredAt()
             && $left->getRevision() === $right->getRevision()
             && $left->getEmailChangeReservationRevision() === $right->getEmailChangeReservationRevision()
+            && $left->getRequestOrigin()->requesterId->equals($right->getRequestOrigin()->requesterId)
+            && $left->getRequestOrigin()->oldMailbox === $right->getRequestOrigin()->oldMailbox
             && $left->getDelivery()->sameStateAs($right->getDelivery());
     }
 

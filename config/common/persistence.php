@@ -14,6 +14,7 @@ use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
@@ -100,9 +101,12 @@ return static function (Container $container): void {
     ): EmailChangeGrantRepository {
         return new PostgresEmailChangeGrantRepository($container->get(Connection::class));
     });
-    $container->set(AuditEvidenceRepository::class, static function (Container $container): AuditEvidenceRepository {
-        return new PostgresAuditEvidenceRepository($container->get(Connection::class));
-    });
+    $container->set(PostgresAuditEvidenceRepository::class, static fn(Container $container) =>
+        new PostgresAuditEvidenceRepository($container->get(Connection::class)));
+    $container->set(AuditEvidenceRepository::class, static fn(Container $container): AuditEvidenceRepository =>
+        $container->get(PostgresAuditEvidenceRepository::class));
+    $container->set(MembershipEvidenceRepository::class, static fn(Container $container) =>
+        $container->get(PostgresAuditEvidenceRepository::class));
     $container->set(TransactionalUnitOfWork::class, static function (
         Container $container
     ): TransactionalUnitOfWork {

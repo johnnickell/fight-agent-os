@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Application\Security\Activation;
 
 use App\Application\Security\Password\PasswordSetting;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Application\AccessControl\User\Security\TokenSet;
-use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationGrantException;
-use Fight\AccessControl\Domain\AccessControl\User\Exception\UserNotPendingActivationException;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\StateConflict;
-use LogicException;
 use SensitiveParameter;
 use Throwable;
 
@@ -25,7 +24,7 @@ final readonly class ActivateInvitation
     /**
      * Constructs ActivateInvitation
      */
-    public function __construct(private PasswordSetting $passwords, private AuthenticationService $authentication)
+    public function __construct(private PasswordSetting $passwords, private UserAuthentication $authentication)
     {
     }
 
@@ -42,8 +41,8 @@ final readonly class ActivateInvitation
             throw new ActivationPasswordRejected($rejection);
         }
         try {
-            return $this->authentication->activate($userId, $credential, $password, false);
-        } catch (LogicException | ActivationGrantException | UserNotPendingActivationException) {
+            return $this->authentication->activate($userId, $credential, $password, false, AnonymousId::generate());
+        } catch (AuthenticationRequired | StateConflict) {
             throw new StateConflict();
         } catch (Throwable) {
             // Neither the cause nor package diagnostics may retain secret-bearing arguments.

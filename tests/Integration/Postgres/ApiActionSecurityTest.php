@@ -219,7 +219,6 @@ final class ApiActionSecurityTest extends TestCase
                 PasswordHash::fromString((string) password_hash('replacement', PASSWORD_BCRYPT)),
                 $this->tokens->clock->now()
             );
-            $replacement->advanceAuthenticationAuthorityRevision();
             self::assertTrue($this->connection->transactional(
                 fn() => $this->users->replaceAuthenticationAuthority($this->user, $replacement)
             ));

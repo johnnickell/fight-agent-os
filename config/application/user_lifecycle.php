@@ -66,19 +66,19 @@ return static function (Container $container): void {
         $container->get(ActivationCredentialGenerator::class),
         $container->get(InvitationDeliveryCipher::class),
         $container->get(Clock::class),
-        $container->get(AuditEvidenceRepository::class),
         $container->get(TransactionalUnitOfWork::class),
-        $container->get(EventDispatcher::class)
+        $container->get(EventDispatcher::class),
+        $container->get(AuditEvidenceRepository::class)
     ));
     $container->get('messaging.command.router')->registerHandlers([
         RestoreUserHandler::commandRegistration() => RestoreUserHandler::class
     ]);
     $container->set(EnableUserHandler::class, static fn(Container $container) => new EnableUserHandler(
         $container->get('user_lifecycle.repository'),
-        $container->get(AuditEvidenceRepository::class),
         $container->get(TransactionalUnitOfWork::class),
         $container->get(EventDispatcher::class),
-        $container->get(Clock::class)
+        $container->get(Clock::class),
+        $container->get(AuditEvidenceRepository::class)
     ));
     $container->get('messaging.command.router')->registerHandlers([
         EnableUserHandler::commandRegistration() => EnableUserHandler::class
@@ -92,10 +92,10 @@ return static function (Container $container): void {
             $container->get($repository),
             $container->get(SessionRevocationService::class),
             $container->get(Clock::class),
-            $container->get(AuditEvidenceRepository::class),
             $container->get(TransactionalUnitOfWork::class),
             $container->get(EventDispatcher::class),
-            $container->get(PasswordResetGrantRepository::class)
+            $container->get(PasswordResetGrantRepository::class),
+            $container->get(AuditEvidenceRepository::class)
         ));
         $container->get('messaging.command.router')->registerHandlers([$handler::commandRegistration() => $handler]);
     }

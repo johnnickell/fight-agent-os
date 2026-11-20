@@ -75,7 +75,7 @@ network identity. A real ingress must enroll its trusted network boundary separa
 supplies peer address and discards forwarding metadata. These limits are an initial bounded policy, not a DDoS
 or distributed-ingress qualification.
 
-`ActivateInvitation` owns only password acceptance. The installed `AuthenticationService::activate()` owns latest
+`ActivateInvitation` owns only password acceptance. The installed `UserAuthentication::activate()` owns latest
 purpose-bound grant matching/consumption, pending-user activation, Argon2id hashing, authority revision, ordinary
 refresh session/token creation and post-commit `UserActivated`. No repository mutation shortcut is used.
 Malformed/unknown/used/expired/revoked/replaced/raced authority maps to generic `409 Conflict.` without account
