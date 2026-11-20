@@ -169,25 +169,28 @@ last installed footer wins and shutdown restores Pi's footer. API-unavailable na
 
 ## Verification and packaging
 
-For Pi changes, run the owning checks from the repository root, separately from the required application gate
-(`./bin/build`). Run Harness behavior with `npm --prefix harness/pi test` or the network-none
-`./bin/harness-check`, which reuses this checkout's tooling image (`./bin/up --build-only` if missing).
-Git and Python are required by the custody and Sync process checks. Use the locked Harness runtime dependencies
-where needed (`npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund` if missing
-or stale in that environment).
+Run owning Harness behavior checks with `npm --prefix harness/pi test` or the network-none
+`./bin/harness-check`, which reuses this checkout's explicitly prepared tooling image (`./bin/up --build-only`).
+Git and Python are required by the shared-custody and Sync process checks. For changes to the bundled engine,
+run `npm --prefix harness/pi/vendor/pi-subagents run check` for lint, type checking and its full test suite.
+Run both owning checks separately from `./bin/build`, which neither installs nor requires Pi dependencies.
+Use private task scratch for the engine's `TMPDIR` and `GIT_CEILING_DIRECTORIES`.
 
-For changes affecting the bundled engine, run `npm --prefix harness/pi/vendor/pi-subagents run check` for
-lint, type checking, and the full engine suite. Prepare its locked development tools only if missing or stale
-on the OS running the checks; native optional modules are platform-specific:
+For Docker tooling, `./bin/runtime setup` prepares both
+the Harness and engine dependencies automatically. Use `./bin/pi-dependencies setup` to prepare an existing
+checkout or `./bin/pi-dependencies check` for an offline readiness check. Setup reuses valid installations;
+finish active checks and stop this checkout's web service before replacing stale dependencies. Receipts identify the manifests,
+lockfiles, Node/npm versions, OS and architecture; validation executes the local native tools.
+
+For separate host-side development, install on the OS where checks execute (native optional modules are
+platform-specific); do not copy host node_modules into the Docker installation:
 
 ```sh
-npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+node harness/pi/scripts/dependencies.mjs setup
 ```
 
-For Docker setup, use the selected checkout's writable maintenance service. Run engine tests with `TMPDIR`
-and `GIT_CEILING_DIRECTORIES` set to the same private task-owned scratch directory outside source control.
-Never replace dependencies beneath a running check. Pi supplies host peers; do not bundle another SDK.
-No product tests assert tooling/configuration behavior.
+For Docker, use the selected checkout's writable maintenance service and task-owned scratch/cache locations.
+Never replace dependencies beneath a running gate. Pi supplies host peers; do not bundle another SDK.
 `croner` and `nanoid` remain actual bundled-engine dependencies. `npm pack --ignore-scripts --pack-destination PATH`
 creates a private distributable containing runtime source, bin, agents/profile, runbooks/licenses, not tests or
 node_modules. Keep artifacts under ignored task scratch.
