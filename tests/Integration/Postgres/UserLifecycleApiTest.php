@@ -17,7 +17,10 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditUserOutcome;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditUserRevisions;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
@@ -195,6 +198,9 @@ final class UserLifecycleApiTest extends TestCase
             [$target->getId()->toString()]
         );
         self::assertIsArray($before);
+        $initialUser = $this->container->get(UserRepository::class)->getById($target->getId());
+        self::assertNotNull($initialUser);
+        $auditState = AuditUserRevisions::fromUser($initialUser)->toArray();
         $this->connection->executeStatement('TRUNCATE audit_evidence');
         $children = [];
         $firstPid = 0;
@@ -275,13 +281,17 @@ final class UserLifecycleApiTest extends TestCase
                 $this->app->handle($me->withHeader('Authorization', 'Bearer '.$token))->getStatusCode()
             );
             $audit = $this->connection->fetchAllAssociative(
-                'SELECT action, actor_id, subject_id, context FROM audit_evidence ORDER BY id'
+                'SELECT action, actor_id, subject_type, subject_id, context FROM audit_evidence ORDER BY id'
             );
             self::assertSame($actions, array_column($audit, 'action'));
             foreach ($audit as $entry) {
-                self::assertSame($this->actor->getId()->toString(), $entry['actor_id']);
-                self::assertSame($target->getId()->toString(), $entry['subject_id']);
-                self::assertSame('{}', $entry['context']);
+                $disabled = $entry['action'] === 'user.disabled';
+                $next = array_replace($auditState, [
+                    'state'                  => $disabled ? 'disabled' : 'active',
+                    'authentication_version' => $auditState['authentication_version'] + (int) $disabled
+                ]);
+                $this->assertLifecycleEvidence($entry, $target->getId(), $auditState, $next);
+                $auditState = $next;
             }
         } finally {
             foreach ($children as [$process, $pipes]) {
@@ -506,16 +516,52 @@ final class UserLifecycleApiTest extends TestCase
         self::assertSame(401, $this->app->handle($me->withHeader('Authorization', 'Bearer '.$token))->getStatusCode());
         $audit = $this->connection->fetchAllAssociative(
             <<<'SQL'
-                SELECT actor_id, subject_id, action, context FROM audit_evidence
+                SELECT actor_id, subject_type, subject_id, action, context FROM audit_evidence
                 WHERE action IN ('user.deleted', 'user.restored') ORDER BY id
                 SQL
         );
         self::assertSame(['user.deleted', 'user.restored'], array_column($audit, 'action'));
-        foreach ($audit as $entry) {
-            self::assertSame($this->actor->getId()->toString(), $entry['actor_id']);
-            self::assertSame($target->getId()->toString(), $entry['subject_id']);
-            self::assertSame('{}', $entry['context']);
-        }
+        $originalState = AuditUserRevisions::fromUser($target)->toArray();
+        $deletedState = AuditUserRevisions::fromUser($deleted)->toArray();
+        $this->assertLifecycleEvidence($audit[0], $target->getId(), $originalState, $deletedState);
+        $this->assertLifecycleEvidence(
+            $audit[1],
+            $target->getId(),
+            $deletedState,
+            AuditUserRevisions::fromUser($restored)->toArray()
+        );
+    }
+
+    /**
+     * Verifies the typed, bounded fact agrees with the indexed audit fields and actual transition
+     *
+     * @param array<string, mixed> $entry
+     * @param UserId $targetId
+     * @param array<string, mixed> $before
+     * @param array<string, mixed> $after
+     */
+    private function assertLifecycleEvidence(array $entry, UserId $targetId, array $before, array $after): void
+    {
+        self::assertSame($this->actor->getId()->toString(), $entry['actor_id']);
+        self::assertSame('user', $entry['subject_type']);
+        self::assertSame($targetId->toString(), $entry['subject_id']);
+        self::assertIsString($entry['context']);
+        $payload = json_decode($entry['context'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($payload);
+        $evidence = AuditEvidence::fromArray($payload);
+        self::assertSame($entry['action'], $evidence->action()->value);
+        self::assertInstanceOf(UserId::class, $evidence->actorId());
+        self::assertSame($entry['actor_id'], $evidence->actorId()->toString());
+        self::assertSame(['kind' => 'user', 'id' => $targetId->toString()], $evidence->getSubject()->toArray());
+        $facts = $evidence->getFacts();
+        self::assertInstanceOf(AuditUserOutcome::class, $facts);
+        self::assertSame([
+            'before'               => $before,
+            'after'                => $after,
+            'grant_before'         => null,
+            'grant_after'          => null,
+            'replaced_predecessor' => null
+        ], $facts->toArray());
     }
 
     /**

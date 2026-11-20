@@ -11,8 +11,8 @@ use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\User\Command\DeleteUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\DisableUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\EnableUser;
-use Fight\AccessControl\Domain\AccessControl\User\Exception\UserLifecycleException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use RuntimeException;
 use Throwable;
@@ -63,12 +63,15 @@ final class UserLifecycleRaceWorker implements Clock
                 }
                 $container->get(CommandBus::class)->execute($command);
                 echo "success\n";
-            } catch (UserLifecycleException) {
-                echo "conflict\n";
-            } catch (\LogicException $failure) {
+            } catch (StateConflict $failure) {
+                $refusal = match ($input['operation']) {
+                    'disable' => 'The user cannot be disabled.',
+                    'delete'  => 'The user cannot be deleted.',
+                    default   => 'The user cannot be enabled.'
+                };
                 if (
-                    $failure::class !== \LogicException::class
-                    || $failure->getMessage() !== 'The user lifecycle state changed concurrently.'
+                    $failure->getMessage() !== $refusal
+                    && $failure->getMessage() !== 'The user lifecycle state changed concurrently.'
                 ) {
                     throw $failure;
                 }

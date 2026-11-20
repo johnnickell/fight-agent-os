@@ -46,15 +46,25 @@ the returned generated UUID, revision and custom Role view, rather than comparin
 A lost creation response may leave a Role whose ID the caller has not received; reconcile the authorized catalog instead
 of retrying creation. The service is not mounted as new UI.
 
-## v0.10.0 source cutover
+## v0.10.1 source cutover
 
-TASK-00573 selects Access Control **v0.10.0** (`ae1cd27340a97daf260bbe30ae95d2fc62826453`) and Common
+TASK-00573 selects Access Control **v0.10.1** (`57a693e39dd1aef9f753a1ab9b089be6eb48396c`) and Common
 **v1.5.1** (`c73690164a9f112dbf14d774c56a7c01519b88aa`), with manifest constraints `0.10.*` and `1.5.*`.
 This release of Access Control requires Common `^1.5.1`. See TASK-00573 for consumer verification status.
-`Version20261119155505` requires the issued requester and old mailbox on each new email-change grant. It blocks
-installation cutover if any legacy email-change grant remains, even terminal history. Do not infer these values
-from current User state or delete history to get past the guard. Work's fresh test database does not authorize
-migration of any existing installation.
+### Email-change grant upgrade
+
+`Version20261119155505` discards legacy email-change grants, pending and terminal, on upgrade from the previous
+Agent OS schema. Their original requester and old mailbox cannot be recovered from current User state. The data
+owner approved discarding those grants only. Old links stop working; User rows, existing reservation claims,
+current mailboxes, other credential grants and audit history are not changed. A retained reservation must not be
+treated as confirmation authority. This release does not expose a confirmation route.
+
+For an authorized installation upgrade, stop the old HTTP and worker writers, back up, and rehearse
+`./bin/database migrate` on a private restored copy. This cutover does not override historical preflights on older
+schemas. The migration runs in a transaction, refuses unexpected inbound foreign keys and an existing origin schema,
+and makes both origin fields mandatory before commit. A database that already recorded this version does not rerun
+it or delete new-format grants. After a committed cutover, there is no downgrade: recovery requires an authorized
+restore or forward correction. Local Work verification does not authorize a live installation upgrade.
 
 ## Historical v0.8.0 adoption
 

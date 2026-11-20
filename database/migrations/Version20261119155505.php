@@ -18,7 +18,7 @@ final class Version20261119155505 extends AbstractMigration
      */
     public function getDescription(): string
     {
-        return 'Persists the original requester and old mailbox of each email-change generation';
+        return 'Discards legacy email-change grants and requires recorded origin for new grants';
     }
 
     /**
@@ -28,18 +28,26 @@ final class Version20261119155505 extends AbstractMigration
     {
         $this->abortIf(!$this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform, 'PostgreSQL required.');
         $this->addSql('LOCK TABLE email_change_grants IN ACCESS EXCLUSIVE MODE');
-        // The old schema cannot prove either part of the origin, even for terminal generations.
+        // Add the columns first so an unexpected new-format schema fails before any deletion.
+        $this->addSql(<<<'SQL'
+ALTER TABLE email_change_grants
+    ADD COLUMN requester_id UUID,
+    ADD COLUMN old_mailbox VARCHAR(320)
+SQL);
         $this->addSql(<<<'SQL'
 DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM email_change_grants) THEN
-        RAISE EXCEPTION 'Email-change history requires explicit origin reconciliation before adoption';
+    IF EXISTS (SELECT 1 FROM pg_constraint
+        WHERE contype = 'f' AND confrelid = 'email_change_grants'::regclass) THEN
+        RAISE EXCEPTION 'Unexpected foreign key to email-change grants; refusing to discard legacy grants';
     END IF;
 END $$
 SQL);
+        // The data owner approved discarding these grants, not changing User or reservation state.
+        $this->addSql('DELETE FROM ONLY email_change_grants');
         $this->addSql(<<<'SQL'
 ALTER TABLE email_change_grants
-    ADD COLUMN requester_id UUID NOT NULL,
-    ADD COLUMN old_mailbox VARCHAR(320) NOT NULL
+    ALTER COLUMN requester_id SET NOT NULL,
+    ALTER COLUMN old_mailbox SET NOT NULL
 SQL);
     }
 
@@ -48,6 +56,8 @@ SQL);
      */
     public function down(Schema $schema): void
     {
-        $this->throwIrreversibleMigrationException('Email-change requester and old mailbox must not be discarded.');
+        $this->throwIrreversibleMigrationException(
+            'Discarded legacy grants cannot be recovered and new grant origin must not be removed.'
+        );
     }
 }

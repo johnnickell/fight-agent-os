@@ -10,11 +10,10 @@ use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserLifecycleResponder;
 use App\Application\Authorization\PreventAdministratorLockout;
 use Fight\AccessControl\Domain\AccessControl\User\Command\EnableUser;
-use Fight\AccessControl\Domain\AccessControl\User\Exception\UserLifecycleException;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -92,12 +91,10 @@ final readonly class EnableUserAction
         $this->lockout->assertOtherUser($authentication->getUserId(), $targetId);
         try {
             $this->commandBus->execute(new EnableUser($authentication->getUserId(), $targetId));
-        } catch (UserLifecycleException) {
-            throw new StateConflict();
-        } catch (LogicException $failure) {
+        } catch (ResourceNotFound $failure) {
             if (
-                $failure::class !== LogicException::class
-                || $failure->getMessage() !== 'The user lifecycle state changed concurrently.'
+                $failure::class !== ResourceNotFound::class
+                || $failure->getMessage() !== 'The user cannot be enabled.'
             ) {
                 throw $failure;
             }

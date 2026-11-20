@@ -23,6 +23,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -295,16 +296,21 @@ SQL
         self::assertTrue($this->unitOfWork->commitTransactional(
             fn(): bool => $this->sessions->replace($original, $rotated)
         ));
-        $reused = $rotated->rotate($spent, $base->modify('+20 minutes'), $base->modify('+80 minutes'));
-        self::assertFalse($this->unitOfWork->commitTransactional(
-            fn(): bool => $this->sessions->replace($rotated, $reused)
-        ));
-        self::assertSame(
-            $rotated->getCredentialDigest(),
-            $this->sessions->getById($original->getId())?->getCredentialDigest()
-        );
+        try {
+            $rotated->rotate($spent, $base->modify('+20 minutes'), $base->modify('+80 minutes'));
+            self::fail('The aggregate must reject returning to its own spent credential.');
+        } catch (InvalidArgumentException $failure) {
+            self::assertSame('Refresh-session credential history is invalid.', $failure->getMessage());
+        }
+        $stored = $this->sessions->getById($original->getId());
+        self::assertNotNull($stored);
+        self::assertSame($rotated->getCredentialDigest(), $stored->getCredentialDigest());
+        self::assertSame($rotated->getRevision(), $stored->getRevision());
         self::assertNull($this->sessions->getByCredential($spent));
-        self::assertNotNull($this->sessions->getByUsedCredential($spent));
+        self::assertSame(
+            $original->getId()->toString(),
+            $this->sessions->getByUsedCredential($spent)?->getId()->toString()
+        );
     }
 
     /**

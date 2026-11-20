@@ -1201,11 +1201,15 @@ SQL);
     #[DataProvider('purposes')]
     public function testExpiryCannotBeOverwrittenByAStaleProviderOutcome(string $purpose): void
     {
-        $this->seed($purpose);
+        $grant = $this->seed($purpose);
         $cleanup = null;
-        $this->provider(function () use (&$cleanup): CredentialDeliveryOutcome {
+        $expired = null;
+        $claim = null;
+        $this->provider(function () use ($purpose, &$cleanup, &$expired, &$claim): CredentialDeliveryOutcome {
+            $claim = $this->row($purpose);
             $this->container->get(Clock::class)->time = $this->now->modify('+1 hour');
             $cleanup = $this->expire($this->freshWorker(new InMemoryCredentialDeliveryProvider()))->run();
+            $expired = $this->row($purpose);
 
             return CredentialDeliveryOutcome::DELIVERED;
         });
@@ -1213,10 +1217,47 @@ SQL);
         self::assertNotNull($cleanup);
         self::assertSame(0, $cleanup['remaining']);
         self::assertSame(1, $delivery['contended']);
-        self::assertSame('expired', $this->row($purpose)['delivery_status']);
-        self::assertNull($this->row($purpose)['delivery_ciphertext']);
-        self::assertSame(1, (int) $this->row($purpose)['delivery_attempt_count']);
-        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        self::assertNotNull($claim);
+        self::assertNotNull($expired);
+        self::assertSame('expired', $expired['delivery_status']);
+        self::assertNull($expired['delivery_ciphertext']);
+        self::assertSame(1, (int) $expired['delivery_attempt_count']);
+        self::assertSame((int) $claim['revision'] + 1, (int) $expired['revision']);
+        self::assertSame($expired, $this->row($purpose));
+
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT action, subject_type, subject_id, context FROM audit_evidence'
+        );
+        self::assertCount(1, $rows);
+        $action = $purpose === 'activation' ? AuditAction::INVITATION_DELIVERY_EXPIRED : (
+            AuditAction::PASSWORD_RESET_DELIVERY_EXPIRED
+        );
+        self::assertSame($action->value, $rows[0]['action']);
+        self::assertSame('user', $rows[0]['subject_type']);
+        self::assertSame($this->userId->toString(), $rows[0]['subject_id']);
+        self::assertIsString($rows[0]['context']);
+        $payload = json_decode($rows[0]['context'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($payload);
+        $evidence = AuditEvidence::fromArray($payload);
+        self::assertSame($action, $evidence->action());
+        self::assertInstanceOf(SystemId::class, $evidence->actorId());
+        self::assertSame(['kind' => 'user', 'id' => $this->userId->toString()], $evidence->getSubject()->toArray());
+        $facts = $evidence->getFacts();
+        self::assertInstanceOf(AuditGrantOutcome::class, $facts);
+        self::assertSame(CredentialDeliveryStatus::EXPIRED, $facts->getDeliveryStatus());
+        self::assertNull($facts->getFailure());
+        $prior = [
+            'kind'        => $purpose,
+            'id'          => $grant->getId()->toString(),
+            'revision'    => (int) $claim['revision'],
+            'delivery_id' => $grant->getDelivery()->getId()->toString()
+        ];
+        self::assertSame($prior, $facts->getBefore()?->toArray());
+        self::assertSame(
+            array_replace($prior, ['revision' => (int) $expired['revision']]),
+            $facts->getAfter()->toArray()
+        );
+        self::assertNull($facts->getReplacedPredecessor());
     }
 
     /**
