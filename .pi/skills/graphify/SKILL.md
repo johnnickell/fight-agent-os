@@ -29,6 +29,10 @@ API-key presence or the parent agent. Never switch providers/models automaticall
 Missing authentication, model access or dispatch capability leaves semantic coverage incomplete and names
 the missing prerequisite; it does not become a Gemini approval request.
 
+Pi's final result text may omit the effective model. Before treating that omission as a hold, follow
+[effective-model confirmation](references/refresh.md#effective-model-confirmation) to inspect the worker's
+host metadata or saved session. Retain confirmation for that run; do not ask the user to confirm it again.
+
 ## Query and trace
 
 1. For source orientation and relationship questions, query an existing graph before broad searches; exact-file
