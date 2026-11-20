@@ -6,13 +6,13 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Documentation\PrivateOpenApi;
 use App\Adapter\Http\Web\PublicRuntimeConfiguration;
+use App\Adapter\Persistence\AccessControl\Role\PostgresRoleRepository;
+use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
-use App\Adapter\Persistence\Repository\PostgresRoleRepository;
-use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Adapter\Security\AccessToken\SystemAccessClock;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;

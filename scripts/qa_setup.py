@@ -13,7 +13,7 @@ from resource_lifecycle.resources import require, run, write_private
 # executes in trusted local containers, not a hostile-code sandbox. A changed
 # boundary needs deliberate qualification, never implicit approval from --ref.
 SETUP_PATHS = (
-    'compose.yaml', 'bin/composer', 'bin/client', 'bin/runtime', 'bin/database',
+    'compose.yaml', 'bin/composer', 'bin/client', 'bin/pi-dependencies', 'bin/runtime', 'bin/database',
     'bin/console', 'bin/validations', 'scripts/runtime.py', 'scripts/resource_lifecycle/cli.py',
     'scripts/resource_lifecycle/runtime.py', 'scripts/resource_lifecycle/resources.py',
     'scripts/resource_lifecycle/preparation.py', 'scripts/local_domain.py', 'etc/docker',
@@ -79,6 +79,7 @@ def setup(root, safe, checkout, project):
                                            "APP_CREDENTIAL_DELIVERY_ADAPTER='catcher'\n"))
     run([root / 'bin/up', '--worktree', checkout, '--build-only'], root)
     tool('composer', 'install', '--no-interaction', '--prefer-dist', '--no-progress', '--no-scripts', '--no-plugins')
+    tool('pi-dependencies', 'setup')
     tool('client', 'setup')
     tool('client', 'build')
     tool('database', 'start')

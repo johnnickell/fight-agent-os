@@ -61,7 +61,7 @@ private storage, status, updates and backup/recovery. The `web` container is too
 application traffic uses Nginx/PHP-FPM. Mailpit and SeaweedFS have no public or host ports.
 
 ```sh
-./bin/runtime setup
+./bin/runtime setup # Also prepares and validates locked Pi tooling dependencies
 ./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup

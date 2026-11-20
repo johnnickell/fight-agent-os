@@ -86,7 +86,7 @@ final readonly class BootstrapSuperAdminHandler implements CommandHandler
                 throw new LogicException('Managed bootstrap authority is unavailable.');
             }
             /** @var ManagedPolicyPlan $plan */
-            InstallationManagedPolicy::requireReconciled($plan, $policy);
+            InstallationManagedPolicy::assertReconciled($plan, $policy);
             $role = $this->queries->fetch(new GetRoleById($roleId));
             if (!$role instanceof RoleView) {
                 throw new LogicException('Managed bootstrap authority is unavailable.');

@@ -6,7 +6,6 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Authorization\AuthenticatedRoleAssignment;
 use App\Application\Authorization\IncompleteBootstrap;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Authorization\TrustedOperator;
@@ -17,9 +16,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
@@ -28,21 +24,9 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUser
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
-use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\RoleAssignedToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
-use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
-use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\CommandFilter;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
@@ -53,7 +37,6 @@ use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\EventMessage;
 use Fight\Common\Domain\Utility\ClassName;
-use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -63,7 +46,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 use Tests\Support\AccessClock;
 
 /**
- * Proves manual bootstrap admission, independent package commits and authoritative authenticated assignment
+ * Proves manual bootstrap admission and independent package commits
  */
 final class BootstrapTest extends TestCase
 {
@@ -446,74 +429,6 @@ final class BootstrapTest extends TestCase
         self::assertSame($before, $counts());
         self::assertSame($events, $this->events);
         self::assertSame($providerCalls, $this->providerCalls);
-    }
-
-    /**
-     * Enforces fresh authenticated permissions through real repositories and dispatches package assignment
-     */
-    public function testNormalAuthenticatedAssignment(): void
-    {
-        $command = $this->command();
-        self::assertTrue($this->bootstrap($command)->isComplete());
-        $normal = $this->newContainer();
-        $users = $normal->get(UserRepository::class);
-        $pending = $users->getById($command->userId);
-        self::assertInstanceOf(User::class, $pending);
-        $actor = clone $pending;
-        $actor->activate(
-            PasswordHash::fromString((string) password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT)),
-            $this->clock->now()
-        );
-        $session = RefreshSession::start(
-            RefreshSessionId::generate(),
-            $actor->getId(),
-            RefreshCredential::fromString(bin2hex(random_bytes(32))),
-            $this->clock->now(),
-            $this->clock->now()->modify('+1 day'),
-            $this->clock->now()->modify('+2 days'),
-            $actor->getAuthenticationVersion(),
-            false
-        );
-        $target = User::invite(
-            UserId::generate(),
-            EmailAddress::fromString('normal-target@example.test'),
-            $this->clock->now()
-        );
-        $this->connection->transactional(function () use ($users, $pending, $actor, $session, $target): void {
-            self::assertTrue($users->replaceAuthenticationAuthorityAndAddRefreshSession($pending, $actor, $session));
-            $users->add($target);
-        });
-        $context = $this->createStub(AuthenticationContextProvider::class);
-        $context->method('getAuthenticationContext')->willReturn(new AuthenticationContext(
-            $actor->getId(),
-            $session->getId(),
-            $actor->getAuthenticationVersion()
-        ));
-        $normal->set(AuthenticationContextProvider::class, static fn(): AuthenticationContextProvider => $context);
-        // Validate authentication at the same time used to create the session, not at wall-clock time.
-        $normal->set(
-            AuthoritativePrincipalResolver::class,
-            fn(Container $container): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
-                $container->get(UserRepository::class),
-                $container->get(RefreshSessionRepository::class),
-                $container->get(RoleRepository::class),
-                $container->get(PermissionRepository::class),
-                $this->clock
-            )
-        );
-        $assignment = new AssignRoleToUser(
-            $actor->getId(),
-            $target->getId(),
-            RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID)
-        );
-        $useCase = $normal->get(AuthenticatedRoleAssignment::class);
-        $useCase->assign($assignment);
-        self::assertTrue($users->getById($target->getId())->hasRole($assignment->getRoleId()));
-        $this->connection->executeStatement(<<<'SQL'
-DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'ASSIGN_SUPER_ADMIN')
-SQL);
-        $this->expectException(PermissionDenied::class);
-        $useCase->assign($assignment);
     }
 
     /**

@@ -10,9 +10,8 @@ This TASK-00446 policy supersedes TASK-00038/TICKET-00015's permanent-claim/no-r
 command-specific composition requirements. Their old implementation reports remain historical evidence.
 
 Console owns local admission and explicit confirmation. The registered bootstrap handler owns installation
-eligibility, package dispatch and the separate completion audit. This does not change the existing
-`AuthenticatedRoleAssignment` admission path or expose trusted Console/raw-bus operations. Bootstrap remains
-manual, non-atomic and not replayable.
+eligibility, package dispatch and the separate completion audit. Bootstrap remains a manual, single-operator
+procedure: the steps do not commit together, and the command cannot replay a prior attempt.
 
 Under the [TASK-00573 cutover](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption),
 bootstrap invitation and assignment use the canonical nil `SystemId`. Package `user.invited` and
@@ -105,17 +104,13 @@ registration does not execute a command, reconcile policy, require the unused de
 See [shared services and dispatch](STANDARDS.md#shared-services-and-bus-dispatch).
 
 **Raw package bus dispatch is trusted in-process infrastructure, not an authenticated API.** TASK-00446 removes
-the old raw `AssignRoleToUser` authentication filter, not merely its name. Authenticated/nontrusted assignment
-must invoke `AuthenticatedRoleAssignment::assign()`: it freshly resolves the authoritative principal, matches
-actor, requires exact `MANAGE_USER_ROLES`, and additionally exact `ASSIGN_SUPER_ADMIN` for stable or
-package-semantic Super Admin. Unknown, stale, revoked, absent or mismatched authority fails before dispatch.
-Role names identify a protected target, never grant authority. The default authentication provider refuses;
-a future authenticated adapter must inject verified invocation-bound context, not mutate a shared global principal.
+the old raw `AssignRoleToUser` authentication filter. TASK-00578 removes its unused authenticated forwarding
+service. A future authenticated assignment adapter must establish current actor, operation and target admission
+before dispatch. Role names identify a protected target, never grant authority.
 
 There is currently no HTTP/Agent assignment consumer, raw-message forwarding endpoint or role-administration UI.
-The existing `/me` and authentication middleware are read/security paths, not assignment entry points. Tests that
-previously dispatched raw assignments as authenticated callers now invoke this explicit use case. Trusted console
-orchestration dispatches package messages through the same bus without fabricating a browser principal. Installed
+The existing `/me` and authentication middleware are read/security paths, not assignment entry points.
+Trusted Console orchestration dispatches package messages through the same bus without fabricating a browser principal. Installed
 filters/handlers are trusted code, not a separate hostile-caller boundary; no terminal intent scope protects
 arbitrary transformations of package messages. Never forward untrusted raw messages into this graph.
 

@@ -51,8 +51,6 @@ services:
       - .:/app:ro
       - ./.runs:/app/.runs
       - ./var:/app/var
-      - ./.runs/cache/client/dependency-cache:/app/client/node_modules/.cache
-      - ./.runs/cache/client/vite-temp:/app/client/node_modules/.vite-temp
     shm_size: 256mb
     read_only: true
     # Runtime tools do not inherit other installations' secret/certificate directories.

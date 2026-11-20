@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Authority;
 
+use App\Adapter\Authorization\InstallationPermissionAdmission;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Api\V1\Authority\RoleMutationInput;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\RoleMutationResponder;
-use App\Application\Authorization\ManageCustomRoles;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Command\RemoveCustomRole;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -25,8 +28,11 @@ final readonly class RemoveRoleAction
     /**
      * Constructs RemoveRoleAction
      */
-    public function __construct(private ManageCustomRoles $roles, private RoleMutationResponder $responder)
-    {
+    public function __construct(
+        private CommandBus $commandBus,
+        private InstallationPermissionAdmission $installationAuthority,
+        private RoleMutationResponder $responder
+    ) {
     }
 
     /**
@@ -81,7 +87,11 @@ final readonly class RemoveRoleAction
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $authentication = CatalogInput::authentication($request);
+        $actorId = CatalogInput::authentication($request)->getUserId();
+        $this->installationAuthority->assertInstallationPermission(
+            $actorId,
+            PermissionName::fromString('DELETE_ROLES')
+        );
         /** @var array{expected_revision: string, confirm: bool} $input */
         $input = $request->getAttribute(JsonBody::class);
         if (!$input['confirm']) {
@@ -90,8 +100,8 @@ final readonly class RemoveRoleAction
         $id = RoleMutationInput::id($request);
         $revision = RoleMutationInput::revision($input['expected_revision']);
 
-        return $this->responder->respond(function () use ($authentication, $id, $revision): null {
-            $this->roles->remove($authentication, $id, $revision, true);
+        return $this->responder->respond(function () use ($actorId, $id, $revision): null {
+            $this->commandBus->execute(new RemoveCustomRole($actorId, $id, $revision));
 
             return null;
         });

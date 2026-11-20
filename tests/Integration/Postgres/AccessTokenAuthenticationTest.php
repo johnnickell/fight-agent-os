@@ -6,12 +6,12 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Api\Auth\BearerCredential;
 use App\Adapter\Http\Middleware\Api\Auth\AccessTokenAuthentication;
+use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
-use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use DateInterval;
 use DateTimeImmutable;

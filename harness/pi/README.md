@@ -171,12 +171,22 @@ last installed footer wins and shutdown restores Pi's footer. API-unavailable na
 
 Run owning Harness behavior checks with `npm --prefix harness/pi test` or the network-none
 `./bin/harness-check`, which reuses this checkout's explicitly prepared tooling image (`./bin/up --build-only`).
-Git and Python are required by the surviving shared-custody/Sync process checks; no tools are installed by acceptance. The canonical `./bin/build` additionally checks the bundled engine and application gates.
-No product tests assert tooling/configuration behavior. Prepare the engine's locked development tools explicitly
-on the OS where checks execute (native optional modules are platform-specific):
+Git and Python are required by the shared-custody and Sync process checks. For changes to the bundled engine,
+run `npm --prefix harness/pi/vendor/pi-subagents run check` for lint, type checking and its full test suite.
+Run both owning checks separately from `./bin/build`, which neither installs nor requires Pi dependencies.
+Use private task scratch for the engine's `TMPDIR` and `GIT_CEILING_DIRECTORIES`.
+
+For Docker tooling, `./bin/runtime setup` prepares both
+the Harness and engine dependencies automatically. Use `./bin/pi-dependencies setup` to prepare an existing
+checkout or `./bin/pi-dependencies check` for an offline readiness check. Setup reuses valid installations;
+finish active checks and stop this checkout's web service before replacing stale dependencies. Receipts identify the manifests,
+lockfiles, Node/npm versions, OS and architecture; validation executes the local native tools.
+
+For separate host-side development, install on the OS where checks execute (native optional modules are
+platform-specific); do not copy host node_modules into the Docker installation:
 
 ```sh
-npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+node harness/pi/scripts/dependencies.mjs setup
 ```
 
 For Docker, use the selected checkout's writable maintenance service and task-owned scratch/cache locations.

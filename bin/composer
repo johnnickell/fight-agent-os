@@ -2,8 +2,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 ./bin/runtime storage-admit
-./bin/runtime paths .runs/cache/client/dependency-cache .runs/cache/client/vite-temp var \
-    client/node_modules/.cache client/node_modules/.vite-temp
+./bin/runtime paths .runs var
 # Only the explicit maintenance service mounts source writable.
 exec ./bin/runtime docker compose run --rm --user "$(id -u):$(id -g)" \
     -e COMPOSER_ROOT_VERSION=dev-develop \

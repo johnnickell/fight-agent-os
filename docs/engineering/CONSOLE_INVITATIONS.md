@@ -145,9 +145,8 @@ intent/claim scope protects arbitrary filter rewrites. Membership confirmation r
 not proof that a void bus dispatch executed a mutation: an already-present role remains membership-idempotent.
 Throwing package dispatch failures remain non-success, including repeats. Missing new membership cannot be reported as
 success. Queries must still return matching identities and exact desired policy definitions, not merely an empty
-unchanged plan. Authenticated/nontrusted assignment must use `AuthenticatedRoleAssignment::assign()` for fresh
-principal/actor/exact permission checks; never forward raw messages from HTTP or Agent tools. No such assignment
-endpoint currently exists. Trusted machine/process access remains the CLI boundary; future managed Agent CLI
+unchanged plan. No authenticated HTTP or Agent assignment endpoint exists; never forward raw messages
+from those entries. Trusted machine/process access remains the CLI boundary; future managed Agent CLI
 exclusion is not implemented by service registration.
 
 The supported installation writer supplies only `InstallationManagedPolicy::create()` via the shipped

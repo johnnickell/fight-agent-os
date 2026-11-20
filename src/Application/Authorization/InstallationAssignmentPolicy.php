@@ -46,7 +46,7 @@ final readonly class InstallationAssignmentPolicy
             throw new UnexpectedValueException('Managed installation authority is unavailable.');
         }
         /** @var ManagedPolicyPlan $plan */
-        InstallationManagedPolicy::requireReconciled($plan, $policy);
+        InstallationManagedPolicy::assertReconciled($plan, $policy);
     }
 
     /**
