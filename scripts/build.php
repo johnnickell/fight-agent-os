@@ -283,37 +283,14 @@ try {
         }
     }
 
-    // Frontend/Pi tools receive no application, database, provider or host credential environment.
+    // Frontend tools receive no application, database, provider or host credential environment.
     // Explicit runner setup may select tool/browser paths without inheriting its ambient PATH or HOME.
     $frontendEnvironment = $cache->frontendEnvironment($run.'/home');
     $frontendSteps = [
         'Installed frontend lock/runtime' => ['node', 'scripts/dependencies.mjs'],
         'Frontend Node version'           => ['node', '--version'],
         'Frontend npm version'            => ['npm', '--version'],
-        'Frontend dependency versions'    => ['npm', 'ls', '--depth=0'],
-        'Pi Harness behavior'             => [
-            'node',
-            '--test',
-            '../harness/pi/tests/header.test.mjs',
-            '../harness/pi/tests/herdr-workspace.test.mjs',
-            '../harness/pi/tests/herdr-activity.test.mjs',
-            '../harness/pi/tests/herdr-logs.test.mjs',
-            '../harness/pi/tests/discovered-logs.test.mjs',
-            '../harness/pi/tests/local-log-sources.test.mjs',
-            '../harness/pi/tests/workflow-access.test.mjs',
-            '../harness/pi/tests/tool-policy.test.mjs',
-            '../harness/pi/tests/workspace.test.mjs',
-            '../harness/pi/tests/subagents.test.mjs',
-            '../harness/pi/tests/build-stages.test.mjs',
-            '../harness/pi/tests/registered-children.test.mjs',
-            '../harness/pi/tests/native-agent-browser.test.mjs',
-            '../harness/pi/tests/custody.test.mjs',
-            '../harness/pi/tests/session-file.test.mjs',
-            '../harness/pi/tests/runtime-logs.test.mjs'
-        ]
-    ];
-    $frontendSteps['Pi subagent engine'] = [
-        'npm', '--prefix', '../harness/pi/vendor/pi-subagents', 'run', 'check'
+        'Frontend dependency versions'    => ['npm', 'ls', '--depth=0']
     ];
     $frontendChecks = [
         'typecheck', 'lint', 'format-check', 'coverage', 'build-check',
@@ -323,16 +300,7 @@ try {
         $frontendSteps['Frontend '.$step] = ['npm', 'run', $step];
     }
     foreach ($frontendSteps as $name => $command) {
-        $environment = $frontendEnvironment;
-        if ($name === 'Pi subagent engine') {
-            $temporary = $run.'/subagents';
-            if (!mkdir($temporary, 0700)) {
-                throw new RuntimeException('Cannot create subagent test scratch.');
-            }
-            $environment['TMPDIR'] = $temporary;
-            $environment['GIT_CEILING_DIRECTORIES'] = $temporary;
-        }
-        $exitCode = $execute($name, $command, $root.'/client', $environment);
+        $exitCode = $execute($name, $command, $root.'/client', $frontendEnvironment);
         if ($exitCode !== 0) {
             throw new RuntimeException('Build failed during '.$name.'.');
         }

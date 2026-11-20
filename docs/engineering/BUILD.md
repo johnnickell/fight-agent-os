@@ -194,24 +194,21 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
 4. OpenAPI and public-validation artifact freshness through their owning PHP scripts.
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
    migrations, **one unfiltered coverage-enabled PHPUnit execution**, coverage policy, guarded test-schema cleanup.
-6. Installed frontend lock/runtime validation and versions, Pi presentation tests, and the vendored subagent engine's
-   lint/typecheck/full test suite. Install its locked development tools explicitly with
-   `npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-fund --no-audit`;
-   install Harness runtime dependencies with the same options at `--prefix harness/pi`. Acceptance is offline and
-   never installs them. The engine suite uses private run scratch, a Git discovery ceiling and two test workers;
-   source/dependencies remain read-only. Host-provided Pi packages are not bundled with the Harness.
+6. Installed frontend lock/runtime validation and versions.
 7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
    zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
 8. Scratch production build/artifact inspection, static Storybook build/artifact inspection, Chromium story/a11y
    checks, and static catalog captures/resource checks. Only the capture phase overlaps work: the two widths
    of one story use separate contexts in one browser, then both close before the next story. No backend,
-   Vitest, Harness or browser-story phase overlaps another phase or a database reset.
+   Vitest or browser-story phase overlaps another phase or a database reset.
 9. [Critical browser smoke](BROWSER_SMOKE.md): five isolated real Nginx/FPM HTTPS platform scenarios, guarded
    test-schema/catcher cleanup, private browser-only trust of the prepared public CA, credential-safe diagnostics
    and focused source stability. Local task runs exercise the existing shared HTTPS envelope.
 10. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
 Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
+For Pi changes, run the separate [Harness and subagent engine checks](../../harness/pi/README.md#verification-and-packaging).
+The application gate and its hosted setup do not run or provision those suites.
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).
 No percentage-only frontend threshold is invented. Backend Domain/Application line coverage requires 100%; Adapter
 coverage remains a practical target with counted gaps, not a hidden exclusion baseline or a claimed 100% result.
@@ -242,7 +239,7 @@ PostgreSQL test service is disposable; development data is not migrated
 or reset. Normal backend completion/failure after a successful reset cleans the guarded test schema again. Focused
 PostgreSQL iteration therefore needs `./bin/database test-reset` after coverage cleanup.
 
-Frontend/Pi processes receive a minimal environment without application/database/provider secrets, an isolated HOME,
+Frontend processes receive a minimal environment without application/database/provider secrets, an isolated HOME,
 offline npm and telemetry disabled. Native setup may explicitly select `FIGHT_BUILD_TOOL_PATH` (the qualified
 Node/npm directories plus system tools) and `PLAYWRIGHT_BROWSERS_PATH` (the installed browser directory).
 Only these path values cross into the sanitized environment; the ambient runner PATH, HOME and credentials do not.

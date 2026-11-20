@@ -169,18 +169,25 @@ last installed footer wins and shutdown restores Pi's footer. API-unavailable na
 
 ## Verification and packaging
 
-Run owning Harness behavior checks with `npm --prefix harness/pi test` or the network-none
-`./bin/harness-check`, which reuses this checkout's explicitly prepared tooling image (`./bin/up --build-only`).
-Git and Python are required by the surviving shared-custody/Sync process checks; no tools are installed by acceptance. The canonical `./bin/build` additionally checks the bundled engine and application gates.
-No product tests assert tooling/configuration behavior. Prepare the engine's locked development tools explicitly
-on the OS where checks execute (native optional modules are platform-specific):
+For Pi changes, run the owning checks from the repository root, separately from the required application gate
+(`./bin/build`). Run Harness behavior with `npm --prefix harness/pi test` or the network-none
+`./bin/harness-check`, which reuses this checkout's tooling image (`./bin/up --build-only` if missing).
+Git and Python are required by the custody and Sync process checks. Use the locked Harness runtime dependencies
+where needed (`npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund` if missing
+or stale in that environment).
+
+For changes affecting the bundled engine, run `npm --prefix harness/pi/vendor/pi-subagents run check` for
+lint, type checking, and the full engine suite. Prepare its locked development tools only if missing or stale
+on the OS running the checks; native optional modules are platform-specific:
 
 ```sh
 npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
 ```
 
-For Docker, use the selected checkout's writable maintenance service and task-owned scratch/cache locations.
-Never replace dependencies beneath a running gate. Pi supplies host peers; do not bundle another SDK.
+For Docker setup, use the selected checkout's writable maintenance service. Run engine tests with `TMPDIR`
+and `GIT_CEILING_DIRECTORIES` set to the same private task-owned scratch directory outside source control.
+Never replace dependencies beneath a running check. Pi supplies host peers; do not bundle another SDK.
+No product tests assert tooling/configuration behavior.
 `croner` and `nanoid` remain actual bundled-engine dependencies. `npm pack --ignore-scripts --pack-destination PATH`
 creates a private distributable containing runtime source, bin, agents/profile, runbooks/licenses, not tests or
 node_modules. Keep artifacts under ignored task scratch.
