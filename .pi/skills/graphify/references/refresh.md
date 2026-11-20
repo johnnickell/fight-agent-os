@@ -51,9 +51,10 @@ not instructions to pass an OpenAI account model to Graphify's `--backend openai
    Return JSON only; do not edit sources, build graphs, install tools or delegate further.
    ```
 
-4. Verify the reported effective model against the selection, parse and validate the result, and check each
-   assigned file's coverage. One bounded repair with the same model is allowed for invalid JSON or references;
-   otherwise report incomplete coverage. Never cache or mark a failed/partial document as fully extracted.
+4. Confirm the effective model against the selection using [the evidence procedure below](#effective-model-confirmation),
+   then parse and validate the result and check each assigned file's coverage. One bounded repair with the
+   same model is allowed for invalid JSON or references; otherwise report incomplete coverage. Never cache
+   or mark a failed/partial document as fully extracted.
    Record actual token usage when exposed, otherwise unavailable; never treat placeholder zeros as measured usage.
 5. Merge accepted fragments through the installed Graphify library's supported graph-building APIs, preserving
    unaffected graph content and source provenance. Qualify those APIs and the existing graph schema before writing.
@@ -70,6 +71,43 @@ Validate resulting JSON, source coverage and edge endpoints using the version's 
 unexpected size reductions and provenance before replacement. Record command, exit, version, source identity,
 selected files, completed/failed scopes and actual usage or unavailable usage. A reported zero cost is not proof
 of zero account allowance consumed. Preserve recoverable partial results and explain safe continuation.
+
+### Effective-model confirmation
+
+The coordinator confirms model identity from the host; the fragment remains extraction JSON only. A missing
+model field in `get_subagent_result`, including its verbose form, is not evidence of a fallback and is not by
+itself a reason to stop. Do not redispatch extraction or ask the worker to identify itself to fill that omission.
+
+1. Retain the selected provider/model and worker ID from dispatch. Inspect structured launch/run/result
+   metadata as well as rendered text. An exact effective provider/model reported by the host for that worker
+   satisfies confirmation; the requested `model` argument, parent model and a display label alone do not.
+2. If those results omit exact identity, inspect the matching worker's saved Pi session with bounded native
+   reads. Use a session locator supplied by the host when available; otherwise narrow discovery to the target
+   checkout's Pi session directory and dispatch time. Bind the child to the parent session, assigned prompt and
+   returned fragment; a nearby timestamp alone is insufficient. Read only the needed identity and response
+   records, not unrelated session histories or credentials.
+3. In Pi JSONL sessions, assistant response records expose `message.provider` and `message.model`. Check the
+   responses used for extraction, including the final fragment. For the default selection these must be
+   `openai-codex` and `gpt-6.1-terra`. A `model_change` record's `provider` and `modelId` corroborate selection;
+   they do not replace response evidence. Qualify the installed host's fields rather than assuming every host
+   uses this schema. Any different provider/model during extraction is a mismatch, not an allowed fallback.
+4. Record the confirmed identity, worker/session locator and evidence reference in the existing run evidence
+   or continuation handoff. Continue validation and merging without another model approval. An explicit user
+   confirmation for this same worker also resolves missing metadata; record it as user-confirmed, not as
+   host-verified. Preserve that confirmation on resume. A new worker needs its own evidence; conflicting
+   evidence reopens the hold rather than silently inheriting the prior confirmation.
+5. If exact identity remains unavailable or conflicts with the selection, preserve the fragment and hold only
+   its merge/cache/manifest claims. Name the missing worker/session evidence or mismatch and ask only for the
+   unresolved fact. Do not switch models/providers or rerun a completed extraction merely because result text
+   omitted metadata.
+
+For example, a Terra dispatch whose result omits the model can continue when its matching child session's
+assistant responses report `openai-codex/gpt-6.1-terra`. If those responses report another model, preserve the
+hold even if the dispatch requested Terra. Confirmation resolves identity only; JSON, provenance and scoped
+coverage checks still apply. Use the [handoff rules](../../../../docs/engineering/HANDOFFS.md#readable-handoff-text)
+to carry the confirmed identity and remaining action clearly across continuation.
+
+## Installation and output scope
 
 Installation and hook/watch setup are separate requested operations. Inventory existing hooks and merge drivers,
 preserve their ownership, and inspect the exact changes first. Explain whether automatic updates cover structural
