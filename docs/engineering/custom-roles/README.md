@@ -2,7 +2,7 @@
 
 ![Protected HTTP entries dispatch Role commands to Access Control, which writes state and audit in one transaction before dispatching success](role-mutation.png)
 
-Source: the Agent OS TASK-00578 change to `c03e73abdcb09572c2d348ba03702311f9e07ea5`, Access Control
+Source: Agent OS TASK-00578 at `4eddaf0fc7a85e22dad78135cf4de668a4b7f321`, Access Control
 `6258682512e2c8d76a3fa655dd633167bd8f55b6`, and Common
 `c73690164a9f112dbf14d774c56a7c01519b88aa`. [Editable diagram](role-mutation.py).
 

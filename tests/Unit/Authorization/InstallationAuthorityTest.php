@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Authorization;
 
 use App\Adapter\Authorization\InstallationPermissionAdmission;
+use App\Adapter\Authorization\InstallationSessionAdministration;
 use ArrayObject;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
@@ -12,6 +13,7 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -119,16 +121,36 @@ final class InstallationAuthorityTest extends TestCase
     }
 
     /**
+     * Allows cross-user reads but does not treat read authority as revocation authority
+     */
+    public function testSessionReadDoesNotGrantRevocation(): void
+    {
+        [$authority, $actor, $target] = $this->authority(name: 'READ_SESSIONS');
+        InstallationSessionAdministration::forRead($authority)->assertCanManageSessions(
+            $actor->getId(),
+            $target->getId()
+        );
+
+        $this->expectException(SessionAdministrationAuthorizationException::class);
+        InstallationSessionAdministration::forRevocation($authority)->assertCanManageSessions(
+            $actor->getId(),
+            $target->getId()
+        );
+    }
+
+    /**
      * Creates current package authority snapshots behind injectable repository ports
      *
      * @return array{InstallationPermissionAdmission, User, User, Permission, Role, ArrayObject<int, Role>}
      */
-    private function authority(PermissionTier $tier = PermissionTier::SUPER_ADMIN_ONLY): array
-    {
+    private function authority(
+        PermissionTier $tier = PermissionTier::SUPER_ADMIN_ONLY,
+        string $name = 'MANAGE_USERS'
+    ): array {
         $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
         $permission = Permission::defineManaged(
             PermissionId::generate(),
-            PermissionName::fromString('MANAGE_USERS'),
+            PermissionName::fromString($name),
             $tier,
             $at
         );
