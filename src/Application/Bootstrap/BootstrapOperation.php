@@ -9,6 +9,7 @@ use App\Domain\Authorization\ManagedPolicyCatalog;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
@@ -64,12 +65,9 @@ final readonly class BootstrapOperation
             if (!$role instanceof RoleView || !$role->getRoleId()->equals($roleId) || !$role->isManaged()) {
                 throw new LogicException('Managed bootstrap authority is unavailable.');
             }
-            $this->commands->execute(new InvitePendingUser(
-                $command->input->actorId(),
-                $command->userId,
-                $command->input->email
-            ));
-            $this->commands->execute(new AssignRoleToUser($command->input->operatorId, $command->userId, $roleId));
+            $systemId = SystemId::generate();
+            $this->commands->execute(new InvitePendingUser($systemId, $command->userId, $command->input->email));
+            $this->commands->execute(new AssignRoleToUser($systemId, $command->userId, $roleId));
             $this->progress->complete($command);
         } catch (Throwable) {
             // An exception never proves rollback across independently committed package steps.

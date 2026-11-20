@@ -367,7 +367,7 @@ final class InvitationRecoveryApiTest extends TestCase
             self::assertCount(1, $due);
             self::assertSame($after['delivery_id'], $due[0]->getDeliveryId()->toString());
             $this->container->get(CommandBus::class)->execute(new DeliverUserInvitation(
-                $this->actor->getId()->toString(),
+                $this->actor->getId(),
                 $this->target,
                 $due[0]->getDeliveryId()
             ));

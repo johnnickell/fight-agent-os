@@ -26,11 +26,13 @@ final readonly class InvitationIssuanceData implements Arrayable
      */
     public function toArray(): array
     {
+        $delivery = $this->outcome->delivery;
+
         return [
             'user_id'    => $this->outcome->userId?->toString(),
             'assignment' => $this->outcome->assignment,
             'audit'      => $this->outcome->auditConfirmed ? 'confirmed' : 'unconfirmed',
-            'delivery'   => $this->outcome->delivery?->toArray()
+            'delivery'   => $delivery === null ? null : (new InvitationDeliveryData($delivery))->toArray()
         ];
     }
 }

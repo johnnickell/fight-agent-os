@@ -2,15 +2,15 @@
 id: TICKET-00133
 epic: EPIC-00023
 title: Adopt canonical transaction and audit contracts
-status: ready-for-agent
+status: done
 ---
 
 # Adopt canonical transaction and audit contracts
 
 ## Problem statement
 
-Transaction mechanics and required audit must be explicit, reusable responsibilities. Agent OS currently uses
-`RoleMutationUnitOfWork` to infer Role audit from a transaction callback result. Replacing names or introducing a
+Transaction mechanics and required audit must be explicit, reusable responsibilities. Before the adoption,
+Agent OS used `RoleMutationUnitOfWork` to infer Role audit from a transaction callback result. Replacing names or introducing a
 DBAL unit of work alone does not remove that hidden business orchestration. Real package/persistence composition
 must adopt canonical upstream contracts and preserve required mutation/audit atomicity.
 
@@ -94,7 +94,7 @@ version. Coordinate overlapping composition/manifest edits once during TASK deco
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00572](../tasks/00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | done |
-| [TASK-00573](../tasks/00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info |
+| [TASK-00573](../tasks/00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -102,12 +102,11 @@ version. Coordinate overlapping composition/manifest edits once during TASK deco
 The Common DBAL consumer adoption is independently accepted under
 [TASK-00572](../tasks/00572-TASK.md#accepted-implementation-checkpoint--2026-11-10): released Common v1.5.0,
 source/lock `06fb5cd3720af9cf8295198f74040d95b64c5155`, direct shared-Connection composition and real PostgreSQL
-failure/concurrency/recovery qualification. Unused ORM scaffolding/direct dependency is removed; the required
-Role audit decorator remains. Current supplier source now has explicit Role-handler audit and typed Role subjects,
-superseding the older absence observation below; see the
-[source recheck](../adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
-TASK-00573 still owns actual tagged adoption, required audit storage/rollback proof and decorator replacement.
-Its hold remains, so this TICKET is not complete. Publication/merge are separate from implementation acceptance.
+failure/concurrency/recovery qualification. That slice removed unused ORM scaffolding and retained the Role
+inference decorator pending its own replacement. The [accepted TASK-00573 adoption](../tasks/00573-TASK.md#accepted-implementation-checkpoint--2026-11-20)
+replaces that decorator with handler-owned atomic audit on Access Control v0.11.0, using Common v1.5.1's shared
+DBAL connection. Both slices are independently accepted. Earlier supplier holds are historical; acceptance is
+separate from publication and merge.
 
 The decomposition and supplier observations below are historical planning checkpoints, not current TASK status.
 

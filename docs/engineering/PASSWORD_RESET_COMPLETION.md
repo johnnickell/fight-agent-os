@@ -46,7 +46,7 @@ atomically before policy/reset, survive business rollback and deny on capacity/l
 capacity and bounded retry/history/deadline guarantees are unchanged. This is not production ingress or DDoS certification.
 
 `CompletePasswordReset` applies shared candidate policy, then calls the shared package
-`AuthenticationService::resetPassword()` directly. The package owns current active identity, latest usable
+`PasswordManagement::resetPassword()` directly. The package owns current active identity, latest usable
 one-hour purpose-bound grant, credential verification, consume-once, Argon2id replacement, authentication
 version/revision advancement, all-target-session revocation, atomic audit and post-commit event. There is no
 consumer persistence shortcut or duplicate lifecycle policy. Original qualification used Access Control

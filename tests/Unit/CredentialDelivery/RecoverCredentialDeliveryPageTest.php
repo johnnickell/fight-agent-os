@@ -9,16 +9,15 @@ use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
-use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotRetryableException;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\DueCredentialDelivery;
-use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Exception\CredentialDeliveryTransitionException;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\DeliverPasswordReset;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Exception\PasswordResetDeliveryException;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Messaging\Command\Command;
@@ -74,8 +73,8 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
         self::assertSame($activation->getDeliveryId()->toString(), $seen[1]->getActivationDeliveryId()->toString());
         self::assertSame($reset->getUserId(), $seen[0]->getUserId());
         self::assertSame($activation->getUserId(), $seen[1]->getUserId());
-        self::assertSame('credential-recovery', $seen[0]->getActorId());
-        self::assertSame('credential-recovery', $seen[1]->getActorId());
+        self::assertEquals(SystemId::generate(), $seen[0]->getActorId());
+        self::assertEquals(SystemId::generate(), $seen[1]->getActorId());
     }
 
     /**
@@ -145,18 +144,15 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
     }
 
     /**
-     * Proves stale package work stops the current worker before using a closed transaction manager
-     *
-     * @phpstan-param class-string<\Exception> $exception
+     * Proves a package state conflict stops the current worker before dispatching another item
      */
-    #[DataProvider('contentions')]
-    public function testContentionStopsPage(string $exception): void
+    public function testContentionStopsPage(): void
     {
         $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->method('fetch')->willReturn([$this->work('activation', $at), $this->work('password_reset', $at)]);
         $commands = $this->createMock(CommandBus::class);
-        $commands->expects(self::once())->method('execute')->willThrowException(new $exception('private material'));
+        $commands->expects(self::once())->method('execute')->willThrowException(new StateConflict('Stale work.'));
         $runner = new RecoverCredentialDeliveryPage($queries, $commands, $this->clock($at));
         self::assertSame([
             'discovered'  => 2,
@@ -166,18 +162,6 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
             'unsupported' => 0,
             'stopped'     => true
         ], $runner->run(2, 2));
-    }
-
-    /**
-     * Supplies only the package stale-generation and claim failures
-     *
-     * @return iterable<array{class-string<\Exception>}>
-     */
-    public static function contentions(): iterable
-    {
-        yield [ActivationDeliveryNotRetryableException::class];
-        yield [PasswordResetDeliveryException::class];
-        yield [CredentialDeliveryTransitionException::class];
     }
 
     /**

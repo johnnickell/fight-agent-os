@@ -6,10 +6,10 @@ use App\Adapter\Console\BootstrapSuperAdminCommand;
 use App\Adapter\Persistence\Bootstrap\PostgresBootstrapProgress;
 use App\Application\Bootstrap\BootstrapOperation;
 use App\Domain\Authorization\ManagedPolicyCatalog;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Bootstrap\BootstrapProgress;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
@@ -22,7 +22,7 @@ return static function (Container $container): void {
         new PostgresBootstrapProgress(
             $container->get(Connection::class),
             $container->get('bootstrap.inspection.connection'),
-            $container->get(AuditEvidenceRepository::class)
+            $container->get(MembershipEvidenceRepository::class)
         ));
     $container->set(BootstrapOperation::class, static fn(Container $container): BootstrapOperation =>
         new BootstrapOperation(

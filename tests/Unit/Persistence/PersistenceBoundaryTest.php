@@ -9,7 +9,10 @@ use App\Adapter\Persistence\Repository\PostgresAuditEvidenceRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditAction;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditSessionRevocation;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditSubject;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -47,7 +50,14 @@ final class PersistenceBoundaryTest extends TestCase
         $connection->expects(self::never())->method('insert');
         $this->expectException(LogicException::class);
         (new PostgresAuditEvidenceRepository($connection))->add(
-            AuditEvidence::record($this->userId()->toString(), 'user.invited', $this->userId())
+            AuditEvidence::record(
+                $this->userId(),
+                new AuditSubject($this->userId()),
+                AuditAction::SESSION_REVOKED,
+                new DateTimeImmutable('2026-10-01T12:00:00Z'),
+                new AuditSessionRevocation(RefreshSessionId::generate(), 0, 1),
+                null
+            )
         );
     }
 
@@ -64,7 +74,7 @@ final class PersistenceBoundaryTest extends TestCase
             $at,
             $at->modify('+1 hour'),
             $at->modify('+1 day'),
-            0,
+            1,
             false
         );
         $connection = $this->createMock(Connection::class);

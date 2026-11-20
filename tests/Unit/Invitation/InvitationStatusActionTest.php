@@ -11,8 +11,10 @@ use App\Domain\Invitation\InvitationOperation;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -53,13 +55,14 @@ final class InvitationStatusActionTest extends TestCase
             $kind === 'wrong-id' ? UserId::generate() : $target->getId(),
             CredentialDeliveryStatus::RETRY_PENDING,
             new DateTimeImmutable('2026-11-10T12:00:00Z'),
-            ActivationDeliveryId::generate()
+            ActivationDeliveryId::generate(),
+            ActivationOrigin::PRIVATE_INVITATION
         );
         $users = $this->createStub(UserRepository::class);
         $users->method('getById')->willReturn($kind === 'missing-target' ? null : $target);
         $queries = $this->createStub(QueryBus::class);
         $queries->method('fetch')->willReturn(match ($kind) {
-            'no-delivery' => null,
+            'no-delivery' => new CredentialDeliveryAbsent(),
             'wrong-type' => 'private-marker',
             default => $view
         });

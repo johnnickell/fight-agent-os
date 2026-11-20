@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Adapter\Persistence\Bootstrap;
 
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Bootstrap\BootstrapEvidence;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
 use Doctrine\DBAL\Connection;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use LogicException;
 
 /**
@@ -26,7 +26,7 @@ final readonly class PostgresBootstrapProgress implements BootstrapProgress
     public function __construct(
         private Connection $connection,
         private Connection $inspection,
-        private AuditEvidenceRepository $audit
+        private MembershipEvidenceRepository $membershipEvidenceRepository
     ) {
     }
 
@@ -42,7 +42,9 @@ final readonly class PostgresBootstrapProgress implements BootstrapProgress
         ) {
             throw new LogicException('Bootstrap completion is unavailable.');
         }
-        $this->connection->transactional(fn() => $this->audit->add(BootstrapEvidence::completed($command)));
+        $this->connection->transactional(
+            fn() => $this->membershipEvidenceRepository->add(BootstrapEvidence::completed($command))
+        );
     }
 
     /**

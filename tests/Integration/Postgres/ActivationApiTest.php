@@ -88,7 +88,7 @@ final class ActivationApiTest extends TestCase
         $container->get('http.failure.logger')->setHandlers([$this->logs]);
         $this->target = UserId::generate();
         $container->get(CommandBus::class)->execute(new InvitePendingUser(
-            UserId::generate()->toString(),
+            UserId::generate(),
             $this->target,
             EmailAddress::fromString('activation@example.test')
         ));

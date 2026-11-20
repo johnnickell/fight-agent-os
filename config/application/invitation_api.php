@@ -16,13 +16,13 @@ use App\Application\Authorization\PermissionGuard;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Invitation\InvitationRatePolicy;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\QueryHandler\FindInvitationDeliveryStatusHandler;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Command\CommandBus;
@@ -89,7 +89,7 @@ return static function (Container $container): void {
         $container->get(CommandBus::class),
         $container->get(QueryBus::class),
         $container->get(TransactionalUnitOfWork::class),
-        $container->get(AuditEvidenceRepository::class)
+        $container->get(MembershipEvidenceRepository::class)
     ));
     $container->set(IssueInvitationResponder::class, static fn(Container $container): IssueInvitationResponder =>
         new IssueInvitationResponder($container->get(JSendResponseFactory::class)));

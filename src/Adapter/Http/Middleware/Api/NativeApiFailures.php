@@ -7,12 +7,10 @@ namespace App\Adapter\Http\Middleware\Api;
 use App\Adapter\Http\Api\Failure\ProjectInputFailure;
 use App\Domain\Workspace\Project\ProjectConflict;
 use App\Domain\Workspace\Project\ProjectInputRejected;
-use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\LoginRejectedException;
 use Fight\Common\Adapter\Http\Error\SafeHttpFailure;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\InvalidInput;
-use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\EventSourcing\Exception\OptimisticConcurrencyException;
@@ -61,8 +59,6 @@ final readonly class NativeApiFailures implements MiddlewareInterface
                 $failure instanceof HttpGoneException => SafeHttpFailure::fromNative(410),
                 $failure instanceof HttpTooManyRequestsException => SafeHttpFailure::tooManyRequests(),
                 $failure instanceof LoginRejectedException => new AuthenticationRequired(previous: $failure),
-                $failure instanceof InvitationAdministrationAuthorizationException =>
-                    new PermissionDenied(previous: $failure),
                 $failure instanceof ProjectInputRejected => new ProjectInputFailure(previous: $failure),
                 $failure instanceof ProjectConflict,
                 $failure instanceof OptimisticConcurrencyException => new StateConflict(previous: $failure),

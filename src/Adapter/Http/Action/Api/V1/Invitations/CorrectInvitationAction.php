@@ -23,7 +23,6 @@ use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -150,17 +149,6 @@ final readonly class CorrectInvitationAction
         } catch (EventDispatchFailed) {
             throw new InvitationRecoveryUncertain();
         } catch (PendingInvitationCorrectionException) {
-            throw new StateConflict();
-        } catch (LogicException $failure) {
-            // Only the locked package's two expected compare-and-replace rejections are conflicts.
-            if (
-                $failure::class !== LogicException::class || !in_array($failure->getMessage(), [
-                'The pending invitation email changed concurrently or is reserved.',
-                'The activation grant changed concurrently.'
-                ], true)
-            ) {
-                throw $failure;
-            }
             throw new StateConflict();
         }
 

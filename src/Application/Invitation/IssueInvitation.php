@@ -7,13 +7,13 @@ namespace App\Application\Invitation;
 use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\InvitationConfirmationRequired;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationOperation;
 use App\Domain\Invitation\InvitationRoleEvidence;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
@@ -50,7 +50,7 @@ final readonly class IssueInvitation
         private CommandBus $commands,
         private QueryBus $queries,
         private TransactionalUnitOfWork $transactions,
-        private AuditEvidenceRepository $audit
+        private MembershipEvidenceRepository $membershipEvidenceRepository
     ) {
     }
 
@@ -85,8 +85,10 @@ final readonly class IssueInvitation
         }
         $userId = UserId::generate();
         $auditConfirmed = false;
+        $issued = false;
         try {
-            $this->commands->execute(new InvitePendingUser($actor->toString(), $userId, $email));
+            $this->commands->execute(new InvitePendingUser($actor, $userId, $email));
+            $issued = true;
             // Delivery may already have started. Recheck current authority before the independent assignment.
             $this->authority->require($authentication, $permissions);
             $this->policy->requireInstallation();
@@ -96,15 +98,20 @@ final readonly class IssueInvitation
                 throw new LogicException('Invitation membership is unconfirmed.');
             }
             // Separate commit, like TASK-00037: a crash can retain membership without this evidence.
-            $this->transactions->commitTransactional(fn() => $this->audit->add(
+            $this->transactions->commitTransactional(fn() => $this->membershipEvidenceRepository->add(
                 InvitationRoleEvidence::confirmed($actor, $userId, $mode)
             ));
             $auditConfirmed = true;
-        } catch (DuplicateEmailException) {
-            // The package origin transaction rejected a concurrent canonical-email claimant.
-            throw new StateConflict();
-        } catch (Throwable) {
-            // An exception does not establish rollback. Never retry or compensate an uncertain mutation.
+        } catch (Throwable $failure) {
+            if (
+                !$issued
+                && $failure instanceof StateConflict
+                && $failure->getPrevious() instanceof DuplicateEmailException
+            ) {
+                // The package origin transaction rejected a concurrent canonical-email claimant.
+                throw new StateConflict();
+            }
+            // Other exceptions do not establish rollback. Never retry or compensate an uncertain mutation.
         }
         $outcome = $this->inspect($userId, $email, $mode, $auditConfirmed);
         if (!$outcome->auditConfirmed || $outcome->assignment !== 'confirmed' || $outcome->delivery === null) {

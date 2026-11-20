@@ -61,10 +61,8 @@ final class BootstrapTest extends TestCase
         self::assertCount(3, $this->effects);
         self::assertSame($command->toArray(), BootstrapSuperAdmin::fromArray($command->toArray())->toArray());
         $evidence = BootstrapEvidence::completed($command);
-        self::assertSame('bootstrap:'.$command->input->operatorId, $evidence->actorId());
-        self::assertSame('user.bootstrap_completed', $evidence->action());
-        self::assertTrue($evidence->subjectId()->equals($command->userId));
-        self::assertSame([], $evidence->context());
+        self::assertSame('bootstrap:'.$command->input->operatorId, $evidence->actorId);
+        self::assertTrue($evidence->userId->equals($command->userId));
     }
 
     /**

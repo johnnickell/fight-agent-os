@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeDelivery;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrant;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantId;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeRequestOrigin;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
@@ -27,6 +28,7 @@ final class PersistedEmailChangeGrant extends EmailChangeGrant
         DateTimeImmutable $expiresAt,
         EmailChangeDelivery $delivery,
         int $emailChangeReservationRevision,
+        EmailChangeRequestOrigin $requestOrigin,
         ?DateTimeImmutable $consumedAt,
         ?DateTimeImmutable $revokedAt,
         ?DateTimeImmutable $expiredAt,
@@ -43,6 +45,7 @@ final class PersistedEmailChangeGrant extends EmailChangeGrant
             $expiresAt,
             $delivery,
             $emailChangeReservationRevision,
+            $requestOrigin,
             $consumedAt,
             $revokedAt,
             $expiredAt,

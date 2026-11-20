@@ -48,9 +48,9 @@ return static function (Container $container): void {
         $container->get(RefreshSessionRepository::class),
         $container->get(Clock::class),
         $container->get('sessions.authorization.revoke'),
-        $container->get(AuditEvidenceRepository::class),
         $container->get(TransactionalUnitOfWork::class),
-        $container->get(EventDispatcher::class)
+        $container->get(EventDispatcher::class),
+        $container->get(AuditEvidenceRepository::class)
     ));
     $container->get('messaging.command.router')->registerHandlers([
         RevokeSessionHandler::commandRegistration() => RevokeSessionHandler::class

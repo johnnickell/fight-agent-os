@@ -110,13 +110,9 @@ final class InvitationRecoveryTest extends TestCase
         yield ['retry', new ActivationDeliveryNotRetryableException(), StateConflict::class];
         yield ['resend', new ActivationDeliveryNotResendableException(), StateConflict::class];
         yield ['correct', new PendingInvitationCorrectionException(), StateConflict::class];
-        yield ['resend', new LogicException('The activation grant changed concurrently.'), StateConflict::class];
-        yield ['correct', new LogicException('The activation grant changed concurrently.'), StateConflict::class];
-        yield [
-            'correct',
-            new LogicException('The pending invitation email changed concurrently or is reserved.'),
-            StateConflict::class
-        ];
+        foreach (['retry', 'resend', 'correct'] as $operation) {
+            yield [$operation, new StateConflict('The invitation changed concurrently.'), StateConflict::class];
+        }
     }
 
     /**

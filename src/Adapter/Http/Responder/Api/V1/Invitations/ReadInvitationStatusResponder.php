@@ -13,7 +13,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Class ReadInvitationStatusResponder
  *
- * Presents the package credential-free status contract directly
+ * Presents the HTTP invitation delivery status contract
  */
 #[OA\Schema(
     schema: 'InvitationDelivery',
@@ -55,6 +55,10 @@ final readonly class ReadInvitationStatusResponder
      */
     public function respond(?InvitationDeliveryStatusView $view): ResponseInterface
     {
-        return $this->responses->fromEnvelope(JSendEnvelope::success($view), 200, ['Cache-Control' => 'no-store']);
+        return $this->responses->fromEnvelope(
+            JSendEnvelope::success($view === null ? null : new InvitationDeliveryData($view)),
+            200,
+            ['Cache-Control' => 'no-store']
+        );
     }
 }

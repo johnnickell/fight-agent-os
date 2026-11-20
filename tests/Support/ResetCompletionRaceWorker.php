@@ -65,8 +65,6 @@ final class ResetCompletionRaceWorker
                 echo "committed\n";
             } catch (StateConflict) {
                 echo "conflict\n";
-            } catch (\LogicException) {
-                echo "superseded\n";
             }
         } catch (Throwable) {
             echo "unexpected\n";

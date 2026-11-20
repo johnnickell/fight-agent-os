@@ -8,9 +8,10 @@ use App\Adapter\Http\Api\V1\Auth\RefreshCookie;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionLifecycleResponder;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,7 +29,7 @@ final readonly class LogoutAction
      * Constructs LogoutAction
      */
     public function __construct(
-        private AuthenticationService $authentication,
+        private SessionLifecycle $sessionLifecycle,
         private RefreshCookie $cookie,
         private SessionLifecycleResponder $responder
     ) {
@@ -91,8 +92,8 @@ final readonly class LogoutAction
         $credential = $this->cookie->extract($request);
         if ($credential !== null) {
             try {
-                $this->authentication->logout($credential);
-            } catch (RefreshSessionNotFoundException) {
+                $this->sessionLifecycle->logout($credential, AnonymousId::generate());
+            } catch (AuthenticationRequired) {
                 // Deliberately indistinguishable from an admitted current-session logout.
             } catch (Throwable $failure) {
                 return $this->responder->unavailable($failure);

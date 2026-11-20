@@ -2,10 +2,9 @@
 
 ## Current composition
 
-TASK-00572 adopts released Common **v1.5.0**, source/Composer lock reference
-`06fb5cd3720af9cf8295198f74040d95b64c5155`, with manifest constraint `~1.5.0`.
-Access Control remains v0.8.0; its Common `^1.3` requirement admits this release.
-This is consumer adoption, not a supplier release or qualification of TASK-00573's Role-audit replacement.
+TASK-00572 introduced Common's canonical DBAL transaction adapter at v1.5.0. TASK-00573's source adopts
+Common **v1.5.1** with Access Control **v0.11.0**; see the [Role runbook](CUSTOM_ROLES.md#v0110-source-cutover)
+for exact source references, migration constraints and the consumer verification record.
 
 [Shared persistence composition](../../config/common/persistence.php) binds the canonical
 `Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork` directly to the registered DBAL
@@ -20,9 +19,9 @@ packages are removed; this does not replace genuine ORM persistence or prohibit 
 The [historical Project ownership picture](project-registration/README.md) retains unchanged generic-port and
 handler/event ownership; only its concrete transaction composition has changed.
 
-**Required Role audit remains:** `RoleMutationUnitOfWork` still delegates to this same generic boundary and records
-atomic Role audit. Its inferred audit design is pending replacement under TASK-00573, not approved as the final
-architecture and not removed merely because DBAL is now available.
+The released Role handlers write required audit explicitly on the shared connection, before commit. The consumer
+transaction decorator and its event-based audit inference are removed. Read the Role runbook for history and
+failure recovery across the adoption.
 
 ## Planned Agent and email-change boundaries
 
@@ -31,9 +30,8 @@ requires separate transactions for package Agent creation, owned Team assignment
 Agent OS owns truthful partial completion, use exclusion and same-intent recovery; do not manufacture an all-three
 transaction. Template review/reconciliation/no-change evidence belongs to Agent OS, actual Permission-change audit
 to AccessControl. Required state/audit atomicity remains within each owner, not a combined package review journal.
-Current Role-handler audit support still needs tagged adoption and consumer replacement proof before removing the
-existing decorator. Supported atomic owned old-mailbox intent participation remains agreed but unimplemented/
-unreleased; required request/confirmation notice atomicity is not removed by the Agent setup decision.
+Supported atomic owned old-mailbox intent participation remains agreed but unimplemented/unreleased; required
+request/confirmation notice atomicity is not removed by the Agent setup decision.
 
 ## Completion and failure recovery
 
@@ -52,7 +50,7 @@ unreleased; required request/confirmation notice atomicity is not removed by the
   not an original-response journal. Credential delivery retains its separately justified committed intent and
   bounded recovery; external effects are not rollback-safe or exactly once.
 
-There is no schema migration, data disposal, permission, endpoint or response contract change in this adoption.
+The TASK-00572 DBAL-only adoption did not change schema, data, permissions, endpoints or response contracts.
 Installation uses the committed Composer lock through `./bin/composer install`; existing development databases
 remain intact. Test resets use only the guarded isolated test database.
 

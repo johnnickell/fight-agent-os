@@ -18,8 +18,9 @@ use App\Adapter\Security\Authentication\AuthAdmission;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
 use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
 use Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy;
@@ -29,7 +30,7 @@ use Fight\Common\Application\Service\Container;
 return static function (Container $container): void {
     $container->set(LoginAction::class, static fn(Container $container): LoginAction =>
         new LoginAction(
-            $container->get(AuthenticationService::class),
+            $container->get(UserAuthentication::class),
             $container->get(SessionResponder::class),
             $container->get(CaptureSessionPresentation::class)
         ));
@@ -43,7 +44,7 @@ return static function (Container $container): void {
         ));
     foreach ([RefreshAction::class, LogoutAction::class] as $action) {
         $container->set($action, static fn(Container $container): RefreshAction|LogoutAction => new $action(
-            $container->get(AuthenticationService::class),
+            $container->get(SessionLifecycle::class),
             $container->get(RefreshCookie::class),
             $container->get(SessionLifecycleResponder::class)
         ));

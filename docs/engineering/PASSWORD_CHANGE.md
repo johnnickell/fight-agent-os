@@ -20,7 +20,7 @@ are not trimmed, normalized or retained in messages. The shared `PasswordSetting
 enforces Unicode composition and the pinned local common-password corpus before package dispatch.
 See [password semantics](PASSWORDS.md). Client metadata never authorizes or replaces server checks.
 
-Owned Application orchestration calls `AuthenticationService::changePassword()` directly. Only the
+Owned Application orchestration calls `PasswordManagement::changePassword()` directly. Only the
 package reads/verifies current proof using its real/dummy path. The package owns Argon2id replacement,
 authentication-version/authority-revision advancement, reset-grant retirement, all-active-session
 revocation, atomic audit and the post-commit `PasswordChanged` event. No password history or requirement

@@ -11,13 +11,14 @@ use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\ConsoleUserOperation;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use App\Domain\Invitation\Command\AddUserRole;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use App\Domain\Invitation\ConsoleInvitationInput;
+use App\Domain\Invitation\ConsoleRoleEvidence;
 use App\Domain\Invitation\ConsoleRoleInput;
 use DateTimeImmutable;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyChangeAction;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
@@ -59,7 +60,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 final class OrdinaryInvitationTest extends TestCase
 {
     private ?UserView $user = null;
-    /** @var list<AuditEvidence> */
+    /** @var list<ConsoleRoleEvidence> */
     private array $evidence = [];
     /** @var list<Command> */
     private array $effects = [];
@@ -78,10 +79,11 @@ final class OrdinaryInvitationTest extends TestCase
         self::assertCount(2, $this->effects);
         self::assertInstanceOf(InvitePendingUser::class, $this->effects[0]);
         self::assertInstanceOf(AssignRoleToUser::class, $this->effects[1]);
-        self::assertTrue($message->input->operatorId->equals($this->effects[1]->getActorId()));
-        self::assertSame('console:'.$message->input->operatorId, $this->evidence[0]->actorId());
-        self::assertTrue($this->evidence[0]->subjectId()->equals($message->userId));
-        self::assertSame('membership_confirmed', $this->evidence[0]->context()['result']);
+        self::assertInstanceOf(SystemId::class, $this->effects[0]->getActorId());
+        self::assertInstanceOf(SystemId::class, $this->effects[1]->getActorId());
+        self::assertSame('console:'.$message->input->operatorId, $this->evidence[0]->actorId);
+        self::assertTrue($this->evidence[0]->userId->equals($message->userId));
+        self::assertTrue($this->evidence[0]->roleId->equals($this->effects[1]->getRoleId()));
         self::assertSame($message->toArray(), InviteOrdinaryUser::fromArray($message->toArray())->toArray());
     }
 
@@ -466,8 +468,8 @@ final class OrdinaryInvitationTest extends TestCase
         });
         $transactions = $this->createStub(TransactionalUnitOfWork::class);
         $transactions->method('commitTransactional')->willReturnCallback(static fn(callable $work) => $work());
-        $audit = $this->createStub(AuditEvidenceRepository::class);
-        $audit->method('add')->willReturnCallback(function (AuditEvidence $evidence): void {
+        $audit = $this->createStub(MembershipEvidenceRepository::class);
+        $audit->method('add')->willReturnCallback(function (ConsoleRoleEvidence $evidence): void {
             $this->evidence[] = $evidence;
         });
         $policy = new ConsoleAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy());

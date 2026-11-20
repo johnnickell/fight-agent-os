@@ -11,6 +11,7 @@ use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
@@ -100,10 +101,10 @@ final readonly class ReadInvitationStatusAction
             throw new ResourceNotFound();
         }
         $delivery = $this->queryBus->fetch(new FindInvitationDeliveryStatus($userId));
-        if (
-            $delivery !== null && (!$delivery instanceof InvitationDeliveryStatusView
-            || !$delivery->getUserId()->equals($userId))
-        ) {
+        if ($delivery instanceof CredentialDeliveryAbsent) {
+            return $this->responder->respond(null);
+        }
+        if (!$delivery instanceof InvitationDeliveryStatusView || !$delivery->getUserId()->equals($userId)) {
             throw new LogicException('Invitation status is unavailable.');
         }
 

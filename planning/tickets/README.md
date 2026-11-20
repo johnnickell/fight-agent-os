@@ -135,7 +135,7 @@
 | [TICKET-00130](00130-TICKET.md) | Run local Build through upstream agents with browsable activity and stack logs | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00131](00131-TICKET.md) | Establish one authoritative architecture contract | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00132](00132-TICKET.md) | Reconcile every unfinished product plan | done | [EPIC-00023](../epics/00023-EPIC.md) |
-| [TICKET-00133](00133-TICKET.md) | Adopt canonical transaction and audit contracts | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
+| [TICKET-00133](00133-TICKET.md) | Adopt canonical transaction and audit contracts | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00134](00134-TICKET.md) | Register and inspect Projects through aggregate-owned CQRS | done | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00135](00135-TICKET.md) | Correct existing identity, security, and delivery use-case ownership | ready-for-agent | [EPIC-00023](../epics/00023-EPIC.md) |
 | [TICKET-00136](00136-TICKET.md) | Adopt shared failures and safe error presentation | done | [EPIC-00023](../epics/00023-EPIC.md) |

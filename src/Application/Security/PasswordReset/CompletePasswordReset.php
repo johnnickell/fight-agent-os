@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Application\Security\PasswordReset;
 
 use App\Application\Security\Password\PasswordSetting;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Exception\PasswordResetRejectedException;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use SensitiveParameter;
 use Throwable;
@@ -22,7 +23,7 @@ final readonly class CompletePasswordReset
     /**
      * Constructs CompletePasswordReset
      */
-    public function __construct(private PasswordSetting $passwords, private AuthenticationService $authentication)
+    public function __construct(private PasswordSetting $passwords, private PasswordManagement $passwordManagement)
     {
     }
 
@@ -38,8 +39,8 @@ final readonly class CompletePasswordReset
             throw new ResetPasswordRejected();
         }
         try {
-            $this->authentication->resetPassword($userId, $credential, $password);
-        } catch (PasswordResetRejectedException) {
+            $this->passwordManagement->resetPassword($userId, $credential, $password, AnonymousId::generate());
+        } catch (AuthenticationRequired) {
             throw new StateConflict();
         } catch (Throwable) {
             // Post-commit event failure is uncertain, never a reason to replay the mutation.

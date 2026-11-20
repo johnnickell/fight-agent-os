@@ -12,7 +12,7 @@ apply the new-password composition/denylist policy. Unknown fields, actor/role/p
 missing fields, duplicate keys, alternate sources and bodies over 65,536 bytes fail before dispatch.
 
 `LoginAction` consumes only `JsonBody`'s checked map and calls the shared package
-`AuthenticationService::login()` directly. No command serializes a password and no consumer-owned login
+`UserAuthentication::login()` directly. No command serializes a password and no consumer-owned login
 policy or persistence is added. The package owns real/dummy hash verification, rehash, authority revision,
 atomic session creation, token issuance and post-commit `UserLoggedIn`. Concurrent captured logins use the
 existing conditional authority write: one wins, a stale snapshot is rejected; sequential logins can each

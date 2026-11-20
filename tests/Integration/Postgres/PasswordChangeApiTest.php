@@ -10,9 +10,9 @@ use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Domain\AccessControl\User\Event\PasswordChanged;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
@@ -83,7 +83,7 @@ final class PasswordChangeApiTest extends TestCase
         // Existing credentials need not satisfy replacement composition.
         $this->oldPassword = ' old '.bin2hex(random_bytes(12)).' ';
         $this->seed($this->target, 'change@example.test');
-        $session = $container->get(AuthenticationService::class)->login(
+        $session = $container->get(UserAuthentication::class)->login(
             'change@example.test',
             $this->oldPassword,
             false
@@ -109,7 +109,7 @@ final class PasswordChangeApiTest extends TestCase
      */
     public function testSuccessAndAllSessionInvalidation(): void
     {
-        $auth = $this->container->get(AuthenticationService::class);
+        $auth = $this->container->get(UserAuthentication::class);
         $second = $auth->login('change@example.test', $this->oldPassword, true);
         $other = UserId::generate();
         $this->seed($other, 'other@example.test');
@@ -158,9 +158,9 @@ final class PasswordChangeApiTest extends TestCase
                 // Expected authoritative rejection.
             }
             try {
-                $auth->refresh($refresh);
+                $this->container->get(SessionLifecycle::class)->refresh($refresh);
                 self::fail('Old refresh survived password change.');
-            } catch (RefreshSessionNotFoundException) {
+            } catch (\Fight\Common\Application\Error\Exception\AuthenticationRequired) {
                 // Expected package rejection.
             }
         }
@@ -346,7 +346,7 @@ final class PasswordChangeApiTest extends TestCase
     public function testControlledRaces(string $first, string $second): void
     {
         $children = [];
-        $otherSession = $this->container->get(AuthenticationService::class)->login(
+        $otherSession = $this->container->get(UserAuthentication::class)->login(
             'change@example.test',
             $this->oldPassword,
             true

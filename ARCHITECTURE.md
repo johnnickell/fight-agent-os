@@ -23,7 +23,9 @@ entry-generated IDs, independent adapter admission and conflict/fresh-query reco
 state/source claims and explicit required audit in one shared transaction, then dispatches ProjectRegistered after
 commit; safe typed Views cross into HTTP Data/Responders. Common v1.5.0's canonical DBAL transaction boundary
 now uses the shared Connection directly, without an unused EntityManager; see [persistence composition](docs/engineering/TRANSACTIONS.md).
-The Role audit transaction decorator still exists pending TASK-00573's separate supplier qualification. TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
+TASK-00573 replaces the Role audit transaction decorator with explicit Access Control handler audit on that same
+connection. See the [Role runbook](docs/engineering/CUSTOM_ROLES.md) for the cutover and verification boundary.
+TASK-00582's [Common failure/safe HTTP cutover](docs/engineering/SAFE_HTTP_ERRORS.md) replaces
 the local generic classifier and updates actual client/error contracts, with scoped independent technical and
 HTTP/browser/security QA acceptance. This does not qualify the remaining capability-specific corrections or
 production deployment. [Ownership guidance](docs/engineering/OWNERSHIP.md)

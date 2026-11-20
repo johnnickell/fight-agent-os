@@ -29,8 +29,8 @@ use Fight\AccessControl\Domain\AccessControl\Agent\AgentCredentialId;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentName;
 use Fight\AccessControl\Domain\AccessControl\Agent\Command\GrantPermissionToAgent;
-use Fight\AccessControl\Domain\AccessControl\Agent\Exception\AgentOperationRejectedException;
-use Fight\AccessControl\Domain\AccessControl\Agent\Operation\AgentOperationFailure;
+use Fight\AccessControl\Domain\AccessControl\AgentCredentialOperation\AgentOperationFailure;
+use Fight\AccessControl\Domain\AccessControl\AgentCredentialOperation\Exception\AgentOperationRejectedException;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Exception\EmailChangeAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureConflictException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureReferenceException;
@@ -45,7 +45,6 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole;
-use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -54,6 +53,7 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
+use Fight\Common\Application\Error\Exception\RuleViolation;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Repository\Pagination;
@@ -310,7 +310,7 @@ final class AuthorityRepositoryTest extends TestCase
                 $protected->getId()
             )));
             self::fail('A protected Permission must not be granted to a custom Role.');
-        } catch (CustomRoleException) {
+        } catch (RuleViolation) {
             self::assertFalse($this->roles->getById($role->getId())->hasPermission($protected->getId()));
         }
     }

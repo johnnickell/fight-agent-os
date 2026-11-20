@@ -7,6 +7,7 @@ namespace App\Application\CredentialDelivery;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ExpireInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\ExpiredCredentialDelivery;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Command\ExpireEmailChange;
@@ -44,6 +45,7 @@ final readonly class ExpireCredentialDeliveryPages
             throw new InvalidArgumentException('Expiry requires a page size of 1–100 and a page budget of 1–10.');
         }
         $at = $this->clock->now();
+        $systemId = SystemId::generate();
         $query = new FindExpiredCredentialDeliveries($at, $pageSize);
         $report = ['pages' => 0, 'dispatched' => 0, 'remaining' => 0, 'stalled' => false, 'budget_exhausted' => false];
         $previous = [];
@@ -75,15 +77,15 @@ final readonly class ExpireCredentialDeliveryPages
                 $purpose = $item->getPurpose();
                 $command = match ($purpose) {
                     'activation' => new ExpireInvitationDelivery(
-                        'credential-recovery',
+                        $systemId,
                         $item->getUserId(), ActivationDeliveryId::fromString($id), $at
                     ),
                     'password_reset' => new ExpirePasswordResetDelivery(
-                        'credential-recovery',
+                        $systemId,
                         $item->getUserId(), PasswordResetDeliveryId::fromString($id), $at
                     ),
                     'email_change' => new ExpireEmailChange(
-                        'credential-recovery',
+                        $systemId,
                         $item->getUserId(),
                         $item->getEmailChangeGrantId(),
                         $at

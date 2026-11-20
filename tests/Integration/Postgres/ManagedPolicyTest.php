@@ -41,7 +41,6 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
 use Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole;
-use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -52,6 +51,7 @@ use Fight\Common\Adapter\Messaging\Command\Sync\RoutingCommandBus;
 use Fight\Common\Adapter\Messaging\Query\Routing\InMemoryQueryRouter;
 use Fight\Common\Adapter\Messaging\Query\RoutingQueryBus;
 use Fight\Common\Adapter\Persistence\Doctrine\DbalTransactionalUnitOfWork;
+use Fight\Common\Application\Error\Exception\RuleViolation;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Messaging\Event\CommandFailedEvent;
 use Fight\Common\Domain\Messaging\Event\Event;
@@ -519,7 +519,7 @@ final class ManagedPolicyTest extends TestCase
                 $protected->getId()
             ));
             self::fail('Package delegation must reject protected authority.');
-        } catch (CustomRoleException) {
+        } catch (RuleViolation) {
             self::assertSame($state, $this->snapshot());
         }
         $this->connection->beginTransaction();

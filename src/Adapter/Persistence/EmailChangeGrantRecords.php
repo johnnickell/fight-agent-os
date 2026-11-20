@@ -14,6 +14,7 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\EncryptedCredent
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrant;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantId;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeRequestOrigin;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
@@ -39,9 +40,12 @@ final class EmailChangeGrantRecords
     public static function fields(EmailChangeGrant $grant): array
     {
         $delivery = $grant->getDelivery();
+        $requestOrigin = $grant->getRequestOrigin();
 
         return [
             'email_change_reservation_revision' => $grant->getEmailChangeReservationRevision(),
+            'requester_id'                      => $requestOrigin->requesterId->toString(),
+            'old_mailbox'                       => $requestOrigin->oldMailbox,
             'id'                                => $grant->getId()->toString(),
             'user_id'                           => $grant->getUserId()->toString(),
             'credential_digest'                 => $grant->getCredentialHash(),
@@ -104,6 +108,10 @@ final class EmailChangeGrantRecords
             self::parse($row['expires_at']),
             $delivery,
             (int) $row['email_change_reservation_revision'],
+            new EmailChangeRequestOrigin(
+                UserId::fromString((string) $row['requester_id']),
+                EmailAddress::fromString((string) $row['old_mailbox'])
+            ),
             self::parseOptional($row['consumed_at']),
             self::parseOptional($row['revoked_at']),
             self::parseOptional($row['expired_at']),

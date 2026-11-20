@@ -19,10 +19,10 @@ use Fight\AccessControl\Domain\AccessControl\User\Command\CorrectPendingInvitati
 use Fight\AccessControl\Domain\AccessControl\User\Exception\PendingInvitationCorrectionException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Messaging\Event\Sync\ServiceAwareEventDispatcher;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
-use LogicException;
 use RuntimeException;
 use Throwable;
 
@@ -75,8 +75,8 @@ final class InvitationRecoveryRaceWorker
             $actor = UserId::fromString($input['actor']);
             $target = UserId::fromString($input['target']);
             $command = match ($input['operation']) {
-                'retry' => new RetryInvitationDelivery($actor->toString(), $target),
-                'resend' => new ResendInvitationDelivery($actor->toString(), $target),
+                'retry' => new RetryInvitationDelivery($actor, $target),
+                'resend' => new ResendInvitationDelivery($actor, $target),
                 'email' => new CorrectPendingInvitation($actor, $target,
                     EmailAddress::fromString('race-corrected@example.test')),
                 default => throw new RuntimeException('Unsupported race operation.')
@@ -86,17 +86,7 @@ final class InvitationRecoveryRaceWorker
                 echo "committed\n";
             } catch (ActivationDeliveryNotRetryableException | ActivationDeliveryNotResendableException) {
                 echo "conflict\n";
-            } catch (PendingInvitationCorrectionException) {
-                echo "conflict\n";
-            } catch (LogicException $failure) {
-                if (
-                    $failure::class !== LogicException::class || !in_array($failure->getMessage(), [
-                    'The pending invitation email changed concurrently or is reserved.',
-                    'The activation grant changed concurrently.'
-                    ], true)
-                ) {
-                    throw $failure;
-                }
+            } catch (PendingInvitationCorrectionException | StateConflict) {
                 echo "conflict\n";
             }
         } catch (Throwable) {

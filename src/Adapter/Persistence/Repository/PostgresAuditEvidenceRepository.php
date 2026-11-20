@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Repository;
 
+use App\Domain\Authorization\MembershipEvidenceRepository;
+use App\Domain\Bootstrap\BootstrapEvidence;
+use App\Domain\Invitation\ConsoleRoleEvidence;
+use App\Domain\Invitation\InvitationRoleEvidence;
 use Doctrine\DBAL\Connection;
-use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use InvalidArgumentException;
@@ -14,9 +17,9 @@ use LogicException;
 /**
  * Class PostgresAuditEvidenceRepository
  *
- * Appends bounded, typed, secret-free evidence on the caller's connection
+ * Appends canonical evidence on the same connection as the audited mutation
  */
-final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRepository
+final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRepository, MembershipEvidenceRepository
 {
     /**
      * Constructs PostgresAuditEvidenceRepository
@@ -28,106 +31,47 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
     /**
      * @inheritDoc
      */
-    public function add(AuditEvidence $evidence): void
+    public function add(AuditEvidence|BootstrapEvidence|ConsoleRoleEvidence|InvitationRoleEvidence $evidence): void
     {
         if (!$this->connection->isTransactionActive()) {
             throw new LogicException('Audit evidence requires an enclosing transaction.');
         }
 
-        $actor = $evidence->actorId();
-        $action = $evidence->action();
-        $context = $evidence->context();
-        if (
-            !$this->approvedActor($actor, $action)
-            || strlen($action) > 128 || !preg_match('/^[a-z][a-z0-9_.]*$/D', $action)
-            || !$this->approvedContext($action, $context)
-        ) {
-            throw new InvalidArgumentException('Audit evidence contains unsupported public fields.');
+        if ($evidence instanceof AuditEvidence) {
+            // Retain the complete package record, including explicit actor and subject kinds.
+            $payload = $evidence->toArray();
+            $actorId = $payload['actor']['id'];
+            $action = $payload['action'];
+            $subjectType = $payload['subject']['kind'];
+            $subjectId = $payload['subject']['id'];
+            $context = $payload;
+        } else {
+            $actorId = (string) $evidence->actorId;
+            $action = match (true) {
+                $evidence instanceof BootstrapEvidence      => 'user.bootstrap_completed',
+                $evidence instanceof ConsoleRoleEvidence    => 'user.console_role_assigned',
+                $evidence instanceof InvitationRoleEvidence => 'user.invitation_role_confirmed'
+            };
+            $subjectType = 'user';
+            $subjectId = $evidence->userId->toString();
+            // Preserve the existing owned facts and historical row shape.
+            $context = $evidence instanceof BootstrapEvidence ? (object) [] : [
+                'role_id' => $evidence->roleId->toString(),
+                'result'  => 'membership_confirmed'
+            ];
         }
 
-        ksort($context, SORT_STRING);
-        $json = json_encode((object) $context, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $json = json_encode($context, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (strlen($json) > 4096) {
-            throw new InvalidArgumentException('Audit evidence context exceeds its bound.');
+            throw new InvalidArgumentException('Audit evidence exceeds its storage bound.');
         }
 
         $this->connection->insert('audit_evidence', [
-            'actor_id'     => $actor,
+            'actor_id'     => $actorId,
             'action'       => $action,
-            'subject_type' => $evidence->subjectId() instanceof AgentId ? 'agent' : 'user',
-            'subject_id'   => $evidence->subjectId()->toString(),
+            'subject_type' => $subjectType,
+            'subject_id'   => $subjectId,
             'context'      => $json
         ]);
-    }
-
-    /**
-     * Validates principal IDs and narrowly scoped anonymous or internal recovery actors
-     */
-    private function approvedActor(string $actor, string $action): bool
-    {
-        if (str_starts_with($actor, 'bootstrap:')) {
-            return preg_match('/\Abootstrap:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1
-                && in_array($action, ['user.bootstrap_claimed', 'user.bootstrap_completed'], true);
-        }
-        if (str_starts_with($actor, 'console:')) {
-            return preg_match('/\Aconsole:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1
-                && in_array($action, [
-                    'user.invited',
-                    'user.console_role_assigned',
-                    'user.invitation_delivery.failed',
-                    'user.invitation_delivery.confirmed'
-                ], true);
-        }
-        if ($actor === 'credential-recovery') {
-            return in_array($action, [
-                'user.invitation_delivery.failed',
-                'user.invitation_delivery.confirmed',
-                'user.password_reset_delivery.failed',
-                'user.password_reset_delivery.confirmed'
-            ], true);
-        }
-        if ($actor === 'anonymous') {
-            return in_array($action, [
-                'user.password_reset_requested',
-                'user.password_reset_delivery.failed',
-                'user.password_reset_delivery.confirmed'
-            ], true);
-        }
-
-        return preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1;
-    }
-
-    /**
-     * Validates package-defined context values without accepting arbitrary payloads
-     *
-     * @phpstan-param array<string, mixed> $context
-     */
-    private function approvedContext(string $action, array $context): bool
-    {
-        if ($context === []) {
-            return true;
-        }
-        if (in_array($action, ['user.console_role_assigned', 'user.invitation_role_confirmed'], true)) {
-            return array_keys($context) === ['role_id', 'result']
-                && is_string($context['role_id'])
-                && preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $context['role_id']) === 1
-                && $context['result'] === 'membership_confirmed';
-        }
-        if (
-            $action !== 'refresh_session.administratively_revoked'
-            || array_keys($context) !== ['refresh_session_id', 'reason']
-        ) {
-            return false;
-        }
-
-        return is_string($context['refresh_session_id'])
-            && preg_match('/^[0-9a-f-]{36}$/D', $context['refresh_session_id']) === 1
-            && is_string($context['reason'])
-            && $context['reason'] !== '' && preg_match_all('/./us', $context['reason']) <= 500
-            && preg_match('/[\x00-\x1f\x7f]/', $context['reason']) === 0
-            && preg_match(
-                '/(?:password|token|credential|secret|authorization|bearer|ciphertext|https?:\/\/)/i',
-                $context['reason']
-            ) === 0;
     }
 }

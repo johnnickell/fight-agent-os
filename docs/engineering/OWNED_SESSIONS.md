@@ -107,9 +107,11 @@ TASK-00122 replaces the former deny-all handler composition with distinct operat
 callbacks for the separate [administrative API](SESSION_ADMINISTRATION.md). Its trusted raw bus can now perform
 reasoned authorized administration; it is not a public entry. Self-service still grants no administration.
 
-The qualified latest tag is Fight Access Control v0.8.0, source/Composer lock reference
-`319738255e682d587642b67856039f882b9588d6`; no dependency update was needed. The package owns usability,
-current-session exclusion, ownership, optimistic target replacement and post-commit `RefreshSessionRevoked`.
+TASK-00573 adopts Fight Access Control v0.11.0, source/Composer lock reference
+`6258682512e2c8d76a3fa655dd633167bd8f55b6`. The package owns usability, current-session exclusion,
+ownership, optimistic target replacement, required atomic audit and post-commit `RefreshSessionRevoked`.
+This release uses shared Common exception classes. The revocation response maps only the known package
+refusals to the public conflict contract, not ordinary entry permission or validation failures.
 Agent OS does not update session flags in this use case. Only target revision/revoked state changes; credentials,
 digests and other sessions are unchanged. Events are synchronous post-commit notifications, not durable delivery.
 Unexpected notification/storage failure is an uncertain sanitized failure, not permission to replay a mutation.

@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ExpireInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\ExpiredCredentialDelivery;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
@@ -77,7 +78,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
                 || $command instanceof ExpirePasswordResetDelivery
                 || $command instanceof ExpireInvitationDelivery
             );
-            self::assertSame('credential-recovery', $command->getActorId());
+            self::assertEquals(SystemId::generate(), $command->getActorId());
             self::assertSame($at, $command->getOccurredAt());
             self::assertSame([$email, $reset, $activation][$index]->getUserId(), $command->getUserId());
         }

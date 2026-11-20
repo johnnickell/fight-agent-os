@@ -20,7 +20,6 @@ use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use Fight\Common\Application\Validation\Exception\ValidationException;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -114,19 +113,10 @@ final readonly class ResendInvitationAction
         }
         $this->invitationRateLimiter->consume($authentication->getUserId(), InvitationOperation::RESEND, $target);
         try {
-            $this->commandBus->execute(new ResendInvitationDelivery($authentication->getUserId()->toString(), $target));
+            $this->commandBus->execute(new ResendInvitationDelivery($authentication->getUserId(), $target));
         } catch (EventDispatchFailed) {
             throw new InvitationRecoveryUncertain();
         } catch (ActivationDeliveryNotResendableException) {
-            throw new StateConflict();
-        } catch (LogicException $failure) {
-            // The locked package reports this one expected compare-and-replace rejection as LogicException.
-            if (
-                $failure::class !== LogicException::class
-                || $failure->getMessage() !== 'The activation grant changed concurrently.'
-            ) {
-                throw $failure;
-            }
             throw new StateConflict();
         }
 

@@ -152,9 +152,8 @@ with no blockers and explicitly approved `order: 1` ahead of currently ready PHP
 seven-area decomposition is approved and written as [TASK-00565](tasks/00565-TASK.md) through
 [TASK-00571](tasks/00571-TASK.md), orders `2`–`8`: six independent area corrections after TASK-00564, then actual
 operations/architecture correction with final combined coverage after those six. The owning TICKET records area
-coverage. TICKET-00133's two integration TASKs are approved/written as [TASK-00572](tasks/00572-TASK.md) (Common DBAL,
-order `9`) and [TASK-00573](tasks/00573-TASK.md) (explicit Role audit, order `10`), both `needs-info` for their separate
-external capabilities and locally dependent only on TASK-00564, not one another. TICKET-00134's two cutovers are
+coverage. TICKET-00133 covers two independent integration slices: Common DBAL and explicit Role audit. See the
+[owning TICKET](tickets/00133-TICKET.md#decisions-and-progress) for their state. TICKET-00134's two cutovers are
 approved/written as [TASK-00574](tasks/00574-TASK.md) (Workspace/bootstrap/reference ownership, order `11`, after
 TASK-00564) and [TASK-00575](tasks/00575-TASK.md) (Project creation/inspection, order `12`, after TASK-00574), with no
 blanket DBAL/Role-audit or portfolio gate. TICKET-00135's six corrections are approved/written as

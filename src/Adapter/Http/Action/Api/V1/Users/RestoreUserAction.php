@@ -9,12 +9,11 @@ use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserLifecycleResponder;
 use Fight\AccessControl\Domain\AccessControl\User\Command\RestoreUser;
-use Fight\AccessControl\Domain\AccessControl\User\Exception\UserLifecycleException;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -103,12 +102,10 @@ final readonly class RestoreUserAction
                 $targetId,
                 UserState::from($input['restoration_state'])
             ));
-        } catch (UserLifecycleException) {
-            throw new StateConflict();
-        } catch (LogicException $failure) {
+        } catch (ResourceNotFound $failure) {
             if (
-                $failure::class !== LogicException::class
-                || $failure->getMessage() !== 'The user lifecycle state changed concurrently.'
+                $failure::class !== ResourceNotFound::class
+                || $failure->getMessage() !== 'The user cannot be restored.'
             ) {
                 throw $failure;
             }

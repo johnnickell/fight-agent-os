@@ -112,7 +112,7 @@ final readonly class RetryInvitationAction
         }
         $this->invitationRateLimiter->consume($authentication->getUserId(), InvitationOperation::RETRY, $target);
         try {
-            $this->commandBus->execute(new RetryInvitationDelivery($authentication->getUserId()->toString(), $target));
+            $this->commandBus->execute(new RetryInvitationDelivery($authentication->getUserId(), $target));
         } catch (EventDispatchFailed) {
             throw new InvitationRecoveryUncertain();
         } catch (ActivationDeliveryNotRetryableException) {

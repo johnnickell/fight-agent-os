@@ -21,14 +21,13 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\RefreshCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\TokenIssuer;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationTokenPolicy;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -114,7 +113,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         $user = User::invite(UserId::generate(), EmailAddress::fromString('package-login@example.test'), $now);
         $user->activate($hash, $now);
         $this->connection->transactional(fn() => $this->users->add($user));
-        $service = $this->service($hash);
+        $service = $this->authenticationService($hash);
         $tokens = $service->login('package-login@example.test', 'private-fixture-password');
         $token = $tokens->getAccessToken()->toString();
         $claims = $this->fixture->jwt->decode($token);
@@ -207,7 +206,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         $denied = false;
         $context = null;
         try {
-            $tokens = $this->service($hash)->refresh($credential->toString())->getTokenSet();
+            $tokens = $this->sessionLifecycle()->refresh($credential->toString())->getTokenSet();
             try {
                 $context = new AuthenticateAccessToken(
                     $this->fixture->jwt,
@@ -218,7 +217,7 @@ final class AccessTokenAuthenticationTest extends TestCase
             } catch (AuthenticationRequired) {
                 // Direct Bearer refusal must not hide a forbidden refresh rotation.
             }
-        } catch (RefreshSessionNotFoundException) {
+        } catch (AuthenticationRequired) {
             $denied = true;
         }
 
@@ -386,39 +385,70 @@ final class AccessTokenAuthenticationTest extends TestCase
     /**
      * Composes real package authentication with owned token and persistence adapters
      */
-    private function service(PasswordHash $hash): AuthenticationService
+    private function authenticationService(PasswordHash $hash): UserAuthentication
     {
         $throttle = $this->createStub(LoginThrottle::class);
         $throttle->method('allows')->willReturn(true);
-        $generator = $this->createStub(RefreshCredentialGenerator::class);
-        $generator->method('generate')->willReturn(RefreshCredential::fromString(bin2hex(random_bytes(32))));
 
-        return new AuthenticationService(
+        return new UserAuthentication(
             $this->users,
             $this->createStub(ActivationGrantRepository::class),
+            new DbalTransactionalUnitOfWork($this->connection),
+            $this->fixture->clock,
+            $throttle,
+            $this->refreshCredentialGenerator(),
+            new PhpPasswordHasher(PASSWORD_ARGON2ID),
+            new PhpPasswordValidator(PASSWORD_ARGON2ID),
+            new TokenIssuer($this->fixture->jwt, $this->tokenPolicy()),
+            $hash,
+            $this->createStub(EventDispatcher::class),
+            $this->createStub(AuditEvidenceRepository::class)
+        );
+    }
+
+    /**
+     * Composes package rotation with the same guarded repositories and clock
+     */
+    private function sessionLifecycle(): SessionLifecycle
+    {
+        return new SessionLifecycle(
+            $this->users,
             $this->sessions,
             new SessionRevocationService($this->sessions),
             new DbalTransactionalUnitOfWork($this->connection),
             $this->fixture->clock,
-            $throttle,
-            $generator,
-            new PhpPasswordHasher(PASSWORD_ARGON2ID),
-            new PhpPasswordValidator(PASSWORD_ARGON2ID),
-            $this->fixture->jwt,
-            new AuthenticationTokenPolicy(
-                new DateInterval('PT15M'),
-                new DateInterval('P1D'),
-                new DateInterval('P2D'),
-                new DateInterval('P30D'),
-                new DateInterval('P1Y'),
-                new DateInterval('PT5S')
-            ),
-            $hash,
+            $this->refreshCredentialGenerator(),
+            new TokenIssuer($this->fixture->jwt, $this->tokenPolicy()),
+            $this->tokenPolicy(),
             $this->createStub(EventDispatcher::class),
-            $this->createStub(PasswordResetGrantRepository::class),
-            $this->createStub(AuditEvidenceRepository::class),
-            $this->createStub(EmailChangeGrantRepository::class)
+            $this->createStub(AuditEvidenceRepository::class)
         );
+    }
+
+    /**
+     * Supplies the production lifetime and rotation windows
+     */
+    private function tokenPolicy(): AuthenticationTokenPolicy
+    {
+        return new AuthenticationTokenPolicy(
+            new DateInterval('PT15M'),
+            new DateInterval('P1D'),
+            new DateInterval('P2D'),
+            new DateInterval('P30D'),
+            new DateInterval('P1Y'),
+            new DateInterval('PT5S')
+        );
+    }
+
+    /**
+     * Supplies fresh synthetic rotation material
+     */
+    private function refreshCredentialGenerator(): RefreshCredentialGenerator
+    {
+        $generator = $this->createStub(RefreshCredentialGenerator::class);
+        $generator->method('generate')->willReturn(RefreshCredential::fromString(bin2hex(random_bytes(32))));
+
+        return $generator;
     }
 
     /**

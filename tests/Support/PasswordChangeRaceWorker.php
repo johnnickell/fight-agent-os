@@ -9,8 +9,9 @@ use App\Application\Security\PasswordChange\ChangePassword;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\User\User;
@@ -53,11 +54,11 @@ final class PasswordChangeRaceWorker
                 throw new \RuntimeException('Barrier not released.');
             }
             try {
-                $authentication = $container->get(AuthenticationService::class);
+                $sessionLifecycle = $container->get(SessionLifecycle::class);
                 if ($input['mode'] === 'refresh') {
-                    $authentication->refresh($input['refresh']);
+                    $sessionLifecycle->refresh($input['refresh']);
                 } elseif (in_array($input['mode'], ['revoke', 'other-revoke'], true)) {
-                    $authentication->logout($input['refresh']);
+                    $sessionLifecycle->logout($input['refresh'], AnonymousId::generate());
                 } elseif ($input['mode'] === 'authority') {
                     $container->get(Connection::class)->transactional(function () use ($container, $input): void {
                         $users = $container->get(UserRepository::class);
@@ -66,7 +67,7 @@ final class PasswordChangeRaceWorker
                             throw new StateConflict();
                         }
                         $replacement = clone $user;
-                        $replacement->advanceAuthenticationAuthorityRevision();
+                        $replacement->recordSuccessfulLogin($container->get(Clock::class)->now());
                         if (!$users->replaceAuthenticationAuthority($user, $replacement)) {
                             throw new StateConflict();
                         }

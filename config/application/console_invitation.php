@@ -12,6 +12,7 @@ use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\ConsoleUserOperation;
 use App\Domain\Authorization\ManagedPolicyCatalog;
+use App\Domain\Authorization\MembershipEvidenceRepository;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\GetPermissionByIdHandler;
@@ -36,19 +37,19 @@ return static function (Container $container): void {
         new InvitePendingUserHandler(
             $container->get(UserRepository::class),
             $container->get(ActivationGrantRepository::class),
-            $container->get(AuditEvidenceRepository::class),
             $container->get(TransactionalUnitOfWork::class),
             $container->get(ActivationCredentialGenerator::class),
             $container->get(InvitationDeliveryCipher::class),
             $container->get(Clock::class),
-            $container->get(EventDispatcher::class)
+            $container->get(EventDispatcher::class),
+            $container->get(AuditEvidenceRepository::class)
         ));
     $container->set(ConsoleUserOperation::class, static fn(Container $container): ConsoleUserOperation =>
         new ConsoleUserOperation(
             $container->get(CommandBus::class),
             $container->get(QueryBus::class),
             $container->get(TransactionalUnitOfWork::class),
-            $container->get(AuditEvidenceRepository::class),
+            $container->get(MembershipEvidenceRepository::class),
             $container->get(ConsoleAssignmentPolicy::class)
         ));
     $container->set(ConsoleAssignmentPolicy::class, static fn(Container $container): ConsoleAssignmentPolicy =>

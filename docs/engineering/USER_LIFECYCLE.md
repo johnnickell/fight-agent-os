@@ -39,14 +39,16 @@ Success is HTTP 200, no-store, `{"status":"success","data":null}`: completion of
 post-command read or a user-detail payload. Invalid input is 400; unauthenticated/stale authority is 401 and
 missing operation permission is 403 before target execution. Self, observed last-admin, unknown target and
 invalid/concurrent lifecycle transitions use generic 409 without exposing target state. Internal faults remain
-redacted 500, not invented conflicts. Only the locked supplier's exact lifecycle CAS rejection is mapped from
-LogicException; unrelated faults are not hidden.
+redacted 500, not invented conflicts. Access Control reports invalid state and stale writes as typed conflicts.
+Each lifecycle action maps only its known missing-target refusal to the same generic 409; unrelated failures
+keep their original classification.
 
 An exception or lost response can follow commit, especially during post-commit event dispatch. Do not auto-retry;
 use a fresh separately authorized READ_USERS detail request to resolve uncertainty. Required package audit
-contains actor, target, action and time, never passwords, tokens, hashes or private delivery material.
+contains typed actor and target, action, time and before/after state and revisions, never passwords, tokens,
+hashes or private delivery material. Earlier audit rows keep their original representation.
 
-No administrative UI, role removal, email mutation endpoint or supplier upgrade is delivered.
+The Access Control cutover adds no administrative UI, role removal or email mutation endpoint.
 Independent acceptance remains recorded in the owning TASK and canonical Review/QA reports, not inferred here.
 
 ## Confirmed soft deletion and restoration — TASK-00120

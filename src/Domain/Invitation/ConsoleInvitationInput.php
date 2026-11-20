@@ -54,12 +54,4 @@ final readonly class ConsoleInvitationInput
             throw new LogicException('The ordinary invitation outcome was not established.');
         }
     }
-
-    /**
-     * Returns the trusted console actor rather than an authenticated user
-     */
-    public function actorId(): string
-    {
-        return 'console:'.$this->operatorId->toString();
-    }
 }

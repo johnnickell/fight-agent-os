@@ -32,10 +32,13 @@ unknown fields, IDs, names, tokens or unconfirmed removal return sanitized 400. 
 revision. Refresh state, display it and obtain fresh confirmation. Every response is no-store JSend; current OpenAPI
 is exported from the Actions/Responders using `./bin/openapi export`, then checked without rewriting.
 
-Required safe actor/action/Role audit commits inside the package mutation transaction through
-`RoleMutationUnitOfWork`. It wraps the shared Unit of Work, not a nested transaction: audit failure rolls back the
-Role, and the package publishes success only after confirmed commit. No email, credential, Role name or serialized
-entity is stored in the Role audit context. Publication failure or a lost response can occur after a durable commit;
+The Access Control create, rename and remove handlers append required audit inside their mutation transaction.
+The Role and audit repositories share the same PostgreSQL connection and generic DBAL transaction boundary.
+An audit write failure rolls back the Role change; handlers publish success only after commit. New records use
+`role.created`, `role.renamed` and `role.removed`, with typed actor and Role subject, before/after revisions and
+message correlation. They contain no email, credential, Role name or serialized entity. Historical
+`role.custom_*` rows remain in place with their original action and context; include both action families when
+reading across the cutover. Only new typed records can be hydrated as package `AuditEvidence`. Publication failure or a lost response can occur after a durable commit;
 a 500 is not proof of rollback. Reconcile current state under current authorization, never blindly replay. There is
 no outbox or guaranteed replay. `CustomRoleService` refetches authority after every attempted network mutation,
 including conflict/uncertainty, and preserves the caller's displayed token without retry. Its name-only create validates
@@ -43,10 +46,34 @@ the returned generated UUID, revision and custom Role view, rather than comparin
 A lost creation response may leave a Role whose ID the caller has not received; reconcile the authorized catalog instead
 of retrying creation. The service is not mounted as new UI.
 
-## Deliberate v0.8.0 adoption
+See the [Role mutation ownership diagram](custom-roles/README.md) for the protected entry, configured bus
+and handler-owned transaction.
 
-The manifest/lock selects Access Control **v0.8.0**, source/dist
-`319738255e682d587642b67856039f882b9588d6`; Common remains v1.3.0. Tagged availability alone is not adapter or deployment
+## v0.11.0 source cutover
+
+TASK-00573 selects Access Control **v0.11.0** (`6258682512e2c8d76a3fa655dd633167bd8f55b6`) and Common
+**v1.5.1** (`c73690164a9f112dbf14d774c56a7c01519b88aa`), with manifest constraints `0.11.*` and `1.5.*`.
+This release of Access Control requires Common `^1.5.1`. See TASK-00573 for consumer verification status.
+
+### Email-change grant upgrade
+
+`Version20261119155505` discards legacy email-change grants, pending and terminal, on upgrade from the previous
+Agent OS schema. Their original requester and old mailbox cannot be recovered from current User state. The data
+owner approved discarding those grants only. Old links stop working; User rows, existing reservation claims,
+current mailboxes, other credential grants and audit history are not changed. A retained reservation must not be
+treated as confirmation authority. This release does not expose a confirmation route.
+
+For an authorized installation upgrade, stop the old HTTP and worker writers, back up, and rehearse
+`./bin/database migrate` on a private restored copy. This cutover does not override historical preflights on older
+schemas. The migration runs in a transaction, refuses unexpected inbound foreign keys and an existing origin schema,
+and makes both origin fields mandatory before commit. A database that already recorded this version does not rerun
+it or delete new-format grants. After a committed cutover, there is no downgrade: recovery requires an authorized
+restore or forward correction. Local Work verification does not authorize a live installation upgrade.
+
+## Historical v0.8.0 adoption
+
+TASK-00125's baseline selected Access Control **v0.8.0**, source/dist
+`319738255e682d587642b67856039f882b9588d6`, and Common v1.3.0. Tagged availability alone is not adapter or deployment
 qualification. The installed package provides caller Role revisions, immutable reset `RecoveryAuthority`, current
 activation origin, shared User recovery validation and coarse failure notifications. The old v0.6.0 revision hold
 remains historical in TASK-00125; qualification results belong to its current completion notes and handoff.
