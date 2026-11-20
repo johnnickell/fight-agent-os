@@ -171,10 +171,14 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
    migrations, **one unfiltered coverage-enabled PHPUnit execution**, coverage policy, guarded test-schema cleanup.
 6. Installed frontend lock/runtime validation and versions, Pi presentation tests, and the vendored subagent engine's
-   lint/typecheck/full test suite. Install its locked development tools explicitly with
-   `npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-fund --no-audit`;
-   install Harness runtime dependencies with the same options at `--prefix harness/pi`. Acceptance is offline and
-   never installs them. The engine suite uses private run scratch, a Git discovery ceiling and two test workers;
+   lint/typecheck/full test suite. `./bin/runtime setup` automatically installs and validates the Harness and
+   engine dependencies from their lockfiles in the Linux tooling image. Existing checkouts can run
+   `./bin/pi-dependencies setup` directly. Matching installations are reused; replacements require stopping
+   this checkout's web service and finishing one-off tooling first. A read-only Pi preparation check runs
+   before application phases and reports that setup command for missing, stale or unusable dependencies.
+   Native CI preparation uses `node harness/pi/scripts/dependencies.mjs setup` with the same validation.
+   Acceptance is offline and never installs them. The engine suite uses private run scratch, a Git discovery
+   ceiling and two test workers;
    source/dependencies remain read-only. Host-provided Pi packages are not bundled with the Harness.
 7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
    zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.

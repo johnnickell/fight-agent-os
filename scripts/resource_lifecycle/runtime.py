@@ -62,7 +62,8 @@ def setup(root, selector=None, unregistered=False):
                   capture=True, env=environment())
         values = dict(line.split('=', 1) for line in raw.splitlines() if '=' in line)
         provision(checkout / 'var/runtime/secrets', values)
-    print('Installation configuration prepared; no service, migration, trust or DNS change performed.')
+    run([str(checkout / 'bin/pi-dependencies'), 'setup'], checkout, env=environment(isolated))
+    print('Installation configuration and Pi dependencies prepared; no application service or migration started.')
     return 0
 
 

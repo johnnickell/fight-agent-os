@@ -30,7 +30,12 @@ dependency commands rather than inventing this application's stack.
 installation, schema migrations, exports and certificate setup remain explicit owning commands. Main retains
 its `.env` and persistent PostgreSQL volume. Worktree settings have independent keys, credentials, exact origin,
 project-local PostgreSQL/SeaweedFS volumes and ignored output, never imported main data. Prepare them through
-explicit `bin/runtime setup` inside that selected checkout; ordinary startup never generates secrets. Task storage is disposable by
+explicit `bin/runtime setup` inside that selected checkout. Setup also installs and validates the locked
+Harness and vendored Pi development dependencies with the Linux Node image, including native tools.
+Matching lockfile/runtime receipts and working binaries are reused without installation or image pull.
+If replacement is needed, finish active checks and one-off tooling and stop this checkout's web service first.
+`./bin/pi-dependencies setup` repairs only these dependencies; `./bin/pi-dependencies check` is read-only
+and offline. Ordinary startup never generates secrets or installs dependencies. Task storage is disposable by
 definition; shared infrastructure belongs in separate projects.
 
 For explicitly authorized work without a TASK, an unbound linked checkout may use its existing deterministic
