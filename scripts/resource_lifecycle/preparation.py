@@ -138,17 +138,14 @@ def prepare(safe, checkout, project, entry, initialize=False):
     # resolves inherited relative mounts/build contexts against THIS checkout.
     # Nested mount targets must exist beneath the read-only source bind. These
     # are ignored empty directories, not dependency installs or generated source.
-    for relative in ('.runs', 'var', 'client/node_modules/.cache', 'client/node_modules/.vite-temp'):
+    for relative in ('.runs', 'var'):
         (checkout / relative).mkdir(parents=True, exist_ok=True)
     output = state / 'output'
     evidence = safe / '.runs/compose' / project
-    for path in (output, output / 'client/build', output / 'openapi', output / 'validations',
-                 evidence / 'cache/client/dependency-cache', evidence / 'cache/client/vite-temp'):
+    for path in (output, output / 'client/build', output / 'openapi', output / 'validations', evidence):
         path.mkdir(parents=True, exist_ok=True)
     mounts = [{'type': 'bind', 'source': str(output), 'target': '/app/var'},
-              {'type': 'bind', 'source': str(evidence), 'target': '/app/.runs'},
-              {'type': 'bind', 'source': str(evidence / 'cache/client/dependency-cache'), 'target': '/app/client/node_modules/.cache'},
-              {'type': 'bind', 'source': str(evidence / 'cache/client/vite-temp'), 'target': '/app/client/node_modules/.vite-temp'}]
+              {'type': 'bind', 'source': str(evidence), 'target': '/app/.runs'}]
     # A registered worktree's .git file contains an absolute common-dir locator.
     # Tooling must read that SAME native metadata; never copy it or expose writes.
     git_common = Path(text(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], checkout))

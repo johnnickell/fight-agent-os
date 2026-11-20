@@ -14,13 +14,13 @@
     "lint-fix": "eslint . --fix --max-warnings=0",
     "format-check": "prettier --check .",
     "format": "prettier --write .",
-    "test": "vitest run",
-    "coverage": "vitest run --coverage",
+    "test": "vitest run --configLoader native",
+    "coverage": "vitest run --configLoader native --coverage",
     "build": "node scripts/build.mjs",
     "build-check": "node scripts/build.mjs --check",
-    "storybook-build": "storybook build --disable-telemetry --output-dir ../.runs/build/reports/client/storybook && node scripts/finalize-catalog-build.mjs",
-    "storybook-dev": "storybook dev --ci --no-open --disable-telemetry --host 0.0.0.0 --port 6006",
-    "storybook-test": "vitest run --config vitest.storybook.config.ts",
+    "storybook-build": "CACHE_DIR=../.runs/cache/client storybook build --disable-telemetry --output-dir ../.runs/build/reports/client/storybook && node scripts/finalize-catalog-build.mjs",
+    "storybook-dev": "CACHE_DIR=../.runs/cache/client storybook dev --ci --no-open --disable-telemetry --host 0.0.0.0 --port 6006",
+    "storybook-test": "CACHE_DIR=../.runs/cache/client vitest run --configLoader native --config vitest.storybook.config.ts",
     "storybook-capture": "node scripts/capture-catalog.mjs"
   },
   "dependencies": {
