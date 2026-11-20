@@ -14,6 +14,7 @@ use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
 use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
@@ -80,13 +81,18 @@ final readonly class BootstrapSuperAdminHandler implements CommandHandler
         try {
             $policy = $this->managedPolicyCatalog->load();
             $this->commands->execute(new ReconcileManagedPolicy($policy));
-            InstallationManagedPolicy::requireReconciled($this->queries->fetch(
-                new PreviewManagedPolicy($policy)
-            ), $policy);
-            /** @var RoleView $role */
+            $plan = $this->queries->fetch(new PreviewManagedPolicy($policy));
+            if (!$plan instanceof ManagedPolicyPlan) {
+                throw new LogicException('Managed bootstrap authority is unavailable.');
+            }
+            /** @var ManagedPolicyPlan $plan */
+            InstallationManagedPolicy::requireReconciled($plan, $policy);
             $role = $this->queries->fetch(new GetRoleById($roleId));
-            // @phpstan-ignore instanceof.alwaysTrue (A query filter can skip or replace the supplier result.)
-            if (!$role instanceof RoleView || !$role->getRoleId()->equals($roleId) || !$role->isManaged()) {
+            if (!$role instanceof RoleView) {
+                throw new LogicException('Managed bootstrap authority is unavailable.');
+            }
+            /** @var RoleView $role */
+            if (!$role->getRoleId()->equals($roleId) || !$role->isManaged()) {
                 throw new LogicException('Managed bootstrap authority is unavailable.');
             }
             $systemId = SystemId::generate();

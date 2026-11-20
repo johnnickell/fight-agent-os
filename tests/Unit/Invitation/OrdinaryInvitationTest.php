@@ -280,6 +280,7 @@ final class OrdinaryInvitationTest extends TestCase
                 ),
                 $defect === 'permission' && $query instanceof GetPermissionById => null,
                 $defect === 'catalog' && $query instanceof PreviewManagedPolicy => new ManagedPolicyPlan([], []),
+                $defect === 'no-preview' && $query instanceof PreviewManagedPolicy => null,
                 default => $normal
             };
         });
@@ -295,7 +296,7 @@ final class OrdinaryInvitationTest extends TestCase
      */
     public static function unsafeQueries(): iterable
     {
-        foreach (['target', 'role', 'no-role-view', 'protected', 'permission', 'catalog'] as $defect) {
+        foreach (['target', 'role', 'no-role-view', 'protected', 'permission', 'catalog', 'no-preview'] as $defect) {
             yield [$defect];
         }
     }

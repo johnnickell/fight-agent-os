@@ -22,6 +22,7 @@ use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedRolePlanItem;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
@@ -93,6 +94,9 @@ final class BootstrapTest extends TestCase
         self::assertSame($invitation, $result->invitation);
         self::assertSame($assignment, $result->assignment);
         self::assertSame('unconfirmed', $result->audit);
+        if (in_array($phase, ['preview', 'role', 'wrong-role'], true)) {
+            self::assertSame([ReconcileManagedPolicy::class], $this->effects);
+        }
     }
 
     /**
@@ -103,7 +107,9 @@ final class BootstrapTest extends TestCase
     public static function failures(): iterable
     {
         yield ['policy', 'missing', 'missing'];
+        yield ['preview', 'missing', 'missing'];
         yield ['role', 'missing', 'missing'];
+        yield ['wrong-role', 'missing', 'missing'];
         yield ['invite', 'missing', 'missing'];
         yield ['invite_event', 'confirmed', 'missing'];
         yield ['assign', 'confirmed', 'missing'];
@@ -257,12 +263,15 @@ final class BootstrapTest extends TestCase
         $queries->method('fetch')->willReturnCallback(static function ($query) use ($failure) {
             if ($query instanceof GetRoleById) {
                 return $failure === 'role' ? null : new RoleView(
-                    $query->getRoleId(),
+                    $failure === 'wrong-role' ? RoleId::generate() : $query->getRoleId(),
                     RoleName::fromString('ROLE_SUPER_ADMIN'),
                     true,
                     [],
                     \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
                 );
+            }
+            if ($failure === 'preview') {
+                return null;
             }
             $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
 
