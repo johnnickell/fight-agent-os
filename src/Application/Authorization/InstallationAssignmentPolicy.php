@@ -19,6 +19,7 @@ use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use LogicException;
+use UnexpectedValueException;
 
 /**
  * Class InstallationAssignmentPolicy
@@ -42,7 +43,7 @@ final readonly class InstallationAssignmentPolicy
         $policy = $this->managedPolicyCatalog->load();
         $plan = $this->queryBus->fetch(new PreviewManagedPolicy($policy));
         if (!$plan instanceof ManagedPolicyPlan) {
-            throw new LogicException('Managed installation authority is unavailable.');
+            throw new UnexpectedValueException('Managed installation authority is unavailable.');
         }
         /** @var ManagedPolicyPlan $plan */
         InstallationManagedPolicy::requireReconciled($plan, $policy);
