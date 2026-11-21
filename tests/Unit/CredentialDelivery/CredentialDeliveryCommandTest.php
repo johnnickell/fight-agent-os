@@ -10,11 +10,20 @@ use App\Adapter\CredentialDelivery\CredentialExpiryRunner;
 use App\Adapter\CredentialDelivery\CredentialRecoveryRunner;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryStatusView;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -58,6 +67,7 @@ final class CredentialDeliveryCommandTest extends TestCase
         yield 'duplicate bound' => [['run', '--internal', '--capacity=1', '--capacity=2']];
         yield 'bad ID' => [['status', 'activation', 'private-input', '--internal']];
         yield 'bad purpose' => [['status', 'private-input', 'private-input', '--internal']];
+        yield 'missing status ID' => [['status', 'activation', '--internal']];
         yield 'invalid expiry bound' => [['expire', '--internal', '--expiry-pages=11']];
         yield 'invalid capacity' => [['run', '--internal', '--capacity=private-input']];
         yield 'delivery option on cleanup' => [['expire', '--internal', '--capacity=1']];
@@ -105,6 +115,57 @@ final class CredentialDeliveryCommandTest extends TestCase
         self::assertStringContainsString('"expiry":', $expiryOutput);
         self::assertStringNotContainsString('"delivery":', $expiryOutput);
         self::assertStringContainsString('"delivery":', $runOutput);
+    }
+
+    /**
+     * Preserves the exact query identity and renders only the canonical found or absent result
+     */
+    public function testStatusSupportsAllPurposesWithoutOpeningDelivery(): void
+    {
+        $id = ActivationDeliveryId::generate();
+        $at = new DateTimeImmutable('2026-11-21T00:00:00+00:00');
+        $delivery = ActivationDelivery::create(
+            $id,
+            UserId::generate(),
+            EmailAddress::fromString('private-input@example.test'),
+            'private-input',
+            $at->modify('+1 hour'),
+            $at
+        );
+        $view = CredentialDeliveryStatusView::fromDelivery('activation', $delivery, 0, null);
+        $ids = [
+            'activation'     => $id->toString(),
+            'password_reset' => PasswordResetDeliveryId::generate()->toString(),
+            'email_change'   => EmailChangeDeliveryId::generate()->toString()
+        ];
+        $queryBus = $this->createMock(QueryBus::class);
+        $queryBus->expects(self::exactly(3))->method('fetch')->willReturnCallback(
+            static function (FindCredentialDeliveryStatus $query) use (
+                $ids,
+                $view
+            ): CredentialDeliveryStatusView|CredentialDeliveryAbsent {
+                self::assertSame($ids[$query->getPurpose()], $query->getDeliveryId());
+
+                return $query->getPurpose() === 'activation' ? $view : new CredentialDeliveryAbsent();
+            }
+        );
+        $preflight = static function (): void {
+            self::fail('Status resolved delivery configuration.');
+        };
+        foreach ($ids as $purpose => $deliveryId) {
+            [$exit, $output] = $this->execute(
+                ['status', $purpose, $deliveryId, '--internal', '--no-ansi'],
+                $queryBus,
+                $preflight
+            );
+            $found = $purpose === 'activation';
+            self::assertSame($found ? 0 : 3, $exit);
+            self::assertSame(
+                ['found' => $found, 'delivery' => $found ? $view->toArray() : null],
+                json_decode($output, true, flags: JSON_THROW_ON_ERROR)
+            );
+            self::assertStringNotContainsString('private-input', $output);
+        }
     }
 
     /**
