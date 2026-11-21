@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
 use App\Adapter\Http\Middleware\Api\SameOriginApi;
 use App\Adapter\Http\Middleware\CanonicalTransport;
 use App\Adapter\Http\Middleware\SecurityHeaders;
 use App\Adapter\Security\HmacCsrfProofs;
 use App\Adapter\Security\HttpSecurityConfiguration;
+use App\Application\Security\Csrf\Clock\CsrfClock;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
@@ -27,4 +29,6 @@ return static function (Container $container): void {
         ));
     $container->set(SameOriginApi::class, static fn(Container $container): SameOriginApi =>
         new SameOriginApi($container->get(HmacCsrfProofs::class)));
+    $container->set(BrowserMutationGuard::class, static fn(Container $container): BrowserMutationGuard =>
+        new BrowserMutationGuard($container->get(HmacCsrfProofs::class), $container->get(CsrfClock::class)));
 };

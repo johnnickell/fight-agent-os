@@ -7,6 +7,7 @@ namespace App\Adapter\Http\Action\Api\V1\Sessions;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Sessions\OwnedSessionsResponder;
+use App\Application\Security\Session\SessionPage;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Query\ListActiveSessions;
@@ -19,7 +20,6 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -98,6 +98,7 @@ final readonly class ListUserSessionsAction
         /** @var array{page?: string, per_page?: string} $input */
         $input = $request->getAttribute(QueryString::class);
         try {
+            /** @var ResultSet<SessionView> $sessions */
             $sessions = $this->queryBus->fetch(new ListActiveSessions(
                 $principal->getUserId(),
                 $target,
@@ -107,15 +108,7 @@ final readonly class ListUserSessionsAction
         } catch (SessionAdministrationAuthorizationException $failure) {
             throw new PermissionDenied(previous: $failure);
         }
-        if (!$sessions instanceof ResultSet || $sessions->itemType() !== SessionView::class) {
-            throw new LogicException('Session listing is unavailable.');
-        }
-        foreach ($sessions->records() as $session) {
-            if (!$session->getUserId()->equals($target)) {
-                throw new LogicException('Session listing is unavailable.');
-            }
-        }
 
-        return $this->responder->respond(['sessions' => $sessions, 'devices' => []]);
+        return $this->responder->respond(new SessionPage($sessions));
     }
 }

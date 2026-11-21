@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Security;
 
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;

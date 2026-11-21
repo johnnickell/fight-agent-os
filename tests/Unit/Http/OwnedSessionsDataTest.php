@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Http;
 
 use App\Adapter\Http\Responder\Api\V1\Sessions\OwnedSessionsData;
+use App\Application\Security\Session\SessionPage;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Query\SessionView;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
@@ -53,7 +54,7 @@ final class OwnedSessionsDataTest extends TestCase
         self::assertTrue($session->isUsableAt(new DateTimeImmutable('2026-10-25T12:00:00.200000+00:00')));
         $records = ArrayList::of(SessionView::class);
         $records->add(SessionView::fromSession($session, RefreshSessionId::generate()));
-        $data = new OwnedSessionsData(new ResultSet(1, 25, 1, $records), [])->toArray();
+        $data = new OwnedSessionsData(new SessionPage(new ResultSet(1, 25, 1, $records)))->toArray();
 
         // This same approved projection drives the durable client service/page R57-01 regressions.
         self::assertSame([
@@ -87,7 +88,7 @@ final class OwnedSessionsDataTest extends TestCase
         );
         $records = ArrayList::of(SessionView::class);
         $records->add($view);
-        $data = new OwnedSessionsData(new ResultSet(1, 25, 1, $records), [])->toArray();
+        $data = new OwnedSessionsData(new SessionPage(new ResultSet(1, 25, 1, $records)))->toArray();
         $record = $data['records'][0];
         self::assertSame('2026-10-25T06:30:00+00:00', $record['created_at']);
         self::assertSame('2026-10-25T07:30:00+00:00', $record['last_activity_at']);

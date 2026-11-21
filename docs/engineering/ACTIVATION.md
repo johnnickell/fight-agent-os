@@ -99,6 +99,8 @@ The [adopted Access Control v0.11.0 and Common v1.5.1 releases](../../planning/t
 remain locked. PostgreSQL tests cover duplicate activation, competing invitation replacement, rollback at grant,
 user, session and required audit writes, and independently committed admission. The Action uses the existing
 session responder and device presentation owner rather than issuing its own cookies or maintaining another session graph.
+See [canonical login](LOGIN.md) and [browser request controls](BROWSER_AUTH_REQUESTS.md) for the shared session
+and admission setup.
 
 ## Local reproduction and evidence safety
 

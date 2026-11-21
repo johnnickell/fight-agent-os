@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Sessions;
 
-use App\Application\Sessions\DeviceDescriptor;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Query\SessionView;
+use App\Application\Security\Session\SessionPage;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
-use Fight\Common\Domain\Repository\ResultSet;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 
@@ -84,13 +82,11 @@ final readonly class OwnedSessionsResponder
 
     /**
      * Returns explicit safe session data with no-store
-     *
-     * @param array{sessions: ResultSet<SessionView>, devices: array<string, DeviceDescriptor>} $page
      */
-    public function respond(array $page): ResponseInterface
+    public function respond(SessionPage $page): ResponseInterface
     {
         return $this->responses->fromEnvelope(
-            JSendEnvelope::success(new OwnedSessionsData($page['sessions'], $page['devices'])),
+            JSendEnvelope::success(new OwnedSessionsData($page)),
             200,
             ['Cache-Control' => 'no-store']
         );

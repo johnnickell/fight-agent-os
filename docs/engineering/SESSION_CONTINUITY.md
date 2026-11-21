@@ -35,7 +35,9 @@ All responses are no-store and pass through the existing correlation boundary.
 
 See [safe API failures](SAFE_HTTP_ERRORS.md) for the single diagnostics sink and Common policy/fallback.
 
-`SessionLifecycle::refresh()` alone owns rotation, used-digest lookup, five-second conflict and replay
+The HTTP actions call package `SessionLifecycle::refresh()` and `logout()` synchronously. Login calls package
+`UserAuthentication::login()`; both package services share one configured `TokenIssuer`. Passwords and refresh
+credentials are not bus messages. The package owns rotation, used-digest lookup, five-second conflict and replay
 revocation; the Action never retries. Rotation preserves session/owner/authentication version/remembered flag
 and original absolute deadline. Ordinary idle advances by one day and remembered idle by 30 days, capped at
 absolute expiry. Access JSON timing matches the JWT's downward-rounded integer 900-second lifetime. Ordinary
@@ -43,7 +45,8 @@ cookies remain browser-session-only; remembered Expires remains at the original 
 rounded down, without Max-Age. The refresh credential is only in HttpOnly Set-Cookie, never JSON.
 
 The PostgreSQL refresh repository shares the existing per-user authentication-authority fence with lifecycle
-and password changes. At the rotation write boundary it rechecks active owner/current authentication version.
+and password changes. This fence protects changes to authentication state, not ordinary permission admission.
+At the rotation write boundary it rechecks active owner/current authentication version.
 A mutation winning after package snapshot capture therefore rejects with the package terminal exception before
 rotation or token issuance; it is not misclassified as a benign credential CAS conflict. Session compare-and-set
 still atomically stores the replacement and historical digest. The package continues to own session revocation.
@@ -53,7 +56,7 @@ select it). `CurrentSessionLoggedOut` is observed only after commit. No logout-e
 
 The locked package's `RedactedCommandFailed` retains the original exception message, which may include SQL
 and digest-bearing database detail. `AuthenticationEvents`, injected only into the shared authentication
-service, replaces **refresh/logout** failure payloads before the normal shared dispatcher/subscribers see them:
+composition, replaces **refresh/logout** failure payloads before the normal shared dispatcher/subscribers see them:
 fixed operation identity, empty data and fixed safe message. Other package outcome events retain their payloads,
 identity/metadata and post-commit timing. The common event pipeline is not replaced. HTTP unexpected-failure
 mapping contains no exception object/message. This is a consumer redaction control, not a vendor patch or a

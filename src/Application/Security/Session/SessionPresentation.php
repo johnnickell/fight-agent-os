@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Sessions;
+namespace App\Application\Security\Session;
 
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
