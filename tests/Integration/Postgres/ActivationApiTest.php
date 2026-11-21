@@ -14,6 +14,10 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
+use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetCredentialGenerator;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\RequestPasswordReset;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserActivated;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -181,6 +185,62 @@ final class ActivationApiTest extends TestCase
         $this->assertResponse($this->request(), 409);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
         self::assertCount(1, $observed);
+    }
+
+    /**
+     * Refuses a real reset credential on the activation route without altering either account
+     */
+    public function testActivationDoesNotAcceptPasswordResetAuthority(): void
+    {
+        $invitationCredential = $this->credential;
+        $resetUser = UserId::generate();
+        $resetEmail = EmailAddress::fromString('purpose-reset@example.test');
+        $bus = $this->container->get(CommandBus::class);
+        $bus->execute(new InvitePendingUser(UserId::generate(), $resetUser, $resetEmail));
+        $this->assertResponse($this->request(['user_id' => $resetUser->toString()]), 200);
+        $this->credential = $invitationCredential;
+
+        $resetCredential = PasswordResetCredential::fromString(bin2hex(random_bytes(32)));
+        $generator = $this->createStub(PasswordResetCredentialGenerator::class);
+        $generator->method('generate')->willReturn($resetCredential);
+        $this->container->set(
+            PasswordResetCredentialGenerator::class,
+            static fn(): PasswordResetCredentialGenerator => $generator
+        );
+        $bus->execute(new RequestPasswordReset($resetEmail));
+        $grant = $this->container->get(PasswordResetGrantRepository::class)->getLatestByUserId($resetUser);
+        self::assertNotNull($grant);
+        self::assertTrue($grant->matchesCredential($resetCredential));
+        self::assertTrue($grant->isUsableAt(new DateTimeImmutable()));
+
+        $before = $this->authoritySnapshot();
+        $refusal = $this->request(['credential' => $resetCredential->toString()]);
+        self::assertSame(
+            ['status' => 'fail', 'data' => ['message' => 'State conflict.']],
+            $this->assertResponse($refusal, 409)
+        );
+        $this->assertSecretObservability($refusal, $this->connection, $this->logs, [$resetCredential->toString()]);
+        self::assertSame($before, $this->authoritySnapshot());
+
+        $this->assertResponse($this->request(), 200);
+    }
+
+    /**
+     * Compares committed rows without printing password hashes or encrypted delivery material on failure
+     *
+     * @return array<string, string>
+     */
+    private function authoritySnapshot(): array
+    {
+        $snapshot = [];
+        $tables = ['users', 'activation_grants', 'password_reset_grants', 'refresh_sessions', 'audit_evidence'];
+        foreach ($tables as $table) {
+            $snapshot[$table] = hash('sha256', serialize($this->connection->fetchAllAssociative(
+                'SELECT * FROM '.$table.' ORDER BY id'
+            )));
+        }
+
+        return $snapshot;
     }
 
     /**
