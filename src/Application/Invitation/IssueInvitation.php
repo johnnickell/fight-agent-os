@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Invitation;
 
 use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\InvitationConfirmationRequired;
 use App\Domain\Authorization\MembershipEvidenceRepository;
@@ -45,7 +46,7 @@ final readonly class IssueInvitation
     public function __construct(
         private AuthenticatedPermissions $authority,
         private InvitationRateLimiter $limiter,
-        private ConsoleAssignmentPolicy $policy,
+        private InstallationAssignmentPolicy $policy,
         private UserRepository $users,
         private CommandBus $commands,
         private QueryBus $queries,

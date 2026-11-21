@@ -159,8 +159,7 @@ TASK-00564) and [TASK-00575](tasks/00575-TASK.md) (Project creation/inspection, 
 blanket DBAL/Role-audit or portfolio gate. TICKET-00135's six corrections are approved/written as
 [TASK-00576](tasks/00576-TASK.md) through [TASK-00581](tasks/00581-TASK.md), orders `13`–`18`: Console, HTTP invitations,
 directory/catalog/Role operations, authentication/sessions/CSRF, activation/passwords and credential recovery/mail.
-All are `needs-info` for their own precise supplier capabilities and depend locally on TASK-00564; TASK-00577 also
-consumes TASK-00576's policy. TICKET-00136's single end-to-end safe-error cutover is approved/written as
+The adopted supplier baseline and remaining qualification are in the [owning TICKET](tickets/00135-TICKET.md#adopted-supplier-and-remaining-qualification); see the Board for current status. TASK-00577 consumes TASK-00576's policy. TICKET-00136's single end-to-end safe-error cutover is approved/written as
 [TASK-00582](tasks/00582-TASK.md), order `19`, ready-for-agent behind TASK-00564 only, owning dependency qualification,
 HTTP/Console failure presentation, affected clients and removal together. Grill, all six TICKETs and their nineteen
 TASKs are now fully planned; no decomposition remains for this EPIC. Other TASK priorities remain unchanged.

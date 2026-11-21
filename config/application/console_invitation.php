@@ -9,10 +9,15 @@ use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\PruneSessionPresentationCommand;
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
-use App\Application\Invitation\ConsoleAssignmentPolicy;
-use App\Application\Invitation\ConsoleUserOperation;
+use App\Adapter\Persistence\Authorization\PostgresMembershipProgress;
+use App\Application\Authorization\CommandHandler\AddUserRoleHandler;
+use App\Application\Authorization\CommandHandler\InviteOrdinaryUserHandler;
+use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Domain\Authorization\ManagedPolicyCatalog;
 use App\Domain\Authorization\MembershipEvidenceRepository;
+use App\Domain\Authorization\MembershipProgress;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\GetPermissionByIdHandler;
@@ -44,21 +49,37 @@ return static function (Container $container): void {
             $container->get(EventDispatcher::class),
             $container->get(AuditEvidenceRepository::class)
         ));
-    $container->set(ConsoleUserOperation::class, static fn(Container $container): ConsoleUserOperation =>
-        new ConsoleUserOperation(
+    $container->set('authorization.inspection.connection', static fn(Container $container): Connection =>
+        DriverManager::getConnection($container->get(Connection::class)->getParams()));
+    $container->set(MembershipProgress::class, static fn(Container $container): MembershipProgress =>
+        new PostgresMembershipProgress($container->get('authorization.inspection.connection')));
+    $container->set(InviteOrdinaryUserHandler::class, static fn(Container $container): InviteOrdinaryUserHandler =>
+        new InviteOrdinaryUserHandler(
             $container->get(CommandBus::class),
-            $container->get(QueryBus::class),
+            $container->get(InstallationAssignmentPolicy::class),
+            $container->get(MembershipProgress::class),
             $container->get(TransactionalUnitOfWork::class),
-            $container->get(MembershipEvidenceRepository::class),
-            $container->get(ConsoleAssignmentPolicy::class)
+            $container->get(MembershipEvidenceRepository::class)
         ));
-    $container->set(ConsoleAssignmentPolicy::class, static fn(Container $container): ConsoleAssignmentPolicy =>
-        new ConsoleAssignmentPolicy(
+    $container->set(AddUserRoleHandler::class, static fn(Container $container): AddUserRoleHandler =>
+        new AddUserRoleHandler(
+            $container->get(CommandBus::class),
+            $container->get(InstallationAssignmentPolicy::class),
+            $container->get(MembershipProgress::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(MembershipEvidenceRepository::class)
+        ));
+    $container->set(
+        InstallationAssignmentPolicy::class,
+        static fn(Container $container): InstallationAssignmentPolicy => new InstallationAssignmentPolicy(
             $container->get(QueryBus::class),
             $container->get(ManagedPolicyCatalog::class)
-        ));
+        )
+    );
     $container->get('messaging.command.router')->registerHandlers([
-        InvitePendingUserHandler::commandRegistration() => InvitePendingUserHandler::class
+        InvitePendingUserHandler::commandRegistration()  => InvitePendingUserHandler::class,
+        InviteOrdinaryUserHandler::commandRegistration() => InviteOrdinaryUserHandler::class,
+        AddUserRoleHandler::commandRegistration()        => AddUserRoleHandler::class
     ]);
     $container->set(GetRoleByIdHandler::class, static fn(Container $container): GetRoleByIdHandler =>
         new GetRoleByIdHandler($container->get(RoleRepository::class)));
@@ -69,9 +90,9 @@ return static function (Container $container): void {
         GetPermissionByIdHandler::queryRegistration() => GetPermissionByIdHandler::class
     ]);
     $container->set(InviteUserCommand::class, static fn(Container $container): InviteUserCommand =>
-        new InviteUserCommand($container->get(ConsoleUserOperation::class)));
+        new InviteUserCommand($container->get(CommandBus::class), $container->get(MembershipProgress::class)));
     $container->set(AddUserRoleCommand::class, static fn(Container $container): AddUserRoleCommand =>
-        new AddUserRoleCommand($container->get(ConsoleUserOperation::class)));
+        new AddUserRoleCommand($container->get(CommandBus::class), $container->get(MembershipProgress::class)));
     $container->set(SafeConsoleApplication::class, static function (Container $container): SafeConsoleApplication {
         $application = new SafeConsoleApplication('Fight Agent OS');
         $application->addCommand($container->get(InviteUserCommand::class));
