@@ -29,19 +29,17 @@ final class PasswordSettingTest extends TestCase
         $passwords = new Argon2idPasswords();
         $setting = new PasswordSetting(
             new PasswordStructure(),
-            new LocalCompromisedPasswords(dirname(__DIR__, 4).'/resources/passwords/common.sha256'),
-            $passwords
+            new LocalCompromisedPasswords(dirname(__DIR__, 4).'/resources/passwords/common.sha256')
         );
-        self::assertSame(PasswordRejection::COMMON_PASSWORD, $setting->rejection('P@ssw0rd'));
         try {
-            $setting->hash('P@ssw0rd');
+            $setting->requireAccepted('P@ssw0rd');
             self::fail('Expected common-password rejection.');
         } catch (PasswordRejected $failure) {
             self::assertSame(PasswordRejection::COMMON_PASSWORD, $failure->reason);
         }
         $candidate = " Distinct-Ωé42!e\u{0301} ";
-        self::assertNull($setting->rejection($candidate));
-        $hash = $setting->hash($candidate);
+        $setting->requireAccepted($candidate);
+        $hash = $passwords->hash($candidate);
         self::assertTrue($passwords->validate($candidate, $hash));
         self::assertFalse($passwords->validate(trim($candidate), $hash));
         self::assertFalse($passwords->needsRehash($hash));
@@ -78,10 +76,10 @@ final class PasswordSettingTest extends TestCase
                 throw new RuntimeException($this->privateMaterial);
             }
         };
-        $setting = new PasswordSetting(new PasswordStructure(), $checker, new Argon2idPasswords());
+        $setting = new PasswordSetting(new PasswordStructure(), $checker);
         ob_start();
         try {
-            $setting->hash($candidate);
+            $setting->requireAccepted($candidate);
             self::fail('Expected safe infrastructure failure.');
         } catch (Throwable $failure) {
             $output = (string) ob_get_clean();

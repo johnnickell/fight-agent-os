@@ -75,12 +75,12 @@ network identity. A real ingress must enroll its trusted network boundary separa
 supplies peer address and discards forwarding metadata. These limits are an initial bounded policy, not a DDoS
 or distributed-ingress qualification.
 
-`ActivateInvitation` owns only password acceptance. The installed `UserAuthentication::activate()` owns latest
-purpose-bound grant matching/consumption, pending-user activation, Argon2id hashing, authority revision, ordinary
-refresh session/token creation and post-commit `UserActivated`. No repository mutation shortcut is used.
-Malformed/unknown/used/expired/revoked/replaced/raced authority maps to generic `409 Conflict.` without account
-state. Unexpected infrastructure failure discards its cause and returns a sanitized `500`; its outcome must not
-be assumed rolled back if post-commit event delivery failed. Retry/inspection is explicit, not an automatic replay.
+The HTTP action checks `PasswordSetting`, then calls `UserAuthentication::activate()` directly with an
+anonymous audit actor and no remembered session. The package owns grant matching and consumption, pending-user
+activation, Argon2id hashing, authority revision, ordinary session creation and required audit in one transaction.
+It dispatches `UserActivated` after commit. `AuthenticationRequired` and `StateConflict` map to the same generic
+409. Other faults return a sanitized 500. An event failure can leave activation committed without issuing
+browser credentials; do not automatically replay the request.
 
 Success returns no-store JSend data containing only `access_token`, `issued_at`, `expires_at` (UTC seconds,
 900-second difference, no later expiry than the JWT). The typed feature service places access only in the
@@ -93,23 +93,12 @@ has no remembered option. The CSRF nonce rotates on success, so a future mutatio
 The server response never includes refresh material in JSON. `SessionAccessData` does not retain the refresh
 TokenSet, and wraps its temporary access string for redacted PHP diagnostics.
 
-## Qualified package and future consumers
+## Package baseline
 
-The unchanged Composer lock selects Access Control **0.6.0**,
-`dc4621d13851dd08cdf85ed9715ead24b1051e80`, and Common **1.3.0**,
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. The available tagged release and actual installed APIs were inspected;
-version numbers alone are not acceptance. Shared repositories and Doctrine transaction composition are retained.
-Controlled real PostgreSQL duplicate activation, activation/resend/correction winner orders, rollback at grant,
-user and session writes, and independently committed admission are exercised with bounded barriers, not sleeps.
-
-TICKET-00017 should reuse `BrowserMutationGuard`, the configured package `AuthenticationService`/token policy,
-`SessionResponder`, `SessionAccessData`, `ApiClient.post()` and `MemoryAccessToken`. The registered login throttle
-now uses TASK-00045's independently committed rolling email admission; see
-[browser request controls](BROWSER_AUTH_REQUESTS.md). Shared cookie/session responders support remembered
-responses and matching expiry, and [canonical login](LOGIN.md) now consumes them; refresh/logout remain unregistered. Cross-tab coordination,
-restoration, authority projection and scheduling still need their owning implementations and tests. TICKET-00018
-must load real `/me` authority before any protected landing; activation currently presents a bounded truthful
-success page with a link to the application foundation, not an invented dashboard.
+The [adopted Access Control v0.11.0 and Common v1.5.1 releases](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption)
+remain locked. PostgreSQL tests cover duplicate activation, competing invitation replacement, rollback at grant,
+user, session and required audit writes, and independently committed admission. The Action uses the existing
+session responder and device presentation owner rather than issuing its own cookies or maintaining another session graph.
 
 ## Local reproduction and evidence safety
 

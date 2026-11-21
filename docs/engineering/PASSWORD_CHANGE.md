@@ -20,15 +20,11 @@ are not trimmed, normalized or retained in messages. The shared `PasswordSetting
 enforces Unicode composition and the pinned local common-password corpus before package dispatch.
 See [password semantics](PASSWORDS.md). Client metadata never authorizes or replaces server checks.
 
-Owned Application orchestration calls `PasswordManagement::changePassword()` directly. Only the
-package reads/verifies current proof using its real/dummy path. The package owns Argon2id replacement,
-authentication-version/authority-revision advancement, reset-grant retirement, all-active-session
-revocation, atomic audit and the post-commit `PasswordChanged` event. No password history or requirement
-to differ is added. Original qualification used Access Control v0.8.0 lock/source
-`319738255e682d587642b67856039f882b9588d6` and Common v1.3.0
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. TASK-00582's [safe-error cutover](SAFE_HTTP_ERRORS.md)
-selects Common v1.4.1 while retaining that Access Control version; current behavior needs actual checks,
-not version arithmetic.
+The HTTP action calls the locked Access Control v0.11.0 `PasswordManagement::changePassword()` directly
+with the authenticated principal's ID. The package alone verifies current proof using its real/dummy path.
+It replaces the Argon2id hash, advances authentication authority, retires reset grants, revokes active sessions
+and records audit in one transaction. It dispatches `PasswordChanged` after commit. No password history or
+requirement to differ is added.
 
 Success is HTTP 200, no-store `{"status":"success","data":{"changed":true}}`, with fixed refresh/nonce
 cookie deletion (Secure, HttpOnly, SameSite=Strict, Path=/api/v1/auth). No access/refresh token or identity
