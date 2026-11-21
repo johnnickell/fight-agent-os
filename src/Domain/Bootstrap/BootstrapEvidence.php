@@ -28,6 +28,6 @@ final readonly class BootstrapEvidence
      */
     public static function completed(BootstrapSuperAdmin $command): self
     {
-        return new self('bootstrap:'.$command->input->operatorId, $command->userId);
+        return new self($command->operator->auditActorId, $command->userId);
     }
 }

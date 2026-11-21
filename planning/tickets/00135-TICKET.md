@@ -105,7 +105,7 @@ their own prerequisites are satisfied; this TICKET does not imply a monolithic r
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00576](../tasks/00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | ready-for-agent |
+| [TASK-00576](../tasks/00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | done |
 | [TASK-00577](../tasks/00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent |
 | [TASK-00578](../tasks/00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done |
 | [TASK-00579](../tasks/00579-TASK.md) | Correct authentication session and CSRF ownership | ready-for-agent |

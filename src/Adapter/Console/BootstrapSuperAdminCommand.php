@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
-use App\Application\Bootstrap\BootstrapOperation;
+use App\Application\Authorization\IncompleteBootstrap;
+use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
-use App\Domain\Invitation\ConsoleInvitationInput;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -30,8 +31,10 @@ final class BootstrapSuperAdminCommand extends Command
     /**
      * Constructs BootstrapSuperAdminCommand
      */
-    public function __construct(private readonly BootstrapOperation $operation)
-    {
+    public function __construct(
+        private readonly CommandBus $commandBus,
+        private readonly BootstrapProgress $bootstrapProgress
+    ) {
         parent::__construct();
     }
 
@@ -61,18 +64,21 @@ final class BootstrapSuperAdminCommand extends Command
             if (!$input->getOption('internal') || !$input->getOption('confirm-bootstrap') || $this->repeated($input)) {
                 throw new \InvalidArgumentException('Explicit bootstrap confirmation is required.');
             }
-            $invitation = new ConsoleInvitationInput(
-                (string) $input->getOption('operator'),
-                (string) $input->getOption('email')
-            );
+            $operator = TrustedOperatorInput::operator((string) $input->getOption('operator'), 'bootstrap');
+            $email = TrustedOperatorInput::email((string) $input->getOption('email'));
         } catch (Throwable) {
             $error->writeln(self::USAGE, OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET);
 
             return self::INVALID;
         }
         try {
-            $command = new BootstrapSuperAdmin($invitation, UserId::generate());
-            $state = $this->operation->run($command);
+            $command = new BootstrapSuperAdmin($operator, $email, UserId::generate());
+            try {
+                $this->commandBus->execute($command);
+                $state = $this->bootstrapProgress->inspect($command);
+            } catch (IncompleteBootstrap $failure) {
+                $state = $failure->state;
+            }
             $result = [
                 'status'     => $state->isComplete() ? 'bootstrap_complete' : 'partial_or_uncertain',
                 'admission'  => $state->admission,

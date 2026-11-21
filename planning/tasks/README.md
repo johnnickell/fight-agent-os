@@ -578,7 +578,7 @@
 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | done | [TICKET-00133](../tickets/00133-TICKET.md) |
 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | done | [TICKET-00134](../tickets/00134-TICKET.md) |
 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | done | [TICKET-00134](../tickets/00134-TICKET.md) |
-| [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |

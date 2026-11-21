@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
-use App\Application\Invitation\ConsoleUserOperation;
-use App\Domain\Invitation\Command\AddUserRole;
-use App\Domain\Invitation\ConsoleRoleInput;
+use App\Application\Authorization\IncompleteMembership;
+use App\Domain\Authorization\Command\AddUserRole;
+use App\Domain\Authorization\MembershipProgress;
+use App\Domain\Authorization\OperatorMembershipEvidence;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Domain\Value\Identifier\Uuid;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -30,8 +35,10 @@ final class AddUserRoleCommand extends Command
     /**
      * Constructs AddUserRoleCommand
      */
-    public function __construct(private readonly ConsoleUserOperation $operation)
-    {
+    public function __construct(
+        private readonly CommandBus $commandBus,
+        private readonly MembershipProgress $membershipProgress
+    ) {
         parent::__construct();
     }
 
@@ -56,38 +63,42 @@ final class AddUserRoleCommand extends Command
             if (!$input->getOption('internal') || $this->hasRepeatedOptions($input)) {
                 throw new \InvalidArgumentException('Invalid role addition options.');
             }
-            $role = new ConsoleRoleInput(
-                (string) $input->getOption('operator'),
-                (string) $input->getOption('user'),
-                (string) $input->getOption('role')
-            );
+            $operator = TrustedOperatorInput::operator((string) $input->getOption('operator'), 'console');
+            $userId = UserId::fromString(TrustedOperatorInput::uuid((string) $input->getOption('user')));
+            $roleId = RoleId::fromString(TrustedOperatorInput::uuid((string) $input->getOption('role')));
         } catch (Throwable) {
             $error->writeln(self::USAGE, OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET);
 
             return self::INVALID;
         }
         try {
-            $outcome = $this->operation->run(new AddUserRole($role));
-            if (!$outcome->success) {
-                ConsoleUserOutput::failure(
-                    $error,
-                    $outcome,
-                    $role->operatorId->toString(),
-                    $role->roleId->toString(),
-                    self::FAILURE_MESSAGE,
-                    false
-                );
-
-                return self::FAILURE;
+            $invocationId = Uuid::comb();
+            $this->commandBus->execute(new AddUserRole($operator, $userId, $roleId, $invocationId));
+            $state = $this->membershipProgress->inspect(
+                OperatorMembershipEvidence::membershipConfirmed($operator, $userId, $roleId, $invocationId)
+            );
+            if (!$state->isComplete()) {
+                throw new IncompleteMembership($state);
             }
             $output->writeln(json_encode([
-                'user_id' => $role->userId->toString(),
-                'role_id' => $role->roleId->toString(),
+                'user_id' => $userId->toString(),
+                'role_id' => $roleId->toString(),
                 'status'  => 'role_present',
                 'audit'   => 'confirmed'
             ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);
 
             return self::SUCCESS;
+        } catch (IncompleteMembership $failure) {
+            ConsoleUserOutput::failure(
+                $error,
+                $failure->state,
+                $operator->operatorId->toString(),
+                $roleId->toString(),
+                self::FAILURE_MESSAGE,
+                false
+            );
+
+            return self::FAILURE;
         } catch (Throwable) {
             $error->writeln(self::FAILURE_MESSAGE, OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET);
 

@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Persistence;
 
 use App\Adapter\Persistence\Repository\PostgresAuditEvidenceRepository;
+use App\Domain\Authorization\OperatorMembershipEvidence;
+use App\Domain\Authorization\TrustedOperator;
 use App\Domain\Bootstrap\BootstrapEvidence;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
-use App\Domain\Invitation\ConsoleInvitationInput;
-use App\Domain\Invitation\ConsoleRoleEvidence;
-use App\Domain\Invitation\ConsoleRoleInput;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationRoleEvidence;
 use DateTimeImmutable;
@@ -25,6 +24,8 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRevision;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Domain\Value\Identifier\Uuid;
+use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -70,7 +71,7 @@ final class AuditRecordProjectionTest extends TestCase
      */
     #[DataProvider('ownedEvidence')]
     public function testOwnedEvidencePreservesHistoryShape(
-        BootstrapEvidence|ConsoleRoleEvidence|InvitationRoleEvidence $evidence,
+        BootstrapEvidence|OperatorMembershipEvidence|InvitationRoleEvidence $evidence,
         string $actor,
         string $action,
         UserId $target,
@@ -82,7 +83,7 @@ final class AuditRecordProjectionTest extends TestCase
     /**
      * Supplies the three distinct owned audit outcomes
      *
-     * @return iterable<string, array{BootstrapEvidence|ConsoleRoleEvidence|InvitationRoleEvidence, string,
+     * @return iterable<string, array{BootstrapEvidence|OperatorMembershipEvidence|InvitationRoleEvidence, string,
      *     string, UserId, array<string, mixed>|stdClass}>
      */
     public static function ownedEvidence(): iterable
@@ -90,18 +91,29 @@ final class AuditRecordProjectionTest extends TestCase
         $operator = UserId::generate();
         $id = $operator->toString();
         $target = UserId::generate();
-        $role = RoleId::generate()->toString();
+        $role = RoleId::generate();
+        $invocationId = Uuid::comb();
         yield 'bootstrap' => [
             BootstrapEvidence::completed(new BootstrapSuperAdmin(
-                new ConsoleInvitationInput($id, 'first@example.test'),
+                new TrustedOperator($operator, 'bootstrap:'.$id),
+                EmailAddress::fromString('first@example.test'),
                 $target
             )),
             'bootstrap:'.$id, 'user.bootstrap_completed', $target, new stdClass()
         ];
         yield 'console' => [
-            ConsoleRoleEvidence::membershipConfirmed(new ConsoleRoleInput($id, $target->toString(), $role)),
+            OperatorMembershipEvidence::membershipConfirmed(
+                new TrustedOperator($operator, 'console:'.$id),
+                $target,
+                $role,
+                $invocationId
+            ),
             'console:'.$id, 'user.console_role_assigned', $target,
-            ['role_id' => $role, 'result' => 'membership_confirmed']
+            [
+                'role_id'       => $role->toString(),
+                'result'        => 'membership_confirmed',
+                'invocation_id' => $invocationId->toString()
+            ]
         ];
         $mode = InvitationMode::ORDINARY;
         yield 'invitation' => [
@@ -143,7 +155,7 @@ final class AuditRecordProjectionTest extends TestCase
      * @phpstan-param array<string, mixed>|stdClass $facts
      */
     private function assertAppend(
-        AuditEvidence|BootstrapEvidence|ConsoleRoleEvidence|InvitationRoleEvidence $evidence,
+        AuditEvidence|BootstrapEvidence|OperatorMembershipEvidence|InvitationRoleEvidence $evidence,
         string $actor,
         string $action,
         string $subjectType,

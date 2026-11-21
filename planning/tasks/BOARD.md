@@ -31,7 +31,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
+| 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 6 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
@@ -51,7 +51,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | [TASK-00576](00576-TASK.md) | — |
 | 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | [TASK-00577](00577-TASK.md), [TASK-00579](00579-TASK.md), [TASK-00580](00580-TASK.md), [TASK-00581](00581-TASK.md) | — |
 | 9 | [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | [TICKET-00143 — Browse shared stateful tables with restorable URL queries](../tickets/00143-TICKET.md) | ready-for-agent | [TASK-00596](00596-TASK.md) | — |
 | 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00579](00579-TASK.md) | — |
@@ -487,6 +486,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | done | — | [PR #175](https://github.com/johnnickell/fight-agent-os/pull/175) |
 | 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | done | — | [PR #184](https://github.com/johnnickell/fight-agent-os/pull/184) |
 | 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #223](https://github.com/johnnickell/fight-agent-os/pull/223) |
+| 2 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | done | — | [PR #296](https://github.com/johnnickell/fight-agent-os/pull/296) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #222](https://github.com/johnnickell/fight-agent-os/pull/222) |

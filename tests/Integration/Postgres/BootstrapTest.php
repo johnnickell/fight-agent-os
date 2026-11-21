@@ -6,11 +6,11 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Bootstrap\BootstrapOperation;
+use App\Application\Authorization\IncompleteBootstrap;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Authorization\TrustedOperator;
 use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
-use App\Domain\Invitation\ConsoleInvitationInput;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -28,9 +28,12 @@ use Fight\AccessControl\Domain\AccessControl\User\Event\RoleAssignedToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Command\CommandFilter;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\EventMessage;
 use Fight\Common\Domain\Utility\ClassName;
@@ -39,10 +42,11 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Tests\Support\AccessClock;
 
 /**
- * Proves manual bootstrap admission, independent package commits and authoritative authenticated assignment
+ * Proves manual bootstrap admission and independent package commits
  */
 final class BootstrapTest extends TestCase
 {
@@ -131,7 +135,7 @@ final class BootstrapTest extends TestCase
             $context = json_decode($row['context'], true, flags: JSON_THROW_ON_ERROR);
             if ($row['action'] === 'user.bootstrap_completed') {
                 self::assertSame([], $context);
-                self::assertSame('bootstrap:'.$command->input->operatorId, $row['actor_id']);
+                self::assertSame('bootstrap:'.$command->operator->operatorId, $row['actor_id']);
                 continue;
             }
             self::assertInstanceOf(SystemId::class, AuditEvidence::fromArray($context)->actorId());
@@ -206,12 +210,12 @@ final class BootstrapTest extends TestCase
         $old = $this->command();
         $this->connection->insert('installation_bootstrap', [
             'singleton'   => true,
-            'operator_id' => (string) $old->input->operatorId,
+            'operator_id' => $old->operator->operatorId->toString(),
             'target_id'   => (string) $old->userId,
             'email'       => 'historical@example.test'
         ]);
         $this->connection->insert('audit_evidence', [
-            'actor_id'     => 'bootstrap:'.$old->input->operatorId,
+            'actor_id'     => $old->operator->auditActorId,
             'action'       => 'user.bootstrap_claimed',
             'subject_id'   => (string) $old->userId,
             'subject_type' => 'user',
@@ -384,20 +388,71 @@ final class BootstrapTest extends TestCase
     }
 
     /**
+     * Reports unknown admission when a configured filter skips the bootstrap handler
+     */
+    public function testOuterFilterVetoDoesNotConfirmAdmission(): void
+    {
+        self::assertTrue($this->bootstrap($this->command())->isComplete());
+        $tables = ['users', 'roles', 'permissions', 'user_role_assignments', 'activation_grants', 'audit_evidence'];
+        $counts = fn(): array => array_map(
+            fn(string $table): int => (int) $this->connection->fetchOne('SELECT count(*) FROM '.$table),
+            $tables
+        );
+        $before = $counts();
+        $events = $this->events;
+        $providerCalls = $this->providerCalls;
+        $filter = $this->createStub(CommandFilter::class);
+        $filter->method('process')->willReturnCallback(static function (CommandMessage $message, callable $next): void {
+            if (!$message->payload() instanceof BootstrapSuperAdmin) {
+                $next($message);
+            }
+        });
+        $this->container->get('messaging.command.bus')->addFilter($filter);
+        $stdout = new BufferedOutput();
+        $stderr = new BufferedOutput();
+        $output = $this->createStub(ConsoleOutput::class);
+        $output->method('write')->willReturnCallback($stdout->write(...));
+        $output->method('writeln')->willReturnCallback($stdout->writeln(...));
+        $output->method('getErrorOutput')->willReturn($stderr);
+        self::assertSame(1, $this->container->get(SafeConsoleApplication::class)->run(new ArgvInput([
+            'console', 'user:bootstrap-super-admin', '--internal', '--confirm-bootstrap',
+            '--operator='.UserId::generate(), '--email=skipped@example.test'
+        ]), $output));
+        self::assertSame('', $stdout->fetch());
+        $result = json_decode($stderr->fetch(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('partial_or_uncertain', $result['status']);
+        self::assertSame('unknown', $result['admission']);
+        self::assertSame('missing', $result['invitation']);
+        self::assertSame('missing', $result['assignment']);
+        self::assertSame('unconfirmed', $result['audit']);
+        self::assertArrayNotHasKey('user_id', $result);
+        self::assertSame($before, $counts());
+        self::assertSame($events, $this->events);
+        self::assertSame($providerCalls, $this->providerCalls);
+    }
+
+    /**
      * Confirms durable completion after acknowledgement loss without replaying mutations
      */
     public function testLostCompletionAcknowledgement(): void
     {
-        $actual = $this->container->get(BootstrapProgress::class);
-        $progress = $this->createStub(BootstrapProgress::class);
-        $progress->method('complete')->willReturnCallback(static function (BootstrapSuperAdmin $command) use (
+        $actual = $this->container->get(TransactionalUnitOfWork::class);
+        $transactionalUnitOfWork = $this->createStub(TransactionalUnitOfWork::class);
+        $transactionalUnitOfWork->method('isClosed')->willReturnCallback($actual->isClosed(...));
+        $transactionalUnitOfWork->method('commitTransactional')->willReturnCallback(function (callable $write) use (
             $actual
-        ): void {
-            $actual->complete($command);
-            throw new RuntimeException('private-acknowledgement-marker');
+        ): mixed {
+            $result = $actual->commitTransactional($write);
+            if ($this->connection->fetchOne("SELECT 1 FROM audit_evidence WHERE action = 'user.bootstrap_completed'")) {
+                throw new RuntimeException('private-acknowledgement-marker');
+            }
+
+            return $result;
         });
-        $progress->method('inspect')->willReturnCallback($actual->inspect(...));
-        $this->container->set(BootstrapProgress::class, static fn(): BootstrapProgress => $progress);
+        $this->container->set(
+            TransactionalUnitOfWork::class,
+            static fn(): TransactionalUnitOfWork => $transactionalUnitOfWork
+        );
         self::assertTrue($this->bootstrap($this->command())->isComplete());
         self::assertSame(1, (int) $this->connection->fetchOne(
             "SELECT count(*) FROM audit_evidence WHERE action = 'user.bootstrap_completed'"
@@ -412,12 +467,7 @@ final class BootstrapTest extends TestCase
         $command = $this->command();
         $progress = $this->container->get(BootstrapProgress::class);
         self::assertSame('missing', $progress->inspect($command)->invitation);
-        try {
-            $progress->complete($command);
-            self::fail('Missing membership cannot complete.');
-        } catch (\LogicException) {
-            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-        }
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
         self::assertTrue($this->bootstrap($command)->isComplete());
         $this->connection->executeStatement("UPDATE users SET email = 'changed@example.test' WHERE id = ?", [
             (string) $command->userId
@@ -430,7 +480,13 @@ final class BootstrapTest extends TestCase
      */
     private function bootstrap(BootstrapSuperAdmin $command): \App\Domain\Bootstrap\BootstrapState
     {
-        return $this->container->get(BootstrapOperation::class)->run($command);
+        try {
+            $this->container->get(CommandBus::class)->execute($command);
+        } catch (IncompleteBootstrap $failure) {
+            return $failure->state;
+        }
+
+        return $this->container->get(BootstrapProgress::class)->inspect($command);
     }
 
     /**
@@ -474,8 +530,11 @@ final class BootstrapTest extends TestCase
      */
     private function command(): BootstrapSuperAdmin
     {
+        $operatorId = UserId::generate();
+
         return new BootstrapSuperAdmin(
-            new ConsoleInvitationInput((string) UserId::generate(), 'first@example.test'),
+            new TrustedOperator($operatorId, 'bootstrap:'.$operatorId->toString()),
+            \Fight\Common\Domain\Value\Internet\EmailAddress::fromString('first@example.test'),
             UserId::generate()
         );
     }

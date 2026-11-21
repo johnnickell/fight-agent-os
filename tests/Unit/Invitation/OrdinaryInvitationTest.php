@@ -8,15 +8,18 @@ use App\Adapter\Console\AddUserRoleCommand;
 use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
-use App\Application\Invitation\ConsoleAssignmentPolicy;
-use App\Application\Invitation\ConsoleUserOperation;
+use App\Application\Authorization\CommandHandler\AddUserRoleHandler;
+use App\Application\Authorization\CommandHandler\InviteOrdinaryUserHandler;
+use App\Application\Authorization\IncompleteMembership;
+use App\Application\Authorization\InstallationAssignmentPolicy;
+use App\Domain\Authorization\Command\AddUserRole;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Authorization\MembershipEvidenceRepository;
-use App\Domain\Invitation\Command\AddUserRole;
+use App\Domain\Authorization\MembershipProgress;
+use App\Domain\Authorization\MembershipState;
+use App\Domain\Authorization\OperatorMembershipEvidence;
+use App\Domain\Authorization\TrustedOperator;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
-use App\Domain\Invitation\ConsoleInvitationInput;
-use App\Domain\Invitation\ConsoleRoleEvidence;
-use App\Domain\Invitation\ConsoleRoleInput;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\Audit\SystemId;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
@@ -40,11 +43,13 @@ use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Domain\Messaging\Command\Command;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
+use Fight\Common\Domain\Value\Identifier\Uuid;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
 use LogicException;
@@ -60,7 +65,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 final class OrdinaryInvitationTest extends TestCase
 {
     private ?UserView $user = null;
-    /** @var list<ConsoleRoleEvidence> */
+    /** @var list<OperatorMembershipEvidence> */
     private array $evidence = [];
     /** @var list<Command> */
     private array $effects = [];
@@ -72,16 +77,13 @@ final class OrdinaryInvitationTest extends TestCase
     {
         $operation = $this->operation();
         $message = $this->invitation();
-        $outcome = $operation->run($message);
-        self::assertTrue($outcome->success);
-        self::assertSame('confirmed', $outcome->assignment);
-        self::assertSame('confirmed', $outcome->audit);
+        $operation->execute($message);
         self::assertCount(2, $this->effects);
         self::assertInstanceOf(InvitePendingUser::class, $this->effects[0]);
         self::assertInstanceOf(AssignRoleToUser::class, $this->effects[1]);
         self::assertInstanceOf(SystemId::class, $this->effects[0]->getActorId());
         self::assertInstanceOf(SystemId::class, $this->effects[1]->getActorId());
-        self::assertSame('console:'.$message->input->operatorId, $this->evidence[0]->actorId);
+        self::assertSame('console:'.$message->operator->operatorId, $this->evidence[0]->actorId);
         self::assertTrue($this->evidence[0]->userId->equals($message->userId));
         self::assertTrue($this->evidence[0]->roleId->equals($this->effects[1]->getRoleId()));
         self::assertSame($message->toArray(), InviteOrdinaryUser::fromArray($message->toArray())->toArray());
@@ -171,18 +173,18 @@ final class OrdinaryInvitationTest extends TestCase
             }
         });
         $message = $this->invitation();
-        $outcome = $operation->run($message);
-        self::assertFalse($outcome->success);
+        $outcome = $this->failure($operation, $message);
         self::assertSame($message->userId, $outcome->knownUserId);
         self::assertSame('missing', $outcome->assignment);
         self::assertSame('unconfirmed', $outcome->audit);
         self::assertSame([], $this->evidence);
-        $role = new AddUserRole(new ConsoleRoleInput(
-            $message->input->operatorId->toString(),
-            $message->userId->toString(),
-            InstallationManagedPolicy::USER_ROLE_ID
-        ));
-        self::assertTrue($this->operation()->run($role)->success);
+        $role = new AddUserRole(
+            $message->operator,
+            $message->userId,
+            RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID),
+            Uuid::comb()
+        );
+        $this->operation()->execute($role);
         self::assertSame($role->toArray(), AddUserRole::fromArray($role->toArray())->toArray());
         self::assertCount(1, $this->evidence);
     }
@@ -192,25 +194,67 @@ final class OrdinaryInvitationTest extends TestCase
      */
     public function testInspectionFailure(): void
     {
-        $queries = 0;
-        $operation = $this->operation(
-            static function (): never {
-                throw new RuntimeException('private-marker');
-            },
-            static function ($query, $normal) use (&$queries) {
-                if ($query instanceof GetUserById) {
-                    $queries++;
-                    throw new RuntimeException('private-state-marker');
-                }
-
-                return $normal;
-            }
-        );
-        $outcome = $operation->run($this->invitation());
-        self::assertFalse($outcome->success);
+        $inspection = $this->createStub(MembershipProgress::class);
+        $inspection->method('inspect')->willThrowException(new RuntimeException('private-state-marker'));
+        $operation = $this->operation(static function (): never {
+            throw new RuntimeException('private-marker');
+        }, inspection: $inspection);
+        $outcome = $this->failure($operation, $this->invitation());
         self::assertNull($outcome->knownUserId);
         self::assertSame('unknown', $outcome->assignment);
-        self::assertSame(1, $queries);
+        $target = UserId::generate();
+        $this->user = $this->view($target);
+        $outcome = $this->failure($operation, $this->roleAddition($target));
+        self::assertNull($outcome->knownUserId);
+        self::assertSame('unknown', $outcome->assignment);
+    }
+
+    /**
+     * Confirms completion from current evidence if acknowledgement of the audit commit is lost
+     */
+    public function testAuditAcknowledgementLost(): void
+    {
+        $bus = $this->operation(loseAuditAcknowledgement: true);
+        $invitation = $this->invitation();
+        $bus->execute($invitation);
+        $bus->execute($this->roleAddition($invitation->userId));
+        self::assertCount(2, $this->evidence);
+    }
+
+    /**
+     * Rejects a different command payload without applying invitation or membership effects
+     */
+    public function testHandlersRejectOtherPayloads(): void
+    {
+        $policy = new InstallationAssignmentPolicy(
+            $this->createStub(QueryBus::class),
+            new \App\Adapter\Authorization\JsonManagedPolicy()
+        );
+        $commands = $this->createMock(CommandBus::class);
+        $commands->expects(self::never())->method('execute');
+        $inspection = $this->inspection();
+        $transactions = $this->createStub(TransactionalUnitOfWork::class);
+        $audit = $this->createStub(MembershipEvidenceRepository::class);
+        $invite = new InviteOrdinaryUserHandler($commands, $policy, $inspection, $transactions, $audit);
+        $addRole = new AddUserRoleHandler($commands, $policy, $inspection, $transactions, $audit);
+        $mismatches = [[$invite, $this->roleAddition(UserId::generate())], [$addRole, $this->invitation()]];
+        foreach ($mismatches as [$handler, $message]) {
+            try {
+                $handler->handle(CommandMessage::create($message));
+                self::fail('Mismatched command payload must be refused.');
+            } catch (InvalidArgumentException $error) {
+                self::assertStringStartsWith('Unexpected ', $error->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Rejects attribution whose UUID differs from the admitted operator
+     */
+    public function testMismatchedOperatorAttribution(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new TrustedOperator(UserId::generate(), 'console:'.UserId::generate()->toString());
     }
 
     /**
@@ -229,21 +273,18 @@ final class OrdinaryInvitationTest extends TestCase
                     RoleName::fromString('ROLE_CUSTOM'), false, [],
                     \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
                 ),
+                $defect === 'no-role-view' && $query instanceof GetRoleById => null,
                 $defect === 'protected' && $query instanceof GetPermissionById => new PermissionView(
                     $query->getPermissionId(),
                     PermissionName::fromString('READ_USERS'), PermissionTier::SUPER_ADMIN_ONLY, true
                 ),
                 $defect === 'permission' && $query instanceof GetPermissionById => null,
                 $defect === 'catalog' && $query instanceof PreviewManagedPolicy => new ManagedPolicyPlan([], []),
+                $defect === 'no-preview' && $query instanceof PreviewManagedPolicy => null,
                 default => $normal
             };
         });
-        $outcome = $operation->run(new AddUserRole(new ConsoleRoleInput(
-            UserId::generate()->toString(),
-            $target->toString(),
-            InstallationManagedPolicy::USER_ROLE_ID
-        )));
-        self::assertFalse($outcome->success);
+        $this->failure($operation, $this->roleAddition($target));
         self::assertSame([], $this->effects);
         self::assertSame([], $this->evidence);
     }
@@ -255,7 +296,7 @@ final class OrdinaryInvitationTest extends TestCase
      */
     public static function unsafeQueries(): iterable
     {
-        foreach (['target', 'role', 'protected', 'permission', 'catalog'] as $defect) {
+        foreach (['target', 'role', 'no-role-view', 'protected', 'permission', 'catalog', 'no-preview'] as $defect) {
             yield [$defect];
         }
     }
@@ -270,10 +311,9 @@ final class OrdinaryInvitationTest extends TestCase
         if ($kind === 'stable') {
             $id = RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID);
         }
-        $input = new ConsoleRoleInput(UserId::generate()->toString(), UserId::generate()->toString(), $id->toString());
         $this->expectException(LogicException::class);
-        $input->requireEligibleRole($kind === 'absent' ? null : new RoleView(
-            $id,
+        InstallationManagedPolicy::requireAdditiveRole($id, new RoleView(
+            $kind === 'mismatch' ? RoleId::generate() : $id,
             RoleName::fromString($kind === 'alias' ? 'ROLE_SUPER_ADMIN' : 'ROLE_RENAMED'),
             $kind !== 'alias',
             [],
@@ -288,7 +328,7 @@ final class OrdinaryInvitationTest extends TestCase
      */
     public static function unsafeRoles(): iterable
     {
-        foreach (['stable', 'alias', 'managed', 'absent'] as $kind) {
+        foreach (['stable', 'alias', 'managed', 'mismatch'] as $kind) {
             yield [$kind];
         }
     }
@@ -299,16 +339,20 @@ final class OrdinaryInvitationTest extends TestCase
     #[DataProvider('wrongOutcomes')]
     public function testWrongOutcome(string $defect): void
     {
-        $target = UserId::generate();
+        $message = $this->invitation();
         $view = $defect === 'absent' ? null : $this->view(
-            $defect === 'target' ? UserId::generate() : $target,
+            $defect === 'target' ? UserId::generate() : $message->userId,
             $defect === 'email' ? 'other@example.test' : 'new.user@example.test',
             $defect === 'state' ? UserState::ACTIVE : UserState::PENDING_ACTIVATION,
             $defect === 'role' ? [] : [RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID)]
         );
-        $this->expectException(LogicException::class);
-        (new ConsoleInvitationInput(UserId::generate()->toString(), 'new.user@example.test'))
-            ->requireOrdinaryOutcome($view, $target);
+        $reads = 0;
+        $bus = $this->operation(null, static function ($query, $normal) use ($view, &$reads) {
+            return $query instanceof GetUserById && ++$reads === 2 ? $view : $normal;
+        });
+        $this->failure($bus, $message);
+        self::assertCount(2, $this->effects);
+        self::assertSame([], $this->evidence);
     }
 
     /**
@@ -339,12 +383,7 @@ final class OrdinaryInvitationTest extends TestCase
 
             return $normal;
         });
-        $outcome = $operation->run(new AddUserRole(new ConsoleRoleInput(
-            UserId::generate()->toString(),
-            $target->toString(),
-            InstallationManagedPolicy::USER_ROLE_ID
-        )));
-        self::assertFalse($outcome->success);
+        $outcome = $this->failure($operation, $this->roleAddition($target));
         self::assertSame('unconfirmed', $outcome->audit);
         self::assertSame([], $this->evidence);
     }
@@ -408,7 +447,9 @@ final class OrdinaryInvitationTest extends TestCase
         $operation = $this->operation(static function (): never {
             throw new RuntimeException('SQL password=private-programmatic-marker');
         });
-        $invite = new \Symfony\Component\Console\Tester\CommandTester(new InviteUserCommand($operation));
+        $invite = new \Symfony\Component\Console\Tester\CommandTester(
+            new InviteUserCommand($operation, $this->inspection())
+        );
         self::assertSame(1, $invite->execute([
             '--internal' => true,
             '--operator' => $operator,
@@ -416,7 +457,9 @@ final class OrdinaryInvitationTest extends TestCase
         ]));
         self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $invite->getDisplay());
         $this->user = $this->view($user);
-        $correction = new \Symfony\Component\Console\Tester\CommandTester(new AddUserRoleCommand($operation));
+        $correction = new \Symfony\Component\Console\Tester\CommandTester(
+            new AddUserRoleCommand($operation, $this->inspection())
+        );
         self::assertSame(1, $correction->execute([
             '--internal' => true,
             '--operator' => $operator,
@@ -427,6 +470,65 @@ final class OrdinaryInvitationTest extends TestCase
         self::assertStringNotContainsString('private-programmatic-marker', $correction->getDisplay());
         self::assertSame([], $this->effects);
         self::assertSame([], $this->evidence);
+    }
+
+    /**
+     * Reports success only after a void dispatch is confirmed by a current read
+     */
+    #[DataProvider('consoleReadOutcomes')]
+    public function testConsoleDispatchOutcome(string $name, string $outcome): void
+    {
+        $target = UserId::generate();
+        $commands = $this->createStub(CommandBus::class);
+        $inspection = $this->createStub(MembershipProgress::class);
+        $inspection->method('inspect')->willReturnCallback(static function (OperatorMembershipEvidence $evidence) use (
+            $outcome
+        ): MembershipState {
+            if ($outcome === 'unavailable') {
+                throw new RuntimeException('private-inspection-diagnostic');
+            }
+
+            if ($outcome === 'confirmed') {
+                return new MembershipState($evidence->userId, 'confirmed', 'confirmed');
+            }
+
+            return new MembershipState($evidence->userId, 'missing', 'unconfirmed');
+        });
+        $application = new SafeConsoleApplication();
+        $application->setAutoExit(false);
+        $application->addCommand(new InviteUserCommand($commands, $inspection));
+        $application->addCommand(new AddUserRoleCommand($commands, $inspection));
+        $requested = $name === 'user:invite' ? ['--email=user@example.test'] : [
+            '--user='.$target->toString(), '--role='.InstallationManagedPolicy::USER_ROLE_ID
+        ];
+        $input = new ArgvInput(['console', $name, '--internal', '--operator='.UserId::generate(), ...$requested]);
+        $output = new BufferedOutput();
+        self::assertSame($outcome === 'confirmed' ? 0 : 1, $application->run($input, $output));
+        $text = $output->fetch();
+        if ($outcome === 'unavailable') {
+            $diagnostic = match ($name) {
+                'user:invite' => InviteUserCommand::FAILURE_MESSAGE,
+                default       => AddUserRoleCommand::FAILURE_MESSAGE
+            };
+            self::assertSame($diagnostic."\n", $text);
+        } else {
+            $status = $outcome === 'confirmed' ? 'role_present' : 'partial_or_uncertain';
+            self::assertSame($status, json_decode($text, true, flags: JSON_THROW_ON_ERROR)['status']);
+        }
+    }
+
+    /**
+     * Supplies confirmation, silent veto and unavailable inspection cases
+     *
+     * @return iterable<array{string, string}>
+     */
+    public static function consoleReadOutcomes(): iterable
+    {
+        yield ['user:role:add', 'confirmed'];
+        yield ['user:role:add', 'missing'];
+        yield ['user:role:add', 'unavailable'];
+        yield ['user:invite', 'missing'];
+        yield ['user:invite', 'unavailable'];
     }
 
     /**
@@ -446,8 +548,12 @@ final class OrdinaryInvitationTest extends TestCase
      * @phpstan-param (callable(Command): void)|null $effect
      * @phpstan-param (callable(mixed, mixed): mixed)|null $queryResult
      */
-    private function operation(?callable $effect = null, ?callable $queryResult = null): ConsoleUserOperation
-    {
+    private function operation(
+        ?callable $effect = null,
+        ?callable $queryResult = null,
+        ?MembershipProgress $inspection = null,
+        bool $loseAuditAcknowledgement = false
+    ): CommandBus {
         $queries = $this->createStub(QueryBus::class);
         $queries->method('fetch')->willReturnCallback(function ($query) use ($queryResult) {
             $normal = match (true) {
@@ -467,17 +573,42 @@ final class OrdinaryInvitationTest extends TestCase
             return $queryResult === null ? $normal : $queryResult($query, $normal);
         });
         $transactions = $this->createStub(TransactionalUnitOfWork::class);
-        $transactions->method('commitTransactional')->willReturnCallback(static fn(callable $work) => $work());
+        $transactions->method('commitTransactional')->willReturnCallback(
+            static function (callable $work) use ($loseAuditAcknowledgement): mixed {
+                $result = $work();
+                if ($loseAuditAcknowledgement) {
+                    throw new RuntimeException('Audit acknowledgement lost.');
+                }
+
+                return $result;
+            }
+        );
         $audit = $this->createStub(MembershipEvidenceRepository::class);
-        $audit->method('add')->willReturnCallback(function (ConsoleRoleEvidence $evidence): void {
+        $audit->method('add')->willReturnCallback(function (OperatorMembershipEvidence $evidence): void {
             $this->evidence[] = $evidence;
         });
-        $policy = new ConsoleAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy());
+        $policy = new InstallationAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy());
         $router = $this->createStub(SynchronousCommandBus::class);
         $bus = new CommandPipeline($router);
-        $operation = new ConsoleUserOperation($bus, $queries, $transactions, $audit, $policy);
-        $router->method('dispatch')->willReturnCallback(function (CommandMessage $message) use ($effect): void {
+        $inspection ??= $this->inspection();
+        $invite = new InviteOrdinaryUserHandler($bus, $policy, $inspection, $transactions, $audit);
+        $addRole = new AddUserRoleHandler($bus, $policy, $inspection, $transactions, $audit);
+        $router->method('dispatch')->willReturnCallback(function (CommandMessage $message) use (
+            $effect,
+            $invite,
+            $addRole
+        ): void {
             $command = $message->payload();
+            if ($command instanceof InviteOrdinaryUser) {
+                $invite->handle($message);
+
+                return;
+            }
+            if ($command instanceof AddUserRole) {
+                $addRole->handle($message);
+
+                return;
+            }
             assert($command instanceof Command);
             if ($effect !== null) {
                 $effect($command);
@@ -490,7 +621,48 @@ final class OrdinaryInvitationTest extends TestCase
             }
         });
 
-        return $operation;
+        return $bus;
+    }
+
+    /**
+     * Supplies retained facts for unit tests; PostgreSQL integration proves the snapshot semantics
+     */
+    private function inspection(): MembershipProgress
+    {
+        $inspection = $this->createStub(MembershipProgress::class);
+        $inspection->method('inspect')->willReturnCallback(function (
+            OperatorMembershipEvidence $fact
+        ): MembershipState {
+            if ($this->user === null || !$this->user->getUserId()->equals($fact->userId)) {
+                return new MembershipState();
+            }
+            $confirmed = false;
+            foreach ($this->evidence as $record) {
+                $confirmed = $confirmed || $record->invocationId->toString() === $fact->invocationId->toString();
+            }
+
+            return new MembershipState(
+                $fact->userId,
+                in_array($fact->roleId, $this->user->getRoleIds()) ? 'confirmed' : 'missing',
+                $confirmed ? 'confirmed' : 'unconfirmed'
+            );
+        });
+
+        return $inspection;
+    }
+
+    /**
+     * Requires typed partial facts instead of normal command completion
+     */
+    private function failure(CommandBus $bus, Command $command): MembershipState
+    {
+        try {
+            $bus->execute($command);
+        } catch (IncompleteMembership $failure) {
+            return $failure->state;
+        }
+
+        self::fail('Expected incomplete membership.');
     }
 
     /**
@@ -499,12 +671,13 @@ final class OrdinaryInvitationTest extends TestCase
      * @phpstan-param list<string> $arguments
      * @return array{int, string}
      */
-    private function console(ConsoleUserOperation $operation, string $name, array $arguments): array
+    private function console(CommandBus $operation, string $name, array $arguments): array
     {
         $application = new SafeConsoleApplication();
         $application->setAutoExit(false);
-        $application->addCommand(new InviteUserCommand($operation));
-        $application->addCommand(new AddUserRoleCommand($operation));
+        $inspection = $this->inspection();
+        $application->addCommand(new InviteUserCommand($operation, $inspection));
+        $application->addCommand(new AddUserRoleCommand($operation, $inspection));
         $output = new BufferedOutput();
         $exit = $application->run(new ArgvInput(['console', $name, ...$arguments]), $output);
 
@@ -517,9 +690,34 @@ final class OrdinaryInvitationTest extends TestCase
     private function invitation(): InviteOrdinaryUser
     {
         return new InviteOrdinaryUser(
-            new ConsoleInvitationInput(UserId::generate()->toString(), 'new.user@example.test'),
-            UserId::generate()
+            $this->operator(),
+            EmailAddress::fromString('new.user@example.test'),
+            UserId::generate(),
+            Uuid::comb()
         );
+    }
+
+    /**
+     * Supplies a role correction for the existing user
+     */
+    private function roleAddition(UserId $userId): AddUserRole
+    {
+        return new AddUserRole(
+            $this->operator(),
+            $userId,
+            RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID),
+            Uuid::comb()
+        );
+    }
+
+    /**
+     * Supplies trusted operator attribution distinct from the target
+     */
+    private function operator(): TrustedOperator
+    {
+        $id = UserId::generate();
+
+        return new TrustedOperator($id, 'console:'.$id->toString());
     }
 
     /**

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Invitation;
 
 use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\InvitationConfirmationRequired;
-use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
 use App\Domain\Authorization\InstallationManagedPolicy;
@@ -60,11 +60,11 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
-use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Tests\Support\AccessClock;
+use UnexpectedValueException;
 
 /**
  * Protects exact authenticated invitation policy, independent-step evidence and safe status use cases
@@ -187,6 +187,11 @@ final class InvitationApiTest extends TestCase
             self::assertStringNotContainsString('private-marker', $failure->getMessage());
             self::assertNull($failure->getPrevious());
             self::assertLessThanOrEqual(2, count($this->effects));
+            if ($fault === 'post-origin-preview') {
+                self::assertCount(1, $this->effects);
+                self::assertInstanceOf(InvitePendingUser::class, $this->effects[0]);
+                self::assertSame([], $this->audits);
+            }
         }
     }
 
@@ -205,13 +210,50 @@ final class InvitationApiTest extends TestCase
             ['wrong-email', 'unknown', false], ['wrong-state', 'unknown', false],
             ['delivery-null', 'confirmed', true], ['delivery-wrong', 'confirmed', true],
             ['delivery-query', 'confirmed', true],
-            ['veto-assignment', 'unconfirmed', true], ['revoke', 'unconfirmed', true]
+            ['veto-assignment', 'unconfirmed', true], ['revoke', 'unconfirmed', true],
+            ['post-origin-preview', 'unconfirmed', true]
             ] as $case
         ) {
             foreach ([InvitationMode::ORDINARY, InvitationMode::SUPER_ADMIN] as $mode) {
                 yield $case[0].$mode->value => [...$case, $mode];
             }
         }
+    }
+
+    /**
+     * Distinguishes an invalid preview reply from a valid plan reporting drift before any invitation effect
+     *
+     * @phpstan-param class-string<\Throwable> $exception
+     */
+    #[DataProvider('installationPreviewFailures')]
+    public function testInstallationPreviewFailure(string $fault, string $exception): void
+    {
+        $this->fault = $fault;
+        $issuer = $this->issuer();
+        $this->expectException($exception);
+        try {
+            $issuer->issue(
+                $this->authentication,
+                EmailAddress::fromString('new@example.test'),
+                InvitationMode::ORDINARY,
+                false
+            );
+        } finally {
+            self::assertSame([], $this->effects);
+            self::assertSame([], $this->audits);
+        }
+    }
+
+    /**
+     * Supplies a missing reply, a wrong-type reply and a typed plan reporting drift
+     *
+     * @return iterable<string, array{string, class-string<\Throwable>}>
+     */
+    public static function installationPreviewFailures(): iterable
+    {
+        yield 'missing preview' => ['missing-preview', UnexpectedValueException::class];
+        yield 'wrong preview type' => ['wrong-preview', UnexpectedValueException::class];
+        yield 'valid drift plan' => ['policy', StateConflict::class];
     }
 
     /**
@@ -232,13 +274,13 @@ final class InvitationApiTest extends TestCase
     }
 
     /**
-     * Supplies policy drift, existing canonical address and concurrent duplicate failures
+     * Supplies existing canonical address and concurrent duplicate failures
      *
      * @return iterable<array{string}>
      */
     public static function conflicts(): iterable
     {
-        foreach (['policy', 'duplicate', 'race'] as $fault) {
+        foreach (['duplicate', 'race'] as $fault) {
             yield [$fault];
         }
     }
@@ -359,14 +401,24 @@ final class InvitationApiTest extends TestCase
                     ActivationOrigin::PRIVATE_INVITATION
                 );
             }
-            if ($this->fault === 'policy') {
-                throw new LogicException('private-marker');
+            if (
+                $this->fault === 'missing-preview'
+                || ($this->fault === 'post-origin-preview' && $this->target !== null)
+            ) {
+                return null;
+            }
+            if ($this->fault === 'wrong-preview') {
+                return 'private-marker';
             }
             $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
+            $permissionAction = ManagedPolicyChangeAction::UNCHANGED;
+            if ($this->fault === 'policy') {
+                $permissionAction = ManagedPolicyChangeAction::RECONCILE;
+            }
 
             return new ManagedPolicyPlan(
                 array_map(
-                    static fn($d) => new ManagedPermissionPlanItem($d, ManagedPolicyChangeAction::UNCHANGED),
+                    static fn($d) => new ManagedPermissionPlanItem($d, $permissionAction),
                     $policy->getPermissions()
                 ),
                 array_map(
@@ -419,7 +471,7 @@ final class InvitationApiTest extends TestCase
         return new IssueInvitation(
             $authority,
             $limiter,
-            new ConsoleAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
+            new InstallationAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
             $users,
             $commands,
             $queries,
