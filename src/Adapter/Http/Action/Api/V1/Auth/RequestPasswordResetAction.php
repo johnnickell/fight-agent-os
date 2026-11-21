@@ -28,7 +28,7 @@ final readonly class RequestPasswordResetAction
      * Constructs RequestPasswordResetAction
      */
     public function __construct(
-        private CommandBus $commands,
+        private CommandBus $commandBus,
         private ResetResponseTiming $timing,
         private ResetRequestResponder $responder
     ) {
@@ -93,7 +93,7 @@ final readonly class RequestPasswordResetAction
     {
         /** @var array{email: string} $input */
         $input = $request->getAttribute(JsonBody::class);
-        $this->timing->normalize(fn() => $this->commands->execute(
+        $this->timing->normalize(fn() => $this->commandBus->execute(
             new RequestPasswordReset(EmailAddress::fromString($input['email']))
         ));
 

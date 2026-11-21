@@ -54,10 +54,8 @@ exceeding 250ms can distinguish durations. This is bounded normalization of obvi
 
 ## Package lifecycle and delivery
 
-The unchanged lock qualifies Access Control **v0.8.0**, source/lock reference
-`319738255e682d587642b67856039f882b9588d6`, and Common **v1.3.0**,
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582` for this integration. Historical v0.6.0 email receipts are not
-current request evidence. The Action dispatches `RequestPasswordReset` through the configured command bus;
+The lock retains the [adopted Access Control v0.11.0 and Common v1.5.1 releases](../../planning/tasks/00573-TASK.md#approved-access-control-v0110-adoption).
+The Action dispatches `RequestPasswordReset` through the configured command bus;
 it neither constructs a grant nor sends mail. The shared package handler owns active eligibility, one-hour
 purpose-bound hashed authority, encrypted recoverable material, predecessor replacement, audit and the
 secret-free post-commit `PasswordResetRequested` event. PostgreSQL authentication fences serialize the latest

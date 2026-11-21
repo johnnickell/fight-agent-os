@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Security\PasswordChange\ChangePassword;
+use App\Application\Security\Password\PasswordSetting;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\SessionLifecycle;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
 use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionConflictException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Throwable;
 
@@ -73,14 +75,17 @@ final class PasswordChangeRaceWorker
                         }
                     });
                 } else {
-                    $container->get(ChangePassword::class)->change(
+                    $container->get(PasswordSetting::class)->requireAccepted($input['password']);
+                    $container->get(PasswordManagement::class)->changePassword(
                         UserId::fromString($input['user']),
                         $input['current'],
                         $input['password']
                     );
                 }
                 echo "committed\n";
-            } catch (StateConflict | RefreshSessionNotFoundException | RefreshSessionConflictException) {
+            } catch (AuthenticationRequired | StateConflict) {
+                echo "conflict\n";
+            } catch (RefreshSessionNotFoundException | RefreshSessionConflictException) {
                 echo "conflict\n";
             }
         } catch (Throwable) {
