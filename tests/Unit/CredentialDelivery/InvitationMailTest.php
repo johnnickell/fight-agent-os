@@ -6,9 +6,8 @@ namespace Tests\Unit\CredentialDelivery;
 
 use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
-use App\Application\Mail\MailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
+use App\Adapter\Mail\MailDelivery;
+use App\Adapter\Mail\MailMessage;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
@@ -107,7 +106,7 @@ final class InvitationMailTest extends TestCase
         $mail->method('deliver')->willReturnCallback(static function (MailMessage $message) use (
             &$observations,
             $userId
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             [$destination, $subject, $text, $html] = $message->content();
             $expectedUrl = 'https://example.test/activate#credential=synthetic%3C%26%22credential&user_id='.$userId;
             $expectedHtmlUrl = str_replace('&', '&amp;', $expectedUrl);
@@ -142,7 +141,7 @@ HTML;
                 'digest'      => hash('sha256', $text.$html)
             ];
 
-            return MailOutcome::DELIVERED;
+            return CredentialDeliveryOutcome::DELIVERED;
         });
         $provider = $this->provider($mail);
         $invocation = $this->invocation('activation', 'synthetic<&"credential');
@@ -181,16 +180,14 @@ HTML;
      * Maps all mail outcomes and preserves one generation identity across duplicate attempts
      */
     #[DataProvider('outcomes')]
-    public function testMapsTypedOutcomesWithoutRetainingInvocation(
-        MailOutcome $mailOutcome,
-        CredentialDeliveryOutcome $expected
-    ): void {
+    public function testPassesThroughTypedOutcomesWithStableIdentity(CredentialDeliveryOutcome $mailOutcome): void
+    {
         $ids = [];
         $mail = $this->createMock(MailDelivery::class);
         $mail->method('deliver')->willReturnCallback(static function (MailMessage $message) use (
             &$ids,
             $mailOutcome
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             $ids[] = $message->idempotencyId;
 
             return $mailOutcome;
@@ -198,7 +195,7 @@ HTML;
         $provider = $this->provider($mail);
         $invocation = $this->invocation();
         $outcomes = [$provider->deliver($invocation), $provider->deliver($invocation)];
-        self::assertSame([$expected, $expected], $outcomes);
+        self::assertSame([$mailOutcome, $mailOutcome], $outcomes);
         self::assertSame(array_fill(0, 2, $invocation->getIdempotencyId()), $ids);
         self::assertStringNotContainsString($invocation->getCredential(), print_r($ids, true));
     }
@@ -206,13 +203,13 @@ HTML;
     /**
      * Supplies transport outcomes without introducing a consumer retry policy
      *
-     * @return iterable<string, array{MailOutcome, CredentialDeliveryOutcome}>
+     * @return iterable<string, array{CredentialDeliveryOutcome}>
      */
     public static function outcomes(): iterable
     {
-        yield 'delivered' => [MailOutcome::DELIVERED, CredentialDeliveryOutcome::DELIVERED];
-        yield 'retryable' => [MailOutcome::RETRYABLE_FAILURE, CredentialDeliveryOutcome::RETRYABLE_FAILURE];
-        yield 'permanent' => [MailOutcome::PERMANENT_FAILURE, CredentialDeliveryOutcome::PERMANENT_FAILURE];
+        yield 'delivered' => [CredentialDeliveryOutcome::DELIVERED];
+        yield 'retryable' => [CredentialDeliveryOutcome::RETRYABLE_FAILURE];
+        yield 'permanent' => [CredentialDeliveryOutcome::PERMANENT_FAILURE];
     }
 
     /**

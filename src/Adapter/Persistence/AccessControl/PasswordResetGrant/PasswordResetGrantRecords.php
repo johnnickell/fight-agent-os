@@ -2,57 +2,52 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence;
+namespace App\Adapter\Persistence\AccessControl\PasswordResetGrant;
 
-use App\Adapter\Persistence\Hydration\PersistedEmailChangeDelivery;
-use App\Adapter\Persistence\Hydration\PersistedEmailChangeGrant;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\EncryptedCredentialMaterial;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeDeliveryId;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrant;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantId;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeRequestOrigin;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantId;
+use Fight\AccessControl\Domain\AccessControl\User\RecoveryAuthority;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
- * Class EmailChangeGrantRecords
+ * Class PasswordResetGrantRecords
  *
- * Maps package-owned email-change authority and encrypted delivery state
+ * Maps password-reset rows to exact package-owned aggregate and delivery state
  */
-final class EmailChangeGrantRecords
+final class PasswordResetGrantRecords
 {
     /**
-     * Constructs EmailChangeGrantRecords
+     * Constructs PasswordResetGrantRecords
      */
     private function __construct()
     {
     }
 
     /**
-     * Returns the stored state without a raw credential
+     * Returns the stored state without raw credentials
      *
      * @return array<string, int|string|null>
      */
-    public static function fields(EmailChangeGrant $grant): array
+    public static function fields(PasswordResetGrant $grant): array
     {
         $delivery = $grant->getDelivery();
-        $requestOrigin = $grant->getRequestOrigin();
 
         return [
-            'email_change_reservation_revision' => $grant->getEmailChangeReservationRevision(),
-            'requester_id'                      => $requestOrigin->requesterId->toString(),
-            'old_mailbox'                       => $requestOrigin->oldMailbox,
+            'recovery_authentication_version'   => $grant->getAuthority()->getAuthenticationVersion(),
+            'recovery_canonical_email_revision' => $grant->getAuthority()->getCanonicalEmailRevision(),
             'id'                                => $grant->getId()->toString(),
             'user_id'                           => $grant->getUserId()->toString(),
             'credential_digest'                 => $grant->getCredentialHash(),
             'expires_at'                        => self::date($grant->getExpiresAt()),
-            'consumed_at'                       => self::optional($grant->getConsumedAt()),
-            'revoked_at'                        => self::optional($grant->getRevokedAt()),
-            'expired_at'                        => self::optional($grant->getExpiredAt()),
+            'consumed_at'                       => self::dateOrNull($grant->getConsumedAt()),
+            'revoked_at'                        => self::dateOrNull($grant->getRevokedAt()),
             'revision'                          => $grant->getRevision(),
             'delivery_id'                       => $delivery->getId()->toString(),
             'delivery_email'                    => $delivery->getEmail()->canonical(),
@@ -61,25 +56,25 @@ final class EmailChangeGrantRecords
             'delivery_due_at'                   => self::date($delivery->getDueAt()),
             'delivery_status'                   => $delivery->getStatus()->value,
             'delivery_claim_token'              => $delivery->getClaimToken()?->toString(),
-            'delivery_claimed_at'               => self::optional($delivery->getClaimedAt()),
-            'delivery_lease_until'              => self::optional($delivery->getLeaseUntil()),
+            'delivery_claimed_at'               => self::dateOrNull($delivery->getClaimedAt()),
+            'delivery_lease_until'              => self::dateOrNull($delivery->getLeaseUntil()),
             'delivery_attempt_count'            => $delivery->getAttemptCount(),
-            'delivery_last_attempt_at'          => self::optional($delivery->getLastAttemptAt()),
-            'delivery_last_outcome_at'          => self::optional($delivery->getLastOutcomeAt()),
+            'delivery_last_attempt_at'          => self::dateOrNull($delivery->getLastAttemptAt()),
+            'delivery_last_outcome_at'          => self::dateOrNull($delivery->getLastOutcomeAt()),
             'delivery_last_failure'             => $delivery->getLastFailure()?->value
         ];
     }
 
     /**
-     * Restores exact package-owned state without replaying provider effects
+     * Restores a grant with its owned delivery and all revision fields
      *
      * @param array<string, mixed> $row
      */
-    public static function hydrate(array $row): EmailChangeGrant
+    public static function hydrate(array $row): PasswordResetGrant
     {
         $userId = UserId::fromString((string) $row['user_id']);
-        $delivery = PersistedEmailChangeDelivery::reconstitute(
-            EmailChangeDeliveryId::fromString((string) $row['delivery_id']),
+        $delivery = PersistedPasswordResetDelivery::reconstitute(
+            PasswordResetDeliveryId::fromString((string) $row['delivery_id']),
             $userId,
             EmailAddress::fromString((string) $row['delivery_email']),
             $row['delivery_ciphertext'] === null ? null : EncryptedCredentialMaterial::fromString(
@@ -101,20 +96,18 @@ final class EmailChangeGrantRecords
             )
         );
 
-        return PersistedEmailChangeGrant::reconstitute(
-            EmailChangeGrantId::fromString((string) $row['id']),
+        return PersistedPasswordResetGrant::reconstitute(
+            PasswordResetGrantId::fromString((string) $row['id']),
             $userId,
             (string) $row['credential_digest'],
             self::parse($row['expires_at']),
             $delivery,
-            (int) $row['email_change_reservation_revision'],
-            new EmailChangeRequestOrigin(
-                UserId::fromString((string) $row['requester_id']),
-                EmailAddress::fromString((string) $row['old_mailbox'])
+            new RecoveryAuthority(
+                (int) $row['recovery_authentication_version'],
+                (int) $row['recovery_canonical_email_revision']
             ),
             self::parseOptional($row['consumed_at']),
             self::parseOptional($row['revoked_at']),
-            self::parseOptional($row['expired_at']),
             (int) $row['revision']
         );
     }
@@ -122,17 +115,17 @@ final class EmailChangeGrantRecords
     /**
      * Formats a date for PostgreSQL
      */
-    private static function date(DateTimeImmutable $value): string
+    private static function date(DateTimeImmutable $date): string
     {
-        return $value->format('Y-m-d H:i:s.uP');
+        return $date->format('Y-m-d H:i:s.uP');
     }
 
     /**
      * Formats an optional date for PostgreSQL
      */
-    private static function optional(?DateTimeImmutable $value): ?string
+    private static function dateOrNull(?DateTimeImmutable $date): ?string
     {
-        return $value === null ? null : self::date($value);
+        return $date === null ? null : self::date($date);
     }
 
     /**

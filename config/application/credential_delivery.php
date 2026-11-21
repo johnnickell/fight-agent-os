@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Console\CredentialDeliveryCommand;
 use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
+use App\Adapter\CredentialDelivery\CredentialExpiryRunner;
 use App\Adapter\CredentialDelivery\CredentialMailProvider;
+use App\Adapter\CredentialDelivery\CredentialRecoveryRunner;
 use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
@@ -11,12 +14,14 @@ use App\Adapter\CredentialDelivery\PasswordResetMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\CredentialDelivery\SystemDeliveryClock;
 use App\Adapter\Mail\CatcherMailDelivery;
-use App\Application\Mail\MailDelivery;
+use App\Adapter\Mail\MailDelivery;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
@@ -40,6 +45,29 @@ return static function (Container $container): void {
         return $cipher('password_reset');
     });
     $container->set(Clock::class, static fn(): Clock => new SystemDeliveryClock());
+    $container->set(CredentialExpiryRunner::class, static fn(Container $container): CredentialExpiryRunner =>
+        new CredentialExpiryRunner(
+            $container->get(QueryBus::class),
+            $container->get(SynchronousCommandBus::class),
+            $container->get(Clock::class)
+        ));
+    $container->set(CredentialRecoveryRunner::class, static fn(Container $container): CredentialRecoveryRunner =>
+        new CredentialRecoveryRunner(
+            $container->get(QueryBus::class),
+            $container->get(CommandBus::class),
+            $container->get(Clock::class)
+        ));
+    $container->set(CredentialDeliveryCommand::class, static fn(Container $container): CredentialDeliveryCommand =>
+        new CredentialDeliveryCommand(
+            $container->get(QueryBus::class),
+            $container->get(CredentialExpiryRunner::class),
+            $container->get(CredentialRecoveryRunner::class),
+            static function () use ($container): void {
+                $container->get(CredentialDeliveryProvider::class);
+                $container->get(InvitationDeliveryCipher::class);
+                $container->get(PasswordResetDeliveryCipher::class);
+            }
+        ));
     $container->set('credential-delivery.activation-link', static function (): CanonicalCredentialLink {
         $origin = getenv('APP_ACTIVATION_ORIGIN') ?: '';
         if (getenv('APP_ACTIVATION_PATH') !== '/activate' || $origin !== getenv('APP_BROWSER_ORIGIN')) {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Mail;
+namespace App\Adapter\Mail;
 
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;

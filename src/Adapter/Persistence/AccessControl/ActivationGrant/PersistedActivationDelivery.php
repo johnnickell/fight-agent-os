@@ -2,44 +2,44 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence\Hydration;
+namespace App\Adapter\Persistence\AccessControl\ActivationGrant;
 
 use DateTimeImmutable;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\EncryptedCredentialMaterial;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDelivery;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
- * Class PersistedPasswordResetDelivery
+ * Class PersistedActivationDelivery
  *
- * Reconstitutes the package-owned delivery through its protected constructor
+ * Reconstitutes package-owned encrypted delivery state through its supported protected constructor
  */
-final class PersistedPasswordResetDelivery extends PasswordResetDelivery
+final class PersistedActivationDelivery extends ActivationDelivery
 {
     /**
-     * Reconstitutes all persisted delivery fields without replaying provider effects
+     * Reconstitutes the complete delivery generation without replaying transport effects
      */
     public static function reconstitute(
-        PasswordResetDeliveryId $id,
+        ActivationDeliveryId $id,
         UserId $userId,
         EmailAddress $email,
         ?EncryptedCredentialMaterial $material,
         DateTimeImmutable $expiresAt,
         DateTimeImmutable $dueAt,
         CredentialDeliveryStatus $status,
-        ?CredentialDeliveryClaimToken $claimToken,
+        ?CredentialDeliveryClaimToken $token,
         ?DateTimeImmutable $claimedAt,
         ?DateTimeImmutable $leaseUntil,
         int $attemptCount,
         ?DateTimeImmutable $lastAttemptAt,
         ?DateTimeImmutable $lastOutcomeAt,
         ?CredentialDeliveryFailure $lastFailure
-    ): PasswordResetDelivery {
+    ): self {
         return new self(
             $id,
             $userId,
@@ -48,7 +48,7 @@ final class PersistedPasswordResetDelivery extends PasswordResetDelivery
             $expiresAt,
             $dueAt,
             $status,
-            $claimToken,
+            $token,
             $claimedAt,
             $leaseUntil,
             $attemptCount,

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\CredentialDelivery;
+namespace App\Adapter\CredentialDelivery;
 
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
@@ -16,20 +16,21 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDel
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use InvalidArgumentException;
+use LogicException;
 
 /**
- * Class ExpireCredentialDeliveryPages
+ * Class CredentialExpiryRunner
  *
  * Dispatches bounded package cleanup and observes progress without inferring lifecycle success
  */
-final readonly class ExpireCredentialDeliveryPages
+final readonly class CredentialExpiryRunner
 {
     /**
-     * Constructs ExpireCredentialDeliveryPages
+     * Constructs CredentialExpiryRunner
      */
     public function __construct(
-        private QueryBus $queries,
-        private SynchronousCommandBus $commands,
+        private QueryBus $queryBus,
+        private SynchronousCommandBus $commandBus,
         private Clock $clock
     ) {
     }
@@ -53,7 +54,7 @@ final readonly class ExpireCredentialDeliveryPages
             /**
              * @var list<ExpiredCredentialDelivery> $work
              */
-            $work = $this->queries->fetch($query);
+            $work = $this->queryBus->fetch($query);
             $report['remaining'] = count($work);
             if ($work === []) {
                 return $report;
@@ -71,27 +72,29 @@ final readonly class ExpireCredentialDeliveryPages
             }
             $previous = $snapshot;
             foreach ($work as $item) {
-                $id = $item->getDeliveryId()->toString();
-                // The final package value rejects other purposes during construction and deserialization.
-                /** @var 'activation'|'password_reset'|'email_change' $purpose */
-                $purpose = $item->getPurpose();
-                $command = match ($purpose) {
-                    'activation' => new ExpireInvitationDelivery(
-                        $systemId,
-                        $item->getUserId(), ActivationDeliveryId::fromString($id), $at
-                    ),
-                    'password_reset' => new ExpirePasswordResetDelivery(
-                        $systemId,
-                        $item->getUserId(), PasswordResetDeliveryId::fromString($id), $at
-                    ),
-                    'email_change' => new ExpireEmailChange(
+                $deliveryId = $item->getDeliveryId();
+                // The supplier pairs each purpose with its typed ID when it constructs the work item.
+                $command = match (true) {
+                    $deliveryId instanceof ActivationDeliveryId => new ExpireInvitationDelivery(
                         $systemId,
                         $item->getUserId(),
-                        $item->getEmailChangeGrantId(),
+                        $deliveryId,
+                        $at
+                    ),
+                    $deliveryId instanceof PasswordResetDeliveryId => new ExpirePasswordResetDelivery(
+                        $systemId,
+                        $item->getUserId(),
+                        $deliveryId,
+                        $at
+                    ),
+                    default => new ExpireEmailChange(
+                        $systemId,
+                        $item->getUserId(),
+                        $item->getEmailChangeGrantId() ?? throw new LogicException('Missing email change grant ID.'),
                         $at
                     )
                 };
-                $this->commands->execute($command);
+                $this->commandBus->execute($command);
                 $report['dispatched']++;
             }
             $report['pages']++;

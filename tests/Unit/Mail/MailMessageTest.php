@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Mail;
 
-use App\Application\Mail\MailMessage;
+use App\Adapter\Mail\MailMessage;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;

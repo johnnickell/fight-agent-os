@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Mail;
 
 use App\Adapter\Mail\CatcherMailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
+use App\Adapter\Mail\MailMessage;
+use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
@@ -58,7 +58,7 @@ final class CatcherMailDeliveryTest extends TestCase
             ++$stops;
         });
         $adapter = new CatcherMailDelivery($transport, 'development');
-        self::assertSame(MailOutcome::DELIVERED, $adapter->deliver($this->message($id)));
+        self::assertSame(CredentialDeliveryOutcome::DELIVERED, $adapter->deliver($this->message($id)));
         self::assertSame(array_fill(0, 9, true), $checks);
         self::assertSame(1, $stops);
         self::assertSame('', $transport->getStream()->getDebug());
@@ -88,7 +88,7 @@ final class CatcherMailDeliveryTest extends TestCase
             }
         });
         $adapter = new CatcherMailDelivery($transport, 'test');
-        self::assertSame(MailOutcome::RETRYABLE_FAILURE, $adapter->deliver($this->message('stable-id')));
+        self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $adapter->deliver($this->message('stable-id')));
         self::assertSame(1, $stops);
         self::assertSame('', $transport->getStream()->getDebug());
         self::assertStringNotContainsString('synthetic-secret', print_r($adapter, true));
