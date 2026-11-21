@@ -581,7 +581,7 @@
 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | done | [TICKET-00136](../tickets/00136-TICKET.md) |
