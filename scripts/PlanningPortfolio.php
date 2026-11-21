@@ -34,7 +34,9 @@ final class PlanningPortfolio
     ];
     private const LINK = '~!?\[[^\]]*\]\(([^\s)]+)\)~u';
     private const MAP = '~^\*\*Label:\*\*[^\r\n]*wayfinder:map~m';
-    private const BLOCK = '~<!-- planning:([a-z-]+) -->\r?\n.*?<!-- /planning:\1 -->~s';
+    private const NEWLINE = '(?>\r\n|[\r\n])';
+    private const BLOCK = '~<!-- planning:([a-z-]+) -->('.self::NEWLINE.').*?<!-- /planning:\1 -->~s';
+    private const FRONTMATTER = '~\A---'.self::NEWLINE.'(.*?)'.self::NEWLINE.'---'.self::NEWLINE.'~s';
 
     private readonly string $planning;
 
@@ -110,11 +112,9 @@ final class PlanningPortfolio
                 }
                 [$current, $offset] = $matches[0][0];
                 $expected = "<!-- planning:$name -->\n$content\n<!-- /planning:$name -->";
-                if (str_replace("\r\n", "\n", $current) !== $expected) {
+                if (str_replace(["\r\n", "\r"], "\n", $current) !== $expected) {
                     if ($write) {
-                        if (str_contains($current, "\r\n")) {
-                            $expected = str_replace("\n", "\r\n", $expected);
-                        }
+                        $expected = str_replace("\n", $matches[0][2][0], $expected);
                         $pending[$path] = substr_replace($text, $expected, $offset, strlen($current));
                     } else {
                         $errors[] = $this->relative($path).": stale $name view; run ./bin/planning-check --write";
@@ -523,11 +523,11 @@ final class PlanningPortfolio
                 $completed = array_any($children, static fn (array $child): bool => $child[1]['status'] === 'done');
                 $status = $completed ? 'done' : 'wontfix';
                 $text = $this->read($path);
-                if (preg_match('~\A---\r?\n(.*?)\r?\n---\r?\n~s', $text, $header, PREG_OFFSET_CAPTURE) !== 1) {
+                if (preg_match(self::FRONTMATTER, $text, $header, PREG_OFFSET_CAPTURE) !== 1) {
                     throw new RuntimeException('Cannot update frontmatter: '.$this->relative($path));
                 }
                 [$block, $offset] = $header[1];
-                $updated = preg_replace('/^(\h*status\h*:)[^\r\n]*/m', '${1} '.$status, $block, 1);
+                $updated = preg_replace('/(?:\A|(?<=[\r\n]))(\h*status\h*:)[^\r\n]*/', '${1} '.$status, $block, 1);
                 $pending[$path] = substr_replace($text, $updated, $offset, strlen($block));
                 $records[$id] = [$path, [...$data, 'status' => $status]];
             }
