@@ -10,7 +10,7 @@ use Fight\Common\Domain\Type\Arrayable;
 /**
  * Class InvitationDeliveryData
  *
- * Projects the existing HTTP status fields without exposing internal issuance origin
+ * Projects safe package status and its activation origin
  */
 final readonly class InvitationDeliveryData implements Arrayable
 {
@@ -30,7 +30,8 @@ final readonly class InvitationDeliveryData implements Arrayable
             'user_id'                => $this->delivery->getUserId()->toString(),
             'status'                 => $this->delivery->getStatus()->value,
             'expires_at'             => $this->delivery->getExpiresAt()->format(DATE_ATOM),
-            'activation_delivery_id' => $this->delivery->getActivationDeliveryId()->toString()
+            'activation_delivery_id' => $this->delivery->getActivationDeliveryId()->toString(),
+            'origin'                 => $this->delivery->getOrigin()->value
         ];
     }
 }

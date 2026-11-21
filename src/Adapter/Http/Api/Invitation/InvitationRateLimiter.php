@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Invitation;
+namespace App\Adapter\Http\Api\Invitation;
 
-use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**

@@ -6,17 +6,18 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Http\Responder\Api\V1\Invitations\IssueInvitationResponder;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Application\Invitation\IssueInvitation;
+use App\Application\Authorization\InstallationAssignmentPolicy;
+use App\Application\Authorization\PermissionGuard;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
-use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -80,6 +81,7 @@ final class InvitationApiTest extends TestCase
     private array $providerObservations = [];
     private CredentialDeliveryOutcome $providerOutcome = CredentialDeliveryOutcome::RETRYABLE_FAILURE;
     private bool $providerThrows = false;
+    private bool $revokeDuringDelivery = false;
     private TestHandler $logs;
 
     /**
@@ -179,6 +181,11 @@ final class InvitationApiTest extends TestCase
                     [$invocation->getEmail()->toString()]
                 )
             ];
+            if ($this->revokeDuringDelivery) {
+                $this->connection->executeStatement('UPDATE refresh_sessions SET revoked = true WHERE id = ?', [
+                    $this->session->getId()->toString()
+                ]);
+            }
             if ($this->providerThrows) {
                 throw new RuntimeException('SQL password=private-provider-marker https://secret.test/credential');
             }
@@ -190,7 +197,12 @@ final class InvitationApiTest extends TestCase
             ++$this->constructions;
 
             return new IssueInvitationAction(
-                $container->get(IssueInvitation::class),
+                $container->get(PermissionGuard::class),
+                $container->get(InvitationRateLimiter::class),
+                $container->get(InstallationAssignmentPolicy::class),
+                $container->get(UserRepository::class),
+                $container->get(CommandBus::class),
+                $container->get(QueryBus::class),
                 $container->get(IssueInvitationResponder::class)
             );
         });
@@ -613,7 +625,20 @@ final class InvitationApiTest extends TestCase
     }
 
     /**
-     * Reports canonical duplicates and installation policy drift without a second origin
+     * Allows an admitted request to finish and rejects the next request with the revoked session
+     */
+    public function testAdmittedIssuanceFinishesAfterRevocation(): void
+    {
+        $this->revokeDuringDelivery = true;
+        $data = $this->assertResponse($this->issue(['email' => 'new@example.test', 'mode' => 'ordinary']), 201)['data'];
+        self::assertSame('confirmed', $data['assignment']);
+        self::assertSame('confirmed', $data['audit']);
+        self::assertSame('private_invitation', $data['delivery']['origin']);
+        $this->assertResponse($this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']), 401);
+    }
+
+    /**
+     * Distinguishes canonical duplicates and an unreconciled installation
      */
     public function testConflictAndPolicy(): void
     {

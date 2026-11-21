@@ -203,6 +203,13 @@ describe('Pending invitation', () => {
     ])
       expect(matchApplicationRoute(`/admin/invitations/${suffix}`)).toBeUndefined();
   });
+  it('does not offer email correction for a registration generation', async () => {
+    const target = invitationTarget();
+    await mount({ ...target, delivery: { ...target.delivery, origin: 'registration' } });
+    expect(await screen.findByRole('button', { name: 'Resend invitation' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Correct email' })).not.toBeInTheDocument();
+  });
+
   it('retries only failed live work once and refetches instead of fabricating delivery', async () => {
     const target = invitationTarget();
     const pending = deferred<Response>();

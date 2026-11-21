@@ -4,30 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
-use App\Application\Invitation\IssueInvitation;
+use App\Domain\Invitation\Command\IssueInvitation;
 use App\Domain\Invitation\InvitationMode;
-use App\Domain\Invitation\InvitationOperation;
-use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use Fight\Common\Application\Error\Exception\StateConflict;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\CommandFilter;
-use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use Throwable;
@@ -77,16 +70,6 @@ final class InvitationRaceWorker
                 $container->set(Connection::class, static fn(): Connection => $connection);
                 $clock = new AccessClock(new DateTimeImmutable($input['now']));
                 $container->set(Clock::class, static fn(): Clock => $clock);
-                $container->set(
-                    AuthoritativePrincipalResolver::class,
-                    static fn(Container $c): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
-                        $c->get(UserRepository::class),
-                        $c->get(RefreshSessionRepository::class),
-                        $c->get(RoleRepository::class),
-                        $c->get(PermissionRepository::class),
-                        $clock
-                    )
-                );
                 $filter = new class implements CommandFilter {
                     /**
                      * @inheritDoc
@@ -105,11 +88,12 @@ final class InvitationRaceWorker
                 };
                 $container->get('messaging.command.bus')->addFilter($filter);
                 try {
-                    $container->get(IssueInvitation::class)->issue(new AuthenticationContext(
+                    $container->get(CommandBus::class)->execute(new IssueInvitation(
                         UserId::fromString($input['actor']),
-                        RefreshSessionId::fromString($input['session']),
-                        $input['version']
-                    ), EmailAddress::fromString('race@example.test'), InvitationMode::from($input['mode']), true);
+                        UserId::generate(),
+                        EmailAddress::fromString('race@example.test'),
+                        InvitationMode::from($input['mode'])
+                    ));
                     echo "issued\n";
                 } catch (StateConflict) {
                     echo "conflict\n";
