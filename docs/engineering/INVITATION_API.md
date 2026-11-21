@@ -88,6 +88,8 @@ a status read does not invent a clock-driven transition. A successfully recorded
 
 ## Independent issuance commits
 
+See the [issuance flow and source trace](invitation-api/README.md).
+
 Issuance retains [TASK-00037](../../planning/tasks/00037-TASK.md)'s sequencing. InvitePendingUser and AssignRoleToUser
 traverse configured buses and own independent transactions/events. Pending identity, seven-day hashed grant,
 encrypted recoverable delivery and user.invited audit commit first; delivery can start before assignment.
