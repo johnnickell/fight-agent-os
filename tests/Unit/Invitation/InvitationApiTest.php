@@ -60,6 +60,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
 use Fight\Common\Adapter\Messaging\Command\Sync\RoutingCommandBus;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
@@ -94,6 +95,40 @@ final class InvitationApiTest extends TestCase
     /** @var list<InvitationOperation> */
     private array $admissions = [];
     private string $fault = '';
+    private int $issuanceDispatches = 0;
+
+    /**
+     * Rejects either missing trusted request context before admission or dispatch
+     */
+    #[DataProvider('requiredContexts')]
+    public function testRejectsMissingRequestContext(string $missingContext): void
+    {
+        $issuer = $this->issuer();
+        $this->expectException(AuthenticationRequired::class);
+        try {
+            $issuer(
+                $this->authentication,
+                EmailAddress::fromString('new@example.test'),
+                InvitationMode::ORDINARY,
+                false,
+                $missingContext
+            );
+        } finally {
+            self::assertSame([], $this->admissions);
+            self::assertSame(0, $this->issuanceDispatches);
+        }
+    }
+
+    /**
+     * Supplies each context required by the issuance action
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function requiredContexts(): iterable
+    {
+        yield 'missing authentication' => [AuthenticationContext::class];
+        yield 'missing security' => [SecurityContext::class];
+    }
 
     /**
      * Enforces each exact permission combination independently of role name and HTTP metadata
@@ -533,9 +568,10 @@ final class InvitationApiTest extends TestCase
         $router->registerHandlers([IssueInvitationHandler::commandRegistration() => IssueInvitationHandler::class]);
         $routingBus = new RoutingCommandBus($router);
         $issuanceCommands = $this->createStub(CommandBus::class);
-        $issuanceCommands->method('execute')->willReturnCallback(static function (IssueInvitation $intent) use (
+        $issuanceCommands->method('execute')->willReturnCallback(function (IssueInvitation $intent) use (
             $routingBus
         ): void {
+            ++$this->issuanceDispatches;
             $routingBus->execute(IssueInvitation::fromArray($intent->toArray()));
         });
         $action = new IssueInvitationAction(
@@ -552,7 +588,8 @@ final class InvitationApiTest extends TestCase
             AuthenticationContext $authentication,
             EmailAddress $email,
             InvitationMode $mode,
-            bool $confirmed
+            bool $confirmed,
+            ?string $missingContext = null
         ) use (
             $action,
             $guard,
@@ -565,12 +602,14 @@ final class InvitationApiTest extends TestCase
             }
             $guard->assertAllowed($security, [PermissionName::fromString('INVITE_USERS')]);
 
-            return $action->handle((new ServerRequest('POST', '/api/v1/invitations'))
+            $request = (new ServerRequest('POST', '/api/v1/invitations'))
                 ->withAttribute(AuthenticationContext::class, $authentication)
                 ->withAttribute(SecurityContext::class, $security)
                 ->withAttribute(JsonBody::class, [
                     'email' => $email->toString(), 'mode' => $mode->value, 'confirm_super_admin' => $confirmed
-                ]));
+                ]);
+
+            return $action->handle($missingContext === null ? $request : $request->withoutAttribute($missingContext));
         };
     }
 }
