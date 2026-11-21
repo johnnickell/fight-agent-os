@@ -48,9 +48,10 @@ $timed = static function (string $name, callable $operation) use (&$timings): mi
 };
 // Planning is fresh on every invocation, including application-cache hits. A
 // planning failure must not turn a previously verified application into a pass.
+$planningCommand = [PHP_BINARY, '-n', 'scripts/planning_portfolio.php'];
 try {
     $planningBefore = $cache->tree($root.'/planning');
-    $planning = new Process(['./bin/planning-check'], $root);
+    $planning = new Process($planningCommand, $root);
     $planning->setTimeout(null);
     $planningExit = $timed('Planning validation', static fn (): int => $planning->run(
         static function (string $type, string $output): void {
@@ -131,7 +132,7 @@ $receipt = [
     'packages'          => [],
     'phases'            => [[
         'name'    => 'Planning (read-only)',
-        'command' => ['./bin/planning-check'],
+        'command' => $planningCommand,
         'exit'    => 0,
         'seconds' => $timings['Planning validation']
     ]],

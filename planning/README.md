@@ -12,8 +12,14 @@ Markdown is the current source of truth for Fight Agent OS planning.
 Grill an EPIC before decomposing it into TICKETs and TASKs. Existing planning skills may help conduct the
 conversation, but repository terminology and templates govern the saved artifacts.
 
-Run `./bin/planning-check --write`, then `./bin/planning-check` after editing records.
-Archive only when explicitly requested. Scratch work belongs in ignored `.runs/` subfolders.
+On a host with Git and Docker, run `./bin/planning-check --setup` once to prepare the local image (and
+again when its Dockerfile changes). Then run `./bin/planning-check` to validate, or
+`./bin/planning-check --write` to refresh views and close eligible parents. Both use an offline one-shot
+container, with no application services, host PHP, or Composer. Build and GitHub invoke the same check
+with native PHP: `php -n scripts/planning_portfolio.php`.
+
+Archive only when explicitly requested. Prepare the same image before using `./bin/archive-planning`
+with `--apply`; its dry run does not need Docker. Scratch work belongs in ignored `.runs/` subfolders.
 
 The future database planning system must prove import, identity preservation, history, export, and recovery
 before an explicitly approved cutover retires this directory. Do not maintain two writable sources of truth.

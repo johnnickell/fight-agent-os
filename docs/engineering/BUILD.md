@@ -188,7 +188,9 @@ The local host wrapper checks that `web` is running and admits storage, then del
 with `docker compose exec -T web php scripts/build.php`. Hosted CI invokes `php scripts/build.php` directly
 on the runner after explicit native setup. Both entries use the same PHP-owned phases, in order:
 
-1. Authoritative `./bin/planning-check`, without `--write`, before application cache lookup on every invocation.
+1. Authoritative `php -n scripts/planning_portfolio.php` in the build's own PHP runtime, without `--write`,
+   before application cache lookup on every invocation. The standalone host wrapper runs the same check
+   in its own prepared Docker image; build does not invoke that wrapper.
 2. On an application cache miss, Composer version and strict manifest/lock validation, with network access disabled for Composer.
 3. PHP syntax/namespace checks, locked Fight Common PHPCS, PHPStan level 7, Deptrac and Rector dry-run.
 4. OpenAPI and public-validation artifact freshness through their owning PHP scripts.
