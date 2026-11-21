@@ -128,8 +128,10 @@ final class CredentialDeliveryCommandTest extends TestCase
             $preflight
         ));
         $output = new BufferedOutput();
-        $tokens = in_array('credential:delivery', $arguments, true) ?
-            $arguments : ['credential:delivery', ...$arguments];
+        $tokens = $arguments;
+        if (!in_array('credential:delivery', $arguments, true)) {
+            array_unshift($tokens, 'credential:delivery');
+        }
         $exit = $application->run(new ArgvInput(['console', ...$tokens]), $output);
 
         return [$exit, $output->fetch()];
