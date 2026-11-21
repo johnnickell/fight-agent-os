@@ -47,6 +47,10 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | — (standalone chore) | ready-for-agent | — | — |
+| — | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | — (standalone chore) | ready-for-agent | — | — |
+| — | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | — (standalone chore) | ready-for-agent | — | — |
+| — | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 
