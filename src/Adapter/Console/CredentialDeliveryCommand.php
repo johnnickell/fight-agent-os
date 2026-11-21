@@ -40,7 +40,7 @@ final class CredentialDeliveryCommand extends Command
     ];
 
     /**
-     * Constructs CredentialDeliveryCommand with a lazy delivery-only configuration check
+     * Constructs CredentialDeliveryCommand
      *
      * @phpstan-param Closure(): void $validateDeliveryConfiguration
      */

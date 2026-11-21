@@ -3,7 +3,7 @@
 The `credential:delivery` console command runs bounded cleanup and recovery through Fight Access Control.
 These are one-shot console operations, not a scheduler or product endpoint. No production provider or recovery
 schedule is enrolled. The console adapter owns scheduling and reporting; Access Control owns delivery state,
-transitions, claim and outcome transactions, and expiry.
+transitions, claim and outcome transactions, and expiry. See the [worker ownership diagram](credential-recovery/README.md).
 
 ## Adoption and data safety
 
