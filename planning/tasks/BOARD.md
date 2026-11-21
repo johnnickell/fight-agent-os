@@ -32,9 +32,10 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
-| 5 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 6 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
+| 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
+| 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | — | — |
@@ -51,11 +52,9 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | [TASK-00577](00577-TASK.md), [TASK-00579](00579-TASK.md), [TASK-00580](00580-TASK.md), [TASK-00581](00581-TASK.md) | — |
+| 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | [TASK-00577](00577-TASK.md), [TASK-00580](00580-TASK.md), [TASK-00581](00581-TASK.md) | — |
 | 9 | [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | [TICKET-00143 — Browse shared stateful tables with restorable URL queries](../tickets/00143-TICKET.md) | ready-for-agent | [TASK-00596](00596-TASK.md) | — |
-| 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00579](00579-TASK.md) | — |
 | 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00121](00121-TASK.md), [TASK-00597](00597-TASK.md) | — |
-| 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00579](00579-TASK.md) | — |
 | 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
 | 14 | [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00128](00128-TASK.md) | — |
 | 16 | [TASK-00600](00600-TASK.md) | Adopt the shared React frontend in the Slim skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
@@ -498,6 +497,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 5 | [TASK-00005](00005-TASK.md) | Establish and prove disposable product-design exploration | [TICKET-00005 — Establish disposable product-design exploration](../tickets/00005-TICKET.md) | done | — | [PR #7](https://github.com/johnnickell/fight-agent-os/pull/7) |
 | 5 | [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | — (standalone chore) | done | — | — |
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #227](https://github.com/johnnickell/fight-agent-os/pull/227) |
+| 5 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | done | — | [PR #298](https://github.com/johnnickell/fight-agent-os/pull/298) |
 | 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | done | — | [PR #10](https://github.com/johnnickell/fight-agent-os/pull/10) |
 | 6 | [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | — (standalone chore) | done | — | — |
 | 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #226](https://github.com/johnnickell/fight-agent-os/pull/226) |

@@ -1,8 +1,8 @@
 # Access-token boundary
 
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md) owns the accepted security policy.
-`AccessJwt` implements Fight Common `TokenEncoder`/`TokenDecoder`; package `AuthenticationService` supplies
-its five package-owned claims and expiration. Issuance preserves those claims and serializes only expiry
+`AccessJwt` implements Fight Common `TokenEncoder`/`TokenDecoder`. The Access Control `TokenIssuer` shared by
+`UserAuthentication` and `SessionLifecycle` supplies its five package-owned claims and expiration. Issuance preserves those claims and serializes only expiry
 downward to integer UTC seconds, requiring `exp - iat = 900`; inconsistent supplied expiry still fails closed.
 It adds issuer, single-element audience, `nbf = iat`, and random 128-bit lowercase hex JTI. Consumption independently
 validates compact encoding, duplicate JSON members (including escaped names),
@@ -43,7 +43,7 @@ the last possible old issuance second. Synchronize clocks; retain the old entry 
 window. New issuance always uses the active key. A grossly incorrect clock requires operational recovery, not
 an expanded grace period. Production provisioning, deployment enrollment and emergency rotation are separate.
 
-The shared package `Clock` port uses precise UTC `SystemDeliveryClock`; `AuthenticationService` must retain
+The shared package `Clock` port uses precise UTC `SystemDeliveryClock`. Login and session lifecycle retain
 precise time for validation, rotation and session deadlines. Delivery grant/lease/outcome deadlines are also
 precise. Request validation and keyring checks use precise `SystemAccessClock`. Never floor a shared clock,
 round persisted deadlines or add grace to obtain integer JWT times.
@@ -54,21 +54,20 @@ claims remain unchanged; serialized `exp` must equal `iat + 900`. Expiry that fl
 refused, not repaired by computing another deadline. Package DateTime/`TokenSet` expiry retains its original
 fractional precision, while JWT expiry can be less than one second earlier, never later. Their whole-second
 timing representations agree; they are not subsecond-identical. Future login/refresh responses must expose
-whole-second timing no later than JWT expiry, not round package DateTime upward. [Activation](ACTIVATION.md) now supplies this response mapping through `SessionResponder`; [canonical login](LOGIN.md) now reuses that response mapping and refresh remains unfinished. Tests use representative fractional clocks and persisted hard deadlines, not only
+whole-second timing no later than JWT expiry, not round package DateTime upward. [Activation](ACTIVATION.md) now supplies this response mapping through `SessionResponder`; [canonical login](LOGIN.md) now reuses that response mapping. [Refresh](SESSION_CONTINUITY.md) uses the matching whole-second representation. Tests use representative fractional clocks and persisted hard deadlines, not only
 whole-second fixtures.
 
-`AuthenticateAccessToken` resolves session and user fresh on every request using package repository ports,
+The security adapter `AuthenticateAccessToken` resolves session and user fresh on every request using package repository ports,
 requires active lifecycle, owned usable session, matching token/user/session versions, and issuance no earlier
 than session creation. It rechecks token expiry after store access. Store failure denies without preserving
 SQL/exception chains. It returns package `AuthenticationContext` without permission projection.
 
-TASK-00044's standalone `AccessTokenAuthentication` remains available for explicitly protected pipelines
-**inside** `ApiResponseBoundary` and Common's safe error boundary; see [safe API failures](SAFE_HTTP_ERRORS.md). TASK-00117's registered API-v1 group uses `ApiActionSecurity` with the same
-extractor/authentication service, then constructs a fresh package `CurrentPrincipalProvider` per protected
-request. It overwrites authentication/current-principal/security attributes only after verified resolution;
+The registered API-v1 group uses `ApiActionSecurity` inside the [safe API boundary](SAFE_HTTP_ERRORS.md).
+It uses `BearerCredential` and the security adapter before constructing a fresh package
+`CurrentPrincipalProvider` per protected request. The unused standalone middleware was removed. It overwrites authentication/current-principal/security attributes only after verified resolution;
 no shared caching provider or client-supplied authority is used. `/me` is the first protected operation.
 See [matched-Action security](../api/README.md#matched-action-security-task-00117) for the exact public
-allowlist, metadata placement, permission conjunction and safe projection. [Login](LOGIN.md) now supplies its real HTTP/browser matrix. Refresh/logout retain their owning TASKs.
+allowlist, metadata placement, permission conjunction and safe projection. See [Login](LOGIN.md) and [session continuity](SESSION_CONTINUITY.md) for the browser credential entry paths.
 
 The extractor accepts exact case-sensitive `Bearer ` plus one compact token, at most 2048 token bytes (2055
 header bytes). It rejects duplicated/folded headers, whitespace/control ambiguity, alternative credential
@@ -82,5 +81,5 @@ need an explicitly planned transport policy rather than silently bypassing inspe
 Known refusals use 401 JSend `fail` with `data.message: "Authentication required."`,
 `WWW-Authenticate: Bearer`, `Cache-Control: no-store`, and safe `X-Correlation-ID`.
 No token, claim, key, SQL, decoder diagnostic or authentication audit event is logged by this boundary.
-Existing approved public reads remain public. OpenAPI describes the real `/me` and login operations, not an unimplemented refresh
-journey or fabricated permission-protected resource route.
+Existing approved public reads remain public. OpenAPI describes the actual `/me`, login, refresh and logout
+operations.

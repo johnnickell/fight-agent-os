@@ -3,13 +3,12 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Api\Auth\BearerCredential;
-use App\Adapter\Http\Middleware\Api\Auth\AccessTokenAuthentication;
 use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AccessKeyring;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use App\Adapter\Security\AccessToken\SystemAccessClock;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
@@ -20,10 +19,13 @@ use Fight\Common\Application\Auth\Security\TokenEncoder;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
-    $container->set(AccessKeyring::class, static function (): AccessKeyring {
+    $container->set(AccessKeyring::class, static function (Container $container): AccessKeyring {
         $configuration = getenv('APP_ACCESS_TOKEN_CONFIG');
 
-        return new AccessKeyring($configuration === false ? '' : $configuration, new SystemAccessClock());
+        return new AccessKeyring(
+            $configuration === false ? '' : $configuration,
+            $container->get(SystemAccessClock::class)
+        );
     });
     $container->set(SystemAccessClock::class, static fn(): SystemAccessClock => new SystemAccessClock());
     $container->set(AccessJwt::class, static fn(Container $container): AccessJwt => new AccessJwt(
@@ -47,13 +49,7 @@ return static function (Container $container): void {
             $container->get(SystemAccessClock::class)
         )
     );
-    $container->set(
-        AccessTokenAuthentication::class,
-        static fn(Container $container): AccessTokenAuthentication => new AccessTokenAuthentication(
-            new BearerCredential(),
-            $container->get(AuthenticateAccessToken::class)
-        )
-    );
+    $container->set(BearerCredential::class, static fn(): BearerCredential => new BearerCredential());
 
     $container->set(AuthoritativePrincipalResolver::class, static fn(
         Container $container
@@ -67,7 +63,7 @@ return static function (Container $container): void {
     $container->set(ApiActionSecurity::class, static fn(
         Container $container
     ): ApiActionSecurity => new ApiActionSecurity(
-        new BearerCredential(),
+        $container->get(BearerCredential::class),
         $container->get(AuthenticateAccessToken::class),
         $container->get(AuthoritativePrincipalResolver::class),
         $container->get(PermissionRepository::class),

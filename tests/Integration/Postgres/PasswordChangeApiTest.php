@@ -6,7 +6,7 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
-use App\Application\Sessions\SessionPresentation;
+use App\Application\Security\Session\SessionPresentation;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

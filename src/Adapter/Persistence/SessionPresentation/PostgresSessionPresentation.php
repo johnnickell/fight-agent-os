@@ -6,10 +6,10 @@ namespace App\Adapter\Persistence\SessionPresentation;
 
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use App\Adapter\Persistence\RefreshSessionRecords;
-use App\Application\Sessions\BrowserFamily;
-use App\Application\Sessions\DeviceClass;
-use App\Application\Sessions\DeviceDescriptor;
-use App\Application\Sessions\SessionPresentation;
+use App\Application\Security\Session\BrowserFamily;
+use App\Application\Security\Session\DeviceClass;
+use App\Application\Security\Session\DeviceDescriptor;
+use App\Application\Security\Session\SessionPresentation;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -41,7 +41,12 @@ final readonly class PostgresSessionPresentation implements SessionPresentation
 INSERT INTO session_presentation (session_id, browser_family, device_class, expires_at)
 VALUES (?, ?, ?, ?) ON CONFLICT (session_id) DO NOTHING
 SQL,
-            [$id->toString(), $device->browser->value, $device->device->value, RefreshSessionRecords::date($expiresAt)]
+            [
+                $id->toString(),
+                $device->browserFamily->value,
+                $device->deviceClass->value,
+                RefreshSessionRecords::date($expiresAt)
+            ]
         ));
     }
 

@@ -101,7 +101,7 @@ final class CsrfBootstrapActionTest extends TestCase
         $bus = $this->createStub(QueryBus::class);
         $bus->method('fetch')->willReturn('unsafe');
         $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf');
-        $this->expectException(\UnexpectedValueException::class);
+        $this->expectException(\TypeError::class);
 
         $this->action($bus)->handle($request);
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Sessions;
+namespace App\Application\Security\Session;
 
 /**
  * Class DeviceDescriptor
@@ -15,8 +15,8 @@ final readonly class DeviceDescriptor
      * Constructs DeviceDescriptor
      */
     public function __construct(
-        public BrowserFamily $browser = BrowserFamily::UNKNOWN,
-        public DeviceClass $device = DeviceClass::UNKNOWN
+        public BrowserFamily $browserFamily = BrowserFamily::UNKNOWN,
+        public DeviceClass $deviceClass = DeviceClass::UNKNOWN
     ) {
     }
 }
