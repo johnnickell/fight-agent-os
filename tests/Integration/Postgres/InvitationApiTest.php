@@ -54,6 +54,7 @@ use Slim\App;
 use Slim\Factory\AppFactory;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Slim\Psr7\Factory\StreamFactory;
 use Tests\Support\AccessClock;
 use Tests\Support\AccessTokens;
 use Tooling\OpenApi\Document;
@@ -720,9 +721,9 @@ final class InvitationApiTest extends TestCase
     public function testConcurrentCanonicalInvitations(string $mode, string $roleId): void
     {
         $children = [];
-        $released = false;
+        $completed = false;
         try {
-            for ($index = 0; $index < 2; ++$index) {
+            foreach (['Race@example.test', 'RACE@EXAMPLE.test'] as $email) {
                 $pipes = [];
                 $process = proc_open([
                     PHP_BINARY, '-r', 'require "vendor/autoload.php"; Tests\\Support\\InvitationRaceWorker::run();'
@@ -732,11 +733,13 @@ final class InvitationApiTest extends TestCase
                 stream_set_timeout($pipes[1], 15);
                 fwrite($pipes[0], json_encode([
                     'operation' => 'issue',
-                    'mode'      => $mode,
-                    'actor'     => $this->actor->getId()->toString(),
-                    'session'   => $this->session->getId()->toString(),
-                    'version'   => $this->actor->getAuthenticationVersion(),
-                    'now'       => $this->clock->now()->format(DATE_ATOM)
+                    'token'     => $this->token,
+                    'now'       => $this->clock->now()->format(DATE_ATOM),
+                    'body'      => [
+                        'email'               => $email,
+                        'mode'                => $mode,
+                        'confirm_super_admin' => $mode === 'super_admin'
+                    ]
                 ], JSON_THROW_ON_ERROR)."\n");
                 fflush($pipes[0]);
             }
@@ -747,16 +750,31 @@ final class InvitationApiTest extends TestCase
                 fwrite($pipes[0], "go\n");
                 fflush($pipes[0]);
             }
-            $released = true;
             $results = [];
             foreach ($children as [$process, $pipes]) {
-                $results[] = trim((string) fgets($pipes[1]));
+                $result = json_decode((string) fgets($pipes[1]), true, flags: JSON_THROW_ON_ERROR);
+                $response = new ResponseFactory()->createResponse($result['status'])
+                    ->withBody(new StreamFactory()->createStream($result['body']));
+                foreach ($result['headers'] as $name => $values) {
+                    $response = $response->withHeader($name, $values);
+                }
+                $results[$response->getStatusCode()] = $response;
             }
-            sort($results);
-            self::assertSame(['conflict', 'issued'], $results);
-            self::assertSame($roleId, $this->connection->fetchOne(
-                'SELECT role_id FROM user_role_assignments WHERE user_id = (SELECT id FROM users WHERE email = ?)',
+            $completed = true;
+            ksort($results);
+            self::assertSame([201, 409], array_keys($results));
+            $issued = $this->assertResponse($results[201], 201)['data'];
+            $conflict = $this->assertResponse($results[409], 409);
+            self::assertSame('fail', $conflict['status']);
+            self::assertStringNotContainsString($issued['user_id'], (string) $results[409]->getBody());
+            self::assertStringNotContainsString('race@example.test', strtolower((string) $results[409]->getBody()));
+            self::assertSame($issued['user_id'], $this->connection->fetchOne(
+                'SELECT id FROM users WHERE email = ?',
                 ['race@example.test']
+            ));
+            self::assertSame([$roleId], $this->connection->fetchFirstColumn(
+                'SELECT role_id FROM user_role_assignments WHERE user_id = ?',
+                [$issued['user_id']]
             ));
             self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
             self::assertSame(1, (int) $this->connection->fetchOne(
@@ -765,17 +783,22 @@ final class InvitationApiTest extends TestCase
             self::assertSame(1, (int) $this->connection->fetchOne(
                 "SELECT count(*) FROM audit_evidence WHERE action = 'user.invitation_role_confirmed'"
             ));
+            self::assertSame(1, (int) $this->connection->fetchOne(
+                "SELECT count(*) FROM audit_evidence WHERE action = 'user.invited'"
+            ));
         } finally {
+            $exits = [];
             foreach ($children as [$process, $pipes]) {
-                if (!$released) {
+                if (!$completed) {
                     proc_terminate($process);
                 }
                 foreach ($pipes as $pipe) {
                     fclose($pipe);
                 }
-                self::assertSame(0, proc_close($process));
+                $exits[] = proc_close($process);
             }
         }
+        self::assertSame([0, 0], $exits);
     }
 
     /**

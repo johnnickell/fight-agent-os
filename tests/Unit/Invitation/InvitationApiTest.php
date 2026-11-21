@@ -58,11 +58,14 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
+use Fight\Common\Adapter\Messaging\Command\Sync\RoutingCommandBus;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
+use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use GuzzleHttp\Psr7\ServerRequest;
@@ -524,11 +527,16 @@ final class InvitationApiTest extends TestCase
         });
 
         $handler = new IssueInvitationHandler($commands, $queries, $transactions, $audit);
+        $handlers = new Container();
+        $handlers->set(IssueInvitationHandler::class, static fn(): IssueInvitationHandler => $handler);
+        $router = new ServiceAwareCommandRouter($handlers);
+        $router->registerHandlers([IssueInvitationHandler::commandRegistration() => IssueInvitationHandler::class]);
+        $routingBus = new RoutingCommandBus($router);
         $issuanceCommands = $this->createStub(CommandBus::class);
         $issuanceCommands->method('execute')->willReturnCallback(static function (IssueInvitation $intent) use (
-            $handler
+            $routingBus
         ): void {
-            $handler->handle(CommandMessage::create(IssueInvitation::fromArray($intent->toArray())));
+            $routingBus->execute(IssueInvitation::fromArray($intent->toArray()));
         });
         $action = new IssueInvitationAction(
             $guard,
