@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
-use App\Application\Invitation\ConsoleUserOutcome;
+use App\Domain\Authorization\MembershipState;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -19,7 +19,7 @@ final class ConsoleUserOutput
      */
     public static function failure(
         OutputInterface $output,
-        ConsoleUserOutcome $outcome,
+        MembershipState $outcome,
         string $operatorId,
         string $roleId,
         string $fallback,

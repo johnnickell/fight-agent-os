@@ -12,8 +12,8 @@ use App\Adapter\Http\Responder\Api\V1\Invitations\IssueInvitationResponder;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
 use App\Domain\Authorization\MembershipEvidenceRepository;
@@ -84,7 +84,7 @@ return static function (Container $container): void {
     $container->set(IssueInvitation::class, static fn(Container $container): IssueInvitation => new IssueInvitation(
         $container->get(AuthenticatedPermissions::class),
         $container->get(InvitationRateLimiter::class),
-        $container->get(ConsoleAssignmentPolicy::class),
+        $container->get(InstallationAssignmentPolicy::class),
         $container->get(UserRepository::class),
         $container->get(CommandBus::class),
         $container->get(QueryBus::class),
