@@ -6,7 +6,7 @@ import stat
 import subprocess
 import sys
 
-from .resources import query, require, text
+from .resources import query, require, run, text
 
 
 def parent_mount_unused(container, mount, checkout, source, safe):
@@ -78,7 +78,49 @@ def readonly_docker_handles(output, safe):
             qualified.add(pid)
 
 
-def check(checkout, safe):
+def runtime_mount_acl(checkout, safe, path, acl):
+    """Qualify only the owner's delete rule on empty reserved runtime mount targets"""
+    require(path in (checkout / '.runs', checkout / 'var') and not path.is_symlink(),
+            'Source ACL protection outside reserved runtime mount targets: ' + str(path))
+    info = path.lstat()
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not getattr(info, 'st_flags', 0),
+            'Runtime mount target protection/foreign owner: ' + str(path))
+    directories = [path]
+    for directory in directories:
+        # iterdir propagates access errors: an unreadable directory is not empty.
+        for child in directory.iterdir():
+            child_info = child.lstat()
+            require(stat.S_ISDIR(child_info.st_mode) and child_info.st_uid == os.getuid() and
+                    not getattr(child_info, 'st_flags', 0),
+                    'Runtime mount target still contains data, aliases or protections: ' + str(path))
+            require(len(text(['ls', '-lden', str(child)], safe).splitlines()) == 1,
+                    'Runtime mount descendant ACL protection: ' + str(child))
+            directories.append(child)
+    run(['git', 'check-ignore', '--quiet', '--', str(path)], checkout)
+    owner = text(['dsmemberutil', 'getuuid', '-u', str(os.getuid())], safe)
+    require(acl == ['0: ' + owner + ' deny delete'],
+            'Source ACL protection is not the sole owner delete rule: ' + str(path))
+    return info.st_dev, info.st_ino
+
+
+def release_runtime_mounts(checkout, safe, targets):
+    """Recheck qualified mount targets before releasing their exact delete rules"""
+    # No permission effect until every target still matches the source inspection.
+    for path, identity, acl in targets:
+        current = [line.strip() for line in text(['ls', '-lden', str(path)], safe).splitlines()[1:]]
+        require(current == acl and runtime_mount_acl(checkout, safe, path, current) == identity,
+                'Runtime mount target changed before retirement: ' + str(path))
+    for path, identity, acl in targets:
+        current = [line.strip() for line in text(['ls', '-lden', str(path)], safe).splitlines()[1:]]
+        require(current == acl and runtime_mount_acl(checkout, safe, path, current) == identity,
+                'Runtime mount target changed before retirement: ' + str(path))
+        run(['chmod', '-a#', '0', str(path)], safe)
+        require(len(text(['ls', '-lden', str(path)], safe).splitlines()) == 1,
+                'Runtime mount target ACL retirement incomplete: ' + str(path))
+        print('Released owner delete rule on retired runtime mount target: ' + str(path))
+
+
+def check(checkout, safe, *, retire_runtime_mounts=False):
     # Exact/child mounts always hold, including stopped containers. Parent-only
     # exposure needs positive live qualification, not shared shutdown.
     ids = text(['docker', 'ps', '-aq'], safe).splitlines()
@@ -97,11 +139,16 @@ def check(checkout, safe):
     # Docker VM handles are not an active task; unknown readers/writers still hold.
     if result.stdout.strip():
         readonly_docker_handles(result.stdout, safe)
+    targets = {}
     for directory, dirs, files in os.walk(checkout, followlinks=False):
         for path in [Path(directory), *(Path(directory) / name for name in [*dirs, *files])]:
             info = path.lstat()
             require(info.st_uid == os.getuid() and not getattr(info, 'st_flags', 0), 'Source filesystem protection/foreign owner')
             require(not stat.S_ISSOCK(info.st_mode), 'Source socket remains')
             if sys.platform == 'darwin':
-                require(len(text(['ls', '-lde', str(path)], safe).splitlines()) == 1,
-                        'Source ACL protection; no automatic stripping')
+                acl = [line.strip() for line in text(['ls', '-lden', str(path)], safe).splitlines()[1:]]
+                if acl:
+                    require(retire_runtime_mounts, 'Source ACL protection; no automatic stripping: ' + str(path))
+                    identity = runtime_mount_acl(checkout, safe, path, acl)
+                    targets[path] = (identity, acl)
+    return [(path, *value) for path, value in sorted(targets.items())]

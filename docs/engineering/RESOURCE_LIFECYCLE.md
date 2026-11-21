@@ -181,6 +181,22 @@ invocation only. It never adds/clears saved approvals, changes global/user confi
 Main/current source, unique/dirty work, needed private ignored data, actual source consumers and filesystem
 protections remain independent holds. A source hold cannot block Docker teardown.
 
+On macOS, the two reserved runtime mount targets, `.runs` and `var` in a registered worktree, can retain an
+owner-only `deny delete` ACL after teardown. Normal guarded source retirement releases that exact single rule
+automatically when the target is an ignored, real directory owned by the invoking user, without filesystem
+flags, files or symlinks. Empty descendant directories are allowed. This happens only after runtime teardown,
+publication/ancestry, clean-source/private-data, live-consumer and effective-hook checks pass. Both targets'
+identities, contents and ACLs are rechecked before the first permission change, then again before each change.
+The remover clears only ACL entry zero and verifies its removal; it never uses recursive or blanket ACL removal.
+
+Any additional/inherited ACL, another identity or permission, another path (including frontend cache targets),
+nonempty data, symlink, foreign owner or filesystem flag still holds source removal. Runtime-free fixtures do
+not get this exception. A later native removal failure remains incomplete and is reported; this policy does
+not change ordinary startup or strip protections during `bin/down`. For an old blocked checkout such as
+TASK-00576, retire its known disposable output first, then rerun the ordinary guarded `bin/runtime finish`
+from a canonical checkout containing this fix; no separate permission-repair step is needed for qualifying
+`.runs`/`var` targets.
+
 After independent acceptance, final delivery verification and durable outcomes, Land may call:
 
 ```sh

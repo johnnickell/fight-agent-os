@@ -559,7 +559,11 @@ Before checkout removal inspect tracked, untracked **and ignored** data. Move ge
 material to its owner and verify bytes/permissions; keep active-role reports outside disposable source. After
 outcomes reach TASK/PR, dispose owned temporary artifacts, not source copies/archives. Unknown/private source
 data or a live source consumer holds checkout removal ONLY. Explicit task down uses `--volumes --remove-orphans`:
-task DB/storage is disposable, while main and foreign/shared projects remain protected. Never strip protections.
+task DB/storage is disposable, while main and foreign/shared projects remain protected. Preserve genuine protections.
+The shared remover may retire only the exact owner delete ACL on otherwise empty reserved `.runs`/`var`
+mount targets after all source/delivery/hook checks, as specified in
+[local resource retirement](RESOURCE_LIFECYCLE.md#retire-runtime-then-finish-the-task). Never strip other ACLs
+or filesystem flags, or apply this exception to unknown/private data.
 
 ### Qualify live consumers
 

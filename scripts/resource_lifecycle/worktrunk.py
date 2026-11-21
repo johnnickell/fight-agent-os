@@ -158,9 +158,10 @@ def remove(root, selector, expected_oid, delivery=None, *, qa_revision=False, ru
     help_text = text(['wt', 'remove', '--help'], safe)
     require(all(option in help_text for option in ('--yes', '--foreground', '--format')),
             'Installed Worktrunk lacks qualified noninteractive removal support')
+    targets = []
     if present:
-        from .source import check
-        check(checkout, safe)
+        from .source import check, release_runtime_mounts
+        targets = check(checkout, safe, retire_runtime_mounts=not runtime_free_fixture)
     source_state()
     # Re-read complete effective pre/post hooks in BOTH contexts immediately before
     # the native effect, using the same inherited config/environment as removal.
@@ -169,6 +170,8 @@ def remove(root, selector, expected_oid, delivery=None, *, qa_revision=False, ru
     if runtime_free_fixture:
         teardown()
     source_state()
+    if targets:
+        release_runtime_mounts(checkout, safe, targets)
     target = str(checkout) if present else branch
     require(target, 'No exact native removal target')
     result = subprocess.run(['wt', 'remove', '--foreground', '--format=json', '--yes', target],
