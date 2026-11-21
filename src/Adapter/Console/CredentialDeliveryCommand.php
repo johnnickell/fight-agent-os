@@ -149,7 +149,7 @@ final class CredentialDeliveryCommand extends Command
     {
         $seen = [];
         if ($input instanceof ArgvInput) {
-            foreach ($input->getRawTokens(true) as $token) {
+            foreach ($input->getRawTokens() as $token) {
                 $name = explode('=', $token, 2)[0];
                 if (!str_starts_with($name, '--')) {
                     continue;

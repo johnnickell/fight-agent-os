@@ -52,6 +52,9 @@ final class CredentialDeliveryCommandTest extends TestCase
     {
         yield 'missing acknowledgement' => [['run']];
         yield 'duplicate acknowledgement' => [['run', '--internal', '--internal']];
+        yield 'duplicate acknowledgement before command' => [
+            ['--internal', 'credential:delivery', 'run', '--internal']
+        ];
         yield 'duplicate bound' => [['run', '--internal', '--capacity=1', '--capacity=2']];
         yield 'bad ID' => [['status', 'activation', 'private-input', '--internal']];
         yield 'bad purpose' => [['status', 'private-input', 'private-input', '--internal']];
@@ -125,7 +128,9 @@ final class CredentialDeliveryCommandTest extends TestCase
             $preflight
         ));
         $output = new BufferedOutput();
-        $exit = $application->run(new ArgvInput(['console', 'credential:delivery', ...$arguments]), $output);
+        $tokens = in_array('credential:delivery', $arguments, true) ?
+            $arguments : ['credential:delivery', ...$arguments];
+        $exit = $application->run(new ArgvInput(['console', ...$tokens]), $output);
 
         return [$exit, $output->fetch()];
     }
