@@ -8,9 +8,7 @@ use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationIssuanceData;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\InvitationConfirmationRequired;
 use App\Application\Failure\InvitationRecoveryUncertain;
-use App\Application\Security\Activation\ActivationPasswordRejected;
-use App\Application\Security\PasswordChange\PasswordChangePolicyRejected;
-use App\Application\Security\PasswordReset\ResetPasswordRejected;
+use App\Application\Security\Password\PasswordRejected;
 use App\Domain\Security\Password\PasswordStructure;
 use Fight\Common\Adapter\Http\Error\SafeHttpMetadata;
 use Fight\Common\Adapter\Http\Error\SafeHttpPresentation;
@@ -59,10 +57,7 @@ final readonly class PublicFailureProjector implements SafeHttpProjector
                 'Recovery outcome uncertain. Read invitation status before another operation.'
             );
         }
-        if (
-            $failure instanceof ActivationPasswordRejected || $failure instanceof ResetPasswordRejected
-            || $failure instanceof PasswordChangePolicyRejected
-        ) {
+        if ($failure instanceof PasswordRejected) {
             return new SafeHttpPresentation(data: ['fields' => ['body.password' => [PasswordStructure::GUIDANCE]]]);
         }
 

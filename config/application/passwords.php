@@ -7,7 +7,6 @@ use App\Adapter\Security\Password\LocalCompromisedPasswords;
 use App\Application\Security\Password\CompromisedPasswordChecker;
 use App\Application\Security\Password\PasswordSetting;
 use App\Domain\Security\Password\PasswordStructure;
-use Fight\Common\Application\Auth\Security\PasswordHasher;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
@@ -19,8 +18,7 @@ return static function (Container $container): void {
     $container->set(PasswordStructure::class, static fn(): PasswordStructure => new PasswordStructure());
     $container->set(PasswordSetting::class, static fn(Container $container): PasswordSetting => new PasswordSetting(
         $container->get(PasswordStructure::class),
-        $container->get(CompromisedPasswordChecker::class),
-        $container->get(PasswordHasher::class)
+        $container->get(CompromisedPasswordChecker::class)
     ));
 
     // Mandatory in all environments and entry-points before any password-setting consumer can run.

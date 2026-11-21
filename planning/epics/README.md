@@ -30,4 +30,5 @@
 | [EPIC-00025](00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | done | — |
 | [EPIC-00026](00026-EPIC.md) | Compare related projects and recommend evidence-backed alignment work | done | — |
 | [EPIC-00027](00027-EPIC.md) | Release a shared React and Bootstrap frontend for the application suite | ready-for-agent | — |
+| [EPIC-00028](00028-EPIC.md) | Run four independently cached verification passes with PHP-native tooling | ready-for-agent | — |
 <!-- /planning:records -->

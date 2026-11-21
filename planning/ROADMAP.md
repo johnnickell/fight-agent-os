@@ -469,6 +469,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00025](epics/00025-EPIC.md) | Serve the browser application from root URLs with managed access defaults | root-browser-urls | done |
 | [EPIC-00026](epics/00026-EPIC.md) | Compare related projects and recommend evidence-backed alignment work | local-project-comparison | done |
 | [EPIC-00027](epics/00027-EPIC.md) | Release a shared React and Bootstrap frontend for the application suite | shared-frontend-first-release | ready-for-agent |
+| [EPIC-00028](epics/00028-EPIC.md) | Run four independently cached verification passes with PHP-native tooling | php-native-verification | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier

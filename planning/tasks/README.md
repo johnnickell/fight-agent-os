@@ -582,7 +582,7 @@
 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | done | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | done | [TICKET-00136](../tickets/00136-TICKET.md) |
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
@@ -608,4 +608,27 @@
 | [TASK-00603](00603-TASK.md) | Adopt the shared React frontend in the CodeIgniter skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
 | [TASK-00604](00604-TASK.md) | Isolate the bundled Git-detection test from the current directory | ready-for-human | — |
 | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | done | — |
+| [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | ready-for-agent | — |
+| [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | ready-for-agent | — |
+| [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | ready-for-agent | — |
+| [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | ready-for-agent | — |
+| [TASK-00610](00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | ready-for-agent | [TICKET-00145](../tickets/00145-TICKET.md) |
+| [TASK-00611](00611-TASK.md) | Run the existing PHP checks as a standalone pass | ready-for-agent | [TICKET-00146](../tickets/00146-TICKET.md) |
+| [TASK-00612](00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | ready-for-agent | [TICKET-00146](../tickets/00146-TICKET.md) |
+| [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | ready-for-agent | [TICKET-00147](../tickets/00147-TICKET.md) |
+| [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | ready-for-agent | [TICKET-00147](../tickets/00147-TICKET.md) |
+| [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
+| [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
+| [TASK-00617](00617-TASK.md) | Port the Build stage launcher and monitor to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
+| [TASK-00618](00618-TASK.md) | Report which verification passes a change affects | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
+| [TASK-00619](00619-TASK.md) | Run and reuse selected verification passes locally | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
+| [TASK-00620](00620-TASK.md) | Pilot four parallel GitHub verification workflows | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
+| [TASK-00621](00621-TASK.md) | Require the four checks and retire the old hosted gate | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
+| [TASK-00622](00622-TASK.md) | Move local runtime and resource lifecycle to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00623](00623-TASK.md) | Move local domains DNS ingress and HTTPS to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00624](00624-TASK.md) | Move human QA setup and cleanup to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00625](00625-TASK.md) | Move Land target binding to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00626](00626-TASK.md) | Move Planning archive maintenance to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00628](00628-TASK.md) | Retire the remaining Python prerequisites outside diagram authoring | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 <!-- /planning:records -->
