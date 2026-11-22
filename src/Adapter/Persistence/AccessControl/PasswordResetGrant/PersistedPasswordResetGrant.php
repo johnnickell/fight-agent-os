@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence\Hydration;
+namespace App\Adapter\Persistence\AccessControl\PasswordResetGrant;
 
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDelivery;

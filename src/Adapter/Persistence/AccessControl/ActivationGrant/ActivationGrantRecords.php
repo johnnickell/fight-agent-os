@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence;
+namespace App\Adapter\Persistence\AccessControl\ActivationGrant;
 
-use App\Adapter\Persistence\Hydration\PersistedActivationDelivery;
-use App\Adapter\Persistence\Hydration\PersistedActivationGrant;
 use DateTimeImmutable;
 use DateTimeZone;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;

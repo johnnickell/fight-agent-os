@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Mail;
 
-use App\Application\Mail\MailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
+use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use InvalidArgumentException;
 use SensitiveParameter;
 use Symfony\Component\Mailer\Transport\Smtp\SmtpTransport;
@@ -33,7 +31,7 @@ final readonly class CatcherMailDelivery implements MailDelivery
     /**
      * @inheritDoc
      */
-    public function deliver(#[SensitiveParameter] MailMessage $message): MailOutcome
+    public function deliver(#[SensitiveParameter] MailMessage $message): CredentialDeliveryOutcome
     {
         try {
             [$destination, $subject, $text, $html] = $message->content();
@@ -49,9 +47,13 @@ final readonly class CatcherMailDelivery implements MailDelivery
             $headers->addTextHeader('X-Auto-Response-Suppress', 'All');
             $headers->addTextHeader('Referrer-Policy', 'no-referrer');
 
-            return $this->transport->send($email) === null ? MailOutcome::RETRYABLE_FAILURE : MailOutcome::DELIVERED;
+            if ($this->transport->send($email) === null) {
+                return CredentialDeliveryOutcome::RETRYABLE_FAILURE;
+            }
+
+            return CredentialDeliveryOutcome::DELIVERED;
         } catch (Throwable) {
-            return MailOutcome::RETRYABLE_FAILURE;
+            return CredentialDeliveryOutcome::RETRYABLE_FAILURE;
         } finally {
             try {
                 $this->transport->stop();

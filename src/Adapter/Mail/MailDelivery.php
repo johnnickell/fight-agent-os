@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Mail;
+namespace App\Adapter\Mail;
+
+use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 
 /**
  * Interface MailDelivery
@@ -14,5 +16,5 @@ interface MailDelivery
     /**
      * Attempts delivery with a stable identity and returns only a classified outcome
      */
-    public function deliver(MailMessage $message): MailOutcome;
+    public function deliver(MailMessage $message): CredentialDeliveryOutcome;
 }

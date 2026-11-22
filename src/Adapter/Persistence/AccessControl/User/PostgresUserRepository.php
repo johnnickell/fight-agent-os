@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\AccessControl\User;
 
+use App\Adapter\Persistence\AccessControl\PasswordResetGrant\PasswordResetGrantRecords;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
-use App\Adapter\Persistence\PasswordResetGrantRecords;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use App\Adapter\Persistence\PostgresUniqueConstraintRace;

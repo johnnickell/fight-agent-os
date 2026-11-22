@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\CredentialDelivery;
 
-use App\Application\CredentialDelivery\ExpireCredentialDeliveryPages;
+use App\Adapter\CredentialDelivery\CredentialExpiryRunner;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
@@ -30,7 +30,7 @@ use RuntimeException;
 /**
  * Proves bounded cleanup orchestration independently of package lifecycle policy
  */
-final class ExpireCredentialDeliveryPagesTest extends TestCase
+final class CredentialExpiryRunnerTest extends TestCase
 {
     /**
      * Dispatches exact identities at one boundary and waits for writes before rediscovery
@@ -61,7 +61,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         );
         $clock = $this->createMock(Clock::class);
         $clock->expects(self::once())->method('now')->willReturn($at);
-        $report = (new ExpireCredentialDeliveryPages($queries, $commands, $clock))->run(2, 2);
+        $report = (new CredentialExpiryRunner($queries, $commands, $clock))->run(2, 2);
         self::assertSame(
             ['pages' => 2, 'dispatched' => 3, 'remaining' => 0, 'stalled' => false, 'budget_exhausted' => false],
             $report
@@ -96,7 +96,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $commands->expects(self::once())->method('execute');
         self::assertSame(
             ['pages' => 1, 'dispatched' => 1, 'remaining' => 1, 'stalled' => true, 'budget_exhausted' => false],
-            (new ExpireCredentialDeliveryPages($queries, $commands, $this->clock($at)))->run()
+            (new CredentialExpiryRunner($queries, $commands, $this->clock($at)))->run()
         );
     }
 
@@ -115,7 +115,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $commands->expects(self::once())->method('execute');
         self::assertSame(
             ['pages' => 1, 'dispatched' => 1, 'remaining' => 1, 'stalled' => false, 'budget_exhausted' => true],
-            (new ExpireCredentialDeliveryPages($queries, $commands, $this->clock($at)))->run(1, 1)
+            (new CredentialExpiryRunner($queries, $commands, $this->clock($at)))->run(1, 1)
         );
     }
 
@@ -128,7 +128,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $queries->expects(self::once())->method('fetch')->willReturn([]);
         $commands = $this->createMock(SynchronousCommandBus::class);
         $commands->expects(self::never())->method('execute');
-        $runner = new ExpireCredentialDeliveryPages(
+        $runner = new CredentialExpiryRunner(
             $queries,
             $commands,
             $this->clock(new DateTimeImmutable('2026-10-01T12:00:00Z'))
@@ -149,7 +149,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $commands = $this->createMock(SynchronousCommandBus::class);
         $commands->expects(self::once())->method('execute')->willThrowException(new RuntimeException('private'));
         $this->expectException(RuntimeException::class);
-        (new ExpireCredentialDeliveryPages($queries, $commands, $this->clock($at)))->run();
+        (new CredentialExpiryRunner($queries, $commands, $this->clock($at)))->run();
     }
 
     /**
@@ -163,7 +163,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $commands = $this->createMock(SynchronousCommandBus::class);
         $commands->expects(self::never())->method('execute');
         $this->expectException(InvalidArgumentException::class);
-        $runner = new ExpireCredentialDeliveryPages(
+        $runner = new CredentialExpiryRunner(
             $queries,
             $commands,
             $this->clock(new DateTimeImmutable('2026-10-01T12:00:00Z'))

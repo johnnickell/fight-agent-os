@@ -9,12 +9,11 @@ use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
+use App\Adapter\Mail\MailDelivery;
+use App\Adapter\Mail\MailMessage;
 use App\Adapter\Persistence\AccessControl\Role\PostgresRoleRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
-use App\Application\Mail\MailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use DateTimeImmutable;
@@ -230,7 +229,7 @@ SQL
         $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
             $observer,
             &$observations
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             [$destination, , $text, $html] = $message->content();
             $row = $observer->fetchAssociative('SELECT * FROM activation_grants');
             $observations[] = [
@@ -255,7 +254,9 @@ SQL
                 'content_digest'      => hash('sha256', $text.$html)
             ];
 
-            return count($observations) === 1 ? MailOutcome::RETRYABLE_FAILURE : MailOutcome::DELIVERED;
+            $retry = count($observations) === 1;
+
+            return $retry ? CredentialDeliveryOutcome::RETRYABLE_FAILURE : CredentialDeliveryOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),

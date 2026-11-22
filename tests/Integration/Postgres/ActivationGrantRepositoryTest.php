@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Persistence\AccessControl\ActivationGrant\ActivationGrantRecords;
+use App\Adapter\Persistence\AccessControl\ActivationGrant\PersistedActivationDelivery;
+use App\Adapter\Persistence\AccessControl\ActivationGrant\PersistedActivationGrant;
+use App\Adapter\Persistence\AccessControl\ActivationGrant\PostgresActivationGrantRepository;
 use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
-use App\Adapter\Persistence\ActivationGrantRecords;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Adapter\Persistence\Hydration\PersistedActivationGrant;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
-use App\Adapter\Persistence\Repository\PostgresActivationGrantRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -398,7 +399,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         );
         self::assertFalse($this->transaction(fn(): bool => $this->grants->add($duplicateId)));
         $delivery = $first->getDelivery();
-        $copied = \App\Adapter\Persistence\Hydration\PersistedActivationDelivery::reconstitute(
+        $copied = PersistedActivationDelivery::reconstitute(
             $delivery->getId(),
             $other->getId(),
             $fresh->getDelivery()->getEmail(),

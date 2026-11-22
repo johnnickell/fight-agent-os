@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence\Repository;
+namespace App\Adapter\Persistence\AccessControl\EmailChangeGrant;
 
-use App\Adapter\Persistence\EmailChangeGrantRecords;
-use App\Adapter\Persistence\ExpiredCredentialDeliveryRecords;
+use App\Adapter\Persistence\AccessControl\CredentialDelivery\ExpiredCredentialDeliveryRecords;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;

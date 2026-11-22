@@ -100,8 +100,9 @@ Immediate postcommit delivery normally precedes role assignment; the runner can 
 successful issuance. If the catcher was offline, start it, wait for the package's due time (first retry: one minute),
 then run the same bounded runner again. A fresh process discovers the retained generation without reinviting.
 Use `./bin/credential-delivery status activation DELIVERY_ID --internal` with a known safe generation ID; see
-[recovery status/exit codes](CREDENTIAL_RECOVERY.md). Console success does not prove mail arrival or activation.
-There is no scheduler: later due retries require another explicit runner invocation.
+[recovery status/exit codes](CREDENTIAL_RECOVERY.md). The one-shot wrapper and the shared `credential:delivery`
+console command use the same recovery entry. Console success does not prove mail arrival or activation. There is
+no scheduler: later due retries require another explicit runner invocation.
 
 Inspect Mailpit through trusted tooling on the selected private network. Run these only in a private operator
 terminal with recording/capture disabled; responses contain credentials and must not enter transcripts or logs:

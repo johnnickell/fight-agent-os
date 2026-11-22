@@ -34,9 +34,9 @@ Apply changed `.env` with `./bin/up`, then use the existing bounded internal ope
 
 Replace `DELIVERY_ID` with the known package-generated generation ID, not a UserId. The runner recovers committed
 work even when immediate event handling was lost. Handler return/runner dispatch counts do not prove SMTP success;
-inspect safe status and the private scoped catcher. Status and expiry remain key/provider-free.
-[Recovery bounds and exit codes](CREDENTIAL_RECOVERY.md) are unchanged. This task supplies no public request
-command/UI, test-only production endpoint or reinvitation workaround for creating reset work.
+inspect safe status and the private scoped catcher. Missing work reports `found: false` and exits 3. Status and
+expiry remain key/provider-free. See [recovery bounds and exit codes](CREDENTIAL_RECOVERY.md). The worker does not
+supply a public request command or create reset work through reinvitation.
 
 After private inspection, `./bin/mail-catcher clear` destroys only this project's messages; it does not revoke
 credentials or resend delivered work. Never retain bodies, fragments, MIME, credential URLs, private mailbox

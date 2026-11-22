@@ -2,11 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence\Repository;
+namespace App\Adapter\Persistence\AccessControl\ActivationGrant;
 
-use App\Adapter\Persistence\ActivationGrantRecords;
-use App\Adapter\Persistence\ActivationGrantTransitions;
-use App\Adapter\Persistence\ExpiredCredentialDeliveryRecords;
+use App\Adapter\Persistence\AccessControl\CredentialDelivery\ExpiredCredentialDeliveryRecords;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use DateTimeImmutable;

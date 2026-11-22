@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Persistence;
 
-use App\Adapter\Persistence\EmailChangeGrantRecords;
+use App\Adapter\Persistence\AccessControl\EmailChangeGrant\EmailChangeGrantRecords;
 use DateTimeImmutable;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeCredential;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrant;
