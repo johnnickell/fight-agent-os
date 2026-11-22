@@ -1006,16 +1006,12 @@ export async function runAgent(
   // go through `ext:`), so an unknown name there is unambiguously a typo. Previously
   // this produced a silently broken agent (#75) — pi-mono accepted the bogus name
   // into the allowlist, then dropped it at registration with no signal back.
-  if (agentConfig?.builtinToolNames?.length) {
-    const knownBuiltins = new Set(BUILTIN_TOOL_NAMES);
-    for (const name of agentConfig.builtinToolNames) {
-      if (!knownBuiltins.has(name)) {
-        options.onToolActivity?.({
-          type: "end",
-          toolName: `tools-error:tool "${name}" requested by agent "${type}" is not a known built-in`,
-        });
-      }
-    }
+  const unrecognized = agentConfig?.builtinToolNames?.filter((name) => !BUILTIN_TOOL_NAMES.includes(name)) ?? [];
+  for (const name of unrecognized) {
+    options.onToolActivity?.({
+      type: "end",
+      toolName: `tools-error:tool "${name}" requested by agent "${type}" is not a known built-in`,
+    });
   }
   // MCP tools come from extensions, so with none loaded these entries cannot match.
   if (agentConfig?.mcpToolPatterns && noExtensions) {
@@ -1144,13 +1140,14 @@ export async function runAgent(
   // no tool it can only narrate calls it cannot make. Extension tools register after
   // spawn (MCP once its servers connect), so they count as possible whenever an
   // extension they could come from loaded, or any `mcp__` entry can reach a bridge.
+  // Unlike extension warnings, this check must not count the inline scope gate
+  // as a possible source of tools.
   const loadedNames = new Set(
     loader
       .getExtensions()
       .extensions.filter((e) => e.path !== `<inline:${SCOPE_GATE_NAME}>`)
       .flatMap((e) => extensionCanonicalNames(e.path)),
   );
-  const unrecognized = agentConfig?.builtinToolNames?.filter((n) => !BUILTIN_TOOL_NAMES.includes(n)) ?? [];
   const unmatched = [...extNames].filter((n) => !loadedNames.has(n));
   // `extensions: false` and `isolated` load nothing, so `loadedNames` is empty then.
   const extensionToolsPossible =
