@@ -7,15 +7,18 @@ transitions, claim and outcome transactions, and expiry. See the [worker ownersh
 
 ## Adoption and data safety
 
-The current Composer lock selects Access Control v0.11.0 and Common v1.5.1. The worker uses their configured
-buses, typed discovery results and explicit status absence. The worker change does not alter the schema or the
-historical data guards. Before upgrading an older installation, read the
-[v0.8.0 adoption and preserved-data guard](CUSTOM_ROLES.md#deliberate-v080-adoption). Do not infer a historical
-reset generation's issuing authority from the current User or from reset/delete history.
-TASK-00042 qualifies the package-owned expiry-aware retry boundary and adds the separate authorized
-[invitation recovery API](INVITATION_API.md#atomic-invitation-recovery), without changing these internal commands. Install that lock, then apply migrations through the
-ordinary authorized `./bin/database migrate` operation before using recovery. TASK verification applies migrations
-only to the guarded test database; it does not migrate development or production.
+Install the repository's current Composer lock, not the versions from the earlier adoption. The worker uses
+configured buses, typed discovery results and explicit status absence; it does not change the schema or historical
+data guards. The separate
+[invitation recovery API](INVITATION_API.md#atomic-recovery-and-failure-mapping) documents the current package contract
+for authorized HTTP retry, resend and correction; these internal console commands are not substitutes for it.
+Before using recovery, apply migrations through the authorized `./bin/database migrate` operation. TASK
+verification applies migrations only to the guarded test database; it does not migrate development or production.
+
+For existing data, retain the [v0.8.0 adoption and preserved-data guard](CUSTOM_ROLES.md#deliberate-v080-adoption).
+Any historical reset generation blocks that migration until its issuing authority can be reconciled explicitly;
+do not infer it from the current User or reset/delete history. TASK-00024's v0.5.0 adoption and TASK-00042's
+v0.8.0 expiry-aware retry qualification are historical, not instructions to install those releases.
 
 `Version20261006220706` adopts non-null Permission tiers, mandatory email-grant reservation bindings and expiry-order
 indexes. It locks affected tables while checking data. Valid legacy custom-null tiers become `ADMIN_SAFE`; malformed

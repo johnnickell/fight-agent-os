@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Invitation;
 
-use App\Application\Authorization\AuthenticatedPermissions;
+use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
+use App\Adapter\Http\Attribute\JsonBody;
+use App\Adapter\Http\Responder\Api\V1\Invitations\IssueInvitationResponder;
 use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\InvitationConfirmationRequired;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Application\Invitation\IssueInvitation;
+use App\Application\Invitation\CommandHandler\IssueInvitationHandler;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Authorization\MembershipEvidenceRepository;
+use App\Domain\Invitation\Command\IssueInvitation;
 use App\Domain\Invitation\InvitationMode;
-use App\Domain\Invitation\InvitationOperation;
-use App\Domain\Invitation\InvitationRatePolicy;
 use App\Domain\Invitation\InvitationRoleEvidence;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\SecurityContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
@@ -53,16 +57,26 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
+use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
+use Fight\Common\Adapter\Messaging\Command\Sync\RoutingCommandBus;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
+use Fight\Common\Application\Service\Container;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use GuzzleHttp\Psr7\ServerRequest;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
+use Slim\Psr7\Factory\ResponseFactory;
+use Slim\Psr7\Factory\StreamFactory;
 use Tests\Support\AccessClock;
 use UnexpectedValueException;
 
@@ -81,6 +95,40 @@ final class InvitationApiTest extends TestCase
     /** @var list<InvitationOperation> */
     private array $admissions = [];
     private string $fault = '';
+    private int $issuanceDispatches = 0;
+
+    /**
+     * Rejects either missing trusted request context before admission or dispatch
+     */
+    #[DataProvider('requiredContexts')]
+    public function testRejectsMissingRequestContext(string $missingContext): void
+    {
+        $issuer = $this->issuer();
+        $this->expectException(AuthenticationRequired::class);
+        try {
+            $issuer(
+                $this->authentication,
+                EmailAddress::fromString('new@example.test'),
+                InvitationMode::ORDINARY,
+                false,
+                $missingContext
+            );
+        } finally {
+            self::assertSame([], $this->admissions);
+            self::assertSame(0, $this->issuanceDispatches);
+        }
+    }
+
+    /**
+     * Supplies each context required by the issuance action
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function requiredContexts(): iterable
+    {
+        yield 'missing authentication' => [AuthenticationContext::class];
+        yield 'missing security' => [SecurityContext::class];
+    }
 
     /**
      * Enforces each exact permission combination independently of role name and HTTP metadata
@@ -97,14 +145,13 @@ final class InvitationApiTest extends TestCase
         $issuer = $this->issuer($names);
         $allowed = ($mask & 1) !== 0 && ($mode === InvitationMode::ORDINARY || ($mask & 2) !== 0);
         try {
-            $outcome = $issuer->issue($this->authentication, EmailAddress::fromString('NEW@EXAMPLE.test'), $mode, true);
+            $response = $issuer($this->authentication, EmailAddress::fromString('NEW@EXAMPLE.test'), $mode, true);
             self::assertTrue($allowed);
-            self::assertTrue($outcome->auditConfirmed);
-            self::assertSame('confirmed', $outcome->assignment);
+            self::assertSame(201, $response->getStatusCode());
             self::assertTrue($mode->roleId()->equals($this->audits[0]->roleId));
             self::assertTrue($this->actor->getId()->equals($this->audits[0]->actorId));
-            self::assertSame($outcome->userId, $this->audits[0]->userId);
             self::assertInstanceOf(InvitePendingUser::class, $this->effects[0]);
+            self::assertTrue($this->effects[0]->getUserId()->equals($this->audits[0]->userId));
             self::assertSame('new@example.test', $this->effects[0]->getEmail()->toString());
             self::assertInstanceOf(AssignRoleToUser::class, $this->effects[1]);
             self::assertEquals($mode->roleId(), $this->effects[1]->getRoleId());
@@ -136,7 +183,7 @@ final class InvitationApiTest extends TestCase
     {
         $issuer = $this->issuer();
         try {
-            $issuer->issue(
+            $issuer(
                 $this->authentication,
                 EmailAddress::fromString('new@example.test'),
                 InvitationMode::SUPER_ADMIN,
@@ -157,7 +204,7 @@ final class InvitationApiTest extends TestCase
         $issuer = $this->issuer();
         $this->actor->disable(new DateTimeImmutable());
         $this->expectException(PermissionDenied::class);
-        $issuer->issue(
+        $issuer(
             $this->authentication,
             EmailAddress::fromString('new@example.test'),
             InvitationMode::ORDINARY,
@@ -174,7 +221,7 @@ final class InvitationApiTest extends TestCase
         $this->fault = $fault;
         $issuer = $this->issuer();
         try {
-            $issuer->issue(
+            $issuer(
                 $this->authentication,
                 EmailAddress::fromString('new@example.test'),
                 $mode,
@@ -187,11 +234,6 @@ final class InvitationApiTest extends TestCase
             self::assertStringNotContainsString('private-marker', $failure->getMessage());
             self::assertNull($failure->getPrevious());
             self::assertLessThanOrEqual(2, count($this->effects));
-            if ($fault === 'post-origin-preview') {
-                self::assertCount(1, $this->effects);
-                self::assertInstanceOf(InvitePendingUser::class, $this->effects[0]);
-                self::assertSame([], $this->audits);
-            }
         }
     }
 
@@ -206,12 +248,11 @@ final class InvitationApiTest extends TestCase
             [
             ['origin', 'unknown', false], ['origin-postcommit', 'unconfirmed', true],
             ['assignment', 'unconfirmed', true], ['assignment-postcommit', 'confirmed', true],
-            ['audit', 'confirmed', true], ['query', 'unknown', false], ['wrong-user', 'unknown', false],
+            ['audit', 'confirmed', true], ['query', 'unknown', false],
             ['wrong-email', 'unknown', false], ['wrong-state', 'unknown', false],
-            ['delivery-null', 'confirmed', true], ['delivery-wrong', 'confirmed', true],
-            ['delivery-query', 'confirmed', true],
-            ['veto-assignment', 'unconfirmed', true], ['revoke', 'unconfirmed', true],
-            ['post-origin-preview', 'unconfirmed', true]
+            ['delivery-null', 'confirmed', true], ['delivery-query', 'confirmed', true],
+            ['audit-and-delivery-query', 'confirmed', true],
+            ['veto-assignment', 'unconfirmed', true]
             ] as $case
         ) {
             foreach ([InvitationMode::ORDINARY, InvitationMode::SUPER_ADMIN] as $mode) {
@@ -232,7 +273,7 @@ final class InvitationApiTest extends TestCase
         $issuer = $this->issuer();
         $this->expectException($exception);
         try {
-            $issuer->issue(
+            $issuer(
                 $this->authentication,
                 EmailAddress::fromString('new@example.test'),
                 InvitationMode::ORDINARY,
@@ -254,6 +295,7 @@ final class InvitationApiTest extends TestCase
         yield 'missing preview' => ['missing-preview', UnexpectedValueException::class];
         yield 'wrong preview type' => ['wrong-preview', UnexpectedValueException::class];
         yield 'valid drift plan' => ['policy', StateConflict::class];
+        yield 'internal preview failure' => ['preview-fault', \LogicException::class];
     }
 
     /**
@@ -265,7 +307,7 @@ final class InvitationApiTest extends TestCase
         $this->fault = $fault;
         $issuer = $this->issuer();
         $this->expectException(StateConflict::class);
-        $issuer->issue(
+        $issuer(
             $this->authentication,
             EmailAddress::fromString('new@example.test'),
             InvitationMode::ORDINARY,
@@ -283,6 +325,56 @@ final class InvitationApiTest extends TestCase
         foreach (['duplicate', 'race'] as $fault) {
             yield [$fault];
         }
+    }
+
+    /**
+     * Completes an admitted operation after revocation and requires fresh authority next time
+     */
+    public function testRevocationAfterAdmission(): void
+    {
+        $this->fault = 'revoke';
+        $issuer = $this->issuer();
+        $email = EmailAddress::fromString('new@example.test');
+        self::assertSame(201, $issuer($this->authentication, $email, InvitationMode::ORDINARY, false)->getStatusCode());
+        self::assertCount(1, $this->audits);
+        $this->expectException(PermissionDenied::class);
+        $issuer($this->authentication, $email, InvitationMode::ORDINARY, false);
+    }
+
+    /**
+     * Rejects a different command without starting invitation work
+     */
+    public function testHandlerRejectsUnrelatedIntent(): void
+    {
+        $handler = new IssueInvitationHandler(
+            $this->createStub(CommandBus::class),
+            $this->createStub(QueryBus::class),
+            $this->createStub(TransactionalUnitOfWork::class),
+            $this->createStub(MembershipEvidenceRepository::class)
+        );
+        $this->expectException(InvalidArgumentException::class);
+        $handler->handle(CommandMessage::create(new InvitePendingUser(
+            UserId::generate(),
+            UserId::generate(),
+            EmailAddress::fromString('new@example.test')
+        )));
+    }
+
+    /**
+     * Rejects serialized invitation intent without a supplied target identity
+     */
+    public function testIntentRequiresSuppliedIdentity(): void
+    {
+        $intent = new IssueInvitation(
+            UserId::generate(),
+            UserId::generate(),
+            EmailAddress::fromString('new@example.test'),
+            InvitationMode::ORDINARY
+        );
+        $input = $intent->toArray();
+        unset($input['user_id']);
+        $this->expectException(InvalidArgumentException::class);
+        IssueInvitation::fromArray($input);
     }
 
     /**
@@ -319,7 +411,7 @@ final class InvitationApiTest extends TestCase
      */
     private function issuer(
         array $names = ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN', 'MANAGE_USER_INVITATIONS']
-    ): IssueInvitation {
+    ): \Closure {
         $now = new DateTimeImmutable('2026-10-17T12:00:00Z');
         $permissions = array_map(static fn(string $name): Permission => Permission::defineManaged(
             PermissionId::generate(),
@@ -364,13 +456,14 @@ final class InvitationApiTest extends TestCase
         $roles->method('getByIds')->willReturn([$role]);
         $permissionStore = $this->createStub(PermissionRepository::class);
         $permissionStore->method('getByIds')->willReturn($permissions);
-        $authority = new AuthenticatedPermissions(new AuthoritativePrincipalResolver(
+        $principalResolver = new AuthoritativePrincipalResolver(
             $users,
             $sessions,
             $roles,
             $permissionStore,
             new AccessClock($now)
-        ), new PermissionGuard());
+        );
+        $guard = new PermissionGuard();
         $limiter = $this->createStub(InvitationRateLimiter::class);
         $limiter->method('consume')->willReturnCallback(function (UserId $actor, InvitationOperation $operation): void {
             $this->admissions[] = $operation;
@@ -385,7 +478,7 @@ final class InvitationApiTest extends TestCase
                 return $this->target;
             }
             if ($query instanceof FindInvitationDeliveryStatus) {
-                if ($this->fault === 'delivery-query') {
+                if (in_array($this->fault, ['delivery-query', 'audit-and-delivery-query'], true)) {
                     throw new RuntimeException('private-marker');
                 }
 
@@ -394,21 +487,21 @@ final class InvitationApiTest extends TestCase
                 }
 
                 return new InvitationDeliveryStatusView(
-                    $this->fault === 'delivery-wrong' ? UserId::generate() : $query->getUserId(),
+                    $query->getUserId(),
                     CredentialDeliveryStatus::PENDING,
                     $now->modify('+7 days'),
                     ActivationDeliveryId::generate(),
                     ActivationOrigin::PRIVATE_INVITATION
                 );
             }
-            if (
-                $this->fault === 'missing-preview'
-                || ($this->fault === 'post-origin-preview' && $this->target !== null)
-            ) {
+            if ($this->fault === 'missing-preview') {
                 return null;
             }
             if ($this->fault === 'wrong-preview') {
                 return 'private-marker';
+            }
+            if ($this->fault === 'preview-fault') {
+                throw new \LogicException('Unexpected internal preview failure.');
             }
             $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
             $permissionAction = ManagedPolicyChangeAction::UNCHANGED;
@@ -441,14 +534,14 @@ final class InvitationApiTest extends TestCase
             $this->effects[] = $command;
             $id = $command instanceof InvitePendingUser ? $command->getUserId() : $command->getTargetUserId();
             $this->target = new UserView(
-                $this->fault === 'wrong-user' ? UserId::generate() : $id,
+                $id,
                 EmailAddress::fromString($this->fault === 'wrong-email' ? 'wrong@example.test' : 'new@example.test'),
                 $this->fault === 'wrong-state' ? UserState::DISABLED : UserState::PENDING_ACTIVATION,
                 $command instanceof AssignRoleToUser ? [$command->getRoleId()] : [],
                 $now,
                 $now
             );
-            if ($this->fault === 'revoke') {
+            if ($this->fault === 'revoke' && $command instanceof InvitePendingUser) {
                 $this->actor->disable($now);
             }
             if (
@@ -462,21 +555,61 @@ final class InvitationApiTest extends TestCase
         $transactions->method('commitTransactional')->willReturnCallback(static fn(callable $work) => $work());
         $audit = $this->createStub(MembershipEvidenceRepository::class);
         $audit->method('add')->willReturnCallback(function (InvitationRoleEvidence $evidence): void {
-            if ($this->fault === 'audit') {
+            if (in_array($this->fault, ['audit', 'audit-and-delivery-query'], true)) {
                 throw new RuntimeException('private-marker');
             }
             $this->audits[] = $evidence;
         });
 
-        return new IssueInvitation(
-            $authority,
+        $handler = new IssueInvitationHandler($commands, $queries, $transactions, $audit);
+        $handlers = new Container();
+        $handlers->set(IssueInvitationHandler::class, static fn(): IssueInvitationHandler => $handler);
+        $router = new ServiceAwareCommandRouter($handlers);
+        $router->registerHandlers([IssueInvitationHandler::commandRegistration() => IssueInvitationHandler::class]);
+        $routingBus = new RoutingCommandBus($router);
+        $issuanceCommands = $this->createStub(CommandBus::class);
+        $issuanceCommands->method('execute')->willReturnCallback(function (IssueInvitation $intent) use (
+            $routingBus
+        ): void {
+            ++$this->issuanceDispatches;
+            $routingBus->execute(IssueInvitation::fromArray($intent->toArray()));
+        });
+        $action = new IssueInvitationAction(
+            $guard,
             $limiter,
             new InstallationAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
             $users,
-            $commands,
+            $issuanceCommands,
             $queries,
-            $transactions,
-            $audit
+            new IssueInvitationResponder(new JSendResponseFactory(new ResponseFactory(), new StreamFactory()))
         );
+
+        return static function (
+            AuthenticationContext $authentication,
+            EmailAddress $email,
+            InvitationMode $mode,
+            bool $confirmed,
+            ?string $missingContext = null
+        ) use (
+            $action,
+            $guard,
+            $principalResolver
+        ): ResponseInterface {
+            try {
+                $security = new SecurityContext($principalResolver->resolve($authentication));
+            } catch (\Throwable) {
+                throw new PermissionDenied();
+            }
+            $guard->assertAllowed($security, [PermissionName::fromString('INVITE_USERS')]);
+
+            $request = (new ServerRequest('POST', '/api/v1/invitations'))
+                ->withAttribute(AuthenticationContext::class, $authentication)
+                ->withAttribute(SecurityContext::class, $security)
+                ->withAttribute(JsonBody::class, [
+                    'email' => $email->toString(), 'mode' => $mode->value, 'confirm_super_admin' => $confirmed
+                ]);
+
+            return $action->handle($missingContext === null ? $request : $request->withoutAttribute($missingContext));
+        };
     }
 }

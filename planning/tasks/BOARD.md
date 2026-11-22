@@ -31,7 +31,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
+| 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | — | — |
 | 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
@@ -45,7 +45,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00610](00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | [TICKET-00145 — Validate Planning without the application stack](../tickets/00145-TICKET.md) | ready-for-agent | — | — |
@@ -66,7 +65,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | [TASK-00577](00577-TASK.md) | — |
 | 9 | [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | [TICKET-00143 — Browse shared stateful tables with restorable URL queries](../tickets/00143-TICKET.md) | ready-for-agent | [TASK-00596](00596-TASK.md) | — |
 | 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00121](00121-TASK.md), [TASK-00597](00597-TASK.md) | — |
 | 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
@@ -509,6 +507,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #222](https://github.com/johnnickell/fight-agent-os/pull/222) |
+| 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | done | — | [PR #305](https://github.com/johnnickell/fight-agent-os/pull/305) |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |
 | 4 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | — (standalone bug) | done | — | [PR #8](https://github.com/johnnickell/fight-agent-os/pull/8) |
 | 4 | [TASK-00132](00132-TASK.md) | Design the diagnosis-to-bug-TASK fix skill | — (standalone chore) | done | — | — |
@@ -695,4 +694,5 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | — (standalone chore) | done | — | [PR #277](https://github.com/johnnickell/fight-agent-os/pull/277) |
 | — | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | — (standalone bug) | done | — | [PR #290](https://github.com/johnnickell/fight-agent-os/pull/290) |
 | — | [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | — (standalone chore) | done | — | [PR #302](https://github.com/johnnickell/fight-agent-os/pull/302) |
+| — | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | — (standalone chore) | done | — | [PR #306](https://github.com/johnnickell/fight-agent-os/pull/306) |
 <!-- /planning:board -->

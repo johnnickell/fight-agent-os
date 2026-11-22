@@ -1,7 +1,7 @@
 # Confirmed elevated browser invitations
 
 `/admin/invite-super-admin` is a separate pending-invitation journey. Its complete route metadata,
-sole-cache action checks and shared issuance service require **both exact INVITE_USERS and
+frontend authority checks and shared issuance service require **both exact INVITE_USERS and
 ASSIGN_SUPER_ADMIN**. The existing `POST /api/v1/invitations` independently resolves current server
 principal authority. Role names, HTML/JWT/client claims and one permission alone grant nothing.
 
@@ -56,21 +56,22 @@ form data; only classified safe status paths may contain the known UUID.
 
 ## Consumed backend and limits
 
-No endpoint, orchestrator, transaction wrapper or package upgrade is introduced. The unchanged lock
-uses Access Control v0.8.0 (`319738255e682d587642b67856039f882b9588d6`) and Common v1.4.1
-(`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`). TASK-00041's current Action/issuance composition
-resolves only the stable managed Role and uses configured package buses. Origin (identity, seven-day
-grant, recoverable encrypted delivery and user.invited audit), assignment and confirmation audit commit
-independently. Delivery can start before assignment. Later failure can retain invitation, sent mail or
-membership without complete audit. Exception does not mean rollback.
+The [current API](INVITATION_API.md) uses Access Control v0.11.0
+(`6258682512e2c8d76a3fa655dd633167bd8f55b6`) and Common v1.5.1. HTTP checks both permissions,
+explicit confirmation, the issuance budget and the shared installation assignment policy before dispatching
+an owned invitation command with a new user ID. The handler does not repeat entry authorization. An
+admitted request may finish after a concurrent revocation; the next request checks authority afresh.
 
-The current redundant Application admission/coordination is TASK-00577's explicit source-correction
-boundary, not the normative architecture or a new pattern added here. This UI does not implement that
-cutover. Admission-time authority suffices under the current shared standard; no new revocation/commit
-locking is added. This is creation of a newly invited pending identity, **not** standalone active-user
+Origin (identity, seven-day grant, recoverable encrypted delivery and `user.invited` audit), managed role
+assignment and confirmation audit commit independently. Delivery can start before assignment. A later
+failure can leave an invitation, sent mail or membership without complete audit. An exception does not
+mean rollback. This is creation of a newly invited pending identity, **not** standalone active-user
 promotion, arbitrary role administration, demotion or bootstrap bypass.
 
-Owning tests cover exact permission combinations, stale/misleading authority, confirmation, injection,
+## Historical browser verification
+
+TASK-00062 shipped this journey against Access Control v0.8.0 and Common v1.4.1. Those versions describe
+its original verification, not the current backend. The owning backend tests cover exact permission combinations, stale/misleading authority, confirmation, injection,
 managed assignment, safe audit, PostgreSQL partial commits and competing canonical requests. Vitest/RTL
 covers the shared fixed transport, deadline/late results, sole-graph invalidation, explicit dialog,
 keyboard/focus, permission loss, unmount, READ_USERS combinations and marker redaction. Fifteen

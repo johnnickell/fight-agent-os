@@ -2,7 +2,7 @@
 id: TICKET-00135
 epic: EPIC-00023
 title: Correct existing identity, security, and delivery use-case ownership
-status: ready-for-agent
+status: done
 ---
 
 # Correct existing identity, security, and delivery use-case ownership
@@ -106,7 +106,7 @@ their own prerequisites are satisfied; this TICKET does not imply a monolithic r
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00576](../tasks/00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | done |
-| [TASK-00577](../tasks/00577-TASK.md) | Correct HTTP invitation issuance status and recovery | ready-for-agent |
+| [TASK-00577](../tasks/00577-TASK.md) | Correct HTTP invitation issuance status and recovery | done |
 | [TASK-00578](../tasks/00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done |
 | [TASK-00579](../tasks/00579-TASK.md) | Correct authentication session and CSRF ownership | done |
 | [TASK-00580](../tasks/00580-TASK.md) | Correct activation and password capabilities | done |

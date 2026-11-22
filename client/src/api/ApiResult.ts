@@ -5,6 +5,7 @@ export type InvitationPartial = Readonly<{
   delivery: Readonly<{
     userId: string;
     generation: string;
+    origin: 'private_invitation' | 'registration';
     status:
       | 'pending'
       | 'claimed'

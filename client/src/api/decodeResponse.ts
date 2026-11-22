@@ -94,7 +94,14 @@ export function decodeInvitationPartial(value: unknown): InvitationPartial | nul
   if (value.delivery !== null) {
     const item: unknown = value.delivery;
     if (
-      !hasExactKeys(item, ['user_id', 'activation_delivery_id', 'status', 'expires_at']) ||
+      !hasExactKeys(item, [
+        'user_id',
+        'activation_delivery_id',
+        'status',
+        'expires_at',
+        'origin'
+      ]) ||
+      (item.origin !== 'private_invitation' && item.origin !== 'registration') ||
       !uuid(item.user_id) ||
       item.user_id !== value.user_id ||
       !uuid(item.activation_delivery_id) ||
@@ -117,6 +124,7 @@ export function decodeInvitationPartial(value: unknown): InvitationPartial | nul
     delivery = Object.freeze({
       userId: item.user_id,
       generation: item.activation_delivery_id,
+      origin: item.origin,
       status: item.status as NonNullable<InvitationPartial['delivery']>['status'],
       expiresAt: item.expires_at
     });

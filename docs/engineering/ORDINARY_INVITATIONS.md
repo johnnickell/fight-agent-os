@@ -11,7 +11,7 @@ creation.
 The form has one email field, with autocomplete, paste, keyboard submission, associated instructions/errors,
 visible focus and pending duplicate suppression. It trims surrounding whitespace and lowercases on submission,
 checks a 254-character usability bound, rejects controls and checks basic syntax without requiring a dotted
-domain. Qualified Common v1.4.1 `IsEmail`/`EmailAddress` accept `person@[IPv6:2001:db8::1]` and canonicalize it
+domain. The server's Common `IsEmail`/`EmailAddress` accept `person@[IPv6:2001:db8::1]` and canonicalize it
 to `person@[ipv6:2001:db8::1]`; that address can reach server admission. This is not a second full email
 validator: semantic email/conflict policy remains server/package-owned. Unsupported Unicode addresses receive
 controlled rejection, never an invented identity.
@@ -47,24 +47,23 @@ Status continuation is offered only with exact current `READ_USERS` and a classi
 alone grants no reading. Otherwise the permitted Users, Dashboard or authenticated Account destination is
 shown. Recovery remains separately governed by `MANAGE_USER_INVITATIONS` and TASK-00060.
 
-## Qualified existing backend, not a new composition
+## Current backend contract
 
-The unchanged Composer lock supplies Access Control **v0.8.0** at
-`319738255e682d587642b67856039f882b9588d6` and Common **v1.4.1** at
-`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`. The consumer uses the existing versioned HTTP Action/Responder,
-not guessed new package APIs or an upgrade. Existing PostgreSQL/HTTP tests qualify canonical conflicts,
-managed role selection, pending identity, seven-day grant, durable package delivery, audit, races, limits,
-partial failure and redaction. See [the API contract](INVITATION_API.md).
+The Composer lock supplies Access Control **v0.11.0** and Common **v1.5.1**. The HTTP entry checks current
+`INVITE_USERS`, the issuance budget, the installation policy and the canonical email before dispatching the
+invitation with a new user ID. There is no second blanket permission check in the handler. An admitted request
+may finish after revocation; the next request checks authority again.
 
-Current issuance commits invitation, assignment and confirmation audit independently. Early delivery and
-partial/uncertain outcomes remain possible. Its redundant Application admission/coordination is a known
-TASK-00577 correction target, not the normative architecture and not repaired or reproduced in this UI TASK.
+The handler coordinates separate invitation, role assignment and confirmation audit commits. Delivery can start
+before assignment. Concurrent requests for the same canonical email can produce only one invitation; the other
+request receives a safe conflict. A partial or uncertain response does not mean rollback: inspect the current
+state before trying again. See [the API contract](INVITATION_API.md) for response details and package versions.
 The currently protected invitation/read/manage permissions belong to the exact managed Super Admin role;
 removing managed memberships causes policy drift. HTTP permission combinations therefore return 403 for
 missing INVITE_USERS, or controlled 409 for drift after admission, not newly supported custom delegation.
 Frontend fixtures independently exercise invite-only, reader, manager and misleading-role presentation.
 
-## Verification boundaries
+## Historical TASK-00061 browser verification
 
 The production form, fixed transport, strict result projection, sole-graph invalidation, permission changes,
 duplicate/deadline/retired results, volatile fields and marker redaction have owning Vitest/RTL tests.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Responder\Api\V1\Invitations;
 
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use OpenApi\Attributes as OA;
@@ -17,7 +18,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 #[OA\Schema(
     schema: 'InvitationDelivery',
-    required: ['user_id', 'status', 'expires_at', 'activation_delivery_id'],
+    required: ['user_id', 'status', 'expires_at', 'activation_delivery_id', 'origin'],
     properties: [
         new OA\Property(property: 'user_id', type: 'string', format: 'uuid'),
         new OA\Property(
@@ -26,7 +27,8 @@ use Psr\Http\Message\ResponseInterface;
             enum: ['pending', 'claimed', 'retry_pending', 'delivered', 'permanent_failure', 'expired', 'invalidated']
         ),
         new OA\Property(property: 'expires_at', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'activation_delivery_id', type: 'string', format: 'uuid')
+        new OA\Property(property: 'activation_delivery_id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'origin', type: 'string', enum: ['private_invitation', 'registration'])
     ],
     type: 'object',
     additionalProperties: false
@@ -53,10 +55,12 @@ final readonly class ReadInvitationStatusResponder
     /**
      * Returns no provider diagnostics, credential material or inferred receipt
      */
-    public function respond(?InvitationDeliveryStatusView $view): ResponseInterface
+    public function respond(InvitationDeliveryStatusView|CredentialDeliveryAbsent $status): ResponseInterface
     {
         return $this->responses->fromEnvelope(
-            JSendEnvelope::success($view === null ? null : new InvitationDeliveryData($view)),
+            JSendEnvelope::success(
+                $status instanceof CredentialDeliveryAbsent ? null : new InvitationDeliveryData($status)
+            ),
             200,
             ['Cache-Control' => 'no-store']
         );
