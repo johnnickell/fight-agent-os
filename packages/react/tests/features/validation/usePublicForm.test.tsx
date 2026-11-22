@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -52,6 +52,42 @@ const rejection = (messages: readonly string[]) =>
   });
 
 describe('Formik shared error lifecycle', () => {
+  it('does not add unregistered fields to the data sent by a form', async () => {
+    const submit = vi.fn().mockResolvedValue(apiFailure('cancelled'));
+    const { result } = renderHook(() =>
+      usePublicForm({
+        schema: singleFieldSchema,
+        initialValues: { displayName: 'Valid' },
+        submit,
+        onSuccess: vi.fn()
+      })
+    );
+    act(() => result.current.setFieldValue('unexpected', 'synthetic-private-marker'));
+    expect(() => result.current.field('unexpected')).toThrow('Unregistered form field');
+    await act(async () => result.current.handleSubmit());
+    expect(submit).toHaveBeenCalledExactlyOnceWith({ displayName: 'Valid' });
+  });
+
+  it('refuses submission without a current validation schema', async () => {
+    const submit = vi.fn();
+    render(<Example submit={submit} activeSchema={null} />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Validation is unavailable');
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it('recovers after a rejected submit promise without exposing its raw error', async () => {
+    const submit = vi.fn().mockRejectedValue(new Error('synthetic-private-marker'));
+    render(<Example submit={submit} activeSchema={singleFieldSchema} />);
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Unable to complete the request. Please try again.'
+    );
+    expect(screen.queryByText('synthetic-private-marker')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  });
   it('leaves same-form submit focus free of blur layout changes, then validates and focuses on submission', async () => {
     const user = userEvent.setup();
     const submit = vi.fn();

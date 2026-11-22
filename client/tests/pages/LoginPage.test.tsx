@@ -42,6 +42,21 @@ const structuralFailure = () =>
   );
 
 describe('schema-backed production login', () => {
+  it('distinguishes failed request protection from invalid credentials without retrying automatically', async () => {
+    const post = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ status: 'fail', data: { message: 'Permission denied.' } }, 403, false)
+      );
+    const deps = loginDependencies(post);
+    render(<LoginPage {...deps} />);
+    await screen.findByLabelText('Password (required)');
+    fill();
+    submit();
+    expect(await screen.findByText(/renew request protection/)).toBeVisible();
+    expect(post).toHaveBeenCalledOnce();
+    deps.service.dispose();
+  });
   it('provides managers, paste, labels, first-invalid focus and no password-setting gate', async () => {
     const post = vi.fn().mockResolvedValue(loginRejected());
     const deps = loginDependencies(post);

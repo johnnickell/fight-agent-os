@@ -46,6 +46,19 @@ describe('deliberate Common failure cutover', () => {
     expect(JSON.stringify(result)).not.toContain('Use Logout');
   });
 
+  it('preserves recovery uncertainty even when the server cannot disclose partial facts', () => {
+    const result = decodeResponse(
+      503,
+      {
+        status: 'error',
+        message: 'Recovery outcome uncertain. Read invitation status before another operation.'
+      },
+      decode,
+      null
+    );
+    expect(result).toEqual({ ok: false, error: { kind: 'uncertain', correlationId: null } });
+  });
+
   it('retains secretless inspected partial facts without declaring rollback or retry authority', () => {
     const data = partial();
     const result = decodeResponse(

@@ -2,11 +2,59 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ContentPanel } from '@fight/react/controls';
-import { ContentState } from '@fight/react/controls';
-import { Notice } from '@fight/react/controls';
+import {
+  AuthorityStatus,
+  ContentPanel,
+  ContentState,
+  LoadingPage,
+  NotFoundPage,
+  Notice,
+  PresentationIcon
+} from '@fight/react/controls';
 
 describe('Content presentation', () => {
+  it('offers explicit retry for stale authority but not for an invalid route', async () => {
+    const retry = vi.fn();
+    const state = { status: 'stale' } as const;
+    const { rerender } = render(
+      <AuthorityStatus state={state} decision="unavailable" onRetry={retry} />
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Server authorization remains authoritative'
+    );
+    expect(retry).not.toHaveBeenCalled();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Try again' }));
+    expect(retry).toHaveBeenCalledOnce();
+
+    rerender(<AuthorityStatus state={state} decision="invalid" onRetry={retry} />);
+    expect(screen.getByText('Route unavailable')).toBeVisible();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('announces a loading route without offering recovery until the route is known missing', () => {
+    const { rerender } = render(<LoadingPage />);
+    expect(screen.getByRole('heading', { name: 'Loading application' })).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('Please wait');
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+
+    rerender(<NotFoundPage />);
+    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Return to application' })).toHaveAttribute(
+      'href',
+      '/'
+    );
+  });
+
+  it('keeps decorative icon markup out of the accompanying button name and focus order', () => {
+    const { container } = render(
+      <button>
+        <PresentationIcon name="logout" /> Sign out
+      </button>
+    );
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('svg')).toHaveAttribute('focusable', 'false');
+  });
   it('renders explicit loading, empty and success outcomes without a color-only meaning', () => {
     const { rerender } = render(
       <ContentState kind="loading" title="Loading" message="Waiting for examples…" />

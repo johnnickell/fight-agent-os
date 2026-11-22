@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ActivationPage } from '@fight/react/account';
+import { ActivationPage, apiFailure } from '@fight/react/account';
 
 import {
   activationDependencies,
@@ -24,6 +24,20 @@ const complete = () =>
   jsonResponse({ access_token: 'header.payload.signature', issued_at: 1000, expires_at: 1900 });
 
 describe('production invitation form', () => {
+  it.each([
+    ['rate-limited', /Wait 15 minutes/],
+    ['authorization', /renew request protection/]
+  ] as const)('shows safe %s recovery without automatic resubmission', async (kind, message) => {
+    const deps = activationDependencies(vi.fn());
+    const submit = vi.spyOn(deps.service, 'submit').mockResolvedValue(apiFailure(kind));
+    render(<ActivationPage {...deps} />);
+    await screen.findByLabelText('New password (required)');
+    fill();
+    await userEvent.click(screen.getByRole('button', { name: 'Activate account' }));
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(submit).toHaveBeenCalledOnce();
+    deps.service.dispose();
+  });
   it('loads explicit schema, announces validation and refreshes dependent confirmation without blocking Unicode or paste', async () => {
     const post = vi.fn().mockResolvedValue(complete());
     const deps = activationDependencies(post);

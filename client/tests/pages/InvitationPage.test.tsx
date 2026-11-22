@@ -571,7 +571,7 @@ describe('Pending invitation', () => {
     );
     expect(dialog).toHaveTextContent('old link becomes invalid');
     expect(dialog).toHaveTextContent('seven-day');
-    await userEvent.tab();
+    await userEvent.tab({ shift: true });
     expect(within(dialog).getByRole('button', { name: 'Confirm resend' })).toHaveFocus();
     await userEvent.tab();
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();

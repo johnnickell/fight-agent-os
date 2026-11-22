@@ -31,6 +31,37 @@ async function mount(
 }
 
 describe('OwnedSessionsPage', () => {
+  it('reads nothing when the current scope has been retired before the list mounts', async () => {
+    const d = sessionDependencies(vi.fn());
+    caches.push(d.cache);
+    await d.cache.load();
+    vi.spyOn(d.cache, 'captureScope').mockReturnValue({
+      signal: AbortSignal.abort(),
+      isCurrent: () => false
+    });
+    const load = vi.fn();
+    render(<OwnedSessionsPage cache={d.cache} service={{ load }} />);
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('reads previous and first pages only when selected', async () => {
+    const load = vi.fn(async (page: number) => ({
+      ok: true as const,
+      correlationId: null,
+      value: { page, perPage: 25, totalPages: 3, totalRecords: 75, records: [] }
+    }));
+    const d = sessionDependencies(vi.fn());
+    caches.push(d.cache);
+    await d.cache.load();
+    const user = userEvent.setup();
+    render(<OwnedSessionsPage cache={d.cache} service={{ load }} />);
+    await user.click(await screen.findByRole('button', { name: 'Next page' }));
+    await user.click(await screen.findByRole('button', { name: 'Next page' }));
+    await user.click(await screen.findByRole('button', { name: 'Previous page' }));
+    await user.click(await screen.findByRole('button', { name: 'First page' }));
+    expect(load.mock.calls.map(([page]) => page)).toEqual([1, 2, 3, 2, 1]);
+    expect(await screen.findByRole('button', { name: 'Previous page' })).toBeDisabled();
+  });
   it('R57-01 renders the complete list when a usable row has equal projected activity and deadlines', async () => {
     await mount(() =>
       Promise.resolve(sessionsResponse(sessionPage([nearExpirySessionWire(), sessionWire()])))

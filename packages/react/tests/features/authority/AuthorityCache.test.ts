@@ -1,6 +1,12 @@
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthorityCache, observeAuthorityResume } from '@fight/react/account';
+import {
+  AuthorityCache,
+  observeAuthorityResume,
+  useAuthority,
+  useAuthorityPresentation
+} from '@fight/react/account';
 
 import { deferred } from '@fixtures/apiFixtures';
 import { principal } from '@fixtures/authorityFixtures';
@@ -22,6 +28,21 @@ afterEach(() => {
 const success = { status: 'principal', principal } as const;
 
 describe('principal ownership and transitions', () => {
+  it('keeps verified display during refresh without granting current authority', async () => {
+    const cache = cacheWith(async () => success);
+    await cache.load();
+    const { result, unmount } = renderHook(() => ({
+      dispatch: useAuthority(cache),
+      display: useAuthorityPresentation(cache)
+    }));
+    expect(result.current.dispatch.status).toBe('authenticated');
+    await act(() => cache.signal('refresh-started'));
+    expect(result.current.dispatch.status).toBe('stale');
+    expect(result.current.display).toEqual({ status: 'authenticated', principal });
+    await act(() => cache.signal('logout'));
+    expect(result.current.display).toEqual({ status: 'anonymous', reason: 'logout' });
+    unmount();
+  });
   it('does not dispatch a queued request retired before the loader starts', async () => {
     const loader = vi.fn<PrincipalLoader>().mockResolvedValue(success);
     const cache = cacheWith(loader);
@@ -83,9 +104,32 @@ describe('principal ownership and transitions', () => {
     const cache = cacheWith(loader);
     await cache.load();
     expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
+    expect(cache.canRetry()).toBe(true);
     expect(loader).toHaveBeenCalledOnce();
     await cache.load();
     expect(cache.getSnapshot()).toEqual({ status: 'authenticated', principal });
+    expect(cache.canRetry()).toBe(false);
+  });
+
+  it('settles synchronous loader exceptions without retaining their message', async () => {
+    const cache = cacheWith(() => {
+      throw new Error('synthetic-private-marker');
+    });
+    await cache.load();
+    expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
+    expect(cache.captureScope().isCurrent()).toBe(false);
+  });
+
+  it('fails closed when a malformed result throws while being decoded', async () => {
+    const cache = cacheWith(async () => ({
+      status: 'principal',
+      get principal() {
+        throw new Error('synthetic-private-marker');
+      }
+    }));
+    await cache.load();
+    expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
+    expect(cache.captureScope().isCurrent()).toBe(false);
   });
 
   it('removes authority before protected-data abort callbacks can read it', async () => {

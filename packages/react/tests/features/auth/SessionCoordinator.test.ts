@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { apiFailure } from '@fight/react/account';
+import { apiFailure, AuthorityCache } from '@fight/react/account';
 import { MemoryAccessToken } from '@fight/react/account';
 import { decodeSessionMessage } from '@fight/react/account';
 import { SessionCoordinator } from '@fight/react/account';
 
 import { deferred } from '@fixtures/apiFixtures';
+import { principal } from '@fixtures/authorityFixtures';
 
 import type { ApiResult } from '@fight/react/account';
 import type { SessionChannel } from '@fight/react/account';
@@ -69,6 +70,8 @@ function setup(
     channels?: Channels;
     locks?: SessionLocks;
     outcome?: () => Promise<ApiResult<true>>;
+    authority?: AuthorityCache;
+    coldAnonymous?: boolean;
   } = {}
 ) {
   const tokens = new MemoryAccessToken();
@@ -99,6 +102,8 @@ function setup(
     tokens,
     clearIntent,
     id,
+    ...(options.authority ? { authority: options.authority } : {}),
+    ...(options.coldAnonymous ? { coldAnonymous: true } : {}),
     ...(channel ? { channel } : {}),
     ...(options.locks ? { locks: options.locks } : {})
   });
@@ -118,6 +123,127 @@ afterEach(() => {
 });
 
 describe('bounded volatile session continuity', () => {
+  it('admits sign-in after a cold authentication rejection without discarding navigation intent', async () => {
+    const { coordinator, clearIntent, session } = setup({
+      coldAnonymous: true,
+      outcome: async () => apiFailure('authentication')
+    });
+
+    await expect(coordinator.restore()).resolves.toEqual(apiFailure('authentication'));
+    expect(coordinator.getSnapshot().status).toBe('anonymous');
+    expect(clearIntent).not.toHaveBeenCalled();
+    await expect(coordinator.restore()).resolves.toEqual(apiFailure('cancelled'));
+    expect(session.refresh).toHaveBeenCalledOnce();
+
+    await coordinator.submit({}, false);
+    expect(coordinator.getSnapshot().status).toBe('authenticated');
+  });
+
+  it('does not present authenticated state after a failed explicit login', async () => {
+    const authority = new AuthorityCache(async () => ({ status: 'network' }));
+    try {
+      const { coordinator, login, tokens } = setup({ authority });
+      login.submit.mockResolvedValueOnce(apiFailure('authentication'));
+
+      await expect(coordinator.submit({}, false)).resolves.toEqual(apiFailure('authentication'));
+      expect(coordinator.getSnapshot().status).toBe('anonymous');
+      expect(tokens.getAccessToken()).toBeNull();
+      expect(authority.getSnapshot().status).not.toBe('authenticated');
+    } finally {
+      authority.dispose();
+    }
+  });
+
+  it('treats a refresh success without usable access as a degraded connection', async () => {
+    const { coordinator, session } = setup();
+    session.refresh.mockResolvedValueOnce(ok());
+
+    await expect(coordinator.restore()).resolves.toEqual(apiFailure('network'));
+    expect(coordinator.getSnapshot().status).toBe('network-degraded');
+  });
+
+  it('retires credentials when current server authority ends', async () => {
+    const authority = new AuthorityCache(async () => ({ status: 'terminal' }));
+    try {
+      const { coordinator, tokens, clearIntent } = setup({ authority });
+      await coordinator.restore();
+      await authority.load();
+      expect(coordinator.getSnapshot().status).toBe('terminal');
+      expect(tokens.getAccessToken()).toBeNull();
+      expect(clearIntent).toHaveBeenCalledOnce();
+    } finally {
+      authority.dispose();
+    }
+  });
+  it('does not dispatch explicit login during an unresolved restore', async () => {
+    const response = deferred<ApiResult<true>>();
+    const { coordinator, login } = setup({ outcome: () => response.promise });
+    const pending = coordinator.restore();
+    await expect(coordinator.submit({}, false)).resolves.toEqual(apiFailure('cancelled'));
+    expect(login.submit).not.toHaveBeenCalled();
+    response.resolve(apiFailure('network'));
+    await pending;
+  });
+
+  it('invalidates authority with the right readiness signal without transferring credentials', async () => {
+    const authority = new AuthorityCache(async () => ({ status: 'network' }));
+    const peerAuthority = new AuthorityCache(async () => ({ status: 'network' }));
+    const signal = vi.spyOn(authority, 'signal').mockResolvedValue(undefined);
+    const peerSignal = vi.spyOn(peerAuthority, 'signal').mockResolvedValue(undefined);
+    try {
+      const channels = new Channels();
+      const { coordinator, tokens } = setup({ authority, channels });
+      const peer = setup({ authority: peerAuthority, channels });
+      coordinator.authorityChanged();
+      await tick();
+      expect(signal).toHaveBeenLastCalledWith('refresh-started');
+      expect(peerSignal).toHaveBeenLastCalledWith('refresh-started');
+
+      tokens.accept('test.access.signature', performance.now());
+      coordinator.authorityChanged();
+      await tick();
+      expect(signal).toHaveBeenLastCalledWith('authority-changed');
+      expect(peerSignal).toHaveBeenLastCalledWith('refresh-started');
+      expect(peer.tokens.getAccessToken()).toBeNull();
+      expect(channels.messages).toEqual(
+        [1, 2].map((sequence) => ({
+          version: 1,
+          sender: expect.stringMatching(/^[a-f0-9]{32}$/),
+          sequence,
+          kind: 'authority-changed'
+        }))
+      );
+    } finally {
+      authority.dispose();
+      peerAuthority.dispose();
+    }
+  });
+
+  it('retires only the context whose verified display identity matches a peer reset notice', async () => {
+    const authority = new AuthorityCache(async () => ({ status: 'network' }));
+    vi.spyOn(authority, 'getPresentationSnapshot').mockReturnValue({
+      status: 'authenticated',
+      principal
+    });
+    try {
+      const { coordinator, tokens, channel } = setup({ authority, channels: new Channels() });
+      await coordinator.submit({}, false);
+      const sender = id();
+      const deliverReset = (userId: string, sequence: number) =>
+        channel?.onmessage?.({
+          data: { version: 1, sender, sequence, kind: 'password-reset', userId }
+        } as MessageEvent<unknown>);
+
+      deliverReset(crypto.randomUUID(), 1);
+      expect(tokens.getAccessToken()).not.toBeNull();
+      deliverReset(principal.userId, 2);
+      expect(tokens.getAccessToken()).toBeNull();
+      expect(coordinator.getSnapshot().status).toBe('terminal');
+    } finally {
+      authority.dispose();
+    }
+  });
+
   it('invalidates every list but terminally clears only an identifiable revoked target without broadcasting terminal to other sessions', async () => {
     const channels = new Channels();
     const actor = setup({ channels });
@@ -269,6 +395,32 @@ describe('bounded volatile session continuity', () => {
     expect(localStorage.length).toBe(0);
     expect(sessionStorage.length).toBe(0);
     expect(JSON.stringify(leader.coordinator)).toBe('{}');
+  });
+
+  it('does not adopt a peer token whose remaining lifetime elapsed in delivery', async () => {
+    const channels = new Channels();
+    const { channel, coordinator, tokens, session } = setup({ channels });
+    const pending = coordinator.restore();
+    const request = decodeSessionMessage(channels.messages[0]);
+    if (request?.kind !== 'request' || !channel?.onmessage) throw new Error('Missing challenge');
+    await tick(30);
+    channel.onmessage({
+      data: {
+        version: 1,
+        sender: id(),
+        sequence: 1,
+        kind: 'token',
+        round: request.round,
+        token: 'expired.peer.signature',
+        remaining: 20
+      }
+    } as MessageEvent<unknown>);
+    expect(tokens.getAccessToken()).toBeNull();
+    expect(coordinator.getSnapshot().status).toBe('restoring');
+    await tick(20);
+    await pending;
+    expect(session.refresh).toHaveBeenCalledOnce();
+    expect(tokens.getAccessToken()).toBe('access.current.signature');
   });
 
   it('joins a current leader without rotating and closes listeners/channels on leave', async () => {

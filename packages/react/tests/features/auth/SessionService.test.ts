@@ -40,6 +40,22 @@ function dependencies(post: ApiTransport) {
 }
 
 describe('single-tab cookie-only refresh and logout', () => {
+  it('rejects a successful refresh whose memory credential generation has been retired', async () => {
+    const pending = deferred<Response>();
+    const dispatched = deferred<void>();
+    const { service, tokens } = dependencies(() => {
+      dispatched.resolve();
+      return pending.promise;
+    });
+    const refresh = service.refresh();
+    await dispatched.promise;
+    tokens.clear();
+    pending.resolve(loginSuccess());
+
+    expect(await refresh).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+    expect(tokens.getAccessToken()).toBeNull();
+    service.dispose();
+  });
   it('coalesces rotation, retires old access immediately and accepts only the replacement in memory', async () => {
     const pending = deferred<Response>();
     const post = vi.fn().mockImplementation(() => pending.promise);

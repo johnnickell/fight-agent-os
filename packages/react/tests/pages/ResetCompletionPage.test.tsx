@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ResetCompletionJourney } from '@fight/react/account';
+import { apiFailure, ResetCompletionJourney } from '@fight/react/account';
 import { ResetCredential } from '@fight/react/account';
 import { ResetCompletionPage } from '@fight/react/account';
 
@@ -22,6 +22,19 @@ async function enter() {
   });
 }
 describe('real schema reset completion form', () => {
+  it.each([
+    ['rate-limited', /Wait 15 minutes/],
+    ['authorization', /renew request protection/]
+  ] as const)('shows safe %s recovery without automatic resubmission', async (kind, message) => {
+    const d = resetCompletionDependencies(vi.fn());
+    const submit = vi.spyOn(d.service, 'submit').mockResolvedValue(apiFailure(kind));
+    render(<ResetCompletionPage {...d} />);
+    await enter();
+    await userEvent.click(screen.getByRole('button', { name: 'Reset password' }));
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(submit).toHaveBeenCalledOnce();
+    d.service.dispose();
+  });
   it('loads named metadata, supports multiple errors, confirmation dependency, show/hide and focus', async () => {
     const post = vi.fn();
     const d = resetCompletionDependencies(post);

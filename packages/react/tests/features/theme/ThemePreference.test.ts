@@ -4,6 +4,7 @@ import {
   browserThemeEnvironment,
   prepaintTheme,
   readTheme,
+  resolveTheme,
   THEME_KEY,
   ThemePreferenceStore
 } from '@fight/react/controls';
@@ -57,6 +58,16 @@ function fixture(initial: string | null = null, dark = false) {
 }
 
 describe('presentation preference', () => {
+  it('defaults to light if a selected system media query becomes unreadable', () => {
+    const state = fixture(null, true);
+    const media = state.media;
+    Object.defineProperty(media, 'matches', {
+      get() {
+        throw new DOMException('Media denied', 'SecurityError');
+      }
+    });
+    expect(resolveTheme('system', media)).toBe('light');
+  });
   it.each([null, '', 'SYSTEM', '"dark"', 'false', 'dark '.repeat(1000)])(
     'treats missing or invalid stored value %# as system',
     (value) => {

@@ -36,6 +36,33 @@ async function confirm() {
 }
 
 describe('InviteSuperAdminPage', () => {
+  it('keeps invalid email out of confirmation and resets the field and its error on Clear', async () => {
+    const { submitElevated } = await setup();
+    const email = screen.getByLabelText('Email (required)');
+    fireEvent.change(email, { target: { value: 'not an email' } });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Review Super Admin invitation' }));
+    expect(email).toHaveFocus();
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Clear email' }));
+    expect(email).toHaveFocus();
+    expect(email).toHaveValue('');
+    expect(email).not.toHaveAttribute('aria-invalid');
+    expect(submitElevated).not.toHaveBeenCalled();
+  });
+
+  it('starts a separate invitation with a focused empty field and no automatic submission', async () => {
+    const { submitElevated } = await setup();
+    await review();
+    await confirm();
+    await userEvent.click(screen.getByRole('button', { name: 'Start a separate invitation' }));
+    const email = screen.getByLabelText('Email (required)');
+    expect(email).toHaveFocus();
+    expect(email).toHaveValue('');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(submitElevated).toHaveBeenCalledOnce();
+  });
   it('requires explicit canonical-target confirmation, starts Cancel-focused, traps Tab and returns focus on Escape', async () => {
     const d = await setup();
     const dialog = await review();
@@ -96,6 +123,25 @@ describe('InviteSuperAdminPage', () => {
       confirmed: true
     });
   });
+  it('rechecks authority before opening review even if the form has not rerendered', async () => {
+    const d = await setup();
+    fireEvent.change(screen.getByLabelText('Email (required)'), {
+      target: { value: 'person@example.test' }
+    });
+    vi.spyOn(d.cache, 'getSnapshot').mockReturnValue({ status: 'stale' });
+    fireEvent.click(screen.getByRole('button', { name: 'Review Super Admin invitation' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(d.submitElevated).not.toHaveBeenCalled();
+  });
+
+  it('rechecks authority before dispatch even if the confirmation has not rerendered', async () => {
+    const d = await setup();
+    await review();
+    vi.spyOn(d.cache, 'getSnapshot').mockReturnValue({ status: 'stale' });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Super Admin invitation' }));
+    expect(d.submitElevated).not.toHaveBeenCalled();
+  });
+
   it('removes confirmation on authority loss and never dispatches with stale authority', async () => {
     const d = await setup();
     await review();

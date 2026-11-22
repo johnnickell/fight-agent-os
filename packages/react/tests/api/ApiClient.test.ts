@@ -21,6 +21,66 @@ function setup(response = jsonResponse()) {
 
 // Future protected operations below exercise the shared transport only, not a server endpoint.
 describe('shared API transport', () => {
+  it('decodes a raw private document only through the authenticated fixed endpoint', async () => {
+    const document = { openapi: '3.1.0' };
+    const fetch = vi.fn<ApiTransport>().mockResolvedValue(
+      new Response(JSON.stringify(document), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      })
+    );
+    const client = new ApiClient(configuration, {
+      fetch,
+      accessTokens: { getAccessToken: () => 'synthetic.token' }
+    });
+    const signal = new AbortController().signal;
+    const decode = vi.fn((value: unknown) => value);
+
+    expect(await client.getPrivateOpenApi(decode, signal)).toEqual({
+      ok: true,
+      value: document,
+      correlationId: null
+    });
+    expect(decode).toHaveBeenCalledExactlyOnceWith(document);
+    const [url, init] = fetch.mock.calls[0]!;
+    expect(url).toBe('/api/v1/documentation/openapi');
+    expect(init.signal).toBe(signal);
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer synthetic.token');
+  });
+
+  it('rejects an oversized private document before decoding it', async () => {
+    const fetch = vi.fn<ApiTransport>().mockResolvedValue(
+      new Response(' '.repeat(2_097_153), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      })
+    );
+    const client = new ApiClient(configuration, {
+      fetch,
+      accessTokens: { getAccessToken: () => 'synthetic.token' }
+    });
+    const decode = vi.fn(() => true);
+
+    await expect(client.getPrivateOpenApi(decode, new AbortController().signal)).resolves.toEqual(
+      apiFailure('protocol')
+    );
+    expect(decode).not.toHaveBeenCalled();
+  });
+
+  it('does not dispatch or leak a protected mutation provider exception', async () => {
+    const fetch = vi.fn<ApiTransport>();
+    const client = new ApiClient(configuration, {
+      fetch,
+      accessTokens: {
+        getAccessToken: () => {
+          throw new Error('synthetic-private-marker');
+        }
+      }
+    });
+
+    await expect(client.mutate('PATCH', '/access/roles', {}, () => true)).resolves.toEqual(
+      apiFailure('system')
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it.each(['invalid', `${csrfData.proof}\n`])(
     'refuses mutation without an exact bounded CSRF proof before dispatch (%#)',
     async (proof) => {

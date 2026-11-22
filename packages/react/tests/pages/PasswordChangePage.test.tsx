@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PasswordChangePage } from '@fight/react/account';
+import { apiFailure, PasswordChangePage } from '@fight/react/account';
 
 import { jsonResponse, passwordGuidance } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
@@ -22,6 +22,26 @@ async function enter() {
 const submit = () =>
   userEvent.click(screen.getByRole('button', { name: 'Change password and sign out' }));
 describe('real authenticated change form', () => {
+  it.each([
+    ['rate-limited', /Too many attempts/],
+    ['network', /Try signing in before submitting again/]
+  ] as const)('presents a safe recovery for %s without replay', async (kind, message) => {
+    const post = vi.fn();
+    const d = passwordChangeDependencies(post);
+    const change = vi.spyOn(d.service, 'submit').mockResolvedValue(apiFailure(kind));
+    try {
+      render(<PasswordChangePage {...d} />);
+      await enter();
+      await submit();
+      expect(await screen.findByText(message)).toBeVisible();
+      expect(screen.getByLabelText('Current password (required)')).toHaveValue('');
+      expect(screen.getByLabelText('New password (required)')).toHaveValue('');
+      expect(change).toHaveBeenCalledOnce();
+      expect(post).not.toHaveBeenCalled();
+    } finally {
+      d.authority.dispose();
+    }
+  });
   it('uses named metadata, accessible current/new autocomplete, focus, dependent confirmation and show/hide', async () => {
     const post = vi.fn();
     const d = passwordChangeDependencies(post);

@@ -38,6 +38,9 @@ describe('authenticated password-change service', () => {
     expect(d.tokens.getAccessToken()).toBeNull();
     expect(d.authority.getSnapshot().status).toBe('terminal');
     expect(d.service.completed()).toBe(true);
+    d.service.clearCompletion();
+    expect(d.service.completed()).toBe(false);
+    expect(d.authority.getSnapshot().status).toBe('terminal');
     expect(JSON.stringify(d.service)).not.toContain(values.password);
     d.authority.dispose();
   });

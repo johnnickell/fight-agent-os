@@ -53,6 +53,16 @@ async function setup(permissions = ['READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS'])
 }
 
 describe('confirmed other-owned session revocation', () => {
+  it('rechecks authority at confirmation even if the dialog has not rerendered', async () => {
+    const d = await setup();
+    render(<OwnedSessionsPage cache={d.cache} service={d.service} />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Revoke session' }));
+    const confirm = screen.getByRole('button', { name: 'Confirm revocation' });
+    vi.spyOn(d.cache, 'getSnapshot').mockReturnValue({ status: 'stale' });
+    await user.click(confirm);
+    expect(d.fetch.mock.calls.filter(([, init]) => init.method === 'DELETE')).toHaveLength(0);
+  });
   it('requires keyboard confirmation, focuses safe cancel, traps focus, cancels without mutation, suppresses duplicate pending activation and refetches on commit', async () => {
     const d = await setup();
     const logout = vi.fn();
