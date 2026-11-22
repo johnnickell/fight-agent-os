@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import { AuthorityCache } from '@fight/react/account';
+import { Button } from '@fight/react/controls';
+import { ApiClient } from '@fixtures/transport';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ApiClient } from '@/api/ApiClient';
-import { Button } from '@/components/Button';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import SwaggerPage from '@/pages/SwaggerPage';
 
@@ -70,7 +70,7 @@ function Example({
       })
     );
     const api = new ApiClient(
-      { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: available },
+      { schemaVersion: 2, apiBasePath: '/api/v1' },
       {
         accessTokens: { getAccessToken: () => 'synthetic.catalog.access' },
         fetch: (url) =>

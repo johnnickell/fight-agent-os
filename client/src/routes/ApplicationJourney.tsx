@@ -1,31 +1,49 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 
-import { AuthorityStatus } from '@/components/AuthorityStatus';
-import { Button } from '@/components/Button';
-import { ContentState } from '@/components/ContentState';
+import { evaluateAccess } from '@fight/react/account';
+import { useAuthority, useAuthorityPresentation } from '@fight/react/account';
+import { LoginPage } from '@fight/react/account';
+import {
+  AuthorityStatus,
+  BrandProvider,
+  Button,
+  ContentState,
+  LoadingPage,
+  ShellLayout,
+  useBrand
+} from '@fight/react/controls';
+
+import { agentOsBrand } from '@/agentOsBrand';
 import { useApplicationSession } from '@/features/auth/useApplicationSession';
-import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import { ShellLayout } from '@/layouts/ShellLayout';
-import { LoadingPage } from '@/pages/LoadingPage';
-import { LoginPage } from '@/pages/LoginPage';
 import { applicationRoutes, matchApplicationRoute } from '@/routes/applicationRoutes';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 
 import type { ApplicationSession } from '@/features/auth/useApplicationSession';
-import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
+import type { ThemePreferenceStore } from '@fight/react/controls';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const SwaggerPage = lazy(() => import('@/pages/SwaggerPage'));
-const PasswordChangePage = lazy(() => import('@/pages/PasswordChangePage'));
-const OwnedSessionsPage = lazy(() => import('@/pages/OwnedSessionsPage'));
-const UsersPage = lazy(() => import('@/pages/UsersPage'));
-const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
-const InviteUserPage = lazy(() => import('@/pages/InviteUserPage'));
-const InviteSuperAdminPage = lazy(() => import('@/pages/InviteSuperAdminPage'));
+const PasswordChangePage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.PasswordChangePage }))
+);
+const OwnedSessionsPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.OwnedSessionsPage }))
+);
+const UsersPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.UsersPage }))
+);
+const InvitationPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.InvitationPage }))
+);
+const InviteUserPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.InviteUserPage }))
+);
+const InviteSuperAdminPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.InviteSuperAdminPage }))
+);
 
 export function ApplicationJourney({
   runtime,
@@ -68,6 +86,8 @@ export function ApplicationView({
   theme?: ThemePreferenceStore | undefined;
   onAuthenticated?: (() => void) | undefined;
 }) {
+  const brand = useBrand(agentOsBrand);
+  const productName = brand.name;
   const dispatch = useAuthority(session.authority);
   const authority = useAuthorityPresentation(session.authority);
   const credential = useSyncExternalStore(
@@ -173,10 +193,10 @@ export function ApplicationView({
                 ? 'Access forbidden'
                 : (route?.title ?? 'Application');
   useEffect(() => {
-    document.title = `${title} — Fight Agent OS`;
+    document.title = `${title} — ${productName}`;
     // Announce the destination without scrolling a tall main past the utility header.
     document.getElementById('main-content')?.focus({ preventScroll: true });
-  }, [pathname, title]);
+  }, [pathname, productName, title]);
   let content;
   if (busy)
     content = (
@@ -389,16 +409,16 @@ export function ApplicationView({
       </ShellLayout>
     );
   return (
-    <>
+    <BrandProvider brand={brand}>
       <p
         className="visually-hidden"
         role="status"
         aria-atomic="true"
         aria-label="Application navigation status"
       >
-        {title} — Fight Agent OS
+        {title} — {productName}
       </p>
       {frame}
-    </>
+    </BrandProvider>
   );
 }

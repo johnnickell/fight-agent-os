@@ -1,24 +1,4 @@
-// Shared production foundation; catalog-only presentation is composed separately.
+// Agent OS installs the package stylesheet before its own local fonts and product styles.
 @use 'fonts';
-@use 'settings/bootstrap';
-@use 'base/tokens';
-@use 'base/document';
-@use 'layouts/shell';
-@use 'layouts/application-frame';
-@use 'components/button';
-@use 'components/text-field';
-@use 'components/notice';
-@use 'components/content-state';
-@use 'components/content-panel';
-@use 'components/spinner';
-@use 'components/theme-selector';
-@use 'components/current-session';
-@use 'pages/activation';
-@use 'pages/login';
 @use 'pages/dashboard';
-@use 'pages/owned-sessions';
-@use 'pages/users';
-@use 'pages/invitation';
-@use 'pages/invite-user';
 @use 'components/swagger';
-@use 'base/accessibility';

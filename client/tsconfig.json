@@ -4,7 +4,12 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "paths": { "@/*": ["./src/*"] },
+    "preserveSymlinks": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@fixtures/*": ["./tests/*"],
+      "@fixtures/transport": ["./node_modules/@fight/react/dist/api/ApiClient.d.ts"]
+    },
     "jsx": "react-jsx",
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -18,5 +23,5 @@
     "allowImportingTsExtensions": true,
     "types": ["vitest/globals", "node"]
   },
-  "include": ["src", "tests", "vitest.config.ts"]
+  "include": ["src", "tests", "node_modules/@fight/react/tests", "vitest.config.ts"]
 }

@@ -1,12 +1,11 @@
 import { useState, useSyncExternalStore } from 'react';
 
+import { ThemePreferenceStore } from '@fight/react/controls';
+import { ShellLayout } from '@fight/react/controls';
+import { LoadingPage } from '@fight/react/controls';
+import { NotFoundPage } from '@fight/react/controls';
+import { SystemErrorPage } from '@fight/react/controls';
 import { expect, userEvent, within } from 'storybook/test';
-
-import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
-import { ShellLayout } from '@/layouts/ShellLayout';
-import { LoadingPage } from '@/pages/LoadingPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { SystemErrorPage } from '@/pages/SystemErrorPage';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

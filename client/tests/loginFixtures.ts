@@ -1,12 +1,12 @@
-import { ApiClient } from '@/api/ApiClient';
-import { CsrfProofService } from '@/features/auth/CsrfProofService';
-import { LoginService } from '@/features/auth/LoginService';
-import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { CsrfProofService } from '@fight/react/account';
+import { LoginService } from '@fight/react/account';
+import { MemoryAccessToken } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 import { jsonResponse } from './activationFixtures';
 
-import type { ApiTransport } from '@/api/ApiClient';
+import type { ApiTransport } from '@fight/react/account';
 
 const rule = (type: string, args: string[], message: string) => ({
   type,
@@ -52,7 +52,7 @@ export function loginDependencies(
   const tokens = new MemoryAccessToken();
   const csrfCalls: string[] = [];
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       fetch: (url, init) => {
         if (url.endsWith('/validations/login'))

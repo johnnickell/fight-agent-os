@@ -1,7 +1,7 @@
+import { AuthorityCache } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiClient } from '@/api/ApiClient';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { decodeSwaggerDocument } from '@/features/swagger/SwaggerDocument';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 
@@ -9,9 +9,7 @@ import { principal } from '../../authorityFixtures';
 
 const configuration = {
   schemaVersion: 2,
-  apiBasePath: '/api/v1',
-  appDebug: false,
-  swaggerAvailable: true
+  apiBasePath: '/api/v1'
 } as const;
 const document = {
   openapi: '3.0.3',

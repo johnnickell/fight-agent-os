@@ -1,8 +1,8 @@
+import { observeAuthorityResume } from '@fight/react/account';
+import { PermissionButton } from '@fight/react/controls';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PermissionButton } from '@/components/PermissionButton';
-import { observeAuthorityResume } from '@/features/authority/AuthorityCache';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { GuardedRoute } from '@/routes/GuardedRoute';
@@ -11,7 +11,7 @@ import { deferred } from '../apiFixtures';
 import { applicationSession } from '../applicationFixtures';
 import { principal } from '../authorityFixtures';
 
-import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
+import type { PrincipalLoadResult } from '@fight/react/account';
 
 const owners: ReturnType<typeof applicationSession>[] = [];
 afterEach(() => {

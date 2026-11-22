@@ -1,7 +1,7 @@
+import { AuthorityCache } from '@fight/react/account';
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import DashboardPage from '@/pages/DashboardPage';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
@@ -10,7 +10,7 @@ import { deferred } from '../apiFixtures';
 import { applicationSession } from '../applicationFixtures';
 import { principal } from '../authorityFixtures';
 
-import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
+import type { PrincipalLoadResult } from '@fight/react/account';
 
 const owned: { dispose: () => void }[] = [];
 afterEach(() => owned.splice(0).forEach((owner) => owner.dispose()));

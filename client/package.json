@@ -9,11 +9,13 @@
   },
   "packageManager": "npm@11.19.1",
   "scripts": {
+    "package-build": "node scripts/build-package.mjs",
+    "pack-check": "node scripts/qualify-package.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.catalog.json",
     "lint": "eslint . --max-warnings=0",
     "lint-fix": "eslint . --fix --max-warnings=0",
-    "format-check": "prettier --check .",
-    "format": "prettier --write .",
+    "format-check": "prettier --check . '../packages/react/{src,stories,styles,tests}/**/*' '../packages/react/*.json' --config .prettierrc.json",
+    "format": "prettier --write . '../packages/react/{src,stories,styles,tests}/**/*' '../packages/react/*.json' --config .prettierrc.json",
     "test": "vitest run --configLoader native",
     "coverage": "vitest run --configLoader native --coverage",
     "build": "node scripts/build.mjs",
@@ -24,6 +26,7 @@
     "storybook-capture": "node scripts/capture-catalog.mjs"
   },
   "dependencies": {
+    "@fight/react": "file:../packages/react",
     "bootstrap": "5.3.8",
     "formik": "2.4.9",
     "react": "19.3.0",

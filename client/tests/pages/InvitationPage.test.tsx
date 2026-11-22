@@ -1,18 +1,17 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import InvitationPage from '@/pages/InvitationPage';
-import { matchApplicationRoute } from '@/routes/applicationRoutes';
-
-import { deferred } from '../apiFixtures';
+import { InvitationPage } from '@fight/react/account';
+import { deferred } from '@fixtures/apiFixtures';
 import {
   invitationDependencies,
   invitationResponse,
   invitationTarget
-} from '../invitationFixtures';
+} from '@fixtures/invitationFixtures';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { AuthorityCache } from '@/features/authority/AuthorityCache';
+import { matchApplicationRoute } from '@/routes/applicationRoutes';
+
+import type { AuthorityCache } from '@fight/react/account';
 
 async function submitRecovery(operation: 'retry' | 'resend' | 'correct') {
   if (operation === 'retry') {
@@ -195,7 +194,7 @@ describe('Pending invitation', () => {
     expect(route?.requirements).toContainEqual({ kind: 'permissions', all: ['READ_USERS'] });
     expect(route?.intendedRoute).toBeUndefined();
     for (const suffix of [
-      '../users',
+      '@fixtures/users',
       `${id}?actor=other`,
       `${id}#secret`,
       'invalid',

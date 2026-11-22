@@ -290,7 +290,9 @@ try {
         'Installed frontend lock/runtime' => ['node', 'scripts/dependencies.mjs'],
         'Frontend Node version'           => ['node', '--version'],
         'Frontend npm version'            => ['npm', '--version'],
-        'Frontend dependency versions'    => ['npm', 'ls', '--depth=0']
+        'Frontend dependency versions'    => ['npm', 'ls', '--depth=0'],
+        'Frontend shared package'          => ['npm', 'run', 'package-build'],
+        'Frontend packed consumer'         => ['npm', 'run', 'pack-check']
     ];
     $frontendChecks = [
         'typecheck', 'lint', 'format-check', 'coverage', 'build-check',

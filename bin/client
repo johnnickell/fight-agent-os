@@ -6,6 +6,8 @@ image='node@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d
 browser_base='mcr.microsoft.com/playwright@sha256:57b65fdc9ceabe0ef613124c7bbe2babcf9362c4d85e382fe3b03604e84b428a'
 browser_image=$(./bin/runtime image-name client-browser)
 network=none
+package_mode=readonly
+dist_mode=readonly
 port=''
 source_mode=readonly
 build_mode=readonly
@@ -51,22 +53,25 @@ case "${1:-}" in
     check)
         # Separate containers share the same installed lock/runtime, not a second toolchain.
         started=$(date +%s)
-        for step in versions typecheck lint format-check coverage build-check storybook-build storybook-test storybook-capture; do
+        for step in versions package-build pack-check typecheck lint format-check coverage build-check storybook-build storybook-test storybook-capture; do
             printf '\n== Frontend %s ==\n' "$step"
             ./bin/client "$step"
         done
         printf '\nFrontend checks passed in %ss\n' "$(($(date +%s) - started))"
         exit 0 ;;
-    lint-fix|format) source_mode=''; set -- npm run "$1" ;;
-    build) build_mode=''; set -- npm run build ;;
-    typecheck|lint|format-check|test|coverage|build-check|storybook-build) set -- npm run "$1" ;;
-    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|lint-fix|format-check|format|test|coverage|build|build-check|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
+    format) source_mode=''; package_mode=''; set -- npm run "$1" ;;
+    lint-fix) source_mode=''; set -- npm run "$1" ;;
+    package-build) dist_mode=''; set -- npm run package-build ;;
+    build) build_mode=''; dist_mode=''; set -- sh -c 'npm run package-build && npm run build' ;;
+    pack-check|typecheck|lint|format-check|test|coverage|build-check|storybook-build) set -- npm run "$1" ;;
+    *) echo 'Usage: ./bin/client {setup|lock|versions|package-build|pack-check|typecheck|lint|lint-fix|format-check|format|test|coverage|build|build-check|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
 esac
 
 if [ "$storage_checked" = no ]; then
     ./bin/runtime storage-admit --protect-image "$image"
 fi
-./bin/runtime paths var/client/build var/client/check .runs/build/reports/client .runs/cache/client
+./bin/runtime paths var/client/build var/client/check var/client/shared-react packages/react/dist \
+    .runs/build/reports/client .runs/cache/client
 if [ "$verify_install" = yes ]; then
     if [ ! -f client/node_modules/.fight-install.json ]; then
         echo 'Missing frontend install receipt; run ./bin/client setup explicitly' >&2
@@ -83,6 +88,8 @@ exec ./bin/runtime docker run --rm --pull=never --network="$network" ${port:+--p
     --env STORYBOOK_DISABLE_TELEMETRY=1 --env HOME=/tmp --env CI=1 --env TZ=UTC \
     --env npm_config_cache=/app/.runs/cache/client/npm --env npm_config_update_notifier=false \
     --mount "type=bind,source=$(pwd)/client,target=/app/client${source_mode:+,$source_mode}" \
+    --mount "type=bind,source=$(pwd)/packages/react,target=/app/packages/react${package_mode:+,$package_mode}" \
+    --mount "type=bind,source=$(pwd)/var/client/shared-react,target=/app/packages/react/dist${dist_mode:+,$dist_mode}" \
     --mount "type=bind,source=$(pwd)/var/client/build,target=/app/var/client/build${build_mode:+,$build_mode}" \
     --mount "type=bind,source=$(pwd)/var/client/check,target=/app/var/client/check" \
     --mount "type=bind,source=$(pwd)/.runs/build/reports/client,target=/app/.runs/build/reports/client" \

@@ -1,19 +1,18 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { apiFailure } from '@/api/ApiResult';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import UsersPage from '@/pages/UsersPage';
-import { matchApplicationRoute } from '@/routes/applicationRoutes';
-
+import { apiFailure } from '@fight/react/account';
+import { AuthorityCache } from '@fight/react/account';
+import { UsersPage } from '@fight/react/account';
 import {
   directoryDependencies,
   directoryPage,
   directoryPermissions,
   directoryResponse,
   directoryUser
-} from '../userDirectoryFixtures';
+} from '@fixtures/userDirectoryFixtures';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { matchApplicationRoute } from '@/routes/applicationRoutes';
 
 const caches: AuthorityCache[] = [];
 afterEach(() => {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
+import { InviteUserPage } from '@fight/react/account';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import InviteUserPage from '@/pages/InviteUserPage';
 
 import { jsonResponse } from '../tests/apiFixtures';
 import {

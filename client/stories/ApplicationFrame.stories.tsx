@@ -1,26 +1,28 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
+import { apiFailure } from '@fight/react/account';
+import { MemoryAccessToken } from '@fight/react/account';
+import { PasswordChangeService } from '@fight/react/account';
+import { SessionCoordinator } from '@fight/react/account';
+import { AuthorityCache } from '@fight/react/account';
+import { InvitationIssuanceService } from '@fight/react/account';
+import { InvitationService } from '@fight/react/account';
+import { OwnedSessionsService } from '@fight/react/account';
+import { UserDirectoryService } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { BrandProvider, ThemePreferenceStore } from '@fight/react/controls';
+import { ApiClient } from '@fixtures/transport';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ApiClient } from '@/api/ApiClient';
-import { apiFailure } from '@/api/ApiResult';
-import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
-import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { InvitationIssuanceService } from '@/features/invitations/InvitationIssuanceService';
-import { InvitationService } from '@/features/invitations/InvitationService';
-import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
-import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
-import { UserDirectoryService } from '@/features/users/UserDirectoryService';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
 import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 
-import type { ThemePreference } from '@/features/theme/ThemePreference';
+import { harborBrand } from './HarborBrand';
+
+import type { ThemePreference } from '@fight/react/controls';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 function FrameExample({
@@ -100,9 +102,7 @@ function FrameExample({
       passwordChange: new PasswordChangeService(
         new ApiClient({
           schemaVersion: 2,
-          apiBasePath: '/api/v1',
-          appDebug: false,
-          swaggerAvailable: false
+          apiBasePath: '/api/v1'
         }),
         authority,
         coordinator.terminal
@@ -110,9 +110,7 @@ function FrameExample({
       invitationIssuance: new InvitationIssuanceService(
         new ApiClient({
           schemaVersion: 2,
-          apiBasePath: '/api/v1',
-          appDebug: false,
-          swaggerAvailable: false
+          apiBasePath: '/api/v1'
         }),
         authority,
         { invalidated: () => {}, accessRejected: () => {}, authorityRejected: () => {} }
@@ -120,9 +118,7 @@ function FrameExample({
       invitations: new InvitationService(
         new ApiClient({
           schemaVersion: 2,
-          apiBasePath: '/api/v1',
-          appDebug: false,
-          swaggerAvailable: false
+          apiBasePath: '/api/v1'
         }),
         authority,
         {
@@ -134,25 +130,19 @@ function FrameExample({
       users: new UserDirectoryService(
         new ApiClient({
           schemaVersion: 2,
-          apiBasePath: '/api/v1',
-          appDebug: false,
-          swaggerAvailable: false
+          apiBasePath: '/api/v1'
         })
       ),
       sessions: new OwnedSessionsService(
         new ApiClient({
           schemaVersion: 2,
-          apiBasePath: '/api/v1',
-          appDebug: false,
-          swaggerAvailable: false
+          apiBasePath: '/api/v1'
         })
       ),
       swagger: new SwaggerService(
         new ApiClient({
           schemaVersion: 2,
-          apiBasePath: '/api/v1',
-          appDebug: false,
-          swaggerAvailable: false
+          apiBasePath: '/api/v1'
         }),
         authority,
         false,
@@ -161,7 +151,7 @@ function FrameExample({
       ),
       schemas: new PublicSchemaService(
         new ApiClient(
-          { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+          { schemaVersion: 2, apiBasePath: '/api/v1' },
           { fetch: () => Promise.resolve(new Response('', { status: 503 })) }
         )
       )
@@ -278,6 +268,34 @@ export const DashboardRouteReturn: Story = {
 };
 export const AccountSeam: Story = { args: { initial: '/account' } };
 export const InvitationSeam: Story = { args: { initial: '/admin/invitations' } };
+
+const harborFrame: Story = {
+  parameters: { harbor: true },
+  decorators: [
+    (Story) => (
+      <BrandProvider brand={harborBrand}>
+        <Story />
+      </BrandProvider>
+    )
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const utilities = await canvas.findByRole('banner', { name: 'Application utilities' });
+    await expect(within(utilities).getByRole('img', { name: 'Harbor sailboat' })).toBeVisible();
+    await expect(canvasElement.ownerDocument.title).toMatch(/ — Harbor Desk$/);
+  }
+};
+export const HarborAccountLight: Story = {
+  ...harborFrame,
+  args: { initial: '/account', preference: 'light' },
+  globals: { viewport: { value: 'wide' } }
+};
+export const HarborAdminDarkNarrow: Story = {
+  ...harborFrame,
+  args: { initial: '/admin/invitations', preference: 'dark' },
+  globals: { viewport: { value: 'narrow' } },
+  parameters: { ...harborFrame.parameters, mode: 'dark' }
+};
 export const AccountMenuKeyboard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

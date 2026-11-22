@@ -306,8 +306,9 @@ permission execution order. See [API input sources and limits](../api/README.md#
 ## Frontend conventions
 
 For frontend changes, follow the [client conventions](../../client/README.md#frontend-conventions): mirrored
-`client/tests/`, application-root imports, semantic/import lint and explicit formatting, with default SCSS
-separate in `client/styles/`. That document owns composition order, theme-extension limits, supported tooling
+tests in their owning application or library, application-root imports in the host, semantic/import lint, and
+explicit formatting. Shared style defaults live under `packages/react/styles/`; host fonts and product styles
+live under `client/styles/`. The client guide owns composition order, theme-extension limits, supported tooling
 and read-only check versus explicit fix/install commands. Preserve runtime behavior and accessibility when
 changing organization or tooling; verify the production shell and catalog through their actual builds/browsers.
 

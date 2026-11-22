@@ -1,18 +1,19 @@
-import { apiFailure, type ApiResult } from '@/api/ApiResult';
-import { hasExactKeys } from '@/api/decodeResponse';
-import { CatalogService, decodeCatalogRole } from '@/features/authority/CatalogService';
-import { decodePrincipalResponse } from '@/features/authority/CurrentPrincipalService';
-import { evaluateAccess } from '@/features/authority/evaluateAccess';
+import { apiFailure, type ApiResult } from '@fight/react/account';
+import { hasExactKeys } from '@fight/react/account';
+import { CatalogService, decodeCatalogRole } from '@fight/react/account';
+import { decodePrincipalResponse } from '@fight/react/account';
+import { evaluateAccess } from '@fight/react/account';
+
 import {
   decodeSwaggerDocument,
   supportsSwaggerOperation
 } from '@/features/swagger/SwaggerDocument';
 
-import type { ApiClient } from '@/api/ApiClient';
-import type { AuthorityCache, AuthorityScope } from '@/features/authority/AuthorityCache';
 import type { SwaggerDocument } from '@/features/swagger/SwaggerDocument';
 import type { SwaggerRequest, SwaggerResponse } from '@/features/swagger/SwaggerSystem';
 import type { safeDiagnostics } from '@/SafeDiagnostics';
+import type { ApiClient } from '@fight/react/account';
+import type { AuthorityCache, AuthorityScope } from '@fight/react/account';
 
 const requirements = [{ kind: 'permissions', all: ['READ_SWAGGER'] }] as const;
 const uuid = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
@@ -21,7 +22,7 @@ const uuid = '[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}';
 export class SwaggerService {
   readonly #catalog: CatalogService;
   constructor(
-    private readonly api: ApiClient,
+    private readonly api: Pick<ApiClient, 'get' | 'mutate' | 'getPrivateOpenApi'>,
     private readonly authority: AuthorityCache,
     readonly available: boolean,
     private readonly lifecycle: Readonly<{

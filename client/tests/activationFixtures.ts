@@ -1,11 +1,11 @@
-import { ApiClient } from '@/api/ApiClient';
-import { ActivationCredential } from '@/features/auth/ActivationCredential';
-import { ActivationService } from '@/features/auth/ActivationService';
-import { CsrfProofService } from '@/features/auth/CsrfProofService';
-import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { ActivationCredential } from '@fight/react/account';
+import { ActivationService } from '@fight/react/account';
+import { CsrfProofService } from '@fight/react/account';
+import { MemoryAccessToken } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
-import type { ApiTransport } from '@/api/ApiClient';
+import type { ApiTransport } from '@fight/react/account';
 
 const rule = (type: string, args: string, message: string, depends_on: string[] = []) => ({
   type,
@@ -64,7 +64,7 @@ export function activationDependencies(
   });
   const tokens = new MemoryAccessToken();
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       fetch: (url, init) => {
         if (url.endsWith('/validations/invitation_activation'))

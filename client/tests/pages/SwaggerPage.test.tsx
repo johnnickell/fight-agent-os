@@ -1,8 +1,8 @@
+import { AuthorityCache } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { ApiClient } from '@/api/ApiClient';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { mountSwagger } from '@/features/swagger/mountSwagger';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import SwaggerPage from '@/pages/SwaggerPage';
@@ -33,7 +33,7 @@ async function fixture(available = true) {
     )
   );
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: available },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     { fetch, accessTokens: { getAccessToken: () => 'synthetic.access.signature' } }
   );
   return {

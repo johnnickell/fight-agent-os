@@ -138,11 +138,12 @@ def prepare(safe, checkout, project, entry, initialize=False):
     # resolves inherited relative mounts/build contexts against THIS checkout.
     # Nested mount targets must exist beneath the read-only source bind. These
     # are ignored empty directories, not dependency installs or generated source.
-    for relative in ('.runs', 'var'):
+    for relative in ('.runs', 'var', 'packages/react/dist'):
         (checkout / relative).mkdir(parents=True, exist_ok=True)
     output = state / 'output'
     evidence = safe / '.runs/compose' / project
-    for path in (output, output / 'client/build', output / 'openapi', output / 'validations', evidence):
+    for path in (output, output / 'client/build', output / 'client/shared-react',
+                 output / 'openapi', output / 'validations', evidence):
         path.mkdir(parents=True, exist_ok=True)
     mounts = [{'type': 'bind', 'source': str(output), 'target': '/app/var'},
               {'type': 'bind', 'source': str(evidence), 'target': '/app/.runs'}]
@@ -151,7 +152,9 @@ def prepare(safe, checkout, project, entry, initialize=False):
     git_common = Path(text(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], checkout))
     mounts.append({'type': 'bind', 'source': str(git_common), 'target': str(git_common),
                    'read_only': True, 'bind': {'create_host_path': False}})
-    services = {'web': {'image': project + '-web', 'volumes': mounts},
+    services = {'web': {'image': project + '-web', 'volumes': [*mounts, {
+                    'type': 'bind', 'source': str(output / 'client/shared-react'),
+                    'target': '/app/packages/react/dist'}]},
                 'composer': {'image': project + '-web', 'volumes': mounts},
                 'https_php': {'image': project + '-https_php', 'volumes': [
                     {'type': 'bind', 'source': str(output / path), 'target': '/app/var/' + path,

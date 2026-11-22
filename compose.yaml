@@ -51,6 +51,7 @@ services:
       - .:/app:ro
       - ./.runs:/app/.runs
       - ./var:/app/var
+      - ./var/client/shared-react:/app/packages/react/dist
     shm_size: 256mb
     read_only: true
     # Runtime tools do not inherit other installations' secret/certificate directories.

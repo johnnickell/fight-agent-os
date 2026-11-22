@@ -1,7 +1,7 @@
-import { evaluateAccess } from '@/features/authority/evaluateAccess';
+import { evaluateAccess } from '@fight/react/account';
 
-import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
+import type { AuthorityCache } from '@fight/react/account';
 
 /**
  * Retains at most one classified navigation target in memory, never form or history state

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { AuthorityStatus } from '@/components/AuthorityStatus';
-import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
+import { evaluateAccess } from '@fight/react/account';
+import { useAuthority, useAuthorityPresentation } from '@fight/react/account';
+import { AuthorityStatus } from '@fight/react/controls';
 
-import type { AuthorityCache, AuthorityScope } from '@/features/authority/AuthorityCache';
-import type { AccessRequirement } from '@/features/authority/evaluateAccess';
 import type { IntendedRoute } from '@/routes/IntendedRoute';
+import type { AuthorityCache, AuthorityScope } from '@fight/react/account';
+import type { AccessRequirement } from '@fight/react/account';
 import type { ComponentType, ReactNode } from 'react';
 
 export type RegisteredRoute = Readonly<{

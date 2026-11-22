@@ -16,7 +16,7 @@ final class BuildCache
 {
     private const array EXCLUSIONS = [
         '.git', '.runs', 'var', '.idea', '.DS_Store', 'client/dist', 'public/build', 'planning',
-        'client/node_modules/.cache', 'client/node_modules/.vite-temp'
+        'client/node_modules/.cache', 'client/node_modules/.vite-temp', 'packages/react/dist'
     ];
 
     /**

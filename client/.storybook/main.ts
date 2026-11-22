@@ -5,7 +5,8 @@ import { applicationResolve } from '../vite.resolve.ts';
 import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: ['../stories/**/*.stories.tsx'],
+  stories: ['../stories/**/*.stories.tsx', '../node_modules/@fight/react/stories/**/*.stories.tsx'],
+  staticDirs: ['./assets'],
   addons: ['@storybook/addon-a11y'],
   framework: { name: '@storybook/react-vite', options: { builder: { configLoader: 'native' } } },
   core: { disableTelemetry: true, enableCrashReports: false },

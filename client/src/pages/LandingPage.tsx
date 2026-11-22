@@ -1,4 +1,4 @@
-import { PageHeading } from '@/components/PageHeading';
+import { PageHeading } from '@fight/react/controls';
 
 import type { ApplicationRoute } from '@/routes/applicationRoutes';
 

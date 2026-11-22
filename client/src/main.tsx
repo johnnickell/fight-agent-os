@@ -1,10 +1,12 @@
+import '@fight/react/styles.css';
 import '../styles/app.scss';
 
 import { createRoot } from 'react-dom/client';
 
-import { takeActivation } from '@/features/auth/ActivationCredential';
-import { takeReset } from '@/features/auth/ResetCredential';
-import { browserThemeEnvironment, ThemePreferenceStore } from '@/features/theme/ThemePreference';
+import { takeActivation } from '@fight/react/account';
+import { takeReset } from '@fight/react/account';
+import { browserThemeEnvironment, ThemePreferenceStore } from '@fight/react/controls';
+
 import { ShellApplication } from '@/ShellApplication';
 
 const reset = takeReset(window);
