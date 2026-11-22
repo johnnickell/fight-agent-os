@@ -134,7 +134,9 @@ final class InstallationManagedPolicy
         }
         foreach ([...$plan->getPermissions(), ...$plan->getRoles()] as $item) {
             if ($item->getAction() !== ManagedPolicyChangeAction::UNCHANGED) {
-                throw new LogicException('Managed installation authority requires reconciliation.');
+                throw new InstallationPolicyRequiresReconciliation(
+                    'Managed installation authority requires reconciliation.'
+                );
             }
         }
     }

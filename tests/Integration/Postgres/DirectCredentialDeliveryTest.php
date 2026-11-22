@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
+use App\Adapter\CredentialDelivery\CredentialExpiryRunner;
+use App\Adapter\CredentialDelivery\CredentialRecoveryRunner;
 use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\PasswordResetMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
+use App\Adapter\Mail\MailDelivery;
+use App\Adapter\Mail\MailMessage;
+use App\Adapter\Persistence\AccessControl\ActivationGrant\PostgresActivationGrantRepository;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\CredentialDelivery\ExpireCredentialDeliveryPages;
-use App\Application\CredentialDelivery\RecoverCredentialDeliveryPage;
-use App\Application\Mail\MailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -64,6 +65,8 @@ use Fight\Common\Application\Templating\TemplateEngine;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\Support\AccessClock;
 
 /**
@@ -158,6 +161,33 @@ final class DirectCredentialDeliveryTest extends TestCase
         $this->workerConnections = [];
         if (isset($this->connection)) {
             $this->connection->close();
+        }
+    }
+
+    /**
+     * Distinguishes explicit status absence from a safe found result at the real entry
+     */
+    public function testConsoleStatusReportsExplicitAbsenceAndFoundWork(): void
+    {
+        $application = $this->container->get(SafeConsoleApplication::class);
+        $grant = $this->seed('activation');
+        $absentId = ActivationDeliveryId::generate()->toString();
+        $foundId = $grant->getDelivery()->getId()->toString();
+        foreach ([[$absentId, 3], [$foundId, 0]] as [$id, $expectedExit]) {
+            $output = new BufferedOutput();
+            $exit = $application->run(
+                new ArgvInput(['console', 'credential:delivery', 'status', 'activation', $id, '--internal']),
+                $output
+            );
+            self::assertSame($expectedExit, $exit);
+            $status = json_decode($output->fetch(), true, flags: JSON_THROW_ON_ERROR);
+            if ($expectedExit === 3) {
+                self::assertSame(['found' => false, 'delivery' => null], $status);
+            } else {
+                self::assertTrue($status['found']);
+                self::assertSame($foundId, $status['delivery']['delivery_id']);
+                self::assertArrayNotHasKey('ciphertext', $status['delivery']);
+            }
         }
     }
 
@@ -601,7 +631,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         $mail->method('deliver')->willReturnCallback(static function (MailMessage $message) use (
             &$ids,
             &$digests
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             $ids[] = $message->idempotencyId;
             [, , $text, $html] = $message->content();
             $digests[] = hash('sha256', $text.$html);
@@ -610,7 +640,7 @@ final class DirectCredentialDeliveryTest extends TestCase
                 throw new \RuntimeException('Controlled interruption before SMTP.');
             }
 
-            return MailOutcome::DELIVERED;
+            return CredentialDeliveryOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),
@@ -682,7 +712,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
             &$ids,
             &$digests
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             $ids[] = $message->idempotencyId;
             [, , $text, $html] = $message->content();
             $digests[] = hash('sha256', $text.$html);
@@ -693,7 +723,7 @@ final class DirectCredentialDeliveryTest extends TestCase
                 );
             }
 
-            return MailOutcome::DELIVERED;
+            return CredentialDeliveryOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),
@@ -750,7 +780,7 @@ final class DirectCredentialDeliveryTest extends TestCase
             $other->beginTransaction();
             $other->executeStatement("SET LOCAL lock_timeout = '100ms'");
             try {
-                (new \App\Adapter\Persistence\Repository\PostgresActivationGrantRepository($other))
+                (new PostgresActivationGrantRepository($other))
                     ->replace($grant, $claim());
                 self::fail('Competing claim must not pass the live lock.');
             } catch (DriverException $exception) {
@@ -953,7 +983,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         ): CredentialDeliveryOutcome {
             $observations['transaction_active'] = $this->connection->isTransactionActive();
             // Worker B discovered before A claimed but resumes only after A's claim commits.
-            $runner = new RecoverCredentialDeliveryPage(
+            $runner = new CredentialRecoveryRunner(
                 $pausedQueries,
                 $competing->get(CommandBus::class),
                 $competing->get(Clock::class)
@@ -1126,7 +1156,7 @@ final class DirectCredentialDeliveryTest extends TestCase
         $this->container->get(Clock::class)->time = $expiry;
         $provider = new InMemoryCredentialDeliveryProvider();
         $worker = $this->freshWorker($provider);
-        $cleanup = new ExpireCredentialDeliveryPages(
+        $cleanup = new CredentialExpiryRunner(
             $worker->get(QueryBus::class),
             $worker->get(SynchronousCommandBus::class),
             $worker->get(Clock::class)
@@ -1185,7 +1215,7 @@ SQL);
         $other = $this->freshWorker(new InMemoryCredentialDeliveryProvider());
         $paused = $this->createMock(QueryBus::class);
         $paused->expects(self::exactly(2))->method('fetch')->willReturnOnConsecutiveCalls($snapshot, []);
-        $runner = new ExpireCredentialDeliveryPages(
+        $runner = new CredentialExpiryRunner(
             $paused,
             $other->get(SynchronousCommandBus::class),
             $other->get(Clock::class)
@@ -1366,7 +1396,7 @@ SQL);
             &$ids,
             &$digests,
             &$routingChecks
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             $ids[] = $message->idempotencyId;
             [$destination, , $text, $html] = $message->content();
             $routingChecks[] = !$this->connection->isTransactionActive()
@@ -1383,7 +1413,7 @@ SQL);
                 }
             }
 
-            return MailOutcome::DELIVERED;
+            return CredentialDeliveryOutcome::DELIVERED;
         });
         $provider = new PasswordResetMailProvider(
             $this->queries(),
@@ -1463,7 +1493,7 @@ SQL);
         $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
             $old,
             &$observations
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             [$destination, , $text] = $message->content();
             $observations[] = [
                 $message->idempotencyId === $old->getDelivery()->getId()->toString(),
@@ -1471,7 +1501,7 @@ SQL);
                 str_contains($text, '#user_id='.$this->userId->toString().'&credential=')
             ];
 
-            return MailOutcome::DELIVERED;
+            return CredentialDeliveryOutcome::DELIVERED;
         });
         $provider = new PasswordResetMailProvider(
             $queries,
@@ -1505,9 +1535,9 @@ SQL);
     /**
      * Creates cleanup without resolving any provider or cipher
      */
-    private function expire(Container $worker): ExpireCredentialDeliveryPages
+    private function expire(Container $worker): CredentialExpiryRunner
     {
-        return new ExpireCredentialDeliveryPages(
+        return new CredentialExpiryRunner(
             $worker->get(QueryBus::class),
             $worker->get(SynchronousCommandBus::class),
             $worker->get(Clock::class)
@@ -1548,9 +1578,9 @@ SQL);
     /**
      * Creates the actual bounded application runner using a worker's direct package buses
      */
-    private function recover(Container $worker): RecoverCredentialDeliveryPage
+    private function recover(Container $worker): CredentialRecoveryRunner
     {
-        return new RecoverCredentialDeliveryPage(
+        return new CredentialRecoveryRunner(
             $worker->get(QueryBus::class),
             $worker->get(CommandBus::class),
             $worker->get(Clock::class)

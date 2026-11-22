@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Invitation;
 
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Domain\Invitation\InvitationOperation;
-use App\Domain\Invitation\InvitationRatePolicy;
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;

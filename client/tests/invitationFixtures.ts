@@ -11,6 +11,7 @@ export function invitationTarget(overrides: Record<string, unknown> = {}) {
     delivery: {
       user_id: userId,
       activation_delivery_id: crypto.randomUUID(),
+      origin: 'private_invitation' as 'private_invitation' | 'registration',
       status: 'retry_pending',
       expires_at: '2099-11-09T12:00:00+00:00'
     },

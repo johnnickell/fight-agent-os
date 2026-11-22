@@ -6,6 +6,8 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Http\Responder\Api\V1\Invitations\IssueInvitationResponder;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
@@ -13,10 +15,9 @@ use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Application\Invitation\IssueInvitation;
+use App\Application\Authorization\InstallationAssignmentPolicy;
+use App\Application\Authorization\PermissionGuard;
 use App\Domain\Authorization\InstallationManagedPolicy;
-use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -53,6 +54,7 @@ use Slim\App;
 use Slim\Factory\AppFactory;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Slim\Psr7\Factory\StreamFactory;
 use Tests\Support\AccessClock;
 use Tests\Support\AccessTokens;
 use Tooling\OpenApi\Document;
@@ -80,6 +82,7 @@ final class InvitationApiTest extends TestCase
     private array $providerObservations = [];
     private CredentialDeliveryOutcome $providerOutcome = CredentialDeliveryOutcome::RETRYABLE_FAILURE;
     private bool $providerThrows = false;
+    private bool $revokeDuringDelivery = false;
     private TestHandler $logs;
 
     /**
@@ -179,6 +182,11 @@ final class InvitationApiTest extends TestCase
                     [$invocation->getEmail()->toString()]
                 )
             ];
+            if ($this->revokeDuringDelivery) {
+                $this->connection->executeStatement('UPDATE refresh_sessions SET revoked = true WHERE id = ?', [
+                    $this->session->getId()->toString()
+                ]);
+            }
             if ($this->providerThrows) {
                 throw new RuntimeException('SQL password=private-provider-marker https://secret.test/credential');
             }
@@ -190,7 +198,12 @@ final class InvitationApiTest extends TestCase
             ++$this->constructions;
 
             return new IssueInvitationAction(
-                $container->get(IssueInvitation::class),
+                $container->get(PermissionGuard::class),
+                $container->get(InvitationRateLimiter::class),
+                $container->get(InstallationAssignmentPolicy::class),
+                $container->get(UserRepository::class),
+                $container->get(CommandBus::class),
+                $container->get(QueryBus::class),
                 $container->get(IssueInvitationResponder::class)
             );
         });
@@ -613,7 +626,20 @@ final class InvitationApiTest extends TestCase
     }
 
     /**
-     * Reports canonical duplicates and installation policy drift without a second origin
+     * Allows an admitted request to finish and rejects the next request with the revoked session
+     */
+    public function testAdmittedIssuanceFinishesAfterRevocation(): void
+    {
+        $this->revokeDuringDelivery = true;
+        $data = $this->assertResponse($this->issue(['email' => 'new@example.test', 'mode' => 'ordinary']), 201)['data'];
+        self::assertSame('confirmed', $data['assignment']);
+        self::assertSame('confirmed', $data['audit']);
+        self::assertSame('private_invitation', $data['delivery']['origin']);
+        $this->assertResponse($this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']), 401);
+    }
+
+    /**
+     * Distinguishes canonical duplicates and an unreconciled installation
      */
     public function testConflictAndPolicy(): void
     {
@@ -695,9 +721,9 @@ final class InvitationApiTest extends TestCase
     public function testConcurrentCanonicalInvitations(string $mode, string $roleId): void
     {
         $children = [];
-        $released = false;
+        $completed = false;
         try {
-            for ($index = 0; $index < 2; ++$index) {
+            foreach (['Race@example.test', 'RACE@EXAMPLE.test'] as $email) {
                 $pipes = [];
                 $process = proc_open([
                     PHP_BINARY, '-r', 'require "vendor/autoload.php"; Tests\\Support\\InvitationRaceWorker::run();'
@@ -707,11 +733,13 @@ final class InvitationApiTest extends TestCase
                 stream_set_timeout($pipes[1], 15);
                 fwrite($pipes[0], json_encode([
                     'operation' => 'issue',
-                    'mode'      => $mode,
-                    'actor'     => $this->actor->getId()->toString(),
-                    'session'   => $this->session->getId()->toString(),
-                    'version'   => $this->actor->getAuthenticationVersion(),
-                    'now'       => $this->clock->now()->format(DATE_ATOM)
+                    'token'     => $this->token,
+                    'now'       => $this->clock->now()->format(DATE_ATOM),
+                    'body'      => [
+                        'email'               => $email,
+                        'mode'                => $mode,
+                        'confirm_super_admin' => $mode === 'super_admin'
+                    ]
                 ], JSON_THROW_ON_ERROR)."\n");
                 fflush($pipes[0]);
             }
@@ -722,16 +750,31 @@ final class InvitationApiTest extends TestCase
                 fwrite($pipes[0], "go\n");
                 fflush($pipes[0]);
             }
-            $released = true;
             $results = [];
             foreach ($children as [$process, $pipes]) {
-                $results[] = trim((string) fgets($pipes[1]));
+                $result = json_decode((string) fgets($pipes[1]), true, flags: JSON_THROW_ON_ERROR);
+                $response = new ResponseFactory()->createResponse($result['status'])
+                    ->withBody(new StreamFactory()->createStream($result['body']));
+                foreach ($result['headers'] as $name => $values) {
+                    $response = $response->withHeader($name, $values);
+                }
+                $results[$response->getStatusCode()] = $response;
             }
-            sort($results);
-            self::assertSame(['conflict', 'issued'], $results);
-            self::assertSame($roleId, $this->connection->fetchOne(
-                'SELECT role_id FROM user_role_assignments WHERE user_id = (SELECT id FROM users WHERE email = ?)',
+            $completed = true;
+            ksort($results);
+            self::assertSame([201, 409], array_keys($results));
+            $issued = $this->assertResponse($results[201], 201)['data'];
+            $conflict = $this->assertResponse($results[409], 409);
+            self::assertSame('fail', $conflict['status']);
+            self::assertStringNotContainsString($issued['user_id'], (string) $results[409]->getBody());
+            self::assertStringNotContainsString('race@example.test', strtolower((string) $results[409]->getBody()));
+            self::assertSame($issued['user_id'], $this->connection->fetchOne(
+                'SELECT id FROM users WHERE email = ?',
                 ['race@example.test']
+            ));
+            self::assertSame([$roleId], $this->connection->fetchFirstColumn(
+                'SELECT role_id FROM user_role_assignments WHERE user_id = ?',
+                [$issued['user_id']]
             ));
             self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
             self::assertSame(1, (int) $this->connection->fetchOne(
@@ -740,17 +783,22 @@ final class InvitationApiTest extends TestCase
             self::assertSame(1, (int) $this->connection->fetchOne(
                 "SELECT count(*) FROM audit_evidence WHERE action = 'user.invitation_role_confirmed'"
             ));
+            self::assertSame(1, (int) $this->connection->fetchOne(
+                "SELECT count(*) FROM audit_evidence WHERE action = 'user.invited'"
+            ));
         } finally {
+            $exits = [];
             foreach ($children as [$process, $pipes]) {
-                if (!$released) {
+                if (!$completed) {
                     proc_terminate($process);
                 }
                 foreach ($pipes as $pipe) {
                     fclose($pipe);
                 }
-                self::assertSame(0, proc_close($process));
+                $exits[] = proc_close($process);
             }
         }
+        self::assertSame([0, 0], $exits);
     }
 
     /**

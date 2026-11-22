@@ -1,20 +1,24 @@
 # Internal credential recovery
 
-TASK-00024 supplies bounded internal cleanup and delivery recovery using Fight Access Control v0.5.0. These are
-one-shot console operations, not a scheduler or product endpoint. No production provider or recovery schedule is enrolled.
+The `credential:delivery` console command runs bounded cleanup and recovery through Fight Access Control.
+These are one-shot console operations, not a scheduler or product endpoint. No production provider or recovery
+schedule is enrolled. The console adapter owns scheduling and reporting; Access Control owns delivery state,
+transitions, claim and outcome transactions, and expiry. See the [worker ownership diagram](credential-recovery/README.md).
 
 ## Adoption and data safety
 
-The current Composer lock selects Access Control v0.8.0 (`319738255e682d587642b67856039f882b9588d6`) and
-Common v1.3.0 (`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). Read the
-[v0.8.0 adoption and preserved-data guard](CUSTOM_ROLES.md#deliberate-v080-adoption) before installing it into an
-existing environment. Any historical reset generation blocks that migration until its issuing authority can be
-reconciled explicitly; do not infer it from the current User or reset/delete history. TASK-00024's original v0.5.0 adoption source was
-`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`; its migration/data-safety evidence remains historical.
-TASK-00042 qualifies the package-owned expiry-aware retry boundary and adds the separate authorized
-[invitation recovery API](INVITATION_API.md#atomic-invitation-recovery), without changing these internal commands. Install that lock, then apply migrations through the
-ordinary authorized `./bin/database migrate` operation before using recovery. TASK verification applies migrations
-only to the guarded test database; it does not migrate development or production.
+Install the repository's current Composer lock, not the versions from the earlier adoption. The worker uses
+configured buses, typed discovery results and explicit status absence; it does not change the schema or historical
+data guards. The separate
+[invitation recovery API](INVITATION_API.md#atomic-recovery-and-failure-mapping) documents the current package contract
+for authorized HTTP retry, resend and correction; these internal console commands are not substitutes for it.
+Before using recovery, apply migrations through the authorized `./bin/database migrate` operation. TASK
+verification applies migrations only to the guarded test database; it does not migrate development or production.
+
+For existing data, retain the [v0.8.0 adoption and preserved-data guard](CUSTOM_ROLES.md#deliberate-v080-adoption).
+Any historical reset generation blocks that migration until its issuing authority can be reconciled explicitly;
+do not infer it from the current User or reset/delete history. TASK-00024's v0.5.0 adoption and TASK-00042's
+v0.8.0 expiry-aware retry qualification are historical, not instructions to install those releases.
 
 `Version20261006220706` adopts non-null Permission tiers, mandatory email-grant reservation bindings and expiry-order
 indexes. It locks affected tables while checking data. Valid legacy custom-null tiers become `ADMIN_SAFE`; malformed
@@ -41,7 +45,8 @@ entry-point authorization, Agent contracts and protected managed reconciliation 
 ./bin/credential-delivery status password_reset DELIVERY_ID --internal
 ```
 
-Replace `DELIVERY_ID` with a package-generated delivery-generation ID known to the operator. Status also supports
+The one-shot wrapper invokes the same command as `./bin/console credential:delivery` in the running web tooling
+container. Replace `DELIVERY_ID` with a package-generated delivery-generation ID known to the operator. Status also supports
 `email_change`. Cleanup handles invitation/reset delivery expiry and email authority/reservation expiry; **email-change
 provider delivery remains unregistered**. No new public routes, product email-change journey or generic job types exist.
 
@@ -95,7 +100,7 @@ with a constant diagnostic.
 | 0 | Bounded work completed, cleanup budget reached, delivery contention stopped the page, or status found |
 | 1 | Runtime/preflight failure, unchanged cleanup work, or unsupported live work |
 | 2 | Missing internal acknowledgement, invalid command, ID or operational bound |
-| 3 | Exact generation status not found |
+| 3 | Exact generation status not found; JSON is `{"found":false,"delivery":null}` |
 
 Status returns the exact package-approved safe View: purpose, delivery/User IDs, revision, persisted delivery status,
 due time, expiry, attempts and classified failure/outcome timing. For claimed work, `due_at` is lease end. It excludes

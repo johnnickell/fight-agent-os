@@ -75,8 +75,9 @@ independent acceptance.
   [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172);
   TASK-00061's [ordinary invitation form](docs/engineering/ORDINARY_INVITATIONS.md) uses exact INVITE_USERS,
   a fixed ordinary API request and strict safe-ID projection; directory/status invalidation and READ_USERS-only
-  continuation reuse the same client graph. It does not replace the existing PHP issuance composition owned by
-  TASK-00577 or add elevated input. Independent technical Review and behavioral QA accepted the ordinary
+  continuation reuse the same client graph. That frontend change did not replace PHP issuance or add elevated
+  input. The [current invitation API runbook](docs/engineering/INVITATION_API.md) describes the backend flow
+  corrected by TASK-00577. Independent technical Review and behavioral QA accepted the ordinary
   journey within the evidence boundaries recorded by its TASK. TASK-00062 adds the separate
   [confirmed elevated route](docs/engineering/ELEVATED_INVITATIONS.md) using the same issuance transport
   and existing API, both exact invitation/elevation permissions, a canonical-target Cancel-first dialog,

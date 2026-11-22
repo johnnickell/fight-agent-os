@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Adapter\CredentialDelivery;
 
-use App\Application\Mail\MailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
+use App\Adapter\Mail\MailDelivery;
+use App\Adapter\Mail\MailMessage;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
@@ -68,11 +67,7 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
                 $this->templates->render('mail/invitation.html.twig', $context)
             );
 
-            return match ($this->mail->deliver($message)) {
-                MailOutcome::DELIVERED => CredentialDeliveryOutcome::DELIVERED,
-                MailOutcome::RETRYABLE_FAILURE => CredentialDeliveryOutcome::RETRYABLE_FAILURE,
-                MailOutcome::PERMANENT_FAILURE => CredentialDeliveryOutcome::PERMANENT_FAILURE
-            };
+            return $this->mail->deliver($message);
         } catch (Throwable) {
             // Do not retain, chain, log or render an exception that may contain a complete message.
             return CredentialDeliveryOutcome::RETRYABLE_FAILURE;

@@ -26,15 +26,9 @@ consume the bounded operation budget and dispatch the existing package command t
 Unknown mutation targets return generic 403. A request admitted before revocation may finish; the next request
 is freshly checked. No second blanket Application gate or revocation-through-commit serialization is promised.
 
-The currently installed package's mandatory correction callback binding trusts adapter-admitted in-process
-dispatch. The maintainer agreed removal of redundant invitation/registration-recovery authorization under
-AccessControl ADR 0010, but current supplier handlers still call those ports: TASK-00577's conflict hold remains
-until the amendment ships and is qualified/adopted. See the
-[ownership/source amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#maintainer-accesscontrol-audit-amendment).
-Do not implement a null/no-op shim to bypass the installed contract. This binding is not an independent public
-entry point, ambient trust flag or grant from a service's presence. Every actual nontrusted
-Console/MCP/other entry must establish its own actor, permission and scope before dispatch. Package business
-invariants, generation fences and required transaction/audit atomicity remain package-owned.
+Access Control v0.11.0 correction no longer uses a separate authorization callback. Request admission is not
+an ambient trust flag: every other entry must establish its own actor, permission and scope before dispatch.
+Package business invariants, generation fences and required transaction/audit atomicity remain package-owned.
 
 Install locked dependencies, migrate the selected disposable/runtime database explicitly and reconcile managed
 policy with the owning tools before serving these routes. No setup runs automatically in a gate. See
@@ -51,15 +45,16 @@ the input middleware's separate 65,536-byte ceiling does not override that narro
 
 `mode` is `ordinary` or `super_admin`, mapped only to the corresponding stable managed Role. Elevated issuance
 requires literal boolean `true` confirmation (missing/false: 422; wrong type: 400) and ASSIGN_SUPER_ADMIN.
-Issuance retains its existing Application sequencing, including fresh authority before independent assignment;
-this bounded revision does not refactor issuance, bootstrap or unrelated authentication/registration.
+The HTTP entry checks installation policy, generates the target User ID and dispatches the admitted intent to
+Agent OS's registered issuance handler. The handler does not recheck request permission during assignment.
 
 All outcomes use JSend, `Cache-Control: no-store` and sanitized correlation metadata. Actual Action/Responder
 OpenAPI attributes are authoritative; exports remain private under `var/`.
 
 - **Status GET:** `{"status":"success","data":<delivery-or-null>}`. Delivery contains exactly `user_id`,
-  `status`, `expires_at`, `activation_delivery_id` from the package `InvitationDeliveryStatusView`. A known user
-  without a generation returns null; an authorized unknown user returns 404. This endpoint no longer returns
+  `status`, `expires_at`, `activation_delivery_id` and `origin` from `InvitationDeliveryStatusView`. Origin is
+  `private_invitation` or `registration`, not a credential or authority grant. The package's explicit absence
+  maps to null for a known user without a generation; an authorized unknown user returns 404. This endpoint no longer returns
   composite email/lifecycle fields. Read those through [safe user detail](USER_DIRECTORY.md#safe-user-detail-task-00118-implementation).
 - **Retry/resend/correction:** `{"status":"success","data":null}` on completed configured command dispatch.
   No user/delivery/ID payload, repository postcondition query, inferred winner or provider receipt. The caller
@@ -93,6 +88,8 @@ a status read does not invent a clock-driven transition. A successfully recorded
 
 ## Independent issuance commits
 
+See the [issuance flow and source trace](invitation-api/README.md).
+
 Issuance retains [TASK-00037](../../planning/tasks/00037-TASK.md)'s sequencing. InvitePendingUser and AssignRoleToUser
 traverse configured buses and own independent transactions/events. Pending identity, seven-day hashed grant,
 encrypted recoverable delivery and user.invited audit commit first; delivery can start before assignment.
@@ -125,11 +122,9 @@ transaction, consumer delivery queue, private handler invocation or post-command
 completed dispatch is not independently observed proof of an effect. Configured bus/filter semantics are trusted
 composition, not permission to infer state from unrelated repository changes.
 
-Typed package not-retryable/not-resendable/pending-correction failures map to safe 409. The locked package still
-uses plain LogicException for two specific compare-and-replace rejections (activation generation changed;
-pending email changed/reserved). Only those exact plain-package rejection messages are deliberately mapped in
-resend/correction; arbitrary LogicException and subclasses propagate to safe 500, never a blanket conflict.
-The installed package has no more specific category for these two cases; this mapping adds no vendor patch.
+Typed package state conflicts and not-retryable/not-resendable/pending-correction failures map to safe 409.
+Compare-and-replace rejections use the package's typed state conflict; unknown internal failures are not
+converted to conflicts.
 
 EventDispatchFailed maps to 503 with fixed guidance:
 `Recovery outcome uncertain. Read invitation status before another operation.` It can follow committed state
@@ -141,9 +136,8 @@ normal package discovery and the internal runner find its durable generation. No
 attempts can duplicate effects after provider success/outcome-commit uncertainty. Neither retry nor resend is
 request-idempotent or exactly once; another deliberate resend can create another successor.
 
-Historical TASK-00042 qualification used Access Control v0.6.0 at dc4621d13851dd08cdf85ed9715ead24b1051e80;
-v0.5.0 failures remain historical in that TASK. Current unchanged lock: Access Control **v0.8.0** at
-319738255e682d587642b67856039f882b9588d6 and Common **v1.4.1** at a482c220d312d2ef7762c3f0d85d9fb76a7021fa.
+TASK-00577 uses the existing lock: Access Control **v0.11.0** at `6258682512e2c8d76a3fa655dd633167bd8f55b6`
+and Common **v1.5.1** at `c73690164a9f112dbf14d774c56a7c01519b88aa`.
 
 ## Browser convergence and privacy
 
@@ -154,15 +148,16 @@ assignment repair, reinvitation or inference of audit completion from a status r
 
 The [ordinary issuance form](ORDINARY_INVITATIONS.md) at `/admin/invite` sends only canonical email and
 fixed ordinary mode under INVITE_USERS. It retains only a strictly decoded safe target ID, distinguishes
-accepted/rejected/unconfirmed work and offers status only with READ_USERS. It does not change the existing
-issuance sequencing or implement TASK-00577's architecture cutover.
+accepted/rejected/unconfirmed work and offers status only with READ_USERS. It never retries issuance after an
+uncertain outcome.
 
 The status page uses the sole AuthorityCache, strict codecs and memory-only presentation. Each load deliberately reads
 invitation delivery then safe user detail. They are separately authorized committed observations, not one atomic
 cross-request snapshot. Neither uses a directory scan or route/form email as authority. Failed, refused or retired
 reads yield no partial identity/status presentation. The existing detail decoder is shared, not copied.
 
-Retry eligibility is presentation only; package admission is final. Resend/correction use named Cancel-first
+Retry eligibility is presentation only; package admission is final. The page offers email correction only for
+private invitations, not registration generations. Resend/correction use named Cancel-first
 confirmations explaining old-link invalidation, seven-day replacement and atomic email correction. Controls need
 both permissions. Mutation transport itself needs management only and accepts only the empty acknowledgement.
 
