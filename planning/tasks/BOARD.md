@@ -509,7 +509,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #222](https://github.com/johnnickell/fight-agent-os/pull/222) |
-| 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | done | — | — |
+| 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | done | — | [PR #305](https://github.com/johnnickell/fight-agent-os/pull/305) |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |
 | 4 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | — (standalone bug) | done | — | [PR #8](https://github.com/johnnickell/fight-agent-os/pull/8) |
 | 4 | [TASK-00132](00132-TASK.md) | Design the diagnosis-to-bug-TASK fix skill | — (standalone chore) | done | — | — |
