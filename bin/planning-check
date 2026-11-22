@@ -2,4 +2,40 @@
 set -eu
 
 cd "$(dirname "$0")/.."
-exec python3 scripts/planning_portfolio.py "$@"
+image=fight-agent-os-planning:8.5.12
+case "$#:${1:-}" in
+    1:--setup) exec docker build -t "$image" etc/docker/planning ;;
+    1:-h|1:--help)
+        echo 'Usage: ./bin/planning-check [--setup | --write]'
+        echo 'Prepare the image once with --setup; validate read-only by default.'
+        exit 0 ;;
+    # --ready is the archive tool's preflight, before it moves records.
+    0:|1:--write|1:--ready) ;;
+    *) echo 'Usage: ./bin/planning-check [--setup | --write]' >&2; exit 2 ;;
+esac
+
+if ! docker image inspect "$image" >/dev/null; then
+    echo 'Planning tooling image unavailable; run ./bin/planning-check --setup first.' >&2
+    exit 1
+fi
+
+root=$(pwd -P)
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+# Use one checkout mount. A nested writable planning/ mount can leave a deny-delete ACL on macOS.
+access=,readonly
+case "${1:-}" in
+    --write)
+        access=
+        set -- "$image" -n scripts/planning_portfolio.php --write ;;
+    --ready) set -- "$image" -n scripts/planning_portfolio.php --help ;;
+    *) set -- "$image" -n scripts/planning_portfolio.php ;;
+esac
+set -- --mount "type=bind,source=$root,target=$root$access" "$@"
+# A linked checkout's .git file points to shared metadata outside its source mount.
+case "$common" in
+    "$root"/*) ;;
+    *) set -- --mount "type=bind,source=$common,target=$common,readonly" "$@" ;;
+esac
+exec docker run --rm --pull=never --network=none --read-only \
+    --user "$(id -u):$(id -g)" --workdir "$root" --env HOME=/tmp \
+    --entrypoint php "$@"

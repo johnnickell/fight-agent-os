@@ -178,11 +178,17 @@ def main() -> int:
         print("Dry run only. Re-run with --apply after reviewing these moves.")
         return 0
 
+    refresh = str(ROOT / "bin/planning-check")
+    # Check the explicitly prepared runner before moving records. Stale views do not block archiving.
+    ready = subprocess.run([refresh, "--ready"], cwd=ROOT, stdout=subprocess.DEVNULL, check=False)
+    if ready.returncode:
+        return ready.returncode
+
     for source, destination in moves.items():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(source, destination)
     rewrite_links(moves)
-    return subprocess.run([str(ROOT / "bin/planning-check"), "--write"], cwd=ROOT, check=False).returncode
+    return subprocess.run([refresh, "--write"], cwd=ROOT, check=False).returncode
 
 
 if __name__ == "__main__":
