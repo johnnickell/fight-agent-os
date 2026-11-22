@@ -312,7 +312,7 @@ try {
     }
     // Counts, coverage and explicit exclusions remain in the owning tools' reports.
     $reports = [
-        'backend'  => '.runs/build/reports/backend/summary.json',
+        'backend'  => '.runs/build/reports/backend/unit-coverage.json',
         'frontend' => '.runs/build/reports/client/coverage/coverage-summary.json',
         'catalog'  => '.runs/build/reports/client/catalog-evidence/receipt.json',
         'browser'  => '.runs/build/reports/browser-smoke/summary.json'

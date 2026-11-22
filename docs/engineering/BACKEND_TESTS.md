@@ -1,24 +1,25 @@
 # Backend behavior and coverage
 
-Use `./bin/backend-tests` for the complete backend coverage phase. Run `./bin/up` after changing the CLI
-image to install the pinned Xdebug **3.5.0** driver. Locked Composer dependencies must already be installed;
-the phase does not install packages or contact providers. Xdebug is off for ordinary application execution.
+Use `./bin/backend-tests` for the complete backend phase. Run `./bin/up` after changing the CLI image to
+install Xdebug **3.5.0**. Locked Composer dependencies and a current private public-form catalog must already
+be present (`./bin/validations check`; use `./bin/validations export` to prepare it). The phase does not
+install packages or contact providers. Xdebug is off for ordinary application execution.
 
 The phase requires the running Compose `web` service and explicit test mode. It rejects unsafe PostgreSQL
-targets before connection, verifies the connected identity, resets only the guarded test schema, runs its
-migrations, then invokes PHPUnit **once**, without a suite filter. A shared local phase lock rejects overlapping
-coverage runs. Normal completion or failure after a successful reset performs a fresh guarded test-schema cleanup;
-interruption/engine failure requires process reconciliation before retry. Reinitialize with `./bin/database test-reset`
-before subsequent focused PostgreSQL tests. `phpunit.xml` partitions all tests into:
+targets before connection, verifies the connected identity, resets only the guarded test schema, and runs its
+migrations. It runs each of the disjoint suites in `phpunit.xml` once, with coverage enabled only for Unit:
 
 - **Unit:** isolated application and adapter behavior.
 - **Integration:** runtime filesystem/HTTP adapter contracts, excluding PostgreSQL.
 - **Functional:** real HTTP interactions.
 - **Postgres:** real persistence, rollback, constraints, locking and competing writes.
 
-Do not run this destructive test phase concurrently against the same test database. Development data is not
-reset. PostgreSQL races use separate connections, transaction-held locks and bounded `lock_timeout` failures;
-they do not depend on sleep-based scheduling.
+A shared local phase lock rejects overlapping runs. Do not run focused Postgres tests or reset the same test
+database concurrently with this phase. Completion or failure after a successful reset performs a fresh
+identity-guarded cleanup. Reconcile processes and database state after interruption or engine failure before
+retrying. Development data is not reset. Reinitialize with `./bin/database test-reset` before subsequent
+focused PostgreSQL tests. PostgreSQL races use separate connections, transaction-held locks and bounded
+`lock_timeout` failures; they do not depend on sleeps.
 
 ## Deterministic test time
 
@@ -43,54 +44,33 @@ come from the specified order, not generation timing. These are not byte-identic
 
 ## Reports and policy
 
-The required policy is now 100% unit-only line coverage of owned unit-testable behavior under
-[engineering standards](STANDARDS.md#tests). The implementation described below still gates combined
-Domain/Application coverage and reports Unit attribution; it does not yet enforce that new requirement.
-A combined pass must not be reported as unit-only compliance. This guidance rollout changes no coverage
-algorithm, suite or dependency setup.
+The backend phase requires 100% Unit coverage of owned unit-testable executable PHP lines under `src/`.
+The checker compiles every owned PHP file with CLI OPcache (optimization off) and uses the same Xdebug and
+PHPUnit line analysis for all of them. This keeps the denominator independent of which files the tests load.
+PHPUnit's parser-only fallback for unloaded files can count different lines than its runtime analysis. The
+compiler does not run the files, and only hits from the Unit invocation count. Inline coverage-ignore
+annotations are disabled. The checker rejects missing or unusable data, an incomplete source inventory, and
+Unit line data outside that inventory. It compares exact integers, not rounded percentages. Other suites
+retain their existing failure criteria with no coverage quotas. There is no combined result or second test run.
 
-One execution writes ignored `.runs/build/reports/backend/coverage.php`, `clover.xml`, `junit.xml`, `summary.json`,
-`domain-application.json`, and `adapter.json`.
-Old reports are removed before execution. A failed phase is incomplete even if PHPUnit emitted report files;
-only a successful complete command is a verification receipt. The PHP coverage artifact is trusted local
-output; never replace it with an externally supplied PHP file. The coverage-policy subprocess receives an explicit
-`384M` PHP memory limit to load and process this artifact. TASK-00063 reproduced the `256M` loader
-exhaustion on the legitimate 2,181-test artifact (86,295,694 bytes); the unchanged policy/artifact passed
-at `384M`, peaking at 258.3 MiB allocated (254.6 MiB used), leaving about 126 MiB allocated headroom.
-Previously, TASK-00154's 1,758-test artifact passed at `256M`, peaking at 161.5 MiB allocated
-(159.1 MiB used), after exhausting `160M`; the original 1,577-test report peaked at 129.6 MiB.
-This finite allowance applies only to policy processing, not PHPUnit or application execution, and leaves
-the web container's `2 GiB` ceiling unchanged. Coverage denominators, required threshold,
-report attribution and failure/cleanup behavior are unchanged; reassess measured growth rather than using
-unlimited memory or dropping coverage.
+The ignored `.runs/build/reports/backend/` directory holds one JUnit log per suite and `unit-coverage.json`,
+which records counts, gaps by file and line, and exact excluded lines with reasons. `unit-coverage.php` is
+trusted local output from the Unit invocation; never load an externally supplied PHP artifact. The phase
+removes its current outputs before running, under the phase lock. A failed phase is not a success receipt
+regardless of which reports exist. Line coverage does not establish branch completeness or assertion quality.
 
-The two layer reports and combined `summary.json` report **Domain/Application** and **Adapter**, with per-file executable-line counts,
-covered lines, uncovered line numbers and exact excluded executable lines with reasons. Unit, Integration
-(including Postgres), and Functional line attribution comes from test identities in that same execution.
-Those lane counts overlap and must not be summed; combined coverage is not unit coverage. Clover retains the
-raw source denominator, including the explicitly classified non-behavioral paths, for inspection.
+The existing coverage exclusions identify:
 
-`scripts/backend_coverage.php` enforces 100% meaningful Domain/Application **line** coverage. It rejects an empty
-required denominator or an omitted PHP source file. PHPUnit includes unexecuted source and disables inline
-coverage-ignore annotations. The current Adapter report is advisory rather than a 100% gate: every remaining gap stays in the
-Adapter denominator and is reported, not silently excluded or represented as 100%. The TASK records the current
-capability measurements and limits for independent assessment. Branch/path coverage is not collected by this
-phase; a line percentage does not prove branch completeness or the asserted outcome.
+- `Adapter/Persistence/Guard/DatabaseTargetGuard.php`: destructive test-tool safety, probed directly.
+- `Adapter/Validation/PublicForms.php`: explicit publication composition registry.
+- The named bus registration methods listed in `scripts/backend_coverage.php`: static message-class metadata,
+  not use-case behavior.
+- The named empty private constructors listed there: prevent instantiating static persistence helpers without
+  excluding any of their behavior.
 
-The only source exclusions are:
-
-- `Adapter/Persistence/Guard/DatabaseTargetGuard.php`: destructive test-tool safety, probed directly rather than
-  tested as product behavior.
-- `Adapter/Validation/PublicForms.php`: the explicit publication registry (composition).
-- `GetCsrfProofHandler::queryRegistration()` and the Workspace bootstrap/current-read handlers' registration
-  methods: static bus metadata, not handler behavior.
-- The eight explicitly named empty private constructors in the coverage policy: prevent instantiation of static
-  persistence helpers; their actual adapter methods remain covered.
-
-The report resolves exact executable line numbers against the current files. No entire persistence, HTTP,
-delivery, hydration or validation capability is excluded. The source boundary is `src/`; vendor code, tests,
-bootstrap/configuration, migrations, public entrypoint wiring, scripts/wrappers, generated assets and caches are
-outside it. Validate those with their owning tools, not product-suite tests or seeded tool failures.
+The checker resolves exclusions against the current files. No persistence, HTTP, delivery, hydration or
+validation capability is exempted. Vendor code, tests, bootstrap/configuration, migrations, public entrypoint
+wiring, scripts/wrappers, generated assets and caches are outside `src/`. Validate those with their owning tools.
 
 ## Focused iteration and build integration
 
@@ -98,11 +78,9 @@ outside it. Validate those with their owning tools, not product-suite tests or s
 ./bin/phpunit --testsuite Unit --filter GetCsrfProofHandlerTest
 ./bin/phpunit --testsuite Integration,Functional
 ./bin/database test                  # Existing migrated guarded test database
-./bin/backend-tests                  # Reset + migrate + one all-suite coverage execution + policy
-./bin/build                          # Still mandatory as the repository gate
+./bin/backend-tests                  # Guarded database and all suites; Unit coverage only
+./bin/build                          # Complete repository gate
 ```
 
-Focused commands are not additional canonical backend phases. The [complete gate](BUILD.md) calls
-`scripts/backend_tests.php` once with explicit test/coverage environment, replacing the old PHPUnit build step.
-It does not prepend Unit/coverage passes or rerun any suite. Run `./bin/build` for final TASK verification;
-`./bin/backend-tests` remains useful for backend-only iteration. Hosted CI uses the same complete gate.
+Focused commands are not additional canonical phases. The [complete gate](BUILD.md) calls
+`scripts/backend_tests.php` once with explicit test and coverage environment. Hosted CI uses the same gate.
