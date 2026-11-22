@@ -608,7 +608,7 @@
 | [TASK-00603](00603-TASK.md) | Adopt the shared React frontend in the CodeIgniter skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
 | [TASK-00604](00604-TASK.md) | Isolate the bundled Git-detection test from the current directory | ready-for-human | — |
 | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | done | — |
-| [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | ready-for-agent | — |
+| [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | done | — |
 | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | ready-for-agent | — |
 | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | ready-for-agent | — |
 | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | ready-for-agent | — |
