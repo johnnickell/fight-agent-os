@@ -10,10 +10,17 @@ use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\PDO\Exception as PgSqlException;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Result;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
+use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
+use Fight\AccessControl\Domain\AccessControl\User\Exception\DuplicateEmailException;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -263,6 +270,348 @@ final class PostgresUserRepositoryTest extends TestCase
     }
 
     /**
+     * Keeps a destination reservation separate from the email used for login
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testReservationClaimsOnlyTheDestinationAfterMatchingState(bool $matches): void
+    {
+        $user = $this->activeUser();
+        $reserved = clone $user;
+        $reserved->requestEmailChange(EmailAddress::fromString('New@Example.test'), $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->willReturnCallback(
+            static function (string $sql, array $parameters) use ($matches): int {
+                self::assertStringContainsString('SET pending_email_change', $sql);
+                self::assertNull($parameters['expected_pending_email_change']);
+                self::assertSame('New@Example.test', $parameters['replacement_pending_email_change']);
+                self::assertSame(1, $parameters['replacement_email_change_reservation_revision']);
+
+                return $matches ? 1 : 0;
+            }
+        );
+        $connection->expects(self::never())->method('delete');
+        $insert = $connection->expects(self::exactly($matches ? 1 : 0))->method('insert');
+        if ($matches) {
+            $insert->with('user_email_claims', [
+                'user_id'    => $user->getId()->toString(),
+                'claim_type' => 'reservation',
+                'email'      => 'new@example.test'
+            ])->willReturn(1);
+        }
+
+        self::assertSame($matches, $this->repository($connection)->replaceEmailChangeReservation($user, $reserved));
+    }
+
+    /**
+     * Moves the canonical claim and advances login authority only after a confirmation matches
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testConfirmationPromotesTheReservedAddress(bool $matches): void
+    {
+        $reserved = $this->activeUser();
+        $reserved->requestEmailChange(EmailAddress::fromString('New@Example.test'), $this->later());
+        $confirmed = clone $reserved;
+        $confirmed->confirmEmailChange(new DateTimeImmutable('2026-10-23T12:00:00Z'));
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->willReturnCallback(
+            static function (string $sql, array $parameters) use ($matches, $reserved): int {
+                self::assertStringContainsString('pending_email_change = NULL', $sql);
+                self::assertSame('New@Example.test', $parameters['expected_pending_email_change']);
+                self::assertSame('New@Example.test', $parameters['replacement_email']);
+                self::assertSame(
+                    $reserved->getAuthenticationVersion() + 1,
+                    $parameters['replacement_authentication_version']
+                );
+
+                return $matches ? 1 : 0;
+            }
+        );
+        $recovery = $connection->expects(self::exactly($matches ? 1 : 0))->method('fetchAssociative');
+        $delete = $connection->expects(self::exactly($matches ? 1 : 0))->method('delete');
+        $update = $connection->expects(self::exactly($matches ? 1 : 0))->method('update');
+        if ($matches) {
+            $id = $reserved->getId()->toString();
+            $recovery->with(self::stringContains('password_reset_grants'), [$id])->willReturn(false);
+            $delete->with('user_email_claims', ['user_id' => $id, 'claim_type' => 'reservation'])->willReturn(1);
+            $update->with('user_email_claims', ['email' => 'new@example.test'], [
+                'user_id'    => $id,
+                'claim_type' => 'canonical'
+            ])->willReturn(1);
+        }
+
+        self::assertSame(
+            $matches,
+            $this->repository($connection)->replaceEmailChangeConfirmation($reserved, $confirmed)
+        );
+    }
+
+    /**
+     * Maps a taken destination to a rejected correction and rolls back the attempted replacement
+     */
+    public function testInvitationCorrectionRollsBackWhenCanonicalClaimConflicts(): void
+    {
+        $pending = $this->user();
+        $corrected = clone $pending;
+        $corrected->correctPendingInvitationEmail(EmailAddress::fromString('Taken@Example.test'), $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->with(
+            self::stringContains('canonical_email_revision = :replacement_canonical_email_revision'),
+            self::callback(static fn (array $fields): bool => $fields['replacement_email'] === 'Taken@Example.test')
+        )->willReturn(1);
+        $connection->expects(self::once())->method('update')->with(
+            'user_email_claims',
+            ['email' => 'taken@example.test'],
+            ['user_id' => $pending->getId()->toString(), 'claim_type' => 'canonical']
+        )->willThrowException(new UniqueConstraintViolationException(
+            new PgSqlException('Synthetic canonical claim conflict', '23505'),
+            null
+        ));
+        $connection->expects(self::once())->method('rollbackSavepoint');
+
+        self::assertFalse($this->repository($connection)->replacePendingRegistration($pending, $corrected));
+    }
+
+    /**
+     * Revalidates a no-change registration against the persisted snapshot without writing
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testUnchangedRegistrationRequiresCurrentPendingIdentity(bool $matches): void
+    {
+        $user = $this->user();
+        $connection = $this->connection(inTransaction: true);
+        $result = $this->createStub(Result::class);
+        $result->method('fetchOne')->willReturn($matches ? 1 : false);
+        $connection->method('executeQuery')->willReturnCallback(
+            function (string $sql, array $parameters) use ($user, $result): Result {
+                if (str_contains($sql, 'FROM users')) {
+                    self::assertSame($user->getId()->toString(), $parameters['expected_id']);
+                    self::assertSame(UserState::PENDING_ACTIVATION->value, $parameters['expected_state']);
+
+                    return $result;
+                }
+
+                return $this->createStub(Result::class);
+            }
+        );
+        $connection->expects(self::never())->method('executeStatement');
+        $connection->expects(self::never())->method('update');
+
+        self::assertSame($matches, $this->repository($connection)->replacePendingRegistration($user, clone $user));
+    }
+
+    /**
+     * Rejects unrelated state changes before any write takes place
+     */
+    public function testActiveIdentityCannotUsePendingRegistrationOrConfirmWithoutReservation(): void
+    {
+        $active = $this->activeUser();
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::never())->method('executeStatement');
+        $connection->expects(self::never())->method('update');
+        $repository = $this->repository($connection);
+
+        self::assertFalse($repository->replacePendingRegistration($active, clone $active));
+        self::assertFalse($repository->replaceEmailChangeConfirmation($active, clone $active));
+    }
+
+    /**
+     * Writes activation authority only for the expected identity without changing email or roles
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testActivationWritesTheNewPasswordAndAuthorityRevision(bool $matches): void
+    {
+        $pending = $this->user();
+        $active = clone $pending;
+        $active->activate($this->hash(), $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->willReturnCallback(
+            function (string $sql, array $parameters) use ($pending, $matches): int {
+                self::assertStringContainsString('UPDATE users', $sql);
+                self::assertSame($pending->getId()->toString(), $parameters['expected_id']);
+                self::assertSame('pending_activation', $parameters['expected_state']);
+                self::assertNull($parameters['expected_password_hash']);
+                self::assertSame('active', $parameters['replacement_state']);
+                self::assertSame($this->hash()->toString(), $parameters['replacement_password_hash']);
+                self::assertSame(1, $parameters['replacement_authentication_authority_revision']);
+
+                return $matches ? 1 : 0;
+            }
+        );
+        $connection->expects(self::never())->method('delete');
+        $connection->expects(self::never())->method('insert');
+
+        self::assertSame($matches, $this->repository($connection)->replaceAuthenticationAuthority($pending, $active));
+    }
+
+    /**
+     * Prevents a stale role assignment replacement from removing existing grants
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testRoleAssignmentWritesRequireTheExpectedSnapshot(bool $matches): void
+    {
+        $user = $this->activeUser();
+        $role = RoleId::generate();
+        $assigned = clone $user;
+        $assigned->assignRole($role, $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->method('fetchFirstColumn')->with(self::anything(), [[$role->toString()]])
+            ->willReturn([$role->toString()]);
+        $connection->expects(self::once())->method('executeStatement')->willReturnCallback(
+            static function (string $sql, array $parameters) use ($matches): int {
+                self::assertStringContainsString('SET authorization_assignment_revision', $sql);
+                self::assertSame('{}', $parameters['expected_roles']);
+                self::assertSame(1, $parameters['replacement_authorization_assignment_revision']);
+
+                return $matches ? 1 : 0;
+            }
+        );
+        $delete = $connection->expects(self::exactly($matches ? 1 : 0))->method('delete');
+        $insert = $connection->expects(self::exactly($matches ? 1 : 0))->method('insert');
+        if ($matches) {
+            $id = $user->getId()->toString();
+            $delete->with('user_role_assignments', ['user_id' => $id])->willReturn(0);
+            $insert->with('user_role_assignments', ['user_id' => $id, 'role_id' => $role->toString()])->willReturn(1);
+        }
+
+        self::assertSame($matches, $this->repository($connection)->replaceRoleAssignments($user, $assigned));
+    }
+
+    /**
+     * Distinguishes a claimed email from an identity collision and a missing reference
+     *
+     * @phpstan-param class-string<\Throwable> $failure
+     */
+    #[DataProvider('insertConflicts')]
+    public function testAddMapsOnlyTheEmailConstraintToDuplicateEmail(
+        string $constraint,
+        bool $foreignKey,
+        string $failure,
+        string $message
+    ): void {
+        $user = $this->user();
+        $connection = $this->connection(inTransaction: true);
+        $driver = new PgSqlException(sprintf('unique constraint "%s"', $constraint), $foreignKey ? '23503' : '23505');
+        if ($foreignKey) {
+            $exception = new ForeignKeyConstraintViolationException($driver, null);
+        } else {
+            $exception = new UniqueConstraintViolationException($driver, null);
+        }
+        $claimConflict = $failure === DuplicateEmailException::class;
+        $conflictingTable = $claimConflict ? 'user_email_claims' : 'users';
+        $connection->expects(self::exactly($claimConflict ? 2 : 1))->method('insert')->willReturnCallback(
+            static function (string $table) use ($conflictingTable, $exception): int {
+                if ($table === $conflictingTable) {
+                    throw $exception;
+                }
+
+                return 1;
+            }
+        );
+        if ($claimConflict) {
+            $connection->expects(self::once())->method('rollbackSavepoint');
+        }
+
+        $this->expectException($failure);
+        $this->expectExceptionMessage($message);
+        $this->repository($connection)->add($user);
+    }
+
+    /**
+     * Supplies PostgreSQL failures with distinct application outcomes
+     *
+     * @return iterable<string, array{string, bool, class-string<\Throwable>, string}>
+     */
+    public static function insertConflicts(): iterable
+    {
+        yield 'email claim' => [
+            'uq_user_email_claims_email', false, DuplicateEmailException::class,
+            'The email address is already reserved.'
+        ];
+        yield 'identity collision' => [
+            'users_pkey', false, PersistenceConflict::class, 'The user identity is already in use.'
+        ];
+        yield 'missing reference' => [
+            'user_role_assignments_role_id_fkey', true, PersistenceConflict::class,
+            'The user identity or role reference is invalid.'
+        ];
+    }
+
+    /**
+     * Releases only the reservation and retains the canonical identity when the request is cancelled
+     */
+    public function testCancellationReleasesOnlyPendingEmailClaim(): void
+    {
+        $reserved = $this->activeUser();
+        $reserved->requestEmailChange(EmailAddress::fromString('New@Example.test'), $this->later());
+        $cancelled = clone $reserved;
+        $cancelled->cancelEmailChange(new DateTimeImmutable('2026-10-23T12:00:00Z'));
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->with(
+            self::stringContains('SET pending_email_change'),
+            self::callback(static function (array $fields): bool {
+                return $fields['expected_pending_email_change'] === 'New@Example.test'
+                    && array_key_exists('replacement_pending_email_change', $fields)
+                    && $fields['replacement_pending_email_change'] === null;
+            })
+        )->willReturn(1);
+        $connection->expects(self::never())->method('insert');
+        $connection->expects(self::once())->method('delete')->with('user_email_claims', [
+            'user_id'    => $reserved->getId()->toString(),
+            'claim_type' => 'reservation'
+        ])->willReturn(1);
+
+        self::assertTrue($this->repository($connection)->replaceEmailChangeReservation($reserved, $cancelled));
+    }
+
+    /**
+     * Compares persisted role permissions before granting the requested role to a new identity
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testRegistrationRequiresCurrentRoleState(bool $matches): void
+    {
+        $user = $this->user();
+        $permission = PermissionId::generate();
+        $role = Role::define(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_REGISTERED'),
+            [$permission],
+            $this->later()
+        );
+        $roleId = $role->getId()->toString();
+        $user->assignRole($role->getId(), $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains('FROM roles'),
+            [$roleId]
+        )->willReturn([
+            'id'         => $roleId,
+            'name'       => 'ROLE_REGISTERED',
+            'managed'    => 'f',
+            'created_at' => '2026-10-22T12:00:00Z',
+            'updated_at' => '2026-10-22T12:00:00Z',
+            'revision'   => $role->getRevision()->toString()
+        ]);
+        $permissions = $matches ? [$permission->toString()] : [];
+        $connection->method('fetchFirstColumn')->willReturnCallback(
+            static fn (string $sql): array => str_contains($sql, 'FROM role_permissions') ? $permissions : [$roleId]
+        );
+        $assignments = [];
+        $connection->expects(self::exactly($matches ? 3 : 0))->method('insert')->willReturnCallback(
+            static function (string $table, array $fields) use (&$assignments): int {
+                if ($table === 'user_role_assignments') {
+                    $assignments[] = $fields;
+                }
+
+                return 1;
+            }
+        );
+
+        self::assertSame($matches, $this->repository($connection)->addWithRoleAssignments($user, [$role]));
+        $expected = $matches ? [['user_id' => $user->getId()->toString(), 'role_id' => $roleId]] : [];
+        self::assertSame($expected, $assignments);
+    }
+
+    /**
      * Supplies matching and stale database snapshots
      *
      * @return iterable<string, array{bool}>
@@ -311,6 +660,25 @@ final class PostgresUserRepositoryTest extends TestCase
             EmailAddress::fromString('person@example.test'),
             new DateTimeImmutable('2026-10-20T12:00:00Z')
         );
+    }
+
+    /**
+     * Supplies an activated identity before a persistence transition
+     */
+    private function activeUser(): User
+    {
+        $user = $this->user();
+        $user->activate($this->hash(), new DateTimeImmutable('2026-10-21T12:00:00Z'));
+
+        return $user;
+    }
+
+    /**
+     * Supplies the next write time after activation
+     */
+    private function later(): DateTimeImmutable
+    {
+        return new DateTimeImmutable('2026-10-22T12:00:00Z');
     }
 
     /**
