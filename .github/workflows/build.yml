@@ -54,6 +54,7 @@ jobs:
             npm ci --ignore-scripts --no-fund --no-audit
             node scripts/dependencies.mjs record
             node node_modules/playwright/cli.js install --with-deps chromium
+            npm run package-build
             npm run build
           )
           php scripts/openapi.php export

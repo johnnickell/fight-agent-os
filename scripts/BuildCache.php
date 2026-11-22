@@ -240,7 +240,11 @@ final class BuildCache
                 throw new RuntimeException('Missing or cyclic symlink target.');
             }
             $record['link'] = readlink($path);
-            $record['target'] = $this->tree($real, false, $parents);
+            // The local npm link reaches the same owned package tree. Omit its generated dist
+            // here as well as at the source path; the gate compiles and packs it from source.
+            $sharedPackage = $project && $path === $this->root.'/client/node_modules/@fight/react' &&
+                $real === $this->root.'/packages/react';
+            $record['target'] = $this->tree($real, $sharedPackage, $parents);
         } elseif ($kind === 0100000) {
             $record['bytes'] = hash_file('sha256', $path);
             if ($record['bytes'] === false) {
