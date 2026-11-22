@@ -143,36 +143,96 @@ final class PostgresPasswordResetGrantRepositoryTest extends TestCase
     }
 
     /**
-     * Advances the stored generation and rolls back the terminal write if the successor collides
+     * Advances the generation only after the guarded terminal write and rolls back on collision
      */
-    public function testSuccessorConflictRollsBackRevocation(): void
-    {
+    #[DataProvider('successorOutcomes')]
+    public function testSuccessorRequiresCurrentAuthorityAndTerminalWrite(
+        bool $authority,
+        int $updated,
+        bool $conflict
+    ): void {
         $grant = $this->grant();
         $terminal = $grant->revoke($this->now()->modify('+1 minute'));
         $successor = $this->grant($grant->getUserId());
-        $connection = $this->connection($successor);
+        $connection = $this->connection($successor, $authority);
         $connection->method('fetchAssociative')->willReturn(PasswordResetGrantRecords::fields($grant) + [
             'generation' => '4'
         ]);
-        $connection->expects(self::once())->method('update')->with(
-            'password_reset_grants',
-            self::callback(static fn (array $fields): bool => $fields['delivery_ciphertext'] === null
-                && $fields['revoked_at'] === '2026-10-21 12:01:00.123456+00:00'),
-            ['id' => $grant->getId()->toString(), 'revision' => 0]
-        )->willReturn(1);
-        $connection->expects(self::once())->method('insert')->with(
-            'password_reset_grants',
-            self::callback(static fn (array $fields): bool => $fields['generation'] === 5
-                && $fields['id'] === $successor->getId()->toString())
-        )->willThrowException(new UniqueConstraintViolationException(
-            new PgSqlException('Synthetic successor collision', '23505'),
-            null
-        ));
-        $connection->expects(self::once())->method('rollbackSavepoint');
+        $update = $connection->expects(self::exactly((int) $authority))->method('update');
+        if ($authority) {
+            $update->with(
+                'password_reset_grants',
+                self::callback(static fn (array $fields): bool => $fields['delivery_ciphertext'] === null
+                    && $fields['revoked_at'] === '2026-10-21 12:01:00.123456+00:00'),
+                ['id' => $grant->getId()->toString(), 'revision' => 0]
+            )->willReturn($updated);
+        }
+        $insert = $connection->expects(self::exactly($authority ? $updated : 0))->method('insert');
+        if ($authority && $updated === 1) {
+            $insert->with(
+                'password_reset_grants',
+                self::callback(static fn (array $fields): bool => $fields['generation'] === 5
+                    && $fields['id'] === $successor->getId()->toString())
+            );
+            if ($conflict) {
+                $insert->willThrowException(new UniqueConstraintViolationException(
+                    new PgSqlException('Synthetic successor collision', '23505'),
+                    null
+                ));
+            } else {
+                $insert->willReturn(1);
+            }
+        }
+        $connection->expects(self::exactly((int) $conflict))->method('rollbackSavepoint');
 
-        self::assertFalse(
+        self::assertSame(
+            $authority && $updated === 1 && !$conflict,
             new PostgresPasswordResetGrantRepository($connection)->replaceWithSuccessor($grant, $terminal, $successor)
         );
+    }
+
+    /**
+     * Refuses to add a previously revoked grant as an initial generation
+     */
+    public function testRevokedGrantCannotBeInitialGeneration(): void
+    {
+        $grant = $this->grant();
+        $connection = $this->connection($grant);
+        $connection->expects(self::never())->method('insert');
+
+        self::assertFalse(new PostgresPasswordResetGrantRepository($connection)->add(
+            $grant->revoke($this->now()->modify('+1 minute'))
+        ));
+    }
+
+    /**
+     * Rejects a proposed replacement for a different grant without touching stored delivery
+     */
+    public function testDifferentGrantCannotReplaceCurrentGeneration(): void
+    {
+        $grant = $this->grant();
+        $other = $this->grant($grant->getUserId());
+        $connection = $this->connection($grant);
+        $connection->method('fetchAssociative')->willReturn(PasswordResetGrantRecords::fields($grant));
+        $connection->expects(self::never())->method('update');
+
+        self::assertFalse(new PostgresPasswordResetGrantRepository($connection)->replace(
+            $grant,
+            $other->revoke($this->now()->modify('+1 minute'))
+        ));
+    }
+
+    /**
+     * Supplies admitted, stale and conflicting successor writes
+     *
+     * @return iterable<string, array{bool, int, bool}>
+     */
+    public static function successorOutcomes(): iterable
+    {
+        yield 'changed authority' => [false, 0, false];
+        yield 'stale guarded write' => [true, 0, false];
+        yield 'conflicting successor' => [true, 1, true];
+        yield 'new generation' => [true, 1, false];
     }
 
     /**

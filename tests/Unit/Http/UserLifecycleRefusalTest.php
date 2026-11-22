@@ -79,6 +79,31 @@ final class UserLifecycleRefusalTest extends TestCase
     }
 
     /**
+     * Refuses self-deletion without dispatching a lifecycle command
+     */
+    public function testDeleteRefusesCurrentUser(): void
+    {
+        $actor = UserId::generate();
+        $route = $this->createStub(RouteInterface::class);
+        $route->method('getArgument')->willReturn($actor->toString());
+        $request = new ServerRequestFactory()->createServerRequest('DELETE', '/api/v1/users/'.$actor->toString())
+            ->withAttribute(
+                AuthenticationContext::class,
+                new AuthenticationContext($actor, RefreshSessionId::generate(), 1)
+            )
+            ->withAttribute(JsonBody::class, ['confirm' => true])
+            ->withAttribute(RouteContext::ROUTE, $route)
+            ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
+            ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
+        $commands = $this->createMock(CommandBus::class);
+        $commands->expects(self::never())->method('execute');
+        $responder = new UserLifecycleResponder(new JSendResponseFactory(new ResponseFactory(), new StreamFactory()));
+
+        $this->expectException(StateConflict::class);
+        new DeleteUserAction($commands, $responder)->handle($request);
+    }
+
+    /**
      * Supplies successful changes, exact supplier refusals and unrelated absence
      *
      * @return iterable<string, array{string, ?string, bool}>

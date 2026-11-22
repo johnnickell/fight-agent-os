@@ -161,6 +161,25 @@ final class PostgresActivationGrantRepositoryTest extends TestCase
     }
 
     /**
+     * Refuses a replacement if the predecessor remains issued
+     */
+    public function testSuccessorCannotLeavePredecessorIssued(): void
+    {
+        $issued = $this->grant();
+        $successor = $this->grant($issued->getUserId());
+        $connection = $this->connection($issued->getUserId());
+        $connection->expects(self::once())->method('fetchAssociative')->willReturn(
+            ActivationGrantRecords::fields($issued) + ['generation' => '4']
+        );
+        $connection->expects(self::never())->method('update');
+        $connection->expects(self::never())->method('insert');
+
+        self::assertFalse(
+            new PostgresActivationGrantRepository($connection)->replaceWithSuccessor($issued, $issued, $successor)
+        );
+    }
+
+    /**
      * Supplies successful, stale, and conflicting renewal results
      *
      * @return iterable<string, array{int, bool}>

@@ -31,6 +31,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
+use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -104,6 +105,85 @@ final class PostgresUserRepositoryTest extends TestCase
             $restored->getEmailChangeReservationRevision(),
             $restored->getCanonicalEmailRevision()
         ]);
+    }
+
+    /**
+     * Keeps the count independent of the requested page and uses an identity tie breaker
+     */
+    public function testPageBeyondLastRecordStillReportsTotal(): void
+    {
+        $connection = $this->connection();
+        $connection->expects(self::exactly(2))->method('executeQuery')->willReturnCallback(
+            function (string $sql): Result {
+                $result = $this->createStub(Result::class);
+                if (str_contains($sql, 'COUNT(*)')) {
+                    self::assertSame('SELECT COUNT(*) FROM users', $sql);
+                    $result->method('fetchOne')->willReturn('3');
+                } else {
+                    self::assertStringContainsString('ORDER BY created_at, id LIMIT 2 OFFSET 4', $sql);
+                    $result->method('fetchAllAssociative')->willReturn([]);
+                }
+
+                return $result;
+            }
+        );
+
+        $page = $this->repository($connection)->getAll(new Pagination(3, 2));
+
+        self::assertSame(3, $page->totalRecords());
+        self::assertSame([], iterator_to_array($page->records()));
+    }
+
+    /**
+     * Reports whether the exact role is assigned without loading users
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testRoleAssignmentExistence(bool $matches): void
+    {
+        $role = RoleId::generate();
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('fetchOne')->with(
+            'SELECT 1 FROM user_role_assignments WHERE role_id = ? LIMIT 1',
+            [$role->toString()]
+        )->willReturn($matches ? 1 : false);
+
+        self::assertSame($matches, $this->repository($connection)->hasRoleAssignment($role));
+    }
+
+    /**
+     * Locks only the requested authoritative role and refuses a missing reference
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testValidatesRoleReference(bool $matches): void
+    {
+        $role = RoleId::generate();
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('fetchFirstColumn')->with(
+            self::stringContains('FOR KEY SHARE'),
+            [[$role->toString()]]
+        )->willReturn($matches ? [$role->toString()] : []);
+
+        self::assertSame($matches, $this->repository($connection)->validateRoleAssignmentReference($role));
+    }
+
+    /**
+     * Refuses unchanged replacements before they can mutate an unrelated authority component
+     */
+    public function testInvalidReplacementsDoNotWrite(): void
+    {
+        $active = $this->activeUser();
+        $pending = $this->user();
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::never())->method('executeStatement');
+        $repository = $this->repository($connection);
+
+        self::assertFalse($repository->addWithRoleAssignments($active, []));
+        self::assertFalse($repository->addWithRoleAssignments($pending, []));
+        self::assertFalse($repository->replaceAuthenticationAuthority($active, clone $active));
+        self::assertFalse($repository->replaceRoleAssignments($active, clone $active));
+        self::assertFalse($repository->replaceEmailChangeReservation($active, clone $active));
+        self::assertFalse($repository->replacePendingInvitationEmail($pending, clone $pending));
+        self::assertFalse($repository->replaceLifecycleState($active, clone $active));
     }
 
     /**
@@ -352,6 +432,42 @@ final class PostgresUserRepositoryTest extends TestCase
     }
 
     /**
+     * Rolls back reservation and confirmation when their email claim cannot be written
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testEmailClaimConflictRollsBack(bool $confirmation): void
+    {
+        $active = $this->activeUser();
+        $reserved = clone $active;
+        $reserved->requestEmailChange(EmailAddress::fromString('New@Example.test'), $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->willReturn(1);
+        $connection->expects(self::once())->method('rollbackSavepoint');
+        $repository = $this->repository($connection);
+        $conflict = new UniqueConstraintViolationException(new PgSqlException('Synthetic claim conflict'), null);
+        if (!$confirmation) {
+            $connection->expects(self::once())->method('insert')->with('user_email_claims', [
+                'user_id' => $active->getId()->toString(), 'claim_type' => 'reservation', 'email' => 'new@example.test'
+            ])->willThrowException($conflict);
+            self::assertFalse($repository->replaceEmailChangeReservation($active, $reserved));
+
+            return;
+        }
+        $confirmed = clone $reserved;
+        $confirmed->confirmEmailChange($this->later()->modify('+1 day'));
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains('password_reset_grants'),
+            [$active->getId()->toString()]
+        )->willReturn(false);
+        $connection->expects(self::once())->method('update')->with(
+            'user_email_claims',
+            ['email' => 'new@example.test'],
+            ['user_id' => $active->getId()->toString(), 'claim_type' => 'canonical']
+        )->willThrowException($conflict);
+        self::assertFalse($repository->replaceEmailChangeConfirmation($reserved, $confirmed));
+    }
+
+    /**
      * Maps a taken destination to a rejected correction and rolls back the attempted replacement
      */
     public function testInvitationCorrectionRollsBackWhenCanonicalClaimConflicts(): void
@@ -375,6 +491,31 @@ final class PostgresUserRepositoryTest extends TestCase
         $connection->expects(self::once())->method('rollbackSavepoint');
 
         self::assertFalse($this->repository($connection)->replacePendingRegistration($pending, $corrected));
+    }
+
+    /**
+     * Moves only the canonical invitation claim after the guarded user update succeeds
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testInvitationCorrectionRequiresMatchingSnapshot(bool $matches): void
+    {
+        $pending = $this->user();
+        $corrected = clone $pending;
+        $corrected->correctPendingInvitationEmail(EmailAddress::fromString('New@Example.test'), $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->with(
+            self::stringContains('canonical_email_revision = :replacement_canonical_email_revision'),
+            self::callback(static fn (array $fields): bool => $fields['replacement_email'] === 'New@Example.test'
+                && $fields['expected_email'] === 'person@example.test')
+        )->willReturn((int) $matches);
+        $update = $connection->expects(self::exactly((int) $matches))->method('update');
+        if ($matches) {
+            $update->with('user_email_claims', ['email' => 'new@example.test'], [
+                'user_id' => $pending->getId()->toString(), 'claim_type' => 'canonical'
+            ])->willReturn(1);
+        }
+
+        self::assertSame($matches, $this->repository($connection)->replacePendingRegistration($pending, $corrected));
     }
 
     /**
@@ -480,6 +621,27 @@ final class PostgresUserRepositoryTest extends TestCase
         }
 
         self::assertSame($matches, $this->repository($connection)->replaceRoleAssignments($user, $assigned));
+    }
+
+    /**
+     * Refuses to apply role assignment if the new reference no longer exists
+     */
+    public function testMissingRoleBlocksAssignmentReplacement(): void
+    {
+        $user = $this->activeUser();
+        $assigned = clone $user;
+        $role = RoleId::generate();
+        $assigned->assignRole($role, $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('fetchFirstColumn')->with(
+            self::stringContains('FOR KEY SHARE'),
+            [[$role->toString()]]
+        )->willReturn([]);
+        $connection->expects(self::never())->method('executeStatement');
+        $connection->expects(self::never())->method('delete');
+        $connection->expects(self::never())->method('insert');
+
+        self::assertFalse($this->repository($connection)->replaceRoleAssignments($user, $assigned));
     }
 
     /**
@@ -615,6 +777,33 @@ final class PostgresUserRepositoryTest extends TestCase
         self::assertSame($matches, $this->repository($connection)->addWithRoleAssignments($user, [$role]));
         $expected = $matches ? [['user_id' => $user->getId()->toString(), 'role_id' => $roleId]] : [];
         self::assertSame($expected, $assignments);
+    }
+
+    /**
+     * Refuses a disappeared role and a mismatch between validated and requested identities
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testRegistrationRejectsMissingOrSubstitutedRole(bool $exists): void
+    {
+        $user = $this->user();
+        $user->assignRole(RoleId::generate(), $this->later());
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_REGISTERED'), [], $this->later());
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains('FROM roles'),
+            [$role->getId()->toString()]
+        )->willReturn($exists ? [
+            'id'         => $role->getId()->toString(),
+            'name'       => 'ROLE_REGISTERED',
+            'managed'    => 'f',
+            'created_at' => '2026-10-22T12:00:00Z',
+            'updated_at' => '2026-10-22T12:00:00Z',
+            'revision'   => $role->getRevision()->toString()
+        ] : false);
+        $connection->expects(self::exactly((int) $exists))->method('fetchFirstColumn')->willReturn([]);
+        $connection->expects(self::never())->method('insert');
+
+        self::assertFalse($this->repository($connection)->addWithRoleAssignments($user, [$role]));
     }
 
     /**

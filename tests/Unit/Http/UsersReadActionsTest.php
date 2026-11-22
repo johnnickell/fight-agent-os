@@ -25,6 +25,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Messaging\Query\Query;
 use Fight\Common\Domain\Messaging\Query\QueryMessage;
@@ -136,6 +137,34 @@ final class UsersReadActionsTest extends TestCase
         $this->result = null;
         $this->expectException(ResourceNotFound::class);
         $this->detail->handle($this->request);
+    }
+
+    /**
+     * Rejects malformed identifiers before querying and never echoes their raw values
+     */
+    #[DataProvider('malformedIdentifiers')]
+    public function testMalformedIdentifier(string $input): void
+    {
+        $route = $this->createStub(RouteInterface::class);
+        $route->method('getArgument')->willReturn($input);
+        try {
+            $this->detail->handle($this->request->withAttribute(RouteContext::ROUTE, $route));
+            self::fail('Malformed user identifier reached the response.');
+        } catch (ValidationException $error) {
+            self::assertSame(['user_id' => ['Invalid value.']], $error->getErrors());
+            self::assertSame([], $this->queries);
+        }
+    }
+
+    /**
+     * Supplies invalid-length and invalid-format identifiers
+     *
+     * @return iterable<array{string}>
+     */
+    public static function malformedIdentifiers(): iterable
+    {
+        yield ['private'];
+        yield [str_repeat('x', 36)];
     }
 
     /**

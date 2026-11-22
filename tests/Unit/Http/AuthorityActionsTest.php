@@ -191,14 +191,20 @@ final class AuthorityActionsTest extends TestCase
     public function testCatalogPage(bool $roles): void
     {
         $queries = $this->createMock(QueryBus::class);
-        $viewClass = $roles ? RoleView::class : PermissionView::class;
+        $permission = $this->permission('READ_PERMISSIONS');
+        $role = Role::define($this->roleId, RoleName::fromString('ROLE_READER'), [$permission->getId()], $this->at);
+        if ($roles) {
+            $records = ArrayList::of(RoleView::class)->replace([RoleView::fromRole($role)]);
+        } else {
+            $records = ArrayList::of(PermissionView::class)->replace([PermissionView::fromPermission($permission)]);
+        }
         $queries->expects(self::once())->method('fetch')->willReturnCallback(
-            static function (ListRoles|ListPermissions $query) use ($roles, $viewClass): ResultSet {
+            static function (ListRoles|ListPermissions $query) use ($roles, $records): ResultSet {
                 self::assertInstanceOf($roles ? ListRoles::class : ListPermissions::class, $query);
                 self::assertSame(3, $query->getPagination()->offset());
                 self::assertSame(3, $query->getPagination()->limit());
 
-                return new ResultSet(2, 3, 0, ArrayList::of($viewClass));
+                return new ResultSet(2, 3, 4, $records);
             }
         );
         $responder = new CatalogResponder($this->responses);
@@ -213,8 +219,18 @@ final class AuthorityActionsTest extends TestCase
             'page' => '2', 'per_page' => '3'
         ]));
         $body = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame([], $body['data']['records']);
         self::assertSame(2, $body['data']['page']);
+        self::assertSame(4, $body['data']['total_records']);
+        self::assertCount(1, $body['data']['records']);
+        $record = $body['data']['records'][0];
+        if ($roles) {
+            self::assertSame($this->roleId->toString(), $record['role_id']);
+            self::assertSame('ROLE_READER', $record['name']);
+            self::assertArrayNotHasKey('permissions', $record);
+        } else {
+            self::assertSame($permission->getId()->toString(), $record['permission_id']);
+            self::assertSame('READ_PERMISSIONS', $record['name']);
+        }
     }
 
     /**

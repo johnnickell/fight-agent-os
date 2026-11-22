@@ -48,6 +48,24 @@ final class ApiInputValidationTest extends TestCase
     }
 
     /**
+     * Refuses a declared content type on an otherwise empty no-body request
+     */
+    public function testContentTypeOnEmptyBootstrapIsRejected(): void
+    {
+        $request = $this->request()->withHeader('Content-Type', 'application/json');
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+
+        $response = $this->validation()->process($request, $next);
+
+        self::assertSame(400, $response->getStatusCode());
+        self::assertJsonStringEqualsJsonString(
+            '{"status":"fail","data":{"fields":{"body":["Body is not allowed."]}}}',
+            (string) $response->getBody()
+        );
+    }
+
+    /**
      * Rejects duplicate named cookies without passing credentials to the Action
      */
     public function test_that_duplicate_cookie_is_rejected_before_action(): void
@@ -335,14 +353,15 @@ final class ApiInputValidationTest extends TestCase
     /**
      * Checks original HTTP request-target encoding before PSR URI normalization loses it
      */
-    public function test_that_malformed_original_query_cannot_dispatch(): void
+    #[DataProvider('originalRequestTargets')]
+    public function test_that_malformed_original_query_cannot_dispatch(string $original): void
     {
         $route = $this->createStub(RouteInterface::class);
         $route->method('getCallable')->willReturn(QueryInput::class.':handle');
         $request = (new ServerRequestFactory())->createServerRequest(
             'GET',
             'https://agent-os.test/api/v1/auth/csrf?page=%GG',
-            ['REQUEST_URI' => '/api/v1/auth/csrf?page=%GG']
+            ['REQUEST_URI' => $original]
         )->withAttribute(RouteContext::ROUTE, $route)
             ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
             ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
@@ -354,6 +373,17 @@ final class ApiInputValidationTest extends TestCase
             ['query' => ['Invalid query.']],
             json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)['data']['fields']
         );
+    }
+
+    /**
+     * Supplies malformed and inconsistent original request targets
+     *
+     * @return iterable<array{string}>
+     */
+    public static function originalRequestTargets(): iterable
+    {
+        yield ['/api/v1/auth/csrf?page=%GG'];
+        yield ['/api/v1/auth/csrf?page=1'];
     }
 
     /**
@@ -419,6 +449,9 @@ final class ApiInputValidationTest extends TestCase
         yield 'missing rules' => [MissingValidation::class, 'POST'];
         yield 'conflicting sources' => [AmbiguousInput::class, 'POST'];
         yield 'unsupported rule' => [InvalidRulesInput::class, 'GET'];
+        yield 'duplicate field' => [DuplicateFieldInput::class, 'GET'];
+        yield 'invalid field name' => [InvalidFieldNameInput::class, 'GET'];
+        yield 'empty field rules' => [EmptyFieldRulesInput::class, 'GET'];
         yield 'wrong method for query' => [QueryInput::class, 'POST'];
         yield 'wrong method for JSON' => [JsonInput::class, 'GET'];
     }
