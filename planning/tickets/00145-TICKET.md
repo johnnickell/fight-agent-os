@@ -2,7 +2,7 @@
 id: TICKET-00145
 epic: EPIC-00028
 title: Validate Planning without the application stack
-status: ready-for-agent
+status: done
 ---
 
 # Validate Planning without the application stack
@@ -35,7 +35,7 @@ Show valid, invalid, and stale-view cases through the owning command. Show that 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00610](../tasks/00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | ready-for-agent |
+| [TASK-00610](../tasks/00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
