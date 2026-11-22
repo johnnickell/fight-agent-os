@@ -45,7 +45,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00610](00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | [TICKET-00145 — Validate Planning without the application stack](../tickets/00145-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00611](00611-TASK.md) | Run the existing PHP checks as a standalone pass | [TICKET-00146 — Verify PHP independently and enforce Unit-only coverage](../tickets/00146-TICKET.md) | ready-for-agent | — | — |
@@ -695,4 +694,5 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | — (standalone bug) | done | — | [PR #290](https://github.com/johnnickell/fight-agent-os/pull/290) |
 | — | [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | — (standalone chore) | done | — | [PR #302](https://github.com/johnnickell/fight-agent-os/pull/302) |
 | — | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | — (standalone chore) | done | — | [PR #306](https://github.com/johnnickell/fight-agent-os/pull/306) |
+| — | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
