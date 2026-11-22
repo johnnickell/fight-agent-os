@@ -33,6 +33,15 @@ Native GitHub jobs share one PHP setup action. The targeted **PHP pass qualifica
 with no container or client setup. It is not a replacement for **Build** or a new merge requirement. The full
 build runs the same PHP checks once and retains its Planning, frontend and browser phases.
 
+## Standalone client verification
+
+Run `./bin/client setup` and `./bin/client storybook-setup` explicitly, then `./bin/client check`.
+No application services, PostgreSQL, or backend setup are needed. On a native GitHub runner, the
+[`native-client` action](../../.github/actions/native-client/action.yml) owns the same locked tool preparation,
+and the qualification workflow invokes `npm run check` from `client/` without containers. The full build
+calls that same command once and passes `var/client/check/production/` to browser smoke. This directory
+is separate from the local application's assets in `var/client/build/`.
+
 ## Automatic build reuse
 
 `./bin/build` and native `php scripts/build.php` accept `--force`. With no option, the gate checks the latest
@@ -43,8 +52,9 @@ ignored cache pointer, not another acceptance report. Old receipts without these
 The fingerprint covers sorted project paths, file bytes, permissions and symlink targets plus their resolved
 contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `.runs/`, `var/`, IDE state,
 `.DS_Store`, legacy `client/dist/` and `public/build/`, and the two legacy frontend cache directories
-(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. Current generated OpenAPI, validation
-and live client-build inputs under `var/` are fingerprinted explicitly. Missing inputs, unreadable or special files and cyclic links
+(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. Current OpenAPI and validation exports
+under `var/` are fingerprinted explicitly. The checked client bundle used by smoke is validated as output,
+not as an input to the gate. Missing inputs, unreadable or special files and cyclic links
 disable caching; they are never silently omitted. Ordinary Markdown records under `planning/` are excluded from
 the application fingerprint: tasks, tickets, epics, progress notes and generated planning views do not rebuild
 unchanged application inputs. Every invocation first runs a fresh, read-only planning check, including cache hits.
@@ -235,7 +245,8 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
    and focused source stability. Local task runs exercise the existing shared HTTPS envelope.
 10. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
-Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
+Each mandatory command executes once. Steps 6–8 are one shared `npm run check` pass; step 9 reads that
+pass's inspected bundle and manifest without invoking the build again.
 For Pi changes, run the separate [Harness and subagent engine checks](../../harness/pi/README.md#verification-and-packaging).
 The application gate and its hosted setup do not run or provision those suites.
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).

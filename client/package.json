@@ -9,6 +9,7 @@
   },
   "packageManager": "npm@11.19.1",
   "scripts": {
+    "check": "node scripts/check.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.catalog.json",
     "lint": "eslint . --max-warnings=0",
     "lint-fix": "eslint . --fix --max-warnings=0",

@@ -32,6 +32,7 @@ def main():
     paths.add_argument('paths', nargs='+')
     storage = sub.add_parser('storage-admit')
     storage.add_argument('--protect-image', action='append', default=[])
+    sub.add_parser('project-name')
     image = sub.add_parser('image-name')
     image.add_argument('name')
     remove = sub.add_parser('finish')
@@ -59,6 +60,8 @@ def main():
                 'resources': {kind: native_ids(safe, kind, project) for kind in ('containers', 'volumes', 'networks')}}))
         elif args.action == 'storage-admit':
             storage_admit(checkout)
+        elif args.action == 'project-name':
+            print(project)
         elif args.action == 'image-name':
             print(project + '-' + args.name if isolated else 'fight-agent-os-client-browser:node24.22.1-playwright1.61.0')
         elif args.action == 'paths':

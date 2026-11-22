@@ -19,7 +19,7 @@ Use Docker and the repository wrapper; no host Node installation or global front
 
 ```sh
 ./bin/client setup        # Explicit pinned image pull and clean npm ci; requires registry access
-./bin/client storybook-setup # Explicit pinned browser image build, once per Docker host
+./bin/client storybook-setup # Explicit pinned browser image build for the selected checkout
 ./bin/client versions
 ./bin/client check        # Complete focused frontend checks; no network or dependency changes
 ./bin/client build        # Publish inspected assets for the local application (check uses scratch output)
@@ -42,8 +42,8 @@ Setup records hashes of the manifest, committed lock and npm's installed lock in
 `node_modules/.fight-install.json`. Every tooling invocation verifies this receipt and exact Node/npm versions;
 a missing/stale receipt fails with an explicit setup instruction, never an automatic install. The receipt
 is local provenance/staleness evidence, not a tamper-proof integrity check of every installed byte.
-Acceptance containers mount source and dependencies read-only, with only ignored Vite/Storybook cache mounts
-writable beneath `node_modules`. Fix/install/lock commands are the explicit exceptions.
+Acceptance containers mount source and dependencies read-only. Vite and Storybook caches live outside
+`node_modules`. Fix/install/lock commands are the explicit source or dependency write exceptions.
 
 Selected from registry engine/peer contracts. The October security candidate passes focused typing with
 the catalog-only declaration-check exception described below; see the
@@ -70,7 +70,7 @@ at installation. Retain this disclosed limitation until a compatible lint-stack 
 not establish ongoing upstream support. Exact remaining direct pins and transitive integrity hashes are in
 the manifest/lock. The [canonical repository gate](../docs/engineering/BUILD.md) runs these checks directly
 from its PHP orchestrator in the prepared web service, using the same Node/browser binary pins and installed lock.
-It does not call `bin/client check` or rerun its phases; the wrapper remains a focused iteration entrypoint.
+Both the full gate and `./bin/client check` delegate once to `npm run check` from `client/`.
 
 ### Focused frontend quality gate
 
@@ -78,15 +78,16 @@ It does not call `bin/client check` or rerun its phases; the wrapper remains a f
 and accessibility lint, non-mutating formatting, V8-instrumented Vitest/RTL, a clean ESBuild production build
 with artifact inspection, static Storybook build/inspection, Chromium story interactions/a11y, and static
 catalog captures/resource checks. Each stage fails fast. Only explicit setup/maintenance/dev commands have
-external networking; checks do not install, update or audit. `npm run check` is intentionally absent: the
-focused repository wrapper owns orchestration across the two pinned container environments; PHP owns the
-canonical gate. Both use Node 24.22.1
-and npm 11.19.1. Static captures run at most two isolated browser contexts at a time (the two widths
+external networking in Docker; checks do not install, update or audit. `./bin/client check` runs the pass in
+one Node/Chromium container without starting the application or PostgreSQL. On a native runner, prepare the
+locked Node 24.22.1/npm 11.19.1 installation and Playwright Chromium as in the
+[native client action](../.github/actions/native-client/action.yml), then run `npm run check` from `client/`. Static captures run at most two isolated browser contexts at a time (the two widths
 of one story), retaining every story/width, axe scan, screenshot and resource check. Each context closes
 before another story starts; failure stops scheduling and signals close the owned browser before exit.
 There is no percentage-only frontend gate or seeded-failure/product test of these tools.
 
 Production check output is `var/client/check/production/`, rebuilt clean without pruning live `var/client/build/`.
+The full gate's isolated browser smoke uses that checked output directly.
 `production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
 output sizes/SHA-256 hashes. `build` applies the same inspection before publishing assets/manifest and writes
 `build-*` reports. The three-field manifest is published last; no extra private configuration is serialized.
@@ -568,7 +569,7 @@ not only its tokens, so held Light/Dark and OS-following System remain coherent 
 
 ```sh
 ./bin/client setup              # Clean locked frontend install
-./bin/client storybook-setup    # Explicit pinned Playwright + Node image build, once per Docker host
+./bin/client storybook-setup    # Explicit pinned Playwright + Node image build for this checkout
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail

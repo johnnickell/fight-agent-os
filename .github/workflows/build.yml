@@ -22,27 +22,7 @@ jobs:
             php8.5-cli php8.5-fpm php8.5-pgsql php8.5-mbstring php8.5-xml \
             libnss3-tools openssl
       - uses: ./.github/actions/native-php
-      - name: Set up locked Node runtime
-        uses: actions/setup-node@v5
-        with:
-          node-version-file: client/package.json
-          package-manager-cache: false
-      - name: Explicit locked frontend and browser setup
-        run: |
-          export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/playwright"
-          printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH" >> "$GITHUB_ENV"
-          mkdir -p .runs/build/reports/client
-          npm install --global "npm@$(node -p "require('./client/package.json').engines.npm")" --ignore-scripts --no-fund --no-audit
-          # Qualify only the selected tool directories, not the runner's entire ambient PATH.
-          printf 'FIGHT_BUILD_TOOL_PATH=%s:%s:/usr/local/bin:/usr/bin:/bin\n' \
-            "$(dirname "$(command -v node)")" "$(dirname "$(command -v npm)")" >> "$GITHUB_ENV"
-          (
-            cd client
-            npm ci --ignore-scripts --no-fund --no-audit
-            node scripts/dependencies.mjs record
-            node node_modules/playwright/cli.js install --with-deps chromium
-            npm run build
-          )
+      - uses: ./.github/actions/native-client
       - name: Prepare disposable browser TLS and catcher prerequisites
         run: |
           php --version
@@ -64,7 +44,7 @@ jobs:
           docker run --detach --name browser-smoke-nginx --network host \
             --mount "type=bind,source=$PWD/var/browser-smoke/default.conf,target=/etc/nginx/conf.d/default.conf,readonly" \
             --mount "type=bind,source=$PWD/var/browser-smoke/certs,target=/etc/nginx/certs,readonly" \
-            --mount "type=bind,source=$PWD/var/client/build,target=/app/var/client/build,readonly" \
+            --mount "type=bind,source=$PWD/var/client/check,target=/app/var/client/check,readonly" \
             nginx:1.30.7-alpine@sha256:bef154735288bc38d99fac41ae63730684bcc661503673a04a0f9bc526ba8598
           docker run --detach --name browser-smoke-mailcatcher \
             --publish 127.0.0.1:1025:1025 --publish 127.0.0.1:8025:8025 \

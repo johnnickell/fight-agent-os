@@ -82,7 +82,7 @@ final class BuildCache
     public function fingerprint(): string
     {
         $generated = [];
-        foreach (['var/openapi', 'var/validations', 'var/client/build'] as $path) {
+        foreach (['var/openapi', 'var/validations'] as $path) {
             $generated[$path] = $this->tree($this->root.'/'.$path);
         }
         $this->components = [
@@ -291,7 +291,7 @@ final class BuildCache
         }
         foreach (
             [
-            '.runs/build/reports', 'var/openapi', 'var/validations', 'var/client/build', 'var/client/check/production'
+            '.runs/build/reports', 'var/openapi', 'var/validations', 'var/client/check/production'
             ] as $path
         ) {
             $files[$path] = $this->tree($this->root.'/'.$path);
