@@ -8,6 +8,8 @@ use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
 use Fight\Common\Adapter\Templating\TwigEngine;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ResponseFactory;
@@ -58,7 +60,7 @@ final class ClientShellTest extends TestCase
                 'stylesheet' => '/build/main-BBBBBBBB.css'
             ], JSON_THROW_ON_ERROR)
         );
-        $action = new ClientShellAction(new ClientAssetManifest($this->directory), $this->responder());
+        $action = new ClientShellAction($this->manifest(), $this->responder());
         $response = $action->handle(
             (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/app'),
             (new ResponseFactory())->createResponse()
@@ -81,7 +83,7 @@ final class ClientShellTest extends TestCase
         if ($manifest !== null) {
             file_put_contents($this->directory.'/manifest.json', $manifest);
         }
-        $action = new ClientShellAction(new ClientAssetManifest($this->directory), $this->responder());
+        $action = new ClientShellAction($this->manifest(), $this->responder());
         $response = $action->handle(
             (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/app'),
             (new ResponseFactory())->createResponse()
@@ -114,7 +116,7 @@ final class ClientShellTest extends TestCase
         $loader->addPath($this->directory, 'client');
         $templates = new TwigEngine(new Environment($loader, ['autoescape' => 'name', 'strict_variables' => true]));
         $action = new ClientShellAction(
-            new ClientAssetManifest($this->directory),
+            $this->manifest(),
             new ClientShellResponder($templates)
         );
         $response = $action->handle(
@@ -188,5 +190,16 @@ final class ClientShellTest extends TestCase
             'script'     => '/build/main-AAAAAAAA.js',
             'stylesheet' => '/build/main-BBBBBBBB.css'
         ], JSON_THROW_ON_ERROR)];
+    }
+
+    /**
+     * Uses the same asset reader against the real test directory
+     */
+    private function manifest(): ClientAssetManifest
+    {
+        return new ClientAssetManifest(new Filesystem(new LocalFilesystemAdapter(
+            $this->directory,
+            lazyRootCreation: true
+        )));
     }
 }

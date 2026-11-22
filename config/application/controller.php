@@ -20,6 +20,8 @@ use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 return static function (Container $container): void {
     $container->set(ClientShellResponder::class, static function (Container $container): ClientShellResponder {
@@ -28,9 +30,15 @@ return static function (Container $container): void {
             $container->get(PublicRuntimeConfiguration::class)
         );
     });
+    $container->set('client.buildAssets', static fn (): Filesystem => new Filesystem(new LocalFilesystemAdapter(
+        dirname(__DIR__, 2).'/var/client/build',
+        lazyRootCreation: true
+    )));
+    $container->set(ClientAssetManifest::class, static fn (Container $container): ClientAssetManifest =>
+        new ClientAssetManifest($container->get('client.buildAssets')));
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
         return new ClientShellAction(
-            new ClientAssetManifest(dirname(__DIR__, 2).'/var/client/build'),
+            $container->get(ClientAssetManifest::class),
             $container->get(ClientShellResponder::class)
         );
     });

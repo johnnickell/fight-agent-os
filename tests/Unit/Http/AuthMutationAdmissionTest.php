@@ -19,6 +19,8 @@ use App\Application\Security\Csrf\Clock\CsrfClock;
 use Doctrine\DBAL\Connection;
 use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Error\Exception\RateLimitExceeded;
+use Fight\Common\Domain\Value\Internet\EmailAddress;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
@@ -143,6 +145,79 @@ final class AuthMutationAdmissionTest extends TestCase
         $this->expectException(RateLimitExceeded::class);
 
         $guard->process($request, $next);
+    }
+
+    /**
+     * Maps a spent identity budget to a throttle denial, not a storage exception
+     */
+    #[DataProvider('identityBudgetOutcomes')]
+    public function testIdentityBudgetReturnsDecision(bool $allowed): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $decision = $connection->expects(self::once())->method('transactional');
+        if (!$allowed) {
+            $decision->willThrowException(new RateLimitExceeded(retryDelaySeconds: 60));
+        }
+        $admission = new AuthAdmission(new PostgresAuthAttempts($connection, new AccessClock()), self::admissionKey());
+        self::assertSame($allowed, $admission->allows(EmailAddress::fromString('owner@example.test')));
+    }
+
+    /**
+     * Supplies both results of spending an identity budget
+     *
+     * @return iterable<array{bool}>
+     */
+    public static function identityBudgetOutcomes(): iterable
+    {
+        yield [true];
+        yield [false];
+    }
+
+    /**
+     * Denies reset when the server peer is unknown, before spending any rate budget
+     */
+    public function testMissingResetPeerDoesNotSpendBudget(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::never())->method('transactional');
+        [$guard, $request] = $this->fixture($connection, 'reset', ['email' => 'owner@example.test'], []);
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+        $this->expectException(RateLimitExceeded::class);
+
+        $guard->process($request, $next);
+    }
+
+    /**
+     * Refuses a configuration that can silently disable effective network admission
+     */
+    public function testInvalidNetworkBudget(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid authentication admission configuration.');
+        new AuthAdmission(
+            new PostgresAuthAttempts($this->createStub(Connection::class), new AccessClock()),
+            self::admissionKey(),
+            networkLimit: 21
+        );
+    }
+
+    /**
+     * Keeps budget key material out of diagnostics
+     */
+    public function testBudgetDiagnostics(): void
+    {
+        $attempts = new PostgresAuthAttempts($this->createStub(Connection::class), new AccessClock());
+        self::assertSame(['configuration' => '[redacted]'], new AuthAdmission($attempts, self::admissionKey())
+            ->__debugInfo());
+    }
+
+    /**
+     * Supplies a deterministic test-only HMAC key
+     */
+    private static function admissionKey(): string
+    {
+        return bin2hex(implode('', array_map(chr(...), range(0, 31))));
     }
 
     /**

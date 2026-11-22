@@ -11,6 +11,7 @@ use App\Adapter\Http\Documentation\PrivateOpenApiResponder;
 use App\Adapter\Http\Documentation\SwaggerBootstrapResponder;
 use App\Adapter\Http\Web\PublicRuntimeConfiguration;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Psr7\Factory\ResponseFactory;
@@ -80,11 +81,8 @@ final class DocumentationActionsTest extends TestCase
      */
     public function test_that_document_presentation_preserves_bytes_and_private_headers(): void
     {
-        $document = '{"openapi":"3.0.3","paths":{}}';
-        $response = (new PrivateOpenApiResponder($this->responses()))->respond(
-            (new ResponseFactory())->createResponse(),
-            $document
-        );
+        $document = self::document('/api/v1/example', ['servers' => [['url' => '/']], '$ref' => '#/components/schema']);
+        $response = $this->readDocument($document);
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame($document, (string) $response->getBody());
@@ -97,9 +95,10 @@ final class DocumentationActionsTest extends TestCase
     /**
      * Reports deployment failure without parser or filesystem diagnostics
      */
-    public function test_that_unavailable_document_is_reported_safely(): void
+    #[DataProvider('invalidDocuments')]
+    public function test_that_unavailable_document_is_reported_safely(string|false $document): void
     {
-        $response = (new PrivateOpenApiResponder($this->responses()))->unavailable();
+        $response = $this->readDocument($document);
 
         self::assertSame(503, $response->getStatusCode());
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
@@ -110,6 +109,55 @@ final class DocumentationActionsTest extends TestCase
             8,
             JSON_THROW_ON_ERROR
         ));
+    }
+
+    /**
+     * Supplies missing data, malformed data, and forbidden alternate resources
+     *
+     * @return iterable<string, array{string|false}>
+     */
+    public static function invalidDocuments(): iterable
+    {
+        yield 'missing' => [false];
+        yield 'too large' => [str_repeat(' ', 2097153)];
+        yield 'wrong schema' => ['{}'];
+        yield 'alternate path' => [self::document('/docs')];
+        yield 'remote reference' => [self::document(operation: ['nested' => [['$ref' => 'https://example.test/a']]])];
+        yield 'alternate server' => [self::document(operation: ['servers' => [['url' => 'https://example.test']]])];
+        yield 'malformed servers' => [self::document(operation: ['servers' => 'private'])];
+    }
+
+    /**
+     * Constructs a reviewed local document with a caller-selected operation
+     *
+     * @param string               $path
+     * @param array<string, mixed>  $operation
+     */
+    private static function document(string $path = '/api/v1/example', array $operation = []): string
+    {
+        return json_encode([
+            'openapi'         => '3.0.3',
+            'info'            => ['title' => 'Example', 'version' => '1'],
+            'paths'           => [$path => (object) $operation],
+            'x-source-sha256' => str_repeat('a', 64)
+        ], JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Reads the artifact through the real action without starting an HTTP service
+     */
+    private function readDocument(string|false $document): \Psr\Http\Message\ResponseInterface
+    {
+        $action = new ReadPrivateOpenApiAction(
+            new PublicRuntimeConfiguration(swaggerAvailable: true),
+            new PrivateOpenApi(static fn (): string|false => $document),
+            new PrivateOpenApiResponder($this->responses())
+        );
+
+        return $action->handle(
+            new ServerRequestFactory()->createServerRequest('GET', '/api/v1/documentation/openapi'),
+            new ResponseFactory()->createResponse()
+        );
     }
 
     /**
