@@ -291,8 +291,8 @@ try {
         'Frontend Node version'           => ['node', '--version'],
         'Frontend npm version'            => ['npm', '--version'],
         'Frontend dependency versions'    => ['npm', 'ls', '--depth=0'],
-        'Frontend shared package'          => ['npm', 'run', 'package-build'],
-        'Frontend packed consumer'         => ['npm', 'run', 'pack-check']
+        'Frontend shared package'         => ['npm', 'run', 'package-build'],
+        'Frontend packed consumer'        => ['npm', 'run', 'pack-check']
     ];
     $frontendChecks = [
         'typecheck', 'lint', 'format-check', 'coverage', 'build-check',
