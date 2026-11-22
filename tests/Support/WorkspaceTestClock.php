@@ -6,7 +6,7 @@ namespace Tests\Support;
 
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AccessKeyring;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;

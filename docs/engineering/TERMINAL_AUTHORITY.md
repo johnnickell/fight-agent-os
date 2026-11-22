@@ -253,8 +253,9 @@ TASK's independent acceptance; activation additionally waits for its actual comp
 ## Operator enrollment and package ownership
 
 Use an existing active Fight Access Control User, not a UNIX account, Git author, Docker login or model-provider
-identity. The console authentication adapter must call the package's public `AuthenticationService` for login,
-refresh and logout, and resolve current authority through its public `CurrentPrincipalProvider`. Never construct
+identity. The console authentication adapter must call the package's public `UserAuthentication::login()` for login,
+`SessionLifecycle::refresh()` for refresh and `SessionLifecycle::logout()` for logout. Resolve current authority
+through the package's public `CurrentPrincipalProvider`. Never construct
 a principal from a supplied user ID or call the package's internal principal/permission resolvers directly.
 The configured access-token verifier must validate signature, issuer, audience, type, expiry and session claims
 before providing `AuthenticationContext`; package resolution then checks live User, session and permission state.

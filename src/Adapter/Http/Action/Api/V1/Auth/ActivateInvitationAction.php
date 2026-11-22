@@ -5,16 +5,25 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Action\Api\V1\Auth;
 
 use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
+use App\Adapter\Http\Api\V1\Auth\PasswordMutationUnconfirmed;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
-use App\Application\Security\Activation\ActivateInvitation;
+use App\Application\Security\Password\PasswordSetting;
 use App\Domain\Security\Password\PasswordStructure;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\StateConflict;
+use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
+use SensitiveParameter;
+use Throwable;
 
 /**
  * Class ActivateInvitationAction
@@ -28,9 +37,10 @@ final readonly class ActivateInvitationAction
      * Constructs ActivateInvitationAction
      */
     public function __construct(
-        private ActivateInvitation $activation,
-        private SessionResponder $responder,
-        private CaptureSessionPresentation $presentation
+        private PasswordSetting $passwordSetting,
+        private UserAuthentication $userAuthentication,
+        private SessionResponder $sessionResponder,
+        private CaptureSessionPresentation $sessionPresentation
     ) {
     }
 
@@ -51,6 +61,7 @@ final readonly class ActivateInvitationAction
             Success returns a memory-only access JWT (900 seconds) and sets __Secure-agent_os_refresh, host-only,
             Path=/api/v1/auth, Secure, HttpOnly, SameSite=Strict, no Expires/Max-Age. Refresh is absent from JSON.
             Ordinary server session: one-day idle, two-day absolute. CSRF nonce rotates on success.
+            A system failure may follow a committed activation; do not automatically replay the request.
             TEXT,
         security: [],
         parameters: [
@@ -137,18 +148,29 @@ final readonly class ActivateInvitationAction
             'rules' => 'required|type[string]|min_length[8]|max_length[128]|same[password]'
         ]
     ])]
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    public function handle(#[SensitiveParameter] ServerRequestInterface $request): ResponseInterface
     {
         /** @var array{user_id: string, credential: string, password: string, password_confirmation: string} $input */
         $input = $request->getAttribute(JsonBody::class);
 
-        $tokens = $this->activation->activate(
-            UserId::fromString($input['user_id']),
-            $input['credential'],
-            $input['password']
-        );
-        $this->presentation->capture($tokens, $request);
+        $this->passwordSetting->requireAccepted($input['password']);
+        try {
+            $tokens = $this->userAuthentication->activate(
+                UserId::fromString($input['user_id']),
+                $input['credential'],
+                $input['password'],
+                false,
+                AnonymousId::generate()
+            );
+        } catch (AuthenticationRequired | StateConflict) {
+            throw new StateConflict();
+        } catch (EventDispatchFailed) {
+            throw new PasswordMutationUnconfirmed();
+        } catch (Throwable) {
+            throw new RuntimeException('Activation outcome could not be confirmed.');
+        }
+        $this->sessionPresentation->capture($tokens, $request);
 
-        return $this->responder->respond($tokens);
+        return $this->sessionResponder->respond($tokens);
     }
 }

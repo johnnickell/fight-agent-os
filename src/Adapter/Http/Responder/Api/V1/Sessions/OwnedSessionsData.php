@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Sessions;
 
-use App\Application\Sessions\DeviceDescriptor;
+use App\Application\Security\Session\SessionPage;
 use DateTimeZone;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\Query\SessionView;
-use Fight\Common\Domain\Repository\ResultSet;
 use Fight\Common\Domain\Type\Arrayable;
 
 /**
@@ -19,14 +17,8 @@ final readonly class OwnedSessionsData implements Arrayable
 {
     /**
      * Constructs OwnedSessionsData
-     *
-     * @param ResultSet $sessions
-     * @param array $devices
-     *
-     * @phpstan-param ResultSet<SessionView> $sessions
-     * @phpstan-param array<string, DeviceDescriptor> $devices
      */
-    public function __construct(private ResultSet $sessions, private array $devices)
+    public function __construct(private SessionPage $page)
     {
     }
 
@@ -37,12 +29,13 @@ final readonly class OwnedSessionsData implements Arrayable
     {
         $records = [];
         $utc = new DateTimeZone('UTC');
-        foreach ($this->sessions->records() as $session) {
-            $device = $this->devices[$session->getSessionId()->toString()] ?? new DeviceDescriptor();
+        $sessions = $this->page->sessions;
+        foreach ($sessions->records() as $session) {
+            $device = $this->page->deviceFor($session->getSessionId());
             $records[] = [
                 'session_id'          => $session->getSessionId()->toString(),
-                'browser_family'      => $device->browser->value,
-                'device_class'        => $device->device->value,
+                'browser_family'      => $device->browserFamily->value,
+                'device_class'        => $device->deviceClass->value,
                 'created_at'          => $session->getCreatedAt()->setTimezone($utc)->format(DATE_ATOM),
                 'last_activity_at'    => $session->getLastActivityAt()->setTimezone($utc)->format(DATE_ATOM),
                 'idle_expires_at'     => $session->getIdleExpiresAt()->setTimezone($utc)->format(DATE_ATOM),
@@ -53,10 +46,10 @@ final readonly class OwnedSessionsData implements Arrayable
         }
 
         return [
-            'page'          => $this->sessions->page(),
-            'per_page'      => $this->sessions->perPage(),
-            'total_pages'   => $this->sessions->totalPages(),
-            'total_records' => $this->sessions->totalRecords(),
+            'page'          => $sessions->page(),
+            'per_page'      => $sessions->perPage(),
+            'total_pages'   => $sessions->totalPages(),
+            'total_records' => $sessions->totalRecords(),
             'records'       => $records
         ];
     }

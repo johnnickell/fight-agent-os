@@ -3,14 +3,16 @@
 TASK-00057 implements `GET /api/v1/me/sessions` and `/account/sessions`.
 TASK-00058 adds confirmed other-owned revocation; its independent Review and behavioral QA remain pending.
 
+See the [source-verified request flow](owned-sessions/README.md) for the HTTP, bus and package boundaries.
+
 ## Authority and wire contract
 
-Bearer authentication creates one request-scoped package `CurrentPrincipalProvider`. Both the early HTTP
-attribute and `ReadOwnedSessions` require exact authoritative `READ_OWN_SESSIONS`; a Role name or administrative
-permission is not a substitute. Application derives actor, target and current refresh-session ID exclusively
-from that same principal. Non-HTTP callers must supply an authoritative provider too. The configured query bus
-dispatches package `ListActiveSessions`; its handler, repository and clock own selection and `SessionView` creation.
-No package handler is invoked privately and no sidecar lookup can establish authority.
+`ApiActionSecurity` creates a fresh package `CurrentPrincipalProvider` and enforces the action's exact
+`READ_OWN_SESSIONS` declaration. A role name or administrative permission is not a substitute. The HTTP action
+uses only that principal for the owner and current session and dispatches `ListOwnedSessions` on the query bus.
+Its handler uses the same bus to fetch package `ListActiveSessions`; the package owns selection and `SessionView`
+creation. The handler adds optional device hints and returns a typed `SessionPage`. HTTP Data formats the wire
+response. Neither the internal query bus nor the device lookup supplies caller authority.
 
 The only request fields are optional query `page` (1–1000, default 1) and `per_page` (1–100, default 25), using
 the source-only QueryString/Validation convention. Decoded numeric encoding is accepted; duplicate decoded keys,
@@ -87,7 +89,7 @@ empty, failures and pagination have status feedback and explicit controls. Nativ
 targets, focus and reduced-motion/theme rules; keyboard pagination/retry hands focus to the page heading. The
 frame still owns navigation, appearance and current-session Sign Out; the current card also routes to that same Logout operation.
 
-Behavior tests cover parser/capture failure, safe View/UTC, non-HTTP permission/ownership/bounds, real package
+Behavior tests cover parser/capture failure, safe View/UTC, HTTP permission and bounds, real package
 and PostgreSQL selection, HTTP query rejection and redaction, activation/login capture and refresh preservation,
 strict client decoding, denied-read replay regression, scope retirement, keyboard focus and page states.
 The production-backed catalog adds eight owned-session examples. Owning tools validate migrations, OpenAPI,
@@ -99,10 +101,10 @@ Chromium and inspected captures are not screen-reader, other-engine, physical-de
 
 `DELETE /api/v1/me/sessions/{sessionId}` accepts a lowercase canonical UUID and exactly an empty JSON object
 (`{}`), with no query parameters. Bearer authentication and exact current `DELETE_OWN_SESSIONS` are required
-both at the early route gate and in `RevokeOwnedSession`. The sole request-scoped principal supplies actor and
-current session; no body identity, reason, Role or administrative permission is accepted. The configured command
-bus dispatches package `RevokeSession(actor, current, target, null)`. Cross-user requests cannot mutate through
-this endpoint: the package requires an administrative reason, which this entry cannot accept or dispatch.
+by `ApiActionSecurity`, independently of `READ_OWN_SESSIONS`. The request principal supplies actor and current
+session. The action denies unknown and foreign targets before dispatch with the same conflict response. It then
+dispatches package `RevokeSession(actor, current, target, null)` directly through the configured command bus.
+This endpoint cannot enter administrative authorization or accept a reason.
 TASK-00122 replaces the former deny-all handler composition with distinct operation-sensitive actor/target
 callbacks for the separate [administrative API](SESSION_ADMINISTRATION.md). Its trusted raw bus can now perform
 reasoned authorized administration; it is not a public entry. Self-service still grants no administration.

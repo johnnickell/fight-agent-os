@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Security\Activation\ActivateInvitation;
+use App\Application\Security\Password\PasswordSetting;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use RuntimeException;
 use Throwable;
@@ -92,13 +95,16 @@ final class ActivationRaceWorker
             });
             $container->set(ActivationGrantRepository::class, static fn(): ActivationGrantRepository => $barrier);
             try {
-                $container->get(ActivateInvitation::class)->activate(
+                $container->get(PasswordSetting::class)->requireAccepted($input['password']);
+                $container->get(UserAuthentication::class)->activate(
                     UserId::fromString($input['user']),
                     $input['credential'],
-                    $input['password']
+                    $input['password'],
+                    false,
+                    AnonymousId::generate()
                 );
                 echo "committed\n";
-            } catch (StateConflict) {
+            } catch (AuthenticationRequired | StateConflict) {
                 echo "conflict\n";
             }
         } catch (Throwable) {

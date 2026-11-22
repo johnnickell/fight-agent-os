@@ -10,7 +10,7 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -868,7 +868,7 @@ SQL,
                 try {
                     $this->activate($credential);
                     self::fail('A replaced predecessor must never activate.');
-                } catch (\Fight\Common\Application\Error\Exception\StateConflict) {
+                } catch (\Fight\Common\Application\Error\Exception\AuthenticationRequired) {
                     self::assertSame('pending_activation', $this->connection->fetchOne(
                         'SELECT state FROM users WHERE id = ?',
                         [$this->target->toString()]
@@ -1005,12 +1005,18 @@ SQL,
     /**
      * Exercises production password acceptance and package activation against real persistence
      */
-    private function activate(string $credential): void
+    private function activate(#[\SensitiveParameter] string $credential): void
     {
-        $this->container->get(\App\Application\Security\Activation\ActivateInvitation::class)->activate(
+        $password = 'A!9z'.bin2hex(random_bytes(12));
+        $this->container->get(\App\Application\Security\Password\PasswordSetting::class)->requireAccepted($password);
+        $this->container->get(
+            \Fight\AccessControl\Application\AccessControl\User\Authentication\UserAuthentication::class
+        )->activate(
             $this->target,
             $credential,
-            'A!9z'.bin2hex(random_bytes(12))
+            $password,
+            false,
+            \Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId::generate()
         );
     }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Http;
 
 use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
-use App\Application\Sessions\SessionPresentation;
+use App\Application\Security\Session\SessionPresentation;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\User\Security\AccessToken;
 use Fight\AccessControl\Application\AccessControl\User\Security\TokenSet;
@@ -29,8 +29,8 @@ final class CaptureSessionPresentationTest extends TestCase
     public function testParser(string $header, string $browser, string $device): void
     {
         $descriptor = CaptureSessionPresentation::parse($header);
-        self::assertSame($browser, $descriptor->browser->value);
-        self::assertSame($device, $descriptor->device->value);
+        self::assertSame($browser, $descriptor->browserFamily->value);
+        self::assertSame($device, $descriptor->deviceClass->value);
     }
 
     /**
@@ -78,7 +78,7 @@ final class CaptureSessionPresentationTest extends TestCase
             function ($id, $device, $expiry) use ($tokens) {
                 self::assertTrue($id->equals($tokens->getRefreshSessionId()));
                 self::assertSame($tokens->getRefreshExpiresAt(), $expiry);
-                self::assertSame('Unknown', $device->browser->value);
+                self::assertSame('Unknown', $device->browserFamily->value);
                 throw new RuntimeException('private-metadata-marker');
             }
         );
