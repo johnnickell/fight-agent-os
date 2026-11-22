@@ -20,11 +20,14 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Psr7\Factory\ResponseFactory;
@@ -71,17 +74,10 @@ final class InvitationStatusActionTest extends TestCase
         $action = new ReadInvitationStatusAction($queries, $users, $limiter, new ReadInvitationStatusResponder(
             new JSendResponseFactory(new ResponseFactory(), new StreamFactory())
         ));
-        $route = $this->createStub(RouteInterface::class);
-        $route->method('getArgument')->willReturn($target->getId()->toString());
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/invitations')
-            ->withAttribute(AuthenticationContext::class, new AuthenticationContext(
-                $actor,
-                RefreshSessionId::generate(),
-                1
-            ))
-            ->withAttribute(RouteContext::ROUTE, $route)
-            ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
-            ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
+        $request = $this->request($target->getId()->toString())->withAttribute(
+            AuthenticationContext::class,
+            new AuthenticationContext($actor, RefreshSessionId::generate(), 1)
+        );
         if ($kind === 'missing-target') {
             $this->expectException(ResourceNotFound::class);
         } elseif ($kind === 'wrong-type') {
@@ -101,6 +97,59 @@ final class InvitationStatusActionTest extends TestCase
                 'origin'                 => $kind === 'registration' ? 'registration' : 'private_invitation'
             ], $data);
         }
+    }
+
+    /**
+     * Rejects missing authentication or an invalid target before lookup, budget, or dispatch
+     */
+    #[DataProvider('invalidRequests')]
+    public function testRejectsInvalidRequest(bool $authenticated): void
+    {
+        $users = $this->createMock(UserRepository::class);
+        $users->expects(self::never())->method('getById');
+        $queries = $this->createMock(QueryBus::class);
+        $queries->expects(self::never())->method('fetch');
+        $limiter = $this->createMock(InvitationRateLimiter::class);
+        $limiter->expects(self::never())->method('consume');
+        $action = new ReadInvitationStatusAction($queries, $users, $limiter, new ReadInvitationStatusResponder(
+            new JSendResponseFactory(new ResponseFactory(), new StreamFactory())
+        ));
+        $request = $this->request($authenticated ? 'not-a-user-id' : UserId::generate()->toString());
+        if ($authenticated) {
+            $request = $request->withAttribute(AuthenticationContext::class, new AuthenticationContext(
+                UserId::generate(),
+                RefreshSessionId::generate(),
+                1
+            ));
+        }
+
+        $this->expectException($authenticated ? ValidationException::class : AuthenticationRequired::class);
+        $action->handle($request);
+    }
+
+    /**
+     * Supplies independent authentication and target failures
+     *
+     * @return iterable<array{bool}>
+     */
+    public static function invalidRequests(): iterable
+    {
+        yield 'missing authentication' => [false];
+        yield 'malformed target' => [true];
+    }
+
+    /**
+     * Builds a status request with the supplied route argument
+     */
+    private function request(string $target): ServerRequestInterface
+    {
+        $route = $this->createStub(RouteInterface::class);
+        $route->method('getArgument')->willReturn($target);
+
+        return (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/invitations')
+            ->withAttribute(RouteContext::ROUTE, $route)
+            ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
+            ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
     }
 
     /**
