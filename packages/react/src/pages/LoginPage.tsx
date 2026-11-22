@@ -1,5 +1,5 @@
 import { AccountLink } from '../features/auth/AccountLinks.js';
-import { usePageTitle } from '../components/Brand.js';
+import { useBrand, usePageTitle } from '../components/Brand.js';
 import { useEffect, useRef, useState } from 'react';
 import FormCheck from 'react-bootstrap/FormCheck';
 
@@ -42,6 +42,7 @@ export function LoginPage({
   const [attempt, setAttempt] = useState(0);
   const [complete, setComplete] = useState(false);
   const success = useRef<HTMLHeadingElement>(null);
+  const { name } = useBrand();
   usePageTitle('Sign in');
   useEffect(() => {
     const controller = new AbortController();
@@ -60,9 +61,8 @@ export function LoginPage({
   return (
     <section className="login-page" aria-labelledby="login-heading">
       <div className="login-introduction">
-        <p className="login-eyebrow">FIGHT / AGENT OS</p>
+        <p className="login-eyebrow">{name}</p>
         <h1 id="login-heading">Good work starts here.</h1>
-        <p>Your workspace for building software. Focused. Deliberate. Yours.</p>
         <p className="login-invite-note">Invite-only access. No public registration.</p>
       </div>
       <div className="login-panel">

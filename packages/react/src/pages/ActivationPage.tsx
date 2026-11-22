@@ -1,5 +1,5 @@
 import { AccountLink } from '../features/auth/AccountLinks.js';
-import { usePageTitle } from '../components/Brand.js';
+import { useBrand, usePageTitle } from '../components/Brand.js';
 import { useEffect, useState } from 'react';
 
 import { Button } from '../components/Button.js';
@@ -42,6 +42,7 @@ export function ActivationPage({
   const [state, setState] = useState<'loading' | 'unavailable' | 'ready'>('loading');
   const [attempt, setAttempt] = useState(0);
   const [complete, setComplete] = useState(false);
+  const { name } = useBrand();
   usePageTitle('Activate invitation');
   useEffect(() => {
     const controller = new AbortController();
@@ -58,7 +59,7 @@ export function ActivationPage({
   }, [service, schemas, attempt]);
   return (
     <section className="activation-page" aria-labelledby="activation-heading">
-      <p className="activation-eyebrow">FIGHT / AGENT OS</p>
+      <p className="activation-eyebrow">{name}</p>
       <h1 id="activation-heading">Make it yours.</h1>
       <p className="activation-introduction">One invitation. Your own secure account.</p>
       <div className="activation-panel">

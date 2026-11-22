@@ -1,5 +1,5 @@
 import { AccountLink } from '../features/auth/AccountLinks.js';
-import { usePageTitle } from '../components/Brand.js';
+import { useBrand, usePageTitle } from '../components/Brand.js';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '../components/Button.js';
@@ -47,6 +47,7 @@ export function ResetCompletionPage({
   const [attempt, setAttempt] = useState(0);
   const [complete, setComplete] = useState(false);
   const resultHeading = useRef<HTMLHeadingElement>(null);
+  const { name } = useBrand();
   usePageTitle('Reset password');
   useEffect(() => {
     const controller = new AbortController();
@@ -66,7 +67,7 @@ export function ResetCompletionPage({
   }, [complete]);
   return (
     <section className="activation-page" aria-labelledby="reset-heading">
-      <p className="activation-eyebrow">FIGHT / AGENT OS</p>
+      <p className="activation-eyebrow">{name}</p>
       <h1 id="reset-heading">A fresh start.</h1>
       <p className="activation-introduction">One reset link. A password only you know.</p>
       <div className="activation-panel">

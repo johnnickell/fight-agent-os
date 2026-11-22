@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { prepaintTheme, readTheme, THEME_KEY, ThemePreferenceStore } from '@fight/react/controls';
+import {
+  browserThemeEnvironment,
+  prepaintTheme,
+  readTheme,
+  THEME_KEY,
+  ThemePreferenceStore
+} from '@fight/react/controls';
 
 import type { ThemeEnvironment, ThemeMedia } from '@fight/react/controls';
 
@@ -132,6 +138,42 @@ describe('presentation preference', () => {
     expect(state.storageListeners.size).toBe(1);
     stopSecond();
     expect(state.storageListeners.size).toBe(0);
+  });
+
+  it('forwards browser storage changes only until the subscriber disconnects', () => {
+    const environment = browserThemeEnvironment();
+    const listener = vi.fn();
+    const unsubscribe = environment.subscribeStorage(listener);
+    const event = new StorageEvent('storage', { key: THEME_KEY, newValue: 'dark' });
+
+    window.dispatchEvent(event);
+    expect(listener).toHaveBeenCalledExactlyOnceWith(event);
+    unsubscribe();
+    window.dispatchEvent(event);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('still prepaints light when the browser denies storage and OS preference access', () => {
+    const storage = vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+      throw new DOMException('Storage denied', 'SecurityError');
+    });
+    const media = vi.fn(() => {
+      throw new DOMException('Media denied', 'SecurityError');
+    });
+    vi.stubGlobal('matchMedia', media);
+    const previousTheme = document.documentElement.getAttribute('data-bs-theme');
+    const previousScheme = document.documentElement.style.colorScheme;
+    try {
+      prepaintTheme(browserThemeEnvironment());
+      expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
+      expect(document.documentElement.style.colorScheme).toBe('light');
+    } finally {
+      if (previousTheme === null) document.documentElement.removeAttribute('data-bs-theme');
+      else document.documentElement.setAttribute('data-bs-theme', previousTheme);
+      document.documentElement.style.colorScheme = previousScheme;
+      storage.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('continues when media observation throws or has no listener API', () => {
