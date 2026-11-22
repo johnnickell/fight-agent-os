@@ -115,6 +115,9 @@ their own prerequisites are satisfied; this TICKET does not imply a monolithic r
 
 ## Decisions and progress
 
+All six corrections are independently accepted and complete. The child TASKs record their scope and verification
+limits. The decomposition and planning-only checks below are historical.
+
 John approved this fifth requirement area to make the whole PHP application conform, then approved six complete
 correction slices, their capability-specific supplier holds and orders `13`–`18`:
 
