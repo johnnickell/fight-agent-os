@@ -1,0 +1,37 @@
+name: Client checks qualification
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - '.github/actions/native-client/action.yml'
+      - '.github/workflows/client-checks.yml'
+      - 'client/package.json'
+      - 'client/package-lock.json'
+      - 'client/scripts/check.mjs'
+      - 'client/scripts/dependencies.mjs'
+
+jobs:
+  client-checks:
+    runs-on: ubuntu-24.04
+    env:
+      TZ: UTC
+      STORYBOOK_DISABLE_TELEMETRY: '1'
+      npm_config_update_notifier: 'false'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/native-client
+      - name: Run the standalone client checks
+        working-directory: client
+        run: npm run check
+        env:
+          npm_config_offline: 'true'
+      - name: Retain client output and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-checks
+          include-hidden-files: true
+          path: |
+            .runs/build/reports/client/
+            var/client/check/production/

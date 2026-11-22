@@ -9,8 +9,10 @@ There is no test retry, quarantine, screenshot baseline or general E2E expansion
 Prepare the selected checkout normally using [local tooling](LOCAL_TOOLING.md). The CLI image includes
 the matching digest-pinned PHP FPM binary, OpenSSL and NSS `certutil`; rebuild/start it explicitly after this
 change. Locked client dependencies,
-live production assets and validation exports must already exist. No acceptance command installs tools,
-updates locks, publishes assets, writes planning or starts Docker services.
+checked production assets and validation exports must already exist. `./bin/build` produces the assets once
+through the shared client pass before smoke; for direct smoke, run `./bin/client check` first. Smoke reads
+`var/client/check/production/`; it does not publish or rebuild the application's live assets. No acceptance
+command installs tools, updates locks, writes planning or starts Docker services.
 
 The existing Playwright **1.61.0** lock selects two exact browser suppliers. The digest-pinned local image
 supplies Chromium **149.0.7827.0**, revision **1228**, and the container runner still requires that exact version.
@@ -81,8 +83,9 @@ Explicitly select the existing selected gateway's test supplier after ordinary s
 ./bin/browser-smoke all
 ```
 
-Setup changes only `fastcgi_pass https_php:9000` to `web:19087` in this selected gateway, validates and gracefully
-reloads that Nginx, and records its configuration/public-CA digests under ignored `var/browser-smoke/`. It never
+Setup points this gateway at `web:19087` and the checked asset directory. It keeps the existing asset URL
+allowlist and response headers, validates and gracefully reloads that Nginx, and records its configuration
+and public CA digests under ignored `var/browser-smoke/`. It never
 changes shared supplier/router configuration, TLS leaves, trust, DNS or peer routes. This is an explicit exclusive
 test mode for the selected task origin: ordinary development requests are unavailable when no fixture runs.
 `./bin/up --worktree /absolute/selected/checkout` restores the ordinary development upstream afterward; rerun

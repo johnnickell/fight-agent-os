@@ -218,24 +218,9 @@ try {
     // Frontend tools receive no application, database, provider or host credential environment.
     // Explicit runner setup may select tool/browser paths without inheriting its ambient PATH or HOME.
     $frontendEnvironment = $cache->frontendEnvironment($run.'/home');
-    $frontendSteps = [
-        'Installed frontend lock/runtime' => ['node', 'scripts/dependencies.mjs'],
-        'Frontend Node version'           => ['node', '--version'],
-        'Frontend npm version'            => ['npm', '--version'],
-        'Frontend dependency versions'    => ['npm', 'ls', '--depth=0']
-    ];
-    $frontendChecks = [
-        'typecheck', 'lint', 'format-check', 'coverage', 'build-check',
-        'storybook-build', 'storybook-test', 'storybook-capture'
-    ];
-    foreach ($frontendChecks as $step) {
-        $frontendSteps['Frontend '.$step] = ['npm', 'run', $step];
-    }
-    foreach ($frontendSteps as $name => $command) {
-        $exitCode = $execute($name, $command, $root.'/client', $frontendEnvironment);
-        if ($exitCode !== 0) {
-            throw new RuntimeException('Build failed during '.$name.'.');
-        }
+    $exitCode = $execute('Client checks', ['npm', 'run', 'check'], $root.'/client', $frontendEnvironment);
+    if ($exitCode !== 0) {
+        throw new RuntimeException('Build failed during client checks.');
     }
     $exitCode = $execute('Critical browser smoke (HTTPS continuity)', ['php', 'scripts/browser_smoke.php'], $root);
     if ($exitCode !== 0) {
