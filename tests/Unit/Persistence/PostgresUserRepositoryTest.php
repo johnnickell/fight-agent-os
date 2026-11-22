@@ -17,6 +17,9 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Result;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -612,6 +615,120 @@ final class PostgresUserRepositoryTest extends TestCase
     }
 
     /**
+     * Fences transaction-bound lifecycle reads before loading the user snapshot
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testLifecycleSnapshotFencesOnlyInsideTransaction(bool $inTransaction): void
+    {
+        $id = UserId::generate();
+        $connection = $this->connection($inTransaction);
+        $read = $this->createStub(Result::class);
+        $read->method('fetchAssociative')->willReturn(false);
+        $queries = [];
+        $connection->expects(self::exactly($inTransaction ? 2 : 1))->method('executeQuery')->willReturnCallback(
+            static function (string $sql, array $parameters) use (&$queries, $read): Result {
+                $queries[] = [$sql, $parameters];
+
+                return $read;
+            }
+        );
+
+        self::assertNull($this->repository($connection, lockLifecycleSnapshot: true)->getById($id));
+        if ($inTransaction) {
+            self::assertStringContainsString('pg_advisory_xact_lock', $queries[0][0]);
+            self::assertSame($id->toString(), $queries[0][1][0]);
+        }
+        $snapshot = $queries[$inTransaction ? 1 : 0];
+        self::assertStringContainsString('FROM users', $snapshot[0]);
+        self::assertSame(['value' => $id->toString()], $snapshot[1]);
+    }
+
+    /**
+     * Issues a bound session only after authority advances and restores the savepoint on an insert conflict
+     */
+    #[DataProvider('coupledSessionOutcomes')]
+    public function testSessionWriteDependsOnAuthorityUpdate(
+        bool $matches,
+        bool $duplicate,
+        bool $foreignOwner,
+        bool $staleVersion
+    ): void {
+        $expected = $this->activeUser();
+        $replacement = clone $expected;
+        $replacement->recordSuccessfulLogin($this->later());
+        $session = RefreshSession::start(
+            RefreshSessionId::generate(),
+            $foreignOwner ? UserId::generate() : $replacement->getId(),
+            RefreshCredential::fromString(str_repeat('ab', 32)),
+            $this->later(),
+            $this->later()->modify('+1 hour'),
+            $this->later()->modify('+1 day'),
+            $replacement->getAuthenticationVersion() + (int) $staleVersion,
+            false
+        );
+        $connection = $this->connection(inTransaction: true);
+        $writes = [];
+        $admitted = !$foreignOwner && !$staleVersion;
+        $connection->expects(self::exactly((int) $admitted))->method('executeStatement')->willReturnCallback(
+            static function (string $sql, array $fields) use (&$writes, $expected, $replacement, $matches): int {
+                $writes[] = 'authority';
+                self::assertStringContainsString('UPDATE users', $sql);
+                self::assertSame($expected->getId()->toString(), $fields['expected_id']);
+                self::assertSame(
+                    $expected->getAuthenticationAuthorityRevision(),
+                    $fields['expected_authentication_authority_revision']
+                );
+                self::assertSame(
+                    $replacement->getAuthenticationAuthorityRevision(),
+                    $fields['replacement_authentication_authority_revision']
+                );
+
+                return (int) $matches;
+            }
+        );
+        $connection->expects(self::exactly((int) ($admitted && $matches)))->method('insert')->willReturnCallback(
+            static function (string $table, array $fields) use (&$writes, $session, $duplicate): int {
+                $writes[] = 'session';
+                self::assertSame('refresh_sessions', $table);
+                self::assertSame($session->getId()->toString(), $fields['id']);
+                self::assertSame($session->getUserId()->toString(), $fields['user_id']);
+                self::assertSame($session->getAuthenticationVersion(), $fields['authentication_version']);
+                self::assertSame($session->getCredentialDigest(), $fields['credential_digest']);
+                if ($duplicate) {
+                    throw new UniqueConstraintViolationException(new PgSqlException('Duplicate session ID'), null);
+                }
+
+                return 1;
+            }
+        );
+        $connection->expects(self::exactly((int) $duplicate))->method('rollbackSavepoint');
+
+        self::assertSame(
+            $admitted && $matches && !$duplicate,
+            $this->repository($connection)->replaceAuthenticationAuthorityAndAddRefreshSession(
+                $expected,
+                $replacement,
+                $session
+            )
+        );
+        self::assertSame(!$admitted ? [] : ($matches ? ['authority', 'session'] : ['authority']), $writes);
+    }
+
+    /**
+     * Supplies successful, conflicting and ineligible session writes
+     *
+     * @return iterable<string, array{bool, bool, bool, bool}>
+     */
+    public static function coupledSessionOutcomes(): iterable
+    {
+        yield 'bound session' => [true, false, false, false];
+        yield 'stale authority snapshot' => [false, false, false, false];
+        yield 'duplicate session' => [true, true, false, false];
+        yield 'different session owner' => [true, false, true, false];
+        yield 'wrong authentication version' => [true, false, false, true];
+    }
+
+    /**
      * Supplies matching and stale database snapshots
      *
      * @return iterable<string, array{bool}>
@@ -641,12 +758,13 @@ final class PostgresUserRepositoryTest extends TestCase
     /**
      * Uses the real reference and authority fences on the same isolated connection
      */
-    private function repository(Connection $connection): PostgresUserRepository
+    private function repository(Connection $connection, bool $lockLifecycleSnapshot = false): PostgresUserRepository
     {
         return new PostgresUserRepository(
             $connection,
             new AuthorizationReferenceFences($connection),
-            new AuthenticationAuthorityFences($connection)
+            new AuthenticationAuthorityFences($connection),
+            $lockLifecycleSnapshot
         );
     }
 

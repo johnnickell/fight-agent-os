@@ -285,6 +285,82 @@ final class PostgresPasswordResetGrantRepositoryTest extends TestCase
     }
 
     /**
+     * Releases expired material even after the owner loses recovery authority
+     */
+    public function testExpiredClaimCanDiscardMaterialAfterAuthorityChanges(): void
+    {
+        $grant = $this->grant();
+        $expiry = $grant->getExpiresAt();
+        $token = CredentialDeliveryClaimToken::generate();
+        $claimed = $grant->claimDelivery($token, $expiry->modify('-2 minutes'), $expiry);
+        $failureAt = $expiry->modify('-1 second');
+        $expired = $claimed->failDelivery($token, $failureAt, CredentialDeliveryFailure::UNEXPECTED_PROVIDER);
+        $connection = $this->connection($claimed, current: false);
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains('FOR UPDATE'),
+            [$claimed->getUserId()->toString()]
+        )->willReturn(PasswordResetGrantRecords::fields($claimed));
+        $connection->expects(self::once())->method('update')->with(
+            'password_reset_grants',
+            self::callback(static function (array $fields) use ($failureAt): bool {
+                self::assertSame('expired', $fields['delivery_status']);
+                self::assertSame($failureAt->format('Y-m-d H:i:s.uP'), $fields['delivery_last_outcome_at']);
+                self::assertSame(
+                    CredentialDeliveryFailure::UNEXPECTED_PROVIDER->value,
+                    $fields['delivery_last_failure']
+                );
+                self::assertNull($fields['delivery_ciphertext']);
+                self::assertNull($fields['delivery_claim_token']);
+
+                return true;
+            }),
+            ['id' => $grant->getId()->toString(), 'revision' => $claimed->getRevision()]
+        )->willReturn(1);
+
+        self::assertTrue(new PostgresPasswordResetGrantRepository($connection)->replace($claimed, $expired));
+    }
+
+    /**
+     * Does not persist a delivery claim if its issuing authority or grant snapshot is stale
+     */
+    #[DataProvider('claimAdmission')]
+    public function testClaimRequiresCurrentGrantAndAuthority(bool $snapshot, bool $authority): void
+    {
+        $grant = $this->grant();
+        $token = CredentialDeliveryClaimToken::generate();
+        $lease = $this->now()->modify('+5 minutes');
+        $claim = $grant->claimDelivery($token, $this->now(), $lease);
+        $connection = $this->connection($grant, $authority);
+        $stored = $snapshot ? $grant : $grant->revoke($this->now());
+        $connection->method('fetchAssociative')->willReturn(PasswordResetGrantRecords::fields($stored));
+        $admitted = $snapshot && $authority;
+        $update = $connection->expects(self::exactly((int) $admitted))->method('update');
+        if ($admitted) {
+            $update->with(
+                'password_reset_grants',
+                self::callback(static fn (array $fields): bool => $fields['delivery_status'] === 'claimed'
+                    && $fields['delivery_claim_token'] === $token->toString()
+                    && $fields['delivery_lease_until'] === $lease->format('Y-m-d H:i:s.uP')),
+                ['id' => $grant->getId()->toString(), 'revision' => $grant->getRevision()]
+            )->willReturn(1);
+        }
+
+        self::assertSame($admitted, new PostgresPasswordResetGrantRepository($connection)->replace($grant, $claim));
+    }
+
+    /**
+     * Supplies independent authority and revision outcomes for claiming delivery
+     *
+     * @return iterable<string, array{bool, bool}>
+     */
+    public static function claimAdmission(): iterable
+    {
+        yield 'both are current' => [true, true];
+        yield 'grant revoked' => [false, true];
+        yield 'authority changed' => [true, false];
+    }
+
+    /**
      * Answers the issuing authority check without opening a database connection
      */
     private function connection(PasswordResetGrant $grant, bool $current = true): Connection&MockObject
