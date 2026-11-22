@@ -881,7 +881,8 @@ export async function runWorkflow(options: RunWorkflowOptions): Promise<Workflow
         ...payload,
         schema: payload.schema !== undefined ? JSON.stringify(payload.schema) : undefined,
       };
-      let replayed = replayAt(index, journalKey(keyInput));
+      const key = journalKey(keyInput);
+      let replayed = replayAt(index, key);
       // A replayed answer still has to satisfy the schema. The key covers a
       // schema that *changed*, but not a journal that was hand-edited, and not
       // the empty text a torn entry leaves behind — either would hand the
@@ -921,7 +922,6 @@ export async function runWorkflow(options: RunWorkflowOptions): Promise<Workflow
         return;
       }
 
-      const key = journalKey(keyInput);
       const resumeMark = payload.resume !== undefined ? ({ resumed: true } as const) : {};
 
       /** A skip the user asked for, before the child ever started. */
