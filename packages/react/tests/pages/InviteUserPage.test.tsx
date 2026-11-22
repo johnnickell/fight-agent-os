@@ -2,12 +2,12 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { InviteUserPage } from '@fight/react/account';
+import { AccountLinksProvider, InviteUserPage } from '@fight/react/account';
 
 import { deferred } from '@fixtures/apiFixtures';
 import { authenticatedCache, principal } from '@fixtures/authorityFixtures';
 
-import type { AuthorityCache } from '@fight/react/account';
+import type { AuthorityCache, ResolveAccountLink } from '@fight/react/account';
 import type { InvitationIssuanceOutcome as OrdinaryInvitationOutcome } from '@fight/react/account';
 
 const caches: AuthorityCache[] = [];
@@ -16,7 +16,8 @@ afterEach(() => {
 });
 async function setup(
   permissions = ['INVITE_USERS', 'READ_USERS'],
-  outcome: OrdinaryInvitationOutcome = { kind: 'accepted', userId: crypto.randomUUID() }
+  outcome: OrdinaryInvitationOutcome = { kind: 'accepted', userId: crypto.randomUUID() },
+  resolve?: ResolveAccountLink
 ) {
   const cache = authenticatedCache({ ...principal, permissions });
   caches.push(cache);
@@ -24,7 +25,10 @@ async function setup(
   const submit = vi.fn<(value: string) => Promise<OrdinaryInvitationOutcome>>(() =>
     Promise.resolve(outcome)
   );
-  const rendered = render(<InviteUserPage service={{ submit }} cache={cache} />);
+  const page = <InviteUserPage service={{ submit }} cache={cache} />;
+  const rendered = render(
+    resolve ? <AccountLinksProvider resolve={resolve}>{page}</AccountLinksProvider> : page
+  );
   return { ...rendered, cache, submit };
 }
 const emailInput = () => screen.getByLabelText('Email (required)');
@@ -61,27 +65,50 @@ describe('InviteUserPage', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+  const resolveHostLinks: ResolveAccountLink = (destination, userId) => {
+    switch (destination) {
+      case 'home':
+        return {
+          href: '/dashboard',
+          requirements: [{ kind: 'permissions', all: ['VIEW_DASHBOARD'] }]
+        };
+      case 'account':
+        return { href: '/account', requirements: [{ kind: 'authenticated' }] };
+      case 'users':
+      case 'invitation':
+        return {
+          href: destination === 'users' ? '/admin/users' : `/admin/invitations/${userId}`,
+          requirements: [{ kind: 'permissions', all: ['READ_USERS'] }]
+        };
+      default:
+        return null;
+    }
+  };
   it.each([
-    ['INVITE_USERS'],
-    ['INVITE_USERS', 'MANAGE_USER_INVITATIONS'],
-    ['INVITE_USERS', 'VIEW_DASHBOARD']
+    { permissions: ['INVITE_USERS'], name: 'Back to Account & Security', href: '/account' },
+    {
+      permissions: ['INVITE_USERS', 'MANAGE_USER_INVITATIONS'],
+      name: 'Back to Account & Security',
+      href: '/account'
+    },
+    {
+      permissions: ['INVITE_USERS', 'VIEW_DASHBOARD'],
+      name: 'Back to Dashboard',
+      href: '/dashboard'
+    }
   ])(
     'never infers status reading from invitation or management $permissions',
-    async (...permissions) => {
-      await setup(permissions);
+    async ({ permissions, name, href }) => {
+      await setup(permissions, undefined, resolveHostLinks);
       await submitEmail();
       expect(await screen.findByRole('heading', { name: 'Invitation accepted' })).toBeVisible();
       expect(
         screen.queryByRole('link', { name: 'View invitation status' })
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: 'Back to Users' })).not.toBeInTheDocument();
-      expect(
-        screen.getByRole('link', {
-          name: permissions.includes('VIEW_DASHBOARD')
-            ? 'Back to Dashboard'
-            : 'Back to Account & Security'
-        })
-      ).toBeVisible();
+      const fallback = screen.getByRole('link', { name });
+      expect(fallback).toBeVisible();
+      expect(fallback).toHaveAttribute('href', href);
     }
   );
   it('announces and focuses invalid email without dispatch, then clears explicitly', async () => {

@@ -86,8 +86,8 @@ describe('shared API transport', () => {
   });
 
   it.each([
-    { schemaVersion: 2, apiBasePath: '/api/v1' },
-    { schemaVersion: 1, apiBasePath: 'https://example.invalid/secret' }
+    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: 'https://example.invalid/secret' }
   ])('rejects a bypassed configuration without echoing it %#', (config) => {
     const error = (() => {
       try {
