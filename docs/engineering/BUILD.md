@@ -318,12 +318,14 @@ an accepted requirement makes it mandatory; a local container pass is not native
 
 ## Runner-native CI
 
-The [hosted workflow](../../.github/workflows/build.yml) installs PHP 8.5/extensions/Xdebug and Composer 2,
-selects Node and npm from `client/package.json`, and runs the existing locked installation commands.
-`node scripts/dependencies.mjs record` owns the install receipt; the gate owns its subsequent validation.
-The installed Playwright CLI provisions Chromium and its Ubuntu dependencies into a job-private browser path.
-Explicit setup builds live client assets and exports private OpenAPI/validation metadata through their owning
-JS/PHP commands. Acceptance never installs or exports.
+The [hosted workflow](../../.github/workflows/build.yml) installs PHP 8.5, its extensions and Xdebug, and
+Composer 2. Setup installs the locked PHP and client dependencies and exports private OpenAPI and validation
+metadata. The [client setup action](../../.github/actions/native-client/action.yml) selects Node and npm from
+`client/package.json`, records the installation with `node scripts/dependencies.mjs record`, and uses Playwright
+to provision Chromium in a job-private browser path and install its Ubuntu dependencies. The gate validates
+the install receipt and runs `npm run check` to build and inspect the production assets in
+`var/client/check/production/`. Browser smoke uses those assets without building them again. Setup does not
+build live client assets, and the gate does not install dependencies or export the contract metadata.
 
 Ubuntu 24.04's native PostgreSQL service supplies a dedicated non-superuser `agent_os_test` role/database over
 allowlisted loopback TCP. Only the guarded backend phase resets/migrates/cleans that test schema. Product tests
