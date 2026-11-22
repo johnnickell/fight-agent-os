@@ -694,5 +694,5 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | — (standalone bug) | done | — | [PR #290](https://github.com/johnnickell/fight-agent-os/pull/290) |
 | — | [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | — (standalone chore) | done | — | [PR #302](https://github.com/johnnickell/fight-agent-os/pull/302) |
 | — | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | — (standalone chore) | done | — | [PR #306](https://github.com/johnnickell/fight-agent-os/pull/306) |
-| — | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | — (standalone chore) | done | — | — |
+| — | [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | — (standalone chore) | done | — | [PR #307](https://github.com/johnnickell/fight-agent-os/pull/307) |
 <!-- /planning:board -->
