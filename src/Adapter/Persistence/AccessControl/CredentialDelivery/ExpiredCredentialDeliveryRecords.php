@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence;
+namespace App\Adapter\Persistence\AccessControl\CredentialDelivery;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;

@@ -583,7 +583,7 @@
 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | done | [TICKET-00135](../tickets/00135-TICKET.md) |
-| [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | done | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | done | [TICKET-00136](../tickets/00136-TICKET.md) |
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |
@@ -610,7 +610,7 @@
 | [TASK-00605](00605-TASK.md) | Keep standalone Pi skills separate from Fight workflow selection | done | — |
 | [TASK-00606](00606-TASK.md) | Simplify numeric settings in the Pi subagent extension | done | — |
 | [TASK-00607](00607-TASK.md) | Separate workflow run bookkeeping from the Pi subagent installer | done | — |
-| [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | ready-for-agent | — |
+| [TASK-00608](00608-TASK.md) | Remove repeated Pi subagent launch and resume bookkeeping | done | — |
 | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | ready-for-agent | — |
 | [TASK-00610](00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | ready-for-agent | [TICKET-00145](../tickets/00145-TICKET.md) |
 | [TASK-00611](00611-TASK.md) | Run the existing PHP checks as a standalone pass | ready-for-agent | [TICKET-00146](../tickets/00146-TICKET.md) |

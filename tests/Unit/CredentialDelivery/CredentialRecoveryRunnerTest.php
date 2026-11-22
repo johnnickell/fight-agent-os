@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\CredentialDelivery;
 
-use App\Application\CredentialDelivery\RecoverCredentialDeliveryPage;
+use App\Adapter\CredentialDelivery\CredentialRecoveryRunner;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
@@ -27,11 +27,11 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
- * Class RecoverCredentialDeliveryPageTest
+ * Class CredentialRecoveryRunnerTest
  *
  * Proves bounded operational dispatch without consumer lifecycle policy
  */
-final class RecoverCredentialDeliveryPageTest extends TestCase
+final class CredentialRecoveryRunnerTest extends TestCase
 {
     /**
      * Proves package page order and exact generation dispatch under the smaller operational bound
@@ -58,7 +58,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
                 $seen[] = $command;
             }
         );
-        $runner = new RecoverCredentialDeliveryPage($queries, $commands, $this->clock($at));
+        $runner = new CredentialRecoveryRunner($queries, $commands, $this->clock($at));
         self::assertSame([
             'discovered'  => 2,
             'offered'     => 2,
@@ -99,7 +99,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
         $queries->expects(self::never())->method('fetch');
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::never())->method('execute');
-        $runner = new RecoverCredentialDeliveryPage(
+        $runner = new CredentialRecoveryRunner(
             $queries,
             $commands,
             $this->clock(new DateTimeImmutable('2026-10-01T12:00:00Z'))
@@ -131,7 +131,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
         $queries->method('fetch')->willReturnOnConsecutiveCalls([], [$this->work('email_change', $at)]);
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::never())->method('execute');
-        $runner = new RecoverCredentialDeliveryPage($queries, $commands, $this->clock($at));
+        $runner = new CredentialRecoveryRunner($queries, $commands, $this->clock($at));
         self::assertSame(0, $runner->run(1, 1)['discovered']);
         self::assertSame([
             'discovered'  => 1,
@@ -153,7 +153,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
         $queries->method('fetch')->willReturn([$this->work('activation', $at), $this->work('password_reset', $at)]);
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::once())->method('execute')->willThrowException(new StateConflict('Stale work.'));
-        $runner = new RecoverCredentialDeliveryPage($queries, $commands, $this->clock($at));
+        $runner = new CredentialRecoveryRunner($queries, $commands, $this->clock($at));
         self::assertSame([
             'discovered'  => 2,
             'offered'     => 1,
@@ -174,7 +174,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
         $queries->method('fetch')->willReturn([$this->work('activation', $at), $this->work('password_reset', $at)]);
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::once())->method('execute')->willThrowException(new RuntimeException('private'));
-        $runner = new RecoverCredentialDeliveryPage($queries, $commands, $this->clock($at));
+        $runner = new CredentialRecoveryRunner($queries, $commands, $this->clock($at));
         $this->expectException(RuntimeException::class);
         $runner->run(2, 2);
     }

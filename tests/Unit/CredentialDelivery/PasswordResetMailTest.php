@@ -9,15 +9,15 @@ use App\Adapter\CredentialDelivery\CredentialMailProvider;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\PasswordResetMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
-use App\Application\Mail\MailDelivery;
-use App\Application\Mail\MailMessage;
-use App\Application\Mail\MailOutcome;
+use App\Adapter\Mail\MailDelivery;
+use App\Adapter\Mail\MailMessage;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryAbsent;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
@@ -83,7 +83,7 @@ final class PasswordResetMailTest extends TestCase
      * Maps every transport outcome with stable generation identity and reviewed deterministic alternatives
      */
     #[DataProvider('outcomes')]
-    public function testRoutingAndVersionOneMail(MailOutcome $outcome, CredentialDeliveryOutcome $expected): void
+    public function testRoutingAndVersionOneMail(CredentialDeliveryOutcome $outcome): void
     {
         $grant = $this->grant();
         $view = CredentialDeliveryStatusView::fromDelivery('password_reset', $grant->getDelivery(), 0, null);
@@ -107,7 +107,7 @@ final class PasswordResetMailTest extends TestCase
             &$checks,
             &$ids,
             &$digests
-        ): MailOutcome {
+        ): CredentialDeliveryOutcome {
             [$destination, $subject, $text, $html] = $message->content();
             $userId = $grant->getUserId()->toString();
             $expectedText = <<<TEXT
@@ -160,7 +160,7 @@ HTML;
         );
         $invocation = $this->invocation($grant);
         $outcomes = [$provider->deliver($invocation), $provider->deliver($invocation)];
-        self::assertSame([$expected, $expected], $outcomes);
+        self::assertSame([$outcome, $outcome], $outcomes);
         self::assertSame(array_fill(0, 2, [true, true, true, true]), $checks);
         self::assertSame(array_fill(0, 2, $invocation->getIdempotencyId()), $ids);
         self::assertSame(array_fill(0, 2, [
@@ -172,13 +172,13 @@ HTML;
     /**
      * Supplies typed mail outcomes without owning package retry policy
      *
-     * @return iterable<string, array{MailOutcome, CredentialDeliveryOutcome}>
+     * @return iterable<string, array{CredentialDeliveryOutcome}>
      */
     public static function outcomes(): iterable
     {
-        yield 'delivered' => [MailOutcome::DELIVERED, CredentialDeliveryOutcome::DELIVERED];
-        yield 'retryable' => [MailOutcome::RETRYABLE_FAILURE, CredentialDeliveryOutcome::RETRYABLE_FAILURE];
-        yield 'permanent' => [MailOutcome::PERMANENT_FAILURE, CredentialDeliveryOutcome::PERMANENT_FAILURE];
+        yield 'delivered' => [CredentialDeliveryOutcome::DELIVERED];
+        yield 'retryable' => [CredentialDeliveryOutcome::RETRYABLE_FAILURE];
+        yield 'permanent' => [CredentialDeliveryOutcome::PERMANENT_FAILURE];
     }
 
     /**
@@ -193,7 +193,7 @@ HTML;
             $queries->method('fetch')->willThrowException(new RuntimeException('private-query-marker'));
         } else {
             $result = match ($failure) {
-                'absent' => null,
+                'absent' => new CredentialDeliveryAbsent(),
                 'wrong type' => new \stdClass(),
                 'wrong purpose' => CredentialDeliveryStatusView::fromDelivery(
                     'activation',
@@ -329,7 +329,7 @@ HTML;
         $mail = $this->createMock(MailDelivery::class);
         $mail->expects(self::once())->method('deliver')->willReturnCallback(static function (
             MailMessage $message
-        ) use ($activationGrant): MailOutcome {
+        ) use ($activationGrant): CredentialDeliveryOutcome {
             [$destination, $subject, $text, $html] = $message->content();
             $url = 'https://example.test/activate#credential=synthetic&user_id=';
             $url .= $activationGrant->getUserId()->toString();
@@ -339,7 +339,7 @@ HTML;
             self::assertTrue(str_contains($html, 'href="'.str_replace('&', '&amp;', $url).'"'));
             self::assertSame($activationGrant->getDelivery()->getId()->toString(), $message->idempotencyId);
 
-            return MailOutcome::DELIVERED;
+            return CredentialDeliveryOutcome::DELIVERED;
         });
         $invitations = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),

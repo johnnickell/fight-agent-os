@@ -351,6 +351,15 @@ interface ResumeOptions {
   onStarted?: () => void;
 }
 
+type RunCallbacks = Pick<ResumeOptions, "onTurnEnd" | "onToolActivity" | "onAssistantUsage" | "onCompaction">;
+
+function flushOutput(record: AgentRecord): void {
+  if (record.outputCleanup) {
+    try { record.outputCleanup(); } catch { /* ignore */ }
+    record.outputCleanup = undefined;
+  }
+}
+
 /** Best-effort ceiling on one child's shutdown handlers, so teardown can't strand a quit. */
 const CHILD_SHUTDOWN_TIMEOUT_MS = 3_000;
 
@@ -851,22 +860,8 @@ export class AgentManager {
       signal: record.abortController!.signal,
       sessionDir: options.sessionDir,
       beforeSessionStart: options.beforeSessionStart,
-      onToolActivity: (activity) => {
-        if (activity.type === "end") record.toolUses++;
-        options.onToolActivity?.(activity);
-      },
-      onTurnEnd: options.onTurnEnd,
+      ...this.runCallbacks(record, options),
       onTextDelta: options.onTextDelta,
-      onAssistantUsage: (usage) => {
-        addUsage(record.lifetimeUsage, usage);
-        this.onUsage?.(record, usage);
-        options.onAssistantUsage?.(usage);
-      },
-      onCompaction: (info) => {
-        record.compactionCount++;
-        this.onCompact?.(record, info);
-        options.onCompaction?.(info);
-      },
       nestedRuntime: {
         manager: this,
         parentAgentId: id,
@@ -927,11 +922,7 @@ export class AgentManager {
 
         detach();
 
-        // Final flush of streaming output file
-        if (record.outputCleanup) {
-          try { record.outputCleanup(); } catch { /* ignore */ }
-          record.outputCleanup = undefined;
-        }
+        flushOutput(record);
 
         // Clean up worktree if used
         if (record.worktree) {
@@ -972,11 +963,7 @@ export class AgentManager {
 
         detach();
 
-        // Final flush of streaming output file on error
-        if (record.outputCleanup) {
-          try { record.outputCleanup(); } catch { /* ignore */ }
-          record.outputCleanup = undefined;
-        }
+        flushOutput(record);
 
         // Best-effort worktree cleanup on error
         if (record.worktree) {
@@ -1285,21 +1272,7 @@ export class AgentManager {
       this.settleOutcome(record, await resumeAgent(record.session, prompt, {
         type: record.type,
         maxTurns: options?.maxTurns ?? record.invocation?.maxTurns,
-        onTurnEnd: options?.onTurnEnd,
-        onToolActivity: (activity) => {
-          if (activity.type === "end") record.toolUses++;
-          options?.onToolActivity?.(activity);
-        },
-        onAssistantUsage: (usage) => {
-          addUsage(record.lifetimeUsage, usage);
-          this.onUsage?.(record, usage);
-          options?.onAssistantUsage?.(usage);
-        },
-        onCompaction: (info) => {
-          record.compactionCount++;
-          this.onCompact?.(record, info);
-          options?.onCompaction?.(info);
-        },
+        ...this.runCallbacks(record, options),
         signal: abortController.signal,
       }));
     } catch (err) {
@@ -1312,6 +1285,26 @@ export class AgentManager {
     this.abortOwnedChildren(id);
 
     return record;
+  }
+
+  private runCallbacks(record: AgentRecord, options?: RunCallbacks): RunCallbacks {
+    return {
+      onTurnEnd: options?.onTurnEnd,
+      onToolActivity: (activity) => {
+        if (activity.type === "end") record.toolUses++;
+        options?.onToolActivity?.(activity);
+      },
+      onAssistantUsage: (usage) => {
+        addUsage(record.lifetimeUsage, usage);
+        this.onUsage?.(record, usage);
+        options?.onAssistantUsage?.(usage);
+      },
+      onCompaction: (info) => {
+        record.compactionCount++;
+        this.onCompact?.(record, info);
+        options?.onCompaction?.(info);
+      },
+    };
   }
 
   /**
@@ -1392,11 +1385,7 @@ export class AgentManager {
     const settle = () => {
       detachParentSignal?.();
       detachParentSignal = undefined;
-      // Final flush of streaming output file
-      if (record.outputCleanup) {
-        try { record.outputCleanup(); } catch { /* ignore */ }
-        record.outputCleanup = undefined;
-      }
+      flushOutput(record);
       // Children spawned during the resumed turn must not outlive it.
       this.abortOwnedChildren(id);
       if (occupiesPoolSlot(record)) this.runningBackground--;
@@ -1407,21 +1396,7 @@ export class AgentManager {
     const promise = resumeAgent(record.session, prompt, {
       type: record.type,
       maxTurns: options.maxTurns ?? record.invocation?.maxTurns,
-      onTurnEnd: options.onTurnEnd,
-      onToolActivity: (activity) => {
-        if (activity.type === "end") record.toolUses++;
-        options.onToolActivity?.(activity);
-      },
-      onAssistantUsage: (usage) => {
-        addUsage(record.lifetimeUsage, usage);
-        this.onUsage?.(record, usage);
-        options.onAssistantUsage?.(usage);
-      },
-      onCompaction: (info) => {
-        record.compactionCount++;
-        this.onCompact?.(record, info);
-        options.onCompaction?.(info);
-      },
+      ...this.runCallbacks(record, options),
       signal: abortController.signal,
     })
       .then((outcome) => {

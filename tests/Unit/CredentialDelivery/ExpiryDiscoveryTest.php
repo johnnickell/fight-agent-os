@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\CredentialDelivery;
 
-use App\Adapter\Persistence\ExpiredCredentialDeliveryRecords;
+use App\Adapter\Persistence\AccessControl\CredentialDelivery\ExpiredCredentialDeliveryRecords;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use InvalidArgumentException;

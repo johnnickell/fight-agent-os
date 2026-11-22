@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\CredentialDelivery;
+namespace App\Adapter\CredentialDelivery;
 
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
@@ -18,16 +18,16 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use InvalidArgumentException;
 
 /**
- * Class RecoverCredentialDeliveryPage
+ * Class CredentialRecoveryRunner
  *
  * Offers one bounded discovery page to registered package delivery handlers
  */
-final readonly class RecoverCredentialDeliveryPage
+final readonly class CredentialRecoveryRunner
 {
     /**
-     * Constructs RecoverCredentialDeliveryPage
+     * Constructs CredentialRecoveryRunner
      */
-    public function __construct(private QueryBus $queries, private CommandBus $commands, private Clock $clock)
+    public function __construct(private QueryBus $queryBus, private CommandBus $commandBus, private Clock $clock)
     {
     }
 
@@ -48,7 +48,7 @@ final readonly class RecoverCredentialDeliveryPage
         /**
          * @var list<DueCredentialDelivery> $work
          */
-        $work = $this->queries->fetch(new FindDueCredentialDeliveries($this->clock->now(), min($pageSize, $capacity)));
+        $work = $this->queryBus->fetch(new FindDueCredentialDeliveries($this->clock->now(), min($pageSize, $capacity)));
         $report = [
             'discovered'  => count($work),
             'offered'     => 0,
@@ -59,17 +59,17 @@ final readonly class RecoverCredentialDeliveryPage
         ];
         $systemId = SystemId::generate();
         foreach ($work as $delivery) {
-            $id = $delivery->getDeliveryId()->toString();
-            $command = match ($delivery->getPurpose()) {
-                'activation' => new DeliverUserInvitation(
+            $deliveryId = $delivery->getDeliveryId();
+            $command = match (true) {
+                $deliveryId instanceof ActivationDeliveryId => new DeliverUserInvitation(
                     $systemId,
                     $delivery->getUserId(),
-                    ActivationDeliveryId::fromString($id)
+                    $deliveryId
                 ),
-                'password_reset' => new DeliverPasswordReset(
+                $deliveryId instanceof PasswordResetDeliveryId => new DeliverPasswordReset(
                     $systemId,
                     $delivery->getUserId(),
-                    PasswordResetDeliveryId::fromString($id)
+                    $deliveryId
                 ),
                 default => null
             };
@@ -80,7 +80,7 @@ final readonly class RecoverCredentialDeliveryPage
 
             $report['offered']++;
             try {
-                $this->commands->execute($command);
+                $this->commandBus->execute($command);
                 $report['dispatched']++;
             } catch (StateConflict) {
                 $report['contended']++;
