@@ -20,6 +20,7 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredentia
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -367,6 +368,65 @@ final class PostgresActivationGrantRepositoryTest extends TestCase
         }
 
         self::assertSame($matches, new PostgresActivationGrantRepository($connection)->replace($grant, $claimed));
+    }
+
+    /**
+     * Replays package policy before writing mutable delivery state against the observed revision
+     */
+    #[DataProvider('deliveryOutcomes')]
+    public function testReplaceRecordsPackageDeliveryOutcome(string $outcome, string $status, bool $retained): void
+    {
+        $issued = $this->grant();
+        $token = CredentialDeliveryClaimToken::generate();
+        $at = $this->now();
+        $claimed = $issued->claimDelivery($token, $at, $at->modify('+5 minutes'));
+        $failure = CredentialDeliveryFailure::UNEXPECTED_PROVIDER;
+        $retry = $claimed->failDelivery($token, $at, $failure);
+        $lateAt = $at->modify('+59 minutes');
+        $late = $retry->claimDelivery($token, $lateAt, $issued->getExpiresAt());
+        [$before, $after] = match ($outcome) {
+            'retryable failure' => [$claimed, $retry],
+            'request retry' => [$retry, $retry->requestDeliveryRetry()],
+            'delivered' => [$claimed, $claimed->confirmDelivery($token, $at)],
+            'permanent failure' => [$claimed, $claimed->failDeliveryPermanently($token, $at)],
+            'expired before dispatch' => [$issued, $issued->expireDeliveryAt($issued->getExpiresAt())],
+            'backoff crosses deadline' => [$late, $late->failDelivery($token, $lateAt, $failure)],
+            'consumed' => [$issued, $issued->consume($at)],
+            default => throw new LogicException('Unknown delivery outcome fixture.')
+        };
+        $connection = $this->connection($issued->getUserId());
+        $connection->expects(self::once())->method('fetchAssociative')
+            ->willReturn(ActivationGrantRecords::fields($before));
+        $connection->expects(self::once())->method('update')->with(
+            'activation_grants',
+            self::callback(static function (array $fields) use ($before, $status, $retained): bool {
+                self::assertSame($status, $fields['delivery_status']);
+                self::assertSame($before->getRevision() + 1, $fields['revision']);
+                self::assertSame($retained ? 'synthetic-encrypted-material' : null, $fields['delivery_ciphertext']);
+                self::assertArrayNotHasKey('credential_digest', $fields);
+
+                return true;
+            }),
+            ['id' => $before->getId()->toString(), 'revision' => $before->getRevision()]
+        )->willReturn(1);
+
+        self::assertTrue(new PostgresActivationGrantRepository($connection)->replace($before, $after));
+    }
+
+    /**
+     * Supplies delivery transitions and whether dispatchable material remains
+     *
+     * @return iterable<string, array{string, string, bool}>
+     */
+    public static function deliveryOutcomes(): iterable
+    {
+        yield 'retryable failure' => ['retryable failure', 'retry_pending', true];
+        yield 'request retry' => ['request retry', 'pending', true];
+        yield 'delivered' => ['delivered', 'delivered', false];
+        yield 'permanent failure' => ['permanent failure', 'permanent_failure', false];
+        yield 'expired before dispatch' => ['expired before dispatch', 'expired', false];
+        yield 'backoff crosses deadline' => ['backoff crosses deadline', 'expired', false];
+        yield 'consumed' => ['consumed', 'invalidated', false];
     }
 
     /**
