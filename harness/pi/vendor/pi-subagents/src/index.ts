@@ -3859,17 +3859,61 @@ Write the file using the write tool. Only write the file, nothing else.`;
       : `${base} Currently limited to an empty list, so nothing loads.`;
   }
 
-  const NUMERIC_IDS = new Set([
-    "maxConcurrent", "maxConcurrentForeground", "defaultMaxTurns", "graceTurns", "maxSubagentDepth",
-  ]);
+  const numericSettings = [
+    {
+      id: "maxConcurrent",
+      label: "Max concurrency",
+      description: "Max concurrent background agents (Enter to type)",
+      inputHint: "1+",
+      minimum: 1,
+      get: () => manager.getMaxConcurrent(),
+      set: (n: number) => manager.setMaxConcurrent(n),
+    },
+    {
+      id: "maxConcurrentForeground",
+      label: "Max foreground concurrency",
+      description: "Max concurrent foreground (blocking) agents (0 = unlimited, Enter to type)",
+      inputHint: "0 = unlimited",
+      minimum: 0,
+      get: () => manager.getMaxConcurrentForeground(),
+      set: (n: number) => manager.setMaxConcurrentForeground(n),
+      message: (n: number) => n === 0 ? "Max foreground concurrency set to unlimited" : undefined,
+    },
+    {
+      id: "defaultMaxTurns",
+      label: "Default max turns",
+      description: "Default max turns before wrap-up (0 = unlimited, Enter to type)",
+      inputHint: "0 = unlimited",
+      minimum: 0,
+      get: () => getDefaultMaxTurns() ?? 0,
+      set: (n: number) => setDefaultMaxTurns(n === 0 ? undefined : n),
+      message: (n: number) => n === 0 ? "Default max turns set to unlimited" : undefined,
+    },
+    {
+      id: "graceTurns",
+      label: "Grace turns",
+      description: "Grace turns after wrap-up steer (Enter to type)",
+      inputHint: "1+",
+      minimum: 1,
+      get: getGraceTurns,
+      set: setGraceTurns,
+    },
+    {
+      id: "maxSubagentDepth",
+      label: "Nested depth",
+      description: "Hard cap on nested delegation — main is 0, its subagents 1 (0/1 = nesting off, Enter to type)",
+      inputHint: "0/1 = nesting off",
+      minimum: 0,
+      get: getMaxSubagentDepth,
+      set: setMaxSubagentDepth,
+      message: (n: number) => n <= 1
+        ? "Nested delegation disabled"
+        : `Nested depth set to ${n}. Applies to agents started from now on.`,
+    },
+  ];
 
   async function showSettings(ctx: ExtensionCommandContext) {
     function buildItems(): SettingItem[] {
-      const mc = manager.getMaxConcurrent();
-      const mcf = manager.getMaxConcurrentForeground();
-      const dmt = getDefaultMaxTurns() ?? 0;
-      const gt = getGraceTurns();
-      const msd = getMaxSubagentDepth();
       // Label what unset actually does — it targets general-purpose even when
       // that is unregistered (the permissive hardcoded tier), so showing "none"
       // there would advertise strict dispatch for the most permissive state.
@@ -3879,41 +3923,10 @@ Write the file using the write tool. Only write the file, nothing else.`;
       const fallbackValues = [...new Set([...getAvailableTypes(), NO_FALLBACK])];
 
       return [
-        {
-          id: "maxConcurrent",
-          label: "Max concurrency",
-          description: "Max concurrent background agents (Enter to type)",
-          currentValue: String(mc),
-          values: [String(mc)],
-        },
-        {
-          id: "maxConcurrentForeground",
-          label: "Max foreground concurrency",
-          description: "Max concurrent foreground (blocking) agents (0 = unlimited, Enter to type)",
-          currentValue: String(mcf),
-          values: [String(mcf)],
-        },
-        {
-          id: "defaultMaxTurns",
-          label: "Default max turns",
-          description: "Default max turns before wrap-up (0 = unlimited, Enter to type)",
-          currentValue: String(dmt),
-          values: [String(dmt)],
-        },
-        {
-          id: "graceTurns",
-          label: "Grace turns",
-          description: "Grace turns after wrap-up steer (Enter to type)",
-          currentValue: String(gt),
-          values: [String(gt)],
-        },
-        {
-          id: "maxSubagentDepth",
-          label: "Nested depth",
-          description: "Hard cap on nested delegation — main is 0, its subagents 1 (0/1 = nesting off, Enter to type)",
-          currentValue: String(msd),
-          values: [String(msd)],
-        },
+        ...numericSettings.map(({ id, label, description, get }) => {
+          const currentValue = String(get());
+          return { id, label, description, currentValue, values: [currentValue] };
+        }),
         {
           id: "joinMode",
           label: "Join mode",
@@ -4081,46 +4094,12 @@ Write the file using the write tool. Only write the file, nothing else.`;
     }
 
     function applyValue(id: string, value: string) {
-      if (id === "maxConcurrent") {
+      const numeric = numericSettings.find(setting => setting.id === id);
+      if (numeric) {
         const n = parseInt(value, 10);
-        if (n >= 1) {
-          manager.setMaxConcurrent(n);
-          notifyApplied(ctx, `Max concurrency set to ${n}`);
-        }
-      } else if (id === "maxConcurrentForeground") {
-        // 0 is meaningful here, unlike maxConcurrent above: it means unlimited.
-        const n = parseInt(value, 10);
-        if (n >= 0) {
-          manager.setMaxConcurrentForeground(n);
-          notifyApplied(ctx, n === 0
-            ? "Max foreground concurrency set to unlimited"
-            : `Max foreground concurrency set to ${n}`);
-        }
-      } else if (id === "defaultMaxTurns") {
-        const n = parseInt(value, 10);
-        if (n === 0) {
-          setDefaultMaxTurns(undefined);
-          notifyApplied(ctx, "Default max turns set to unlimited");
-        } else if (n >= 1) {
-          setDefaultMaxTurns(n);
-          notifyApplied(ctx, `Default max turns set to ${n}`);
-        }
-      } else if (id === "graceTurns") {
-        const n = parseInt(value, 10);
-        if (n >= 1) {
-          setGraceTurns(n);
-          notifyApplied(ctx, `Grace turns set to ${n}`);
-        }
-      } else if (id === "maxSubagentDepth") {
-        const n = parseInt(value, 10);
-        if (n >= 0) {
-          setMaxSubagentDepth(n);
-          notifyApplied(
-            ctx,
-            n <= 1
-              ? "Nested delegation disabled"
-              : `Nested depth set to ${n}. Applies to agents started from now on.`,
-          );
+        if (n >= numeric.minimum) {
+          numeric.set(n);
+          notifyApplied(ctx, numeric.message?.(n) ?? `${numeric.label} set to ${n}`);
         }
       } else if (id === "joinMode") {
         setDefaultJoinMode(value as JoinMode);
@@ -4293,7 +4272,7 @@ Write the file using the write tool. Only write the file, nothing else.`;
           }
 
           // Enter on numeric field → close and prompt for typed input
-          if (matchesKey(data, Key.enter) && NUMERIC_IDS.has(items[currentIndex].id)) {
+          if (matchesKey(data, Key.enter) && numericSettings.some(setting => setting.id === items[currentIndex].id)) {
             done(items[currentIndex].id);
             return;
           }
@@ -4303,26 +4282,10 @@ Write the file using the write tool. Only write the file, nothing else.`;
     });
 
     // If a numeric field ID was returned, prompt for typed input
-    if (result && NUMERIC_IDS.has(result)) {
-      const current = result === "maxConcurrent"
-        ? String(manager.getMaxConcurrent())
-        : result === "maxConcurrentForeground"
-          ? String(manager.getMaxConcurrentForeground())
-          : result === "defaultMaxTurns"
-            ? String(getDefaultMaxTurns() ?? 0)
-            : result === "maxSubagentDepth"
-              ? String(getMaxSubagentDepth())
-              : String(getGraceTurns());
-
-      const label = result === "maxConcurrent"
-        ? "Max concurrency (1+)"
-        : result === "maxConcurrentForeground"
-          ? "Max foreground concurrency (0 = unlimited)"
-          : result === "defaultMaxTurns"
-            ? "Default max turns (0 = unlimited)"
-            : result === "maxSubagentDepth"
-              ? "Nested depth (0/1 = nesting off)"
-              : "Grace turns (1+)";
+    const numeric = numericSettings.find(setting => setting.id === result);
+    if (numeric) {
+      const current = String(numeric.get());
+      const label = `${numeric.label} (${numeric.inputHint})`;
 
       // Loop until user enters a valid integer or cancels (Esc / null).
       // Silently trims whitespace; rejects non-numeric input by re-prompting.
@@ -4331,7 +4294,7 @@ Write the file using the write tool. Only write the file, nothing else.`;
         const trimmed = input.trim();
         const n = Number(trimmed);
         if (trimmed !== "" && Number.isInteger(n)) {
-          applyValue(result, String(n));
+          applyValue(numeric.id, String(n));
           await showSettings(ctx);
           return;
         }
