@@ -1,6 +1,6 @@
 # Who owns the browser account journeys?
 
-Work candidate for [TASK-00596](../../../planning/tasks/00596-TASK.md), implementation source `f87ed9391a1f3db78348b7101fda086c221207b9`, based on
+Work candidate for [TASK-00596](../../../planning/tasks/00596-TASK.md), implementation source `93c2ad0c85b0b36be21d2f1a2f854e4193d3527b`, based on
 `dbe74e35efde21cc3b305d582d8e7b216e628826`. The adjacent revision identifies the sources represented by the image.
 
 ![Dependency arrows from the Agent OS host into the shared React library and the library's browser request to the server](ownership.png)
