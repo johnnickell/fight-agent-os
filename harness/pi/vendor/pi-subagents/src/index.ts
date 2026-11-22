@@ -61,7 +61,7 @@ import {
   type UICtx,
 } from "./ui/agent-widget.js";
 import { ConversationViewer, getConversationOverlayOptions, type ViewerBackgroundAction } from "./ui/conversation-viewer.js";
-import { FleetList, type FleetUICtx, type FleetWorkflow } from "./ui/fleet-list.js";
+import { FleetList, type FleetUICtx } from "./ui/fleet-list.js";
 import { showSchedulesMenu } from "./ui/schedule-menu.js";
 import { selectItem } from "./ui/select-item.js";
 import { renderWorkflowCard, renderWorkflowEntryCard } from "./ui/workflow-card.js";
@@ -69,13 +69,12 @@ import { openWorkflowFromFleet, showWorkflowsMenu, type WorkflowMenuDeps } from 
 import { getLifetimeCost, getLifetimeTotal, getSessionContextPercent, type LifetimeUsage, PendingUsagePool, toReportedUsage } from "./usage.js";
 import { decideWorkflowCollision, FOREIGN_WORKFLOW_TOOL_NAMES } from "./workflow/collisions.js";
 import { WORKFLOW_ENTRY_TYPE, type WorkflowEntryData, workflowEntryData } from "./workflow/entry.js";
-import { createWorkflowHost } from "./workflow/host.js";
-import { appendJournal, readJournal, type WorkflowJournalEntry } from "./workflow/journal.js";
+import { readJournal } from "./workflow/journal.js";
 import { extractMeta, type WorkflowMeta, workflowCallName } from "./workflow/meta.js";
 import { elapsedMs } from "./workflow/progress.js";
-import { runWorkflow } from "./workflow/runtime.js";
+import { createWorkflowRuns } from "./workflow/runs.js";
 import { resolveWorkflowScript } from "./workflow/saved.js";
-import { completeWorkflowTask, createWorkflowTask, failWorkflowTask, formatWorkflowNotification, resolveResumeTarget, updateWorkflowProgressBatch, type WorkflowTask, workflowResultText, workflowRunId } from "./workflow/task.js";
+import { createWorkflowTask, formatWorkflowNotification, resolveResumeTarget, type WorkflowTask, workflowResultText, workflowRunId } from "./workflow/task.js";
 import { fullWorkflowToolDescription } from "./workflow/tool-description.js";
 import { isWorktreeIsolationEnabled, setWorktreeIsolationEnabled } from "./worktree.js";
 import { escapeXml } from "./xml.js";
@@ -1182,8 +1181,7 @@ export default function (pi: ExtensionAPI, defaultsPath?: string) {
     scheduler.stop();
     // Before abortAll, and not folded into it: a workflow owns a worker thread
     // as well as its children, and only its own signal terminates that.
-    for (const task of workflowTasks.values()) task.abortController.abort();
-    workflowTasks.clear();
+    workflowRuns.abortAll();
     manager.abortAll();
     // Activation-owned UI and group state (#256): `session_shutdown` also runs for
     // reload and session replacement, where the Node process survives, so a live
@@ -2614,74 +2612,10 @@ Terse command-style prompts produce shallow, generic work.
 
   // ---- Workflow tool ----
 
-  /**
-   * Live runs, by task id. The tool returns before the run finishes, so its
-   * result card looks the task up here on every render rather than freezing a
-   * snapshot into `details` — that is what makes the inline card follow a
-   * background run.
-   */
-  const workflowTasks = new Map<string, WorkflowTask>();
-
-  /**
-   * Workflow runs as the fleet list wants them.
-   *
-   * Mapped here rather than handing `WorkflowTask` over the seam: the list is
-   * deliberately ignorant of the workflow engine, and a run's counters live in
-   * the progress log rather than on the record, so they are derived per call
-   * the same way the card derives them.
-   */
-  function fleetWorkflows(): FleetWorkflow[] {
-    // Cached counters only, no derivation: the fleet list calls this on a
-    // 200ms tick and reads the roster several times per update, so walking a
-    // run's progress log here would put O(log) work in the render loop.
-    return [...workflowTasks.values()].map(task => ({
-      id: task.id,
-      name: task.meta?.name ?? task.workflowName ?? task.id,
-      status: task.status,
-      doneCount: task.doneCount,
-      totalCount: task.agentCount,
-      startedAt: task.startTime,
-      ...(task.endTime !== undefined ? { completedAt: task.endTime } : {}),
-      tokens: task.totalTokens,
-    }));
-  }
-
-  /**
-   * Run a task to completion against the real manager, settling the record
-   * either way. Never rejects: a run that cannot start (bad `meta`, oversized
-   * source, non-JSON `args`) is a failed workflow, and both callers here are
-   * detached — a rejection would surface as an unhandled one.
-   */
-  async function runWorkflowTask(ctx: ExtensionContext, task: WorkflowTask): Promise<void> {
-    try {
-      const result = await runWorkflow({
-        script: task.script,
-        args: task.args,
-        signal: task.abortController.signal,
-        host: createWorkflowHost({
-          pi,
-          ctx,
-          manager,
-          signal: task.abortController.signal,
-          rootSessionId: ctx.sessionManager.getSessionId(),
-          workflowId: task.id,
-        }),
-        onProgress: entries => updateWorkflowProgressBatch(task, entries),
-        // The dialog's pause / skip / retry keys run through this; it is dropped
-        // again when the task settles.
-        onControl: control => { task.control = control; },
-        journal: {
-          ...(task.replay !== undefined ? { entries: task.replay } : {}),
-          ...(task.journalPath !== undefined
-            ? { append: (entry: WorkflowJournalEntry) => appendJournal(task.journalPath!, entry) }
-            : {}),
-        },
-      });
-      completeWorkflowTask(task, result);
-    } catch (err) {
-      failWorkflowTask(task, err instanceof Error ? err.message : String(err));
-    }
-  }
+  const workflowRuns = createWorkflowRuns(pi, manager, () => {
+    widget.update();
+    fleet.update();
+  });
 
   /**
    * Hand a finished run back to the model through the SAME channel a background
@@ -2777,7 +2711,7 @@ Terse command-style prompts produce shallow, generic work.
     renderResult(result, _options, theme, renderContext) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const taskId = (result.details as { taskId?: string } | undefined)?.taskId;
-      const task = taskId !== undefined ? workflowTasks.get(taskId) : undefined;
+      const task = taskId !== undefined ? workflowRuns.tasks.get(taskId) : undefined;
       // No task means the run predates this session (a reloaded transcript) or
       // the call never started one — show what `execute` said instead.
       if (renderContext.isError || !task) return new Text(text, 0, 0);
@@ -2800,7 +2734,7 @@ Terse command-style prompts produce shallow, generic work.
     },
 
     execute: async (toolCallId, params, _signal, _onUpdate, ctx) => {
-      const resumeFrom = resolveResumeTarget(params.resumeFromRunId, workflowTasks);
+      const resumeFrom = resolveResumeTarget(params.resumeFromRunId, workflowRuns.tasks);
       if (resumeFrom !== undefined && !resumeFrom.ok) return textResult(resumeFrom.message);
 
       // A resume with no source of its own re-runs what that run ran. The
@@ -2855,17 +2789,9 @@ Terse command-style prompts produce shallow, generic work.
         ...(journalPath !== undefined ? { journalPath } : {}),
         ...(replay !== undefined && replay.length > 0 ? { replay, resumedFrom: resumeFrom!.runId } : {}),
       });
-      workflowTasks.set(runId, task);
-      // The run's own row has to appear now, not when it settles. Its agents
-      // are owned by it, so their lifecycle callbacks no longer refresh these
-      // surfaces — nothing else would register the widget for a run whose
-      // first agent has not started yet.
-      widget.update();
-      fleet.update();
-
-      // Background, like Claude Code: the id comes back now and the run keeps
-      // going without the tool call.
-      void runWorkflowTask(ctx, task).then(() => notifyWorkflowFinished(task));
+      workflowRuns.track(task);
+      // Return the id now; the run keeps going without the tool call.
+      void workflowRuns.run(ctx, task).then(() => notifyWorkflowFinished(task));
 
       return {
         content: [{
@@ -3013,14 +2939,12 @@ Terse command-style prompts produce shallow, generic work.
     }
 
     const task = createWorkflowTask({ id: workflowRunId(), script, scriptPath: path, meta });
-    workflowTasks.set(task.id, task);
-    widget.update();
-    fleet.update();
+    workflowRuns.track(task);
     report(`Running workflow ${meta.name}…`, "info");
 
     // Detached: session_start is awaited by the host, and a workflow can run for
     // minutes — blocking here would hold the whole session's startup.
-    void runWorkflowTask(ctx, task).then(() => {
+    void workflowRuns.run(ctx, task).then(() => {
       // No tool call to attach a result card to, so the card becomes a session
       // entry (same layout), and the outcome is handed to the model as context
       // for its next turn rather than forcing one.
@@ -3247,7 +3171,7 @@ Terse command-style prompts produce shallow, generic work.
     // Workflow runs, on the same terms as scheduled jobs: shown only when the
     // feature is on, so the menu never advertises something switched off.
     if (isWorkflowsEnabled()) {
-      options.push(`Workflows (${workflowTasks.size})`);
+      options.push(`Workflows (${workflowRuns.tasks.size})`);
     }
 
     // Actions
@@ -4349,7 +4273,7 @@ Write the file using the write tool. Only write the file, nothing else.`;
    * and handing them different views of the session would let the two drift.
    */
   const workflowMenuDeps: WorkflowMenuDeps = {
-    tasks: workflowTasks,
+    tasks: workflowRuns.tasks,
     getRecord: id => manager.getRecord(id),
     viewAgentConversation,
     // Read lazily: `currentCtx` is rebound on every session_start, and the
@@ -4357,5 +4281,5 @@ Write the file using the write tool. Only write the file, nothing else.`;
     getCtx: () => currentCtx as unknown as ExtensionCommandContext | undefined,
   };
 
-  fleet.setWorkflowSource(fleetWorkflows, id => openWorkflowFromFleet(id, workflowMenuDeps));
+  fleet.setWorkflowSource(workflowRuns.fleetSummary, id => openWorkflowFromFleet(id, workflowMenuDeps));
 }
