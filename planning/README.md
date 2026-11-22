@@ -16,7 +16,7 @@ On a host with Git and Docker, run `./bin/planning-check --setup` once to prepar
 again when its Dockerfile changes). Then run `./bin/planning-check` to validate, or
 `./bin/planning-check --write` to refresh views and close eligible parents. Both use an offline one-shot
 container, with no application services, host PHP, or Composer. Build and GitHub invoke the same check
-with native PHP: `php -n scripts/planning_portfolio.php`.
+with native PHP: `php -n scripts/planning_portfolio.php`. See the [entry-point diagram](../docs/engineering/planning-validation/README.md).
 
 Archive only when explicitly requested. Prepare the same image before using `./bin/archive-planning`
 with `--apply`; its dry run does not need Docker. Scratch work belongs in ignored `.runs/` subfolders.
