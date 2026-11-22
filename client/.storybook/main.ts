@@ -15,6 +15,9 @@ const config: StorybookConfig = {
       cacheDir: '../.runs/cache/client/storybook-vite',
       build: { sourcemap: false, assetsInlineLimit: 0 },
       resolve: applicationResolve,
+      // The local package is rebuilt without changing the dependency lock. Vite's lock-based
+      // optimizer cache can otherwise serve old package code to the catalog browser.
+      optimizeDeps: { force: true },
       // Only Storybook's middleware server uses bin/client's published 16006 port.
       // Browser tests supply their own server, not this Docker port mapping.
       ...(configType === 'DEVELOPMENT' && config.server?.middlewareMode
