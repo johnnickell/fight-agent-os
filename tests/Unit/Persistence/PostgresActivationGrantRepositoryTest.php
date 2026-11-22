@@ -10,6 +10,8 @@ use App\Adapter\Persistence\PersistenceConflict;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\PDO\Exception as PgSqlException;
+use Doctrine\DBAL\Exception\DriverException;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -17,6 +19,7 @@ use Doctrine\DBAL\Result;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -210,6 +213,199 @@ final class PostgresActivationGrantRepositoryTest extends TestCase
         self::assertSame(4, $work[1]->getRevision());
         self::assertEquals($at, $work[1]->getDueAt());
         self::assertSame(CredentialDeliveryStatus::CLAIMED, $work[1]->getStatus());
+    }
+
+    /**
+     * Returns the activation delivery to erase at the expiry boundary without returning secret material
+     */
+    public function testExpiryProjectsActivationDeliveryIdentity(): void
+    {
+        $grant = $this->grant();
+        $expires = '2026-10-21 13:00:00.123456+00:00';
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('fetchAllAssociative')->with(
+            self::stringContains('FROM activation_grants'),
+            [$expires, 2]
+        )->willReturn([ActivationGrantRecords::fields($grant)]);
+
+        $references = new PostgresActivationGrantRepository($connection)->findExpired($grant->getExpiresAt(), 2);
+
+        self::assertCount(1, $references);
+        self::assertSame('activation', $references[0]->getPurpose());
+        self::assertSame($grant->getDelivery()->getId()->toString(), $references[0]->getDeliveryId()->toString());
+        self::assertNull($references[0]->getEmailChangeGrantId());
+        self::assertEquals($grant->getExpiresAt(), $references[0]->getExpiresAt());
+    }
+
+    /**
+     * Resolves an activation grant by its own identity, by delivery or by latest owner generation
+     */
+    #[DataProvider('lookupCases')]
+    public function testLookupMapsTheStoredGrant(string $mode, bool $found): void
+    {
+        $grant = $this->grant();
+        $connection = $this->createMock(Connection::class);
+        $row = $found ? ActivationGrantRecords::fields($grant) : false;
+        if ($mode === 'owner') {
+            $connection->expects(self::once())->method('fetchAssociative')->with(
+                self::stringContains('ORDER BY generation DESC'),
+                [$grant->getUserId()->toString()]
+            )->willReturn($row);
+        } else {
+            $connection->method('getDatabasePlatform')->willReturn(new PostgreSQLPlatform());
+            $connection->method('createQueryBuilder')->willReturnCallback(
+                static fn (): QueryBuilder => new QueryBuilder($connection)
+            );
+            $result = $this->createStub(Result::class);
+            $result->method('fetchAssociative')->willReturn($row);
+            $byDelivery = $mode === 'delivery';
+            $connection->expects(self::once())->method('executeQuery')->with(
+                self::stringContains($byDelivery ? 'WHERE delivery_id = :id' : 'WHERE id = :id'),
+                ['id' => ($byDelivery ? $grant->getDelivery()->getId() : $grant->getId())->toString()]
+            )->willReturn($result);
+        }
+        $repository = new PostgresActivationGrantRepository($connection);
+
+        $loaded = match ($mode) {
+            'owner' => $repository->getLatestByUserId($grant->getUserId()),
+            'delivery' => $repository->getByDeliveryId($grant->getDelivery()->getId()),
+            'grant' => $repository->getById($grant->getId()),
+            default => throw new LogicException('Unknown activation lookup fixture.')
+        };
+
+        self::assertSame($found ? $grant->getId()->toString() : null, $loaded?->getId()->toString());
+    }
+
+    /**
+     * Supplies stored and absent activation identity results
+     *
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function lookupCases(): iterable
+    {
+        foreach (['owner', 'delivery', 'grant'] as $mode) {
+            yield $mode.' match' => [$mode, true];
+            yield $mode.' missing' => [$mode, false];
+        }
+    }
+
+    /**
+     * Appends a successor only behind a stored terminal grant, without rewriting that grant
+     */
+    #[DataProvider('successorStates')]
+    public function testAddSuccessorRequiresATerminalPredecessor(string $state): void
+    {
+        $grant = $this->grant();
+        $successor = $this->grant($grant->getUserId());
+        $terminal = $grant->revoke($this->now()->modify('+1 minute'));
+        $stored = match ($state) {
+            'missing' => false,
+            'issued' => ActivationGrantRecords::fields($grant),
+            default => ActivationGrantRecords::fields($terminal) + ['generation' => '7']
+        };
+        $connection = $this->connection($grant->getUserId());
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains('FOR UPDATE'),
+            [$grant->getUserId()->toString()]
+        )->willReturn($stored);
+        $connection->expects(self::never())->method('update');
+        $accepted = $state === 'terminal';
+        $insert = $connection->expects(self::exactly((int) $accepted))->method('insert');
+        if ($accepted) {
+            $insert->with('activation_grants', self::callback(static function (array $row) use (
+                $grant,
+                $successor
+            ): bool {
+                self::assertSame(8, $row['generation']);
+                self::assertSame($grant->getId()->toString(), $row['predecessor_id']);
+                self::assertSame($successor->getId()->toString(), $row['id']);
+
+                return true;
+            }))->willReturn(1);
+        }
+
+        self::assertSame($accepted, new PostgresActivationGrantRepository($connection)->addSuccessor($successor));
+    }
+
+    /**
+     * Supplies latest activation-generation states
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function successorStates(): iterable
+    {
+        foreach (['missing', 'issued', 'terminal'] as $state) {
+            yield $state => [$state];
+        }
+    }
+
+    /**
+     * Rejects a stale snapshot and otherwise records the delivery claim without rewriting the digest
+     */
+    #[DataProvider('storedSnapshots')]
+    public function testReplaceComparesTheStoredRevision(bool $matches): void
+    {
+        $grant = $this->grant();
+        $token = CredentialDeliveryClaimToken::generate();
+        $claimed = $grant->claimDelivery($token, $this->now(), $this->now()->modify('+5 minutes'));
+        $stored = ActivationGrantRecords::fields($matches ? $grant : $claimed);
+        $connection = $this->connection($grant->getUserId());
+        $connection->expects(self::once())->method('fetchAssociative')->willReturn($stored);
+        $write = $connection->expects(self::exactly((int) $matches))->method('update');
+        if ($matches) {
+            $write->with(
+                'activation_grants',
+                self::callback(static function (array $fields) use ($token): bool {
+                    self::assertSame('claimed', $fields['delivery_status']);
+                    self::assertSame($token->toString(), $fields['delivery_claim_token']);
+                    self::assertArrayNotHasKey('credential_digest', $fields);
+
+                    return true;
+                }),
+                ['id' => $grant->getId()->toString(), 'revision' => 0]
+            )->willReturn(1);
+        }
+
+        self::assertSame($matches, new PostgresActivationGrantRepository($connection)->replace($grant, $claimed));
+    }
+
+    /**
+     * Rejects only owned check conflicts and propagates unknown persistence failures
+     */
+    #[DataProvider('writeConflicts')]
+    public function testWriteClassifiesOnlyKnownConflicts(string $sqlState, string $constraint, string $result): void
+    {
+        $grant = $this->grant();
+        $connection = $this->connection($grant->getUserId());
+        $connection->expects(self::once())->method('fetchAssociative')->willReturn(false);
+        $driverError = new PgSqlException('Synthetic violation of constraint "'.$constraint.'"', $sqlState);
+        if ($sqlState === '23503') {
+            $failure = new ForeignKeyConstraintViolationException($driverError, null);
+        } else {
+            $failure = new DriverException($driverError, null);
+        }
+        $connection->expects(self::once())->method('insert')->willThrowException($failure);
+        $connection->expects(self::once())->method('rollbackSavepoint');
+        if ($result === 'owner lost') {
+            $this->expectException(PersistenceConflict::class);
+            $this->expectExceptionMessage('The activation grant owner is unavailable.');
+        } elseif ($result === 'propagated') {
+            $this->expectExceptionObject($failure);
+        }
+
+        self::assertFalse(new PostgresActivationGrantRepository($connection)->add($grant));
+    }
+
+    /**
+     * Supplies owner, table-specific and unrelated database conflicts
+     *
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function writeConflicts(): iterable
+    {
+        yield 'owner reference' => ['23503', 'fk_activation_grants_owner', 'owner lost'];
+        yield 'known check' => ['23514', 'ck_activation_grants_terminal', 'rejected'];
+        yield 'unrelated check' => ['23514', 'ck_unrelated', 'propagated'];
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Persistence;
 
+use App\Adapter\Persistence\AccessControl\PasswordResetGrant\PasswordResetGrantRecords;
 use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
@@ -16,6 +17,8 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Result;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
@@ -766,6 +769,51 @@ final class PostgresUserRepositoryTest extends TestCase
             new AuthenticationAuthorityFences($connection),
             $lockLifecycleSnapshot
         );
+    }
+
+    /**
+     * Cancels outstanding recovery with the lifecycle change but does not rewrite an already revoked grant
+     */
+    #[DataProvider('recoveryMatches')]
+    public function testDisableCancelsOnlyAnIssuedRecoveryGrant(bool $issued): void
+    {
+        $user = $this->activeUser();
+        $disabled = clone $user;
+        $disabled->disable($this->later());
+        $at = $this->later()->modify('-5 minutes');
+        $grant = PasswordResetGrant::issue(
+            $user->getId(),
+            PasswordResetCredential::fromString(str_repeat('ab', 32)),
+            $at,
+            $at->modify('+1 hour'),
+            $user->getEmail(),
+            'fixture-ciphertext',
+            $user->getRecoveryAuthority()
+        );
+        $stored = $issued ? $grant : $grant->revoke($at);
+        $connection = $this->connection(inTransaction: true);
+        $connection->expects(self::once())->method('executeStatement')->with(self::stringContains('UPDATE users'))
+            ->willReturn(1);
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains('ORDER BY generation DESC LIMIT 1 FOR UPDATE'),
+            [$user->getId()->toString()]
+        )->willReturn(PasswordResetGrantRecords::fields($stored));
+        $write = $connection->expects(self::exactly((int) $issued))->method('update');
+        if ($issued) {
+            $write->with(
+                'password_reset_grants',
+                self::callback(static function (array $fields): bool {
+                    self::assertSame('2026-10-22 12:00:00.000000+00:00', $fields['revoked_at']);
+                    self::assertSame('invalidated', $fields['delivery_status']);
+                    self::assertNull($fields['delivery_ciphertext']);
+
+                    return true;
+                }),
+                ['id' => $grant->getId()->toString()]
+            )->willReturn(1);
+        }
+
+        self::assertTrue($this->repository($connection)->replaceLifecycleState($user, $disabled));
     }
 
     /**

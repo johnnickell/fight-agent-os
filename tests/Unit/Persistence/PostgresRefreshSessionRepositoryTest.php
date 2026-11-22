@@ -18,13 +18,14 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Domain\Repository\Pagination;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Protects guarded refresh-session rotation and revocation
+ * Protects refresh-session lookup, rotation and revocation
  */
 final class PostgresRefreshSessionRepositoryTest extends TestCase
 {
@@ -175,6 +176,173 @@ final class PostgresRefreshSessionRepositoryTest extends TestCase
         yield 'same session snapshot' => [true, false];
         yield 'session already changed' => [false, false];
         yield 'historical credential collision' => [true, true];
+    }
+
+    /**
+     * Resolves the current and historical digest namespaces separately and loads the owning session
+     */
+    #[DataProvider('lookupCases')]
+    public function testCredentialAndIdentityLookups(string $mode, bool $exists): void
+    {
+        $row = $this->storedRow();
+        $old = RefreshCredential::fromString(str_repeat('ab', 32));
+        $current = RefreshCredential::fromString(str_repeat('cd', 32));
+        $id = RefreshSessionId::fromString($row['id']);
+        $connection = $this->connection(false);
+        $connection->expects(self::exactly($exists ? ($mode === 'historical' ? 3 : 2) : 1))->method('executeQuery')
+            ->willReturnCallback(function (
+                string $sql,
+                array $parameters
+            ) use (
+                $mode,
+                $exists,
+                $row,
+                $old,
+                $current
+            ): Result {
+                $result = $this->createStub(Result::class);
+                if (str_starts_with($sql, 'SELECT refresh_session_id ')) {
+                    self::assertSame('historical', $mode);
+                    self::assertSame(['digest' => $old->digest()], $parameters);
+                    $result->method('fetchOne')->willReturn($exists ? $row['id'] : false);
+                } elseif (str_contains($sql, 'ORDER BY sequence')) {
+                    self::assertSame(['session_id' => $row['id']], $parameters);
+                    $result->method('fetchFirstColumn')->willReturn([$old->digest()]);
+                } else {
+                    self::assertSame(
+                        $mode === 'current' ? ['digest' => $current->digest()] : ['id' => $row['id']],
+                        $parameters
+                    );
+                    $result->method('fetchAssociative')->willReturn($exists ? $row : false);
+                }
+
+                return $result;
+            });
+        $repository = $this->repository($connection);
+
+        $loaded = match ($mode) {
+            'historical' => $repository->getByUsedCredential($old),
+            'current' => $repository->getByCredential($current),
+            'id' => $repository->getById($id),
+            default => throw new LogicException('Unknown lookup fixture.')
+        };
+
+        if (!$exists) {
+            self::assertNull($loaded);
+
+            return;
+        }
+        self::assertNotNull($loaded);
+        self::assertTrue($id->equals($loaded->getId()));
+        self::assertTrue($loaded->matchesCredential($current));
+        self::assertTrue($loaded->matchesUsedCredential($old));
+        self::assertTrue($loaded->isRemembered());
+        self::assertFalse($loaded->isRevoked());
+        self::assertSame(3, $loaded->getAuthenticationVersion());
+        self::assertSame(1, $loaded->getRevision());
+    }
+
+    /**
+     * Supplies present and absent results from each lookup namespace
+     *
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function lookupCases(): iterable
+    {
+        foreach (['historical', 'current', 'id'] as $mode) {
+            yield $mode.' match' => [$mode, true];
+            yield $mode.' absent' => [$mode, false];
+        }
+    }
+
+    /**
+     * Applies identical active-session eligibility to the page, its total and the unbounded read
+     */
+    #[DataProvider('activeListingModes')]
+    public function testActiveListingUsesBothExpiryDeadlines(bool $paginated): void
+    {
+        $row = $this->storedRow();
+        $owner = UserId::fromString($row['user_id']);
+        $at = new DateTimeImmutable('2026-10-21T12:06:00.123456Z');
+        $connection = $this->connection(false);
+        $connection->expects(self::exactly($paginated ? 3 : 2))->method('executeQuery')
+            ->willReturnCallback(function (string $sql, array $parameters) use ($row, $paginated): Result {
+                $result = $this->createStub(Result::class);
+                if (str_contains($sql, 'refresh_session_used_credentials')) {
+                    self::assertSame(['session_id' => $row['id']], $parameters);
+                    $result->method('fetchFirstColumn')->willReturn([RefreshCredential::fromString(
+                        str_repeat('ab', 32)
+                    )->digest()]);
+
+                    return $result;
+                }
+                self::assertStringContainsString('revoked = FALSE', $sql);
+                self::assertStringContainsString('idle_expires_at > :active_at', $sql);
+                self::assertStringContainsString('absolute_expires_at > :active_at', $sql);
+                self::assertSame([
+                    'user_id'   => $row['user_id'],
+                    'active_at' => '2026-10-21 12:06:00.123456+00:00'
+                ], $parameters);
+                if (str_starts_with($sql, 'SELECT COUNT(*)')) {
+                    self::assertStringNotContainsString('LIMIT', $sql);
+                    $result->method('fetchOne')->willReturn('4');
+                } else {
+                    $stableOrder = '/ORDER BY created_at(?: ASC)?, id(?: ASC)?(?: LIMIT|$)/';
+                    self::assertMatchesRegularExpression($stableOrder, $sql);
+                    self::assertSame($paginated, str_contains($sql, 'LIMIT 2 OFFSET 2'));
+                    $result->method('fetchAllAssociative')->willReturn([$row]);
+                }
+
+                return $result;
+            });
+        $repository = $this->repository($connection);
+
+        if ($paginated) {
+            $page = $repository->getByUserId($owner, $at, new Pagination(2, 2));
+            self::assertSame(4, $page->totalRecords());
+            self::assertSame(2, $page->page());
+            $records = iterator_to_array($page, false);
+        } else {
+            $records = $repository->getAllActiveByUserId($owner, $at);
+        }
+
+        self::assertCount(1, $records);
+        self::assertSame($row['id'], $records[0]->getId()->toString());
+        self::assertTrue($records[0]->isUsableAt($at));
+    }
+
+    /**
+     * Supplies the paginated and unbounded list modes
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function activeListingModes(): iterable
+    {
+        yield 'page with total' => [true];
+        yield 'all active sessions' => [false];
+    }
+
+    /**
+     * Supplies an independently mapped rotated row with PostgreSQL boolean and integer encodings
+     *
+     * @return array<string, string>
+     */
+    private function storedRow(): array
+    {
+        return [
+            'id'                     => RefreshSessionId::generate()->toString(),
+            'user_id'                => UserId::generate()->toString(),
+            'credential_digest'      => RefreshCredential::fromString(str_repeat('cd', 32))->digest(),
+            'created_at'             => '2026-10-21 12:00:00.123456+00:00',
+            'last_activity_at'       => '2026-10-21 12:05:00.123456+00:00',
+            'rotated_at'             => '2026-10-21 12:05:00.123456+00:00',
+            'idle_expires_at'        => '2026-10-21 13:00:00.123456+00:00',
+            'absolute_expires_at'    => '2026-10-22 12:00:00.123456+00:00',
+            'authentication_version' => '3',
+            'remembered'             => 't',
+            'revision'               => '1',
+            'revoked'                => 'f'
+        ];
     }
 
     /**

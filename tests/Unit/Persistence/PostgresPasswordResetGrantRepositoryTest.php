@@ -12,6 +12,7 @@ use Doctrine\DBAL\Driver\PDO\Exception as PgSqlException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\User\RecoveryAuthority;
@@ -276,7 +277,9 @@ final class PostgresPasswordResetGrantRepositoryTest extends TestCase
             array_fill(0, 3, '2026-10-21 12:05:00.123456+00:00') + [3 => 4]
         )->willReturn([PasswordResetGrantRecords::fields($claimed)]);
 
-        $due = new PostgresPasswordResetGrantRepository($connection)->findDue($lease, 4);
+        $repository = new PostgresPasswordResetGrantRepository($connection);
+        self::assertSame([], $repository->findDue($lease, 0));
+        $due = $repository->findDue($lease, 4);
 
         self::assertCount(1, $due);
         self::assertTrue($claimed->getDelivery()->getId()->equals($due[0]->getDeliveryId()));
@@ -358,6 +361,116 @@ final class PostgresPasswordResetGrantRepositoryTest extends TestCase
         yield 'both are current' => [true, true];
         yield 'grant revoked' => [false, true];
         yield 'authority changed' => [true, false];
+    }
+
+    /**
+     * Reads stored grants by distinct grant and owner identities
+     */
+    #[DataProvider('lookupCases')]
+    public function testReadsGrantAndOwnerIdentities(bool $byOwner, bool $exists): void
+    {
+        $grant = $this->grant();
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('fetchAssociative')->with(
+            self::stringContains($byOwner ? 'user_id = ? ORDER BY generation DESC' : 'WHERE id = ?'),
+            [$byOwner ? $grant->getUserId()->toString() : $grant->getId()->toString()]
+        )->willReturn($exists ? PasswordResetGrantRecords::fields($grant) : false);
+        $repository = new PostgresPasswordResetGrantRepository($connection);
+
+        if ($byOwner) {
+            $stored = $repository->getLatestByUserId($grant->getUserId());
+        } else {
+            $stored = $repository->getById($grant->getId());
+        }
+
+        self::assertSame($exists ? $grant->getId()->toString() : null, $stored?->getId()->toString());
+    }
+
+    /**
+     * Supplies present and absent grant and owner results
+     *
+     * @return iterable<string, array{bool, bool}>
+     */
+    public static function lookupCases(): iterable
+    {
+        yield 'grant exists' => [false, true];
+        yield 'grant absent' => [false, false];
+        yield 'owner has a grant' => [true, true];
+        yield 'owner has no grant' => [true, false];
+    }
+
+    /**
+     * Selects only reset material that can still be erased and returns a reset delivery reference
+     */
+    public function testExpiryProjectionSelectsRecoverableMaterial(): void
+    {
+        $grant = $this->grant();
+        $deadline = '2026-10-21 13:00:00.123456+00:00';
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('fetchAllAssociative')->with(
+            self::callback(static fn (string $sql): bool => str_contains($sql, 'FROM password_reset_grants')
+                && str_contains($sql, 'delivery_ciphertext IS NOT NULL')),
+            [$deadline, 2]
+        )->willReturn([PasswordResetGrantRecords::fields($grant)]);
+
+        $expired = new PostgresPasswordResetGrantRepository($connection)->findExpired($grant->getExpiresAt(), 2);
+
+        self::assertCount(1, $expired);
+        self::assertSame('password_reset', $expired[0]->getPurpose());
+        self::assertSame($grant->getDelivery()->getId()->toString(), $expired[0]->getDeliveryId()->toString());
+        self::assertNull($expired[0]->getEmailChangeGrantId());
+        self::assertSame(CredentialDeliveryStatus::PENDING, $expired[0]->getStatus());
+        self::assertEquals($grant->getExpiresAt(), $expired[0]->getExpiresAt());
+    }
+
+    /**
+     * Keeps material on a requeued attempt and clears it on acknowledgment, failure or invalidation
+     */
+    #[DataProvider('deliveryTransitions')]
+    public function testDeliveryWritesRespectMaterialLifetime(string $status, bool $retainsMaterial): void
+    {
+        $grant = $this->grant();
+        $now = $this->now();
+        $token = CredentialDeliveryClaimToken::generate();
+        $claimed = $grant->claimDelivery($token, $now, $now->modify('+5 minutes'));
+        $retry = $claimed->failDelivery($token, $now, CredentialDeliveryFailure::UNEXPECTED_PROVIDER);
+        [$before, $after] = match ($status) {
+            'pending' => [$retry, $retry->requestDeliveryRetry()],
+            'delivered' => [$claimed, $claimed->confirmDelivery($token, $now)],
+            'permanent_failure' => [$claimed, $claimed->failDeliveryPermanently($token, $now)],
+            'invalidated' => [$grant, $grant->invalidateDelivery()],
+            default => throw new LogicException('Unknown reset delivery fixture.')
+        };
+        $connection = $this->connection($grant, current: $status !== 'invalidated');
+        $connection->expects(self::once())->method('fetchAssociative')
+            ->willReturn(PasswordResetGrantRecords::fields($before));
+        $connection->expects(self::once())->method('update')->with(
+            'password_reset_grants',
+            self::callback(static function (array $fields) use ($status, $retainsMaterial): bool {
+                self::assertSame($status, $fields['delivery_status']);
+                self::assertNull($fields['delivery_claim_token']);
+                $material = $retainsMaterial ? 'synthetic-encrypted-material' : null;
+                self::assertSame($material, $fields['delivery_ciphertext']);
+
+                return true;
+            }),
+            ['id' => $before->getId()->toString(), 'revision' => $before->getRevision()]
+        )->willReturn(1);
+
+        self::assertTrue(new PostgresPasswordResetGrantRepository($connection)->replace($before, $after));
+    }
+
+    /**
+     * Supplies retry and terminal delivery writes
+     *
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function deliveryTransitions(): iterable
+    {
+        yield 'operator retry' => ['pending', true];
+        yield 'provider acknowledgment' => ['delivered', false];
+        yield 'provider terminal failure' => ['permanent_failure', false];
+        yield 'authority-invalidated delivery' => ['invalidated', false];
     }
 
     /**
