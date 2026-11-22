@@ -1,8 +1,6 @@
-import { describe, expect, it } from 'vitest';
-
 import { evaluateAccess } from '@fight/react/account';
-
 import { principal } from '@fixtures/authorityFixtures';
+import { describe, expect, it } from 'vitest';
 
 import type { AuthorityState } from '@fight/react/account';
 

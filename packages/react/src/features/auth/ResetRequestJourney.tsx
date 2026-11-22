@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
 import { ApiClient } from '../../api/ApiClient.js';
+import { ResetRequestPage } from '../../pages/ResetRequestPage.js';
+import { PublicSchemaService } from '../validation/PublicSchemaService.js';
 import { CsrfProofService } from './CsrfProofService.js';
 import { ResetRequestService } from './ResetRequestService.js';
-import { PublicSchemaService } from '../validation/PublicSchemaService.js';
-import { ResetRequestPage } from '../../pages/ResetRequestPage.js';
 
 import type { ApiConfiguration } from '../../ApiConfiguration.js';
 

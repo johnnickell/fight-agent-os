@@ -1,12 +1,12 @@
-import { AccountLink } from '../features/auth/AccountLinks.js';
-import { useBrand, usePageTitle } from '../components/Brand.js';
 import { useEffect, useRef, useState } from 'react';
 import FormCheck from 'react-bootstrap/FormCheck';
 
+import { useBrand, usePageTitle } from '../components/Brand.js';
 import { Button } from '../components/Button.js';
 import { ContentState } from '../components/ContentState.js';
 import { TextField } from '../components/forms/TextField.js';
 import { Notice } from '../components/Notice.js';
+import { AccountLink } from '../features/auth/AccountLinks.js';
 import { CurrentSessionControls } from '../features/auth/CurrentSessionControls.js';
 import { usePublicForm } from '../features/validation/usePublicForm.js';
 

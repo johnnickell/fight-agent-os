@@ -1,7 +1,6 @@
+import { AccountLinksProvider, useAccountLinks } from '@fight/react/account';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-
-import { AccountLinksProvider, useAccountLinks } from '@fight/react/account';
 
 function Example() {
   const resolve = useAccountLinks();

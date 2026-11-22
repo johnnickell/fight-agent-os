@@ -2,13 +2,6 @@ import { useLayoutEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { ApiClient } from '../../api/ApiClient.js';
-import { CsrfProofService } from './CsrfProofService.js';
-import { LoginService } from './LoginService.js';
-import { MemoryAccessToken } from './MemoryAccessToken.js';
-import { PasswordChangeService } from './PasswordChangeService.js';
-import { browserSessionPlatform } from './SessionChannel.js';
-import { SessionCoordinator } from './SessionCoordinator.js';
-import { SessionService } from './SessionService.js';
 import { AuthorityCache } from '../authority/AuthorityCache.js';
 import { CurrentPrincipalService } from '../authority/CurrentPrincipalService.js';
 import { InvitationIssuanceService } from '../invitations/InvitationIssuanceService.js';
@@ -16,6 +9,13 @@ import { InvitationService } from '../invitations/InvitationService.js';
 import { OwnedSessionsService } from '../sessions/OwnedSessionsService.js';
 import { UserDirectoryService } from '../users/UserDirectoryService.js';
 import { PublicSchemaService } from '../validation/PublicSchemaService.js';
+import { CsrfProofService } from './CsrfProofService.js';
+import { LoginService } from './LoginService.js';
+import { MemoryAccessToken } from './MemoryAccessToken.js';
+import { PasswordChangeService } from './PasswordChangeService.js';
+import { browserSessionPlatform } from './SessionChannel.js';
+import { SessionCoordinator } from './SessionCoordinator.js';
+import { SessionService } from './SessionService.js';
 
 import type { ApiConfiguration } from '../../ApiConfiguration.js';
 
@@ -93,7 +93,7 @@ export function createAccountSession<T extends { clear(): void; dispose(): void 
     transport: {
       get: api.get.bind(api),
       mutate: api.mutate.bind(api),
-      getPrivateOpenApi: api.getPrivateOpenApi.bind(api)
+      getProtectedJson: api.getProtectedJson.bind(api)
     },
     users,
     invitations,
@@ -119,9 +119,13 @@ export type AccountSession = ReturnType<typeof createAccountSession>;
 export function useAccountSession<
   T extends Pick<AccountSession, 'authority' | 'coordinator' | 'intent' | 'schemas'>
 >(create: () => T) {
-  const [session] = useState(create);
+  const [factory] = useState(() => create);
+  const [session, setSession] = useState<T | null>(null);
   const [retired, setRetired] = useState(false);
   useLayoutEffect(() => {
+    if (retired) return;
+    // Each committed setup owns a fresh graph, including after Strict Mode replay.
+    const session = factory();
     // One lifecycle owner consumes the hidden -> visible edge, regardless of event order.
     let hidden = document.hidden;
     session.authority.setForeground(!hidden);
@@ -139,7 +143,11 @@ export function useAccountSession<
         session.coordinator.pause();
       } else focus();
     };
+    let disposed = false;
     const clear = () => {
+      if (disposed) return;
+      disposed = true;
+      window.removeEventListener('pagehide', retire);
       window.removeEventListener('focus', focus);
       document.removeEventListener('visibilitychange', visibility);
       session.intent.dispose();
@@ -149,18 +157,19 @@ export function useAccountSession<
     };
     const retire = () => {
       clear();
-      flushSync(() => setRetired(true));
+      flushSync(() => {
+        setSession(null);
+        setRetired(true);
+      });
     };
     window.addEventListener('pagehide', retire);
     window.addEventListener('focus', focus);
     document.addEventListener('visibilitychange', visibility);
+    // Publish the committed external owner before paint; allocating it in render leaks discarded graphs.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- The effect owns and retires the browser session.
+    setSession(session);
     void session.coordinator.restore();
-    return () => {
-      window.removeEventListener('pagehide', retire);
-      window.removeEventListener('focus', focus);
-      document.removeEventListener('visibilitychange', visibility);
-      clear();
-    };
-  }, [session]);
+    return clear;
+  }, [factory, retired]);
   return { session, retired };
 }

@@ -1,5 +1,3 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import {
   browserThemeEnvironment,
   prepaintTheme,
@@ -8,6 +6,7 @@ import {
   THEME_KEY,
   ThemePreferenceStore
 } from '@fight/react/controls';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { ThemeEnvironment, ThemeMedia } from '@fight/react/controls';
 

@@ -1,12 +1,10 @@
+import { AuthorityCache } from '@fight/react/account';
+import { PermissionButton } from '@fight/react/controls';
+import { deferred } from '@fixtures/apiFixtures';
+import { principal } from '@fixtures/authorityFixtures';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-
-import { PermissionButton } from '@fight/react/controls';
-import { AuthorityCache } from '@fight/react/account';
-
-import { deferred } from '@fixtures/apiFixtures';
-import { principal } from '@fixtures/authorityFixtures';
 
 import type { AuthorityScope, PrincipalLoadResult } from '@fight/react/account';
 

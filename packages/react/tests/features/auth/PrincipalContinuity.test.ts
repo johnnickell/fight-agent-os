@@ -1,6 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { ApiClient } from '@fixtures/transport';
 import { CsrfProofService } from '@fight/react/account';
 import { LoginService } from '@fight/react/account';
 import { MemoryAccessToken } from '@fight/react/account';
@@ -9,10 +6,11 @@ import { SessionService } from '@fight/react/account';
 import { AuthorityCache } from '@fight/react/account';
 import { CurrentPrincipalService } from '@fight/react/account';
 import { evaluateAccess } from '@fight/react/account';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import { loginSuccess } from '@fixtures/loginFixtures';
+import { ApiClient } from '@fixtures/transport';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ApiTransport } from '@fight/react/account';
 import type { SessionChannel } from '@fight/react/account';

@@ -112,6 +112,15 @@ describe('guarded documentation transport', () => {
       expect(f.fetch).not.toHaveBeenCalled();
     }
   );
+  it('rejects a successful raw response that does not meet the host document contract', async () => {
+    const f = await fixture();
+    f.fetch.mockResolvedValueOnce(json(bootstrap)).mockResolvedValueOnce(json({ title: 'Report' }));
+    expect(await f.service.load(f.authority.captureScope())).toMatchObject({
+      ok: false,
+      error: { kind: 'protocol' }
+    });
+    expect(f.fetch).toHaveBeenCalledTimes(2);
+  });
   it('requires an exact protected bootstrap before fetching the document', async () => {
     const f = await fixture();
     f.fetch.mockResolvedValue(

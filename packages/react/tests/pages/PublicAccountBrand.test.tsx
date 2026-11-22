@@ -1,12 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-
 import { ActivationPage, LoginPage, ResetCompletionPage } from '@fight/react/account';
 import { BrandProvider } from '@fight/react/controls';
-
 import { activationDependencies } from '@fixtures/activationFixtures';
 import { loginDependencies } from '@fixtures/loginFixtures';
 import { resetCompletionDependencies } from '@fixtures/resetCompletionFixtures';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 const brand = { name: 'Harbor Desk' };
 

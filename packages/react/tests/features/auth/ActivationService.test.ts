@@ -1,13 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { MemoryAccessToken } from '@fight/react/account';
-
 import {
   activationDependencies,
   jsonResponse,
   passwordGuidance
 } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 const success = () =>
   jsonResponse({ access_token: 'header.payload.signature', issued_at: 1000, expires_at: 1900 });

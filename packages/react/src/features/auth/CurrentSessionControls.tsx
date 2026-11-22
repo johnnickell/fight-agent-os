@@ -1,8 +1,8 @@
-import { AccountLink } from './AccountLinks.js';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '../../components/Button.js';
 import { Notice } from '../../components/Notice.js';
+import { AccountLink } from './AccountLinks.js';
 
 import type { SessionService } from './SessionService.js';
 import type { ReactNode } from 'react';

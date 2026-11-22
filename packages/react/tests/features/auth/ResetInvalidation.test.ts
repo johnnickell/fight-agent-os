@@ -1,9 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { MemoryAccessToken } from '@fight/react/account';
 import { broadcastPasswordReset, decodeSessionMessage } from '@fight/react/account';
 import { SessionCoordinator } from '@fight/react/account';
 import { AuthorityCache } from '@fight/react/account';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { SessionChannel } from '@fight/react/account';
 

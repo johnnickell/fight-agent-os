@@ -1,15 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { ApiClient } from '@fixtures/transport';
 import { InvitationService } from '@fight/react/account';
-
 import { deferred } from '@fixtures/apiFixtures';
 import {
   invitationDependencies,
   invitationResponse,
   invitationTarget
 } from '@fixtures/invitationFixtures';
+import { ApiClient } from '@fixtures/transport';
 import { directoryUser } from '@fixtures/userDirectoryFixtures';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthorityCache } from '@fight/react/account';
 

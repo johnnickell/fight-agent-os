@@ -1,6 +1,3 @@
-import { act, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-
 import {
   ActivationCredential,
   ActivationJourney,
@@ -11,6 +8,8 @@ import {
   ResetRequestService,
   SessionService
 } from '@fight/react/account';
+import { act, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 const runtime = {
   schemaVersion: 2,
@@ -30,7 +29,7 @@ describe('public account document lifecycle', () => {
     expect(screen.getByText('Checking this browser’s session')).toBeVisible();
     expect(await screen.findByText('Preparing secure sign-in')).toBeVisible();
 
-    act(() => window.dispatchEvent(new Event('pagehide')));
+    void act(() => window.dispatchEvent(new Event('pagehide')));
 
     expect(screen.getByText('Sign-in cleared')).toBeVisible();
     expect(screen.queryByText('Preparing secure sign-in')).not.toBeInTheDocument();
@@ -46,7 +45,7 @@ describe('public account document lifecycle', () => {
     render(<ActivationJourney runtime={runtime} credential={credential} />);
     expect(screen.getByText('Preparing secure activation')).toBeVisible();
 
-    act(() => window.dispatchEvent(new Event(type)));
+    void act(() => window.dispatchEvent(new Event(type)));
 
     expect(credential.current()).toBeNull();
     expect(screen.getByRole('heading', { name: 'Invitation cleared' })).toBeVisible();

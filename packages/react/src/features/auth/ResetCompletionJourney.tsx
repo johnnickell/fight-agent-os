@@ -1,15 +1,15 @@
-import { AccountLink } from './AccountLinks.js';
 import { useLayoutEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { ApiClient } from '../../api/ApiClient.js';
 import { ContentState } from '../../components/ContentState.js';
+import { ResetCompletionPage } from '../../pages/ResetCompletionPage.js';
+import { PublicSchemaService } from '../validation/PublicSchemaService.js';
+import { AccountLink } from './AccountLinks.js';
 import { CsrfProofService } from './CsrfProofService.js';
 import { ResetCompletionService } from './ResetCompletionService.js';
 import { ResetCredential } from './ResetCredential.js';
 import { broadcastPasswordReset } from './SessionChannel.js';
-import { PublicSchemaService } from '../validation/PublicSchemaService.js';
-import { ResetCompletionPage } from '../../pages/ResetCompletionPage.js';
 
 import type { ApiConfiguration } from '../../ApiConfiguration.js';
 

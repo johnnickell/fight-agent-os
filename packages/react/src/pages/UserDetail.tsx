@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '../components/Button.js';
 import { ContentState } from '../components/ContentState.js';
+import { readUsers } from '../features/auth/AccountLinks.js';
 import { evaluateAccess } from '../features/authority/evaluateAccess.js';
 import { useAuthority } from '../features/authority/useAuthority.js';
-import { readUsers } from '../features/auth/AccountLinks.js';
 
 import type { AuthorityCache } from '../features/authority/AuthorityCache.js';
 import type { DirectoryUser } from '../features/users/UserDirectoryService.js';

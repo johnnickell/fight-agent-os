@@ -1,11 +1,9 @@
+import { AccountLinksProvider, InviteUserPage } from '@fight/react/account';
+import { deferred } from '@fixtures/apiFixtures';
+import { authenticatedCache, principal } from '@fixtures/authorityFixtures';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { AccountLinksProvider, InviteUserPage } from '@fight/react/account';
-
-import { deferred } from '@fixtures/apiFixtures';
-import { authenticatedCache, principal } from '@fixtures/authorityFixtures';
 
 import type { AuthorityCache, ResolveAccountLink } from '@fight/react/account';
 import type { InvitationIssuanceOutcome as OrdinaryInvitationOutcome } from '@fight/react/account';

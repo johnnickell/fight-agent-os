@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { captureActivation, discardActivationFragment, takeActivation } from '@fight/react/account';
+import { describe, expect, it, vi } from 'vitest';
 
 const credential = 'a'.repeat(64);
 const userId = crypto.randomUUID();

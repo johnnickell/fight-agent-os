@@ -1,9 +1,9 @@
-import { AccountLink } from '../features/auth/AccountLinks.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '../components/Button.js';
 import { ContentState } from '../components/ContentState.js';
 import { Notice } from '../components/Notice.js';
+import { AccountLink } from '../features/auth/AccountLinks.js';
 import { evaluateAccess } from '../features/authority/evaluateAccess.js';
 import { useAuthority } from '../features/authority/useAuthority.js';
 import {

@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import { resetAccepted, resetDependencies } from '@fixtures/resetRequestFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 // The production service owns only the fixed public request, not eligibility or delivery.
 describe('reset request service', () => {

@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { MemoryAccessToken } from '@fight/react/account';
+import { describe, expect, it } from 'vitest';
 
 describe('conservative volatile access budget', () => {
   it('subtracts full request delay and never uses the browser wall clock', () => {

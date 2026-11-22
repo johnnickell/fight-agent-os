@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { jsonResponse, passwordGuidance } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import { resetCompletionDependencies } from '@fixtures/resetCompletionFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 const values = { password: 'synthetic-candidate', passwordConfirmation: 'synthetic-candidate' };
 describe('reset completion transport and terminal ownership', () => {

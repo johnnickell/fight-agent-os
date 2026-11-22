@@ -1,6 +1,5 @@
-import { expect, within } from 'storybook/test';
-
 import { Notice } from '@fight/react/controls';
+import { expect, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

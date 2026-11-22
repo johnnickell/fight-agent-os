@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { captureReset, discardResetFragment, takeReset } from '@fight/react/account';
+import { describe, expect, it, vi } from 'vitest';
 
 const path = '/reset-password/complete';
 const userId = crypto.randomUUID();

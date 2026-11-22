@@ -6,10 +6,10 @@ import {
   type SessionMessage
 } from './SessionChannel.js';
 
+import type { AuthorityCache, AuthoritySignal } from '../authority/AuthorityCache.js';
 import type { LoginService } from './LoginService.js';
 import type { MemoryAccessToken } from './MemoryAccessToken.js';
 import type { SessionService } from './SessionService.js';
-import type { AuthorityCache, AuthoritySignal } from '../authority/AuthorityCache.js';
 
 export type SessionState = Readonly<{
   status:

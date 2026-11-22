@@ -1,7 +1,3 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-
 import {
   AuthorityStatus,
   ContentPanel,
@@ -11,6 +7,9 @@ import {
   Notice,
   PresentationIcon
 } from '@fight/react/controls';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('Content presentation', () => {
   it('offers explicit retry for stale authority but not for an invalid route', async () => {

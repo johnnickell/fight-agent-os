@@ -1,16 +1,14 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { ApiClient } from '@fixtures/transport';
 import { apiFailure } from '@fight/react/account';
 import { AuthorityCache } from '@fight/react/account';
 import { OwnedSessionsService } from '@fight/react/account';
 import { OwnedSessionsPage } from '@fight/react/account';
-
 import { deferred } from '@fixtures/apiFixtures';
 import { principal } from '@fixtures/authorityFixtures';
 import { sessionPage, sessionsResponse, sessionWire } from '@fixtures/sessionFixtures';
+import { ApiClient } from '@fixtures/transport';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ApiResult } from '@fight/react/account';
 

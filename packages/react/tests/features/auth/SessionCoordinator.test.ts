@@ -1,12 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { apiFailure, AuthorityCache } from '@fight/react/account';
 import { MemoryAccessToken } from '@fight/react/account';
 import { decodeSessionMessage } from '@fight/react/account';
 import { SessionCoordinator } from '@fight/react/account';
-
 import { deferred } from '@fixtures/apiFixtures';
 import { principal } from '@fixtures/authorityFixtures';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ApiResult } from '@fight/react/account';
 import type { SessionChannel } from '@fight/react/account';
@@ -126,7 +124,7 @@ describe('bounded volatile session continuity', () => {
   it('admits sign-in after a cold authentication rejection without discarding navigation intent', async () => {
     const { coordinator, clearIntent, session } = setup({
       coldAnonymous: true,
-      outcome: async () => apiFailure('authentication')
+      outcome: () => Promise.resolve(apiFailure('authentication'))
     });
 
     await expect(coordinator.restore()).resolves.toEqual(apiFailure('authentication'));
@@ -140,7 +138,7 @@ describe('bounded volatile session continuity', () => {
   });
 
   it('does not present authenticated state after a failed explicit login', async () => {
-    const authority = new AuthorityCache(async () => ({ status: 'network' }));
+    const authority = new AuthorityCache(() => Promise.resolve({ status: 'network' }));
     try {
       const { coordinator, login, tokens } = setup({ authority });
       login.submit.mockResolvedValueOnce(apiFailure('authentication'));
@@ -163,7 +161,7 @@ describe('bounded volatile session continuity', () => {
   });
 
   it('retires credentials when current server authority ends', async () => {
-    const authority = new AuthorityCache(async () => ({ status: 'terminal' }));
+    const authority = new AuthorityCache(() => Promise.resolve({ status: 'terminal' }));
     try {
       const { coordinator, tokens, clearIntent } = setup({ authority });
       await coordinator.restore();
@@ -186,8 +184,8 @@ describe('bounded volatile session continuity', () => {
   });
 
   it('invalidates authority with the right readiness signal without transferring credentials', async () => {
-    const authority = new AuthorityCache(async () => ({ status: 'network' }));
-    const peerAuthority = new AuthorityCache(async () => ({ status: 'network' }));
+    const authority = new AuthorityCache(() => Promise.resolve({ status: 'network' }));
+    const peerAuthority = new AuthorityCache(() => Promise.resolve({ status: 'network' }));
     const signal = vi.spyOn(authority, 'signal').mockResolvedValue(undefined);
     const peerSignal = vi.spyOn(peerAuthority, 'signal').mockResolvedValue(undefined);
     try {
@@ -208,7 +206,7 @@ describe('bounded volatile session continuity', () => {
       expect(channels.messages).toEqual(
         [1, 2].map((sequence) => ({
           version: 1,
-          sender: expect.stringMatching(/^[a-f0-9]{32}$/),
+          sender: expect.stringMatching(/^[a-f0-9]{32}$/) as unknown,
           sequence,
           kind: 'authority-changed'
         }))
@@ -220,7 +218,7 @@ describe('bounded volatile session continuity', () => {
   });
 
   it('retires only the context whose verified display identity matches a peer reset notice', async () => {
-    const authority = new AuthorityCache(async () => ({ status: 'network' }));
+    const authority = new AuthorityCache(() => Promise.resolve({ status: 'network' }));
     vi.spyOn(authority, 'getPresentationSnapshot').mockReturnValue({
       status: 'authenticated',
       principal

@@ -1,9 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-
 import { ResetRequestPage } from '@fight/react/account';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import {
@@ -11,6 +6,9 @@ import {
   resetDependencies,
   resetSchemaSource
 } from '@fixtures/resetRequestFixtures';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 const fill = (value = 'Person@example.test') =>
   fireEvent.change(screen.getByLabelText('Email (required)'), { target: { value } });

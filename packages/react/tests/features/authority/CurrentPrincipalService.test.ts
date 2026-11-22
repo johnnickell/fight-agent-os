@@ -1,11 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { ApiClient } from '@fixtures/transport';
 import { AuthorityCache } from '@fight/react/account';
 import { CurrentPrincipalService, decodePrincipalResponse } from '@fight/react/account';
 import { evaluateAccess } from '@fight/react/account';
-
 import { deferred } from '@fixtures/apiFixtures';
+import { ApiClient } from '@fixtures/transport';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const userId = crypto.randomUUID();
 const view = {

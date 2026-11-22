@@ -14,7 +14,8 @@ all account transitions, server-side admission, API compatibility results, or in
 | S2 | [`ApplicationJourney`](../../../client/src/routes/ApplicationJourney.tsx) selects account screens and retains host routing. [`useApplicationSession`](../../../client/src/features/auth/useApplicationSession.ts) joins the account session to the host's intent and Swagger adapters. |
 | S3 | [`account.ts`](../../../packages/react/src/account.ts) exports the account screens and lifecycle entry used by the host. |
 | S4 | [`AccountSession`](../../../packages/react/src/features/auth/AccountSession.ts) builds the single credential store, principal cache, coordinator, and same-origin transport graph. |
-| R1 | [`ApiClient`](../../../packages/react/src/api/ApiClient.ts) dispatches the qualified same-origin request. The server remains authoritative. |
+| R1 | [`SwaggerService`](../../../client/src/features/swagger/SwaggerService.ts) owns the private document path and decoder. It uses the same session transport as the rest of the host, not a second credential store. |
+| R2 | [`ApiClient`](../../../packages/react/src/api/ApiClient.ts) dispatches the qualified same-origin request. The server remains authoritative. |
 
 The npm package does not import the host. Swagger, Dashboard, and the route manifest are not packed. The
 [package guide](../../../packages/react/README.md) describes consumer composition and the supported theme overrides.

@@ -1,9 +1,8 @@
+import { ThemePreferenceStore } from '@fight/react/controls';
+import { ThemeSelector } from '@fight/react/controls';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it } from 'vitest';
-
-import { ThemePreferenceStore } from '@fight/react/controls';
-import { ThemeSelector } from '@fight/react/controls';
 
 it('offers one named keyboard-operable radio group with explicit selection and resolved status', async () => {
   const values = new Map<string, string>();

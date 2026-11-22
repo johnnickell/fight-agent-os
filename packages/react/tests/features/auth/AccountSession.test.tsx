@@ -1,15 +1,15 @@
-import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { StrictMode } from 'react';
 
-import { ApiClient } from '@fixtures/transport';
 import {
   apiFailure,
   createAccountSession,
   MemoryAccessToken,
   useAccountSession
 } from '@fight/react/account';
-
 import { principal } from '@fixtures/authorityFixtures';
+import { ApiClient } from '@fixtures/transport';
+import { act, renderHook } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 const runtime = {
   schemaVersion: 2,
@@ -28,6 +28,24 @@ function setup() {
 }
 
 describe('shared account refusal and invalidation policy', () => {
+  it('does not send a protected raw JSON read without an access token', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch');
+    const { session } = setup();
+    try {
+      expect(
+        await session.transport.getProtectedJson(
+          '/reports/summary',
+          () => true,
+          new AbortController().signal
+        )
+      ).toEqual(apiFailure('authentication'));
+      expect(fetch).not.toHaveBeenCalled();
+    } finally {
+      session.authority.dispose();
+      session.coordinator.dispose();
+    }
+  });
+
   it('requests local session recovery rather than loading principal without an access token', async () => {
     const get = vi.spyOn(ApiClient.prototype, 'get');
     const { session, restore } = setup();
@@ -55,7 +73,7 @@ describe('shared account refusal and invalidation policy', () => {
       expect(session.authority.getSnapshot()).toEqual({ status: 'authenticated', principal });
       expect(get).toHaveBeenCalledExactlyOnceWith('/me', expect.any(Function), {
         access: 'required',
-        signal: expect.any(AbortSignal)
+        signal: expect.any(AbortSignal) as unknown
       });
       expect(restore).not.toHaveBeenCalled();
     } finally {
@@ -168,6 +186,27 @@ describe('shared account refusal and invalidation policy', () => {
 });
 
 describe('account document lifecycle', () => {
+  it('restores through a live graph after Strict Mode replays the mount effect', async () => {
+    const get = vi.spyOn(ApiClient.prototype, 'get').mockResolvedValue(apiFailure('network'));
+    const dispose = vi.fn();
+    const create = vi.fn(() => createAccountSession(runtime, () => ({ clear: vi.fn(), dispose })));
+    const { result, unmount } = renderHook(() => useAccountSession(create), {
+      wrapper: StrictMode
+    });
+    const session = result.current.session;
+    if (!session) throw new Error('Expected a mounted session');
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(dispose).toHaveBeenCalledOnce();
+    await act(async () => {
+      expect(await session.coordinator.restore()).not.toEqual(apiFailure('cancelled'));
+    });
+    expect(get).toHaveBeenCalled();
+
+    unmount();
+    expect(dispose).toHaveBeenCalledTimes(2);
+    expect(await session.coordinator.restore()).toEqual(apiFailure('cancelled'));
+  });
+
   it('pauses a hidden document and resumes once when it becomes visible', () => {
     const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
     const { session, restore } = setup();
@@ -179,10 +218,10 @@ describe('account document lifecycle', () => {
     expect(foreground).toHaveBeenLastCalledWith(false);
     expect(restore).toHaveBeenCalledOnce();
 
-    act(() => window.dispatchEvent(new Event('focus')));
+    void act(() => window.dispatchEvent(new Event('focus')));
     expect(resume).not.toHaveBeenCalled();
     hidden.mockReturnValue(false);
-    act(() => {
+    void act(() => {
       document.dispatchEvent(new Event('visibilitychange'));
       window.dispatchEvent(new Event('focus'));
     });
@@ -190,7 +229,7 @@ describe('account document lifecycle', () => {
     expect(foreground).toHaveBeenLastCalledWith(true);
 
     hidden.mockReturnValue(true);
-    act(() => document.dispatchEvent(new Event('visibilitychange')));
+    void act(() => document.dispatchEvent(new Event('visibilitychange')));
     expect(pause).toHaveBeenCalledTimes(2);
     expect(foreground).toHaveBeenLastCalledWith(false);
     unmount();
@@ -206,8 +245,9 @@ describe('account document lifecycle', () => {
     const { result } = renderHook(() => useAccountSession(() => session));
     expect(result.current.retired).toBe(false);
 
-    act(() => window.dispatchEvent(new Event('pagehide')));
+    void act(() => window.dispatchEvent(new Event('pagehide')));
     expect(result.current.retired).toBe(true);
+    expect(result.current.session).toBeNull();
     expect(intent.dispose).toHaveBeenCalledOnce();
     expect(retireCoordinator).toHaveBeenCalledOnce();
     expect(retireAuthority).toHaveBeenCalledOnce();
@@ -215,7 +255,7 @@ describe('account document lifecycle', () => {
 
     foreground.mockClear();
     hidden.mockReturnValue(true);
-    act(() => document.dispatchEvent(new Event('visibilitychange')));
+    void act(() => document.dispatchEvent(new Event('visibilitychange')));
     expect(foreground).not.toHaveBeenCalled();
   });
 });

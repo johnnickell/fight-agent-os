@@ -72,8 +72,13 @@ export function useAccountLinks(): ResolveAccountLink {
 
 export function AccountLink({
   to,
+  children,
   ...props
 }: Omit<ComponentPropsWithoutRef<'a'>, 'href'> & { to: AccountDestination }) {
   const link = useAccountLinks()(to);
-  return link ? <a {...props} href={link.href} /> : null;
+  return link ? (
+    <a {...props} href={link.href}>
+      {children}
+    </a>
+  ) : null;
 }

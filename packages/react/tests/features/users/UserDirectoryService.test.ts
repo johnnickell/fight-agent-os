@@ -1,14 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { apiFailure } from '@fight/react/account';
 import { UserDirectoryService } from '@fight/react/account';
-
 import {
   directoryDependencies,
   directoryPage,
   directoryResponse,
   directoryUser
 } from '@fixtures/userDirectoryFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 function serviceFor(data: unknown) {
   const fetch = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(() =>

@@ -1,9 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-
-import { ApiClient, type ApiTransport } from '@fixtures/transport';
 import { apiFailure } from '@fight/react/account';
 import { decodeCsrfProof } from '@fight/react/account';
-
 import {
   configuration,
   correlationId,
@@ -12,6 +8,8 @@ import {
   expiresAt,
   jsonResponse
 } from '@fixtures/apiFixtures';
+import { ApiClient, type ApiTransport } from '@fixtures/transport';
+import { describe, expect, it, vi } from 'vitest';
 
 function setup(response = jsonResponse()) {
   const fetch = vi.fn<ApiTransport>().mockResolvedValue(response);
@@ -21,8 +19,8 @@ function setup(response = jsonResponse()) {
 
 // Future protected operations below exercise the shared transport only, not a server endpoint.
 describe('shared API transport', () => {
-  it('decodes a raw private document only through the authenticated fixed endpoint', async () => {
-    const document = { openapi: '3.1.0' };
+  it('decodes raw JSON through the authenticated same-origin transport', async () => {
+    const document = { title: 'Synthetic report' };
     const fetch = vi.fn<ApiTransport>().mockResolvedValue(
       new Response(JSON.stringify(document), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
@@ -35,19 +33,19 @@ describe('shared API transport', () => {
     const signal = new AbortController().signal;
     const decode = vi.fn((value: unknown) => value);
 
-    expect(await client.getPrivateOpenApi(decode, signal)).toEqual({
+    expect(await client.getProtectedJson('/reports/summary', decode, signal)).toEqual({
       ok: true,
       value: document,
       correlationId: null
     });
     expect(decode).toHaveBeenCalledExactlyOnceWith(document);
     const [url, init] = fetch.mock.calls[0]!;
-    expect(url).toBe('/api/v1/documentation/openapi');
+    expect(url).toBe('/api/v1/reports/summary');
     expect(init.signal).toBe(signal);
     expect(new Headers(init.headers).get('Authorization')).toBe('Bearer synthetic.token');
   });
 
-  it('rejects an oversized private document before decoding it', async () => {
+  it('rejects oversized raw JSON before decoding it', async () => {
     const fetch = vi.fn<ApiTransport>().mockResolvedValue(
       new Response(' '.repeat(2_097_153), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
@@ -59,9 +57,9 @@ describe('shared API transport', () => {
     });
     const decode = vi.fn(() => true);
 
-    await expect(client.getPrivateOpenApi(decode, new AbortController().signal)).resolves.toEqual(
-      apiFailure('protocol')
-    );
+    await expect(
+      client.getProtectedJson('/reports/summary', decode, new AbortController().signal)
+    ).resolves.toEqual(apiFailure('protocol'));
     expect(decode).not.toHaveBeenCalled();
   });
 

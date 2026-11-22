@@ -1,13 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { canonicalInvitationEmail } from '@fight/react/account';
-
 import { deferred, jsonResponse } from '@fixtures/apiFixtures';
 import {
   issuanceData,
   issuanceResponse,
   ordinaryInvitationDependencies
 } from '@fixtures/ordinaryInvitationFixtures';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthorityCache } from '@fight/react/account';
 

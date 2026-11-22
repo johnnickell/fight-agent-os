@@ -1,12 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { apiFailure, type ApiResult } from '@fight/react/account';
 import { MemoryAccessToken } from '@fight/react/account';
 import { SessionContinuity } from '@fight/react/account';
 import { SessionCoordinator } from '@fight/react/account';
-
 import { deferred } from '@fixtures/apiFixtures';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const owners: SessionCoordinator[] = [];
 afterEach(() => {

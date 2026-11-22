@@ -1,10 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
-
-import { ApiClient, type ApiTransport } from '@fixtures/transport';
 import { PublicSchemaService } from '@fight/react/account';
-
 import { configuration, deferred, jsonResponse } from '@fixtures/apiFixtures';
 import { fixture } from '@fixtures/features/validation/fixtures';
+import { ApiClient, type ApiTransport } from '@fixtures/transport';
+import { describe, expect, it, vi } from 'vitest';
 
 const response = (value: unknown) => jsonResponse({ status: 'success', data: value });
 

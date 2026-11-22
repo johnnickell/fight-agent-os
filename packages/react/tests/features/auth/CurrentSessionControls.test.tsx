@@ -1,16 +1,14 @@
 import { StrictMode } from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-
-import { ApiClient } from '@fixtures/transport';
 import { CsrfProofService } from '@fight/react/account';
 import { CurrentSessionControls } from '@fight/react/account';
 import { MemoryAccessToken } from '@fight/react/account';
 import { SessionService } from '@fight/react/account';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
+import { ApiClient } from '@fixtures/transport';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('current-session logout presentation', () => {
   it.each([true, false])(

@@ -1,14 +1,12 @@
 import { useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
-
 import { ActivationPage } from '@fight/react/account';
-
 import {
   activationDependencies,
   jsonResponse,
   passwordGuidance
 } from '@fixtures/activationFixtures';
+import { expect, userEvent, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

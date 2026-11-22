@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
-
-import { ContentState } from '@fight/react/controls';
 import { PasswordChangePage } from '@fight/react/account';
-
+import { ContentState } from '@fight/react/controls';
 import { jsonResponse, passwordGuidance } from '@fixtures/activationFixtures';
 import { passwordChangeDependencies } from '@fixtures/passwordChangeFixtures';
+import { expect, userEvent, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

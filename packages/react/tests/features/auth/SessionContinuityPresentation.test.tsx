@@ -1,12 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-
 import {
   apiFailure,
   MemoryAccessToken,
   SessionContinuity,
   SessionCoordinator
 } from '@fight/react/account';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 function mount(state: ReturnType<SessionCoordinator['getSnapshot']>) {
   const action = () => Promise.resolve(apiFailure('cancelled'));

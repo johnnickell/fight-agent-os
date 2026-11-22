@@ -1,5 +1,3 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import {
   nearExpirySessionWire,
   sessionDependencies,
@@ -7,6 +5,7 @@ import {
   sessionsResponse,
   sessionWire
 } from '@fixtures/sessionFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('OwnedSessionsService', () => {
   it('R57-01 accepts a usable non-current session whose activity and deadlines project to the same second', async () => {

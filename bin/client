@@ -60,7 +60,7 @@ case "${1:-}" in
         printf '\nFrontend checks passed in %ss\n' "$(($(date +%s) - started))"
         exit 0 ;;
     format) source_mode=''; package_mode=''; set -- npm run "$1" ;;
-    lint-fix) source_mode=''; set -- npm run "$1" ;;
+    lint-fix) source_mode=''; package_mode=''; set -- npm run "$1" ;;
     package-build) dist_mode=''; set -- npm run package-build ;;
     build) build_mode=''; dist_mode=''; set -- sh -c 'npm run package-build && npm run build' ;;
     pack-check|typecheck|lint|format-check|test|coverage|build-check|storybook-build) set -- npm run "$1" ;;

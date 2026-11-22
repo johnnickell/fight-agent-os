@@ -1,7 +1,6 @@
+import { BrandProvider, defineBrand, PageHeading, ShellLayout } from '@fight/react/controls';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-
-import { BrandProvider, defineBrand, PageHeading, ShellLayout } from '@fight/react/controls';
 
 const logo = { src: '/brand/sailboat.svg', alt: 'Harbor sailboat' };
 

@@ -67,9 +67,9 @@ export function ApplicationJourney({
         Sign in
       </a>
     </ShellLayout>
-  ) : (
+  ) : session ? (
     <ApplicationView session={session} {...props} />
-  );
+  ) : null;
 }
 
 /** Routes only after bounded credential restoration and a fresh sole-cache projection */

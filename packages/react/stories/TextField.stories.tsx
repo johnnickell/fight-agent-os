@@ -1,12 +1,11 @@
 import { useRef, useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
-
+import { decodePublicSchema } from '@fight/react/account';
+import { usePublicForm } from '@fight/react/account';
 import { Button } from '@fight/react/controls';
 import { TextField } from '@fight/react/controls';
 import { Notice } from '@fight/react/controls';
-import { decodePublicSchema } from '@fight/react/account';
-import { usePublicForm } from '@fight/react/account';
+import { expect, userEvent, within } from 'storybook/test';
 
 import type { ApiResult } from '@fight/react/account';
 import type { Meta, StoryObj } from '@storybook/react-vite';

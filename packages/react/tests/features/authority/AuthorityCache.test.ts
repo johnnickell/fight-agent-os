@@ -1,15 +1,13 @@
-import { act, renderHook } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import {
   AuthorityCache,
   observeAuthorityResume,
   useAuthority,
   useAuthorityPresentation
 } from '@fight/react/account';
-
 import { deferred } from '@fixtures/apiFixtures';
 import { principal } from '@fixtures/authorityFixtures';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { PrincipalLoader, PrincipalLoadResult } from '@fight/react/account';
 
@@ -29,7 +27,7 @@ const success = { status: 'principal', principal } as const;
 
 describe('principal ownership and transitions', () => {
   it('keeps verified display during refresh without granting current authority', async () => {
-    const cache = cacheWith(async () => success);
+    const cache = cacheWith(() => Promise.resolve(success));
     await cache.load();
     const { result, unmount } = renderHook(() => ({
       dispatch: useAuthority(cache),
@@ -121,12 +119,14 @@ describe('principal ownership and transitions', () => {
   });
 
   it('fails closed when a malformed result throws while being decoded', async () => {
-    const cache = cacheWith(async () => ({
-      status: 'principal',
-      get principal() {
-        throw new Error('synthetic-private-marker');
-      }
-    }));
+    const cache = cacheWith(() =>
+      Promise.resolve({
+        status: 'principal',
+        get principal() {
+          throw new Error('synthetic-private-marker');
+        }
+      })
+    );
     await cache.load();
     expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
     expect(cache.captureScope().isCurrent()).toBe(false);

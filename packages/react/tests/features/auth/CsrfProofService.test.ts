@@ -1,9 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-
-import { ApiClient, type ApiTransport } from '@fixtures/transport';
 import { apiFailure, type ApiResult } from '@fight/react/account';
 import { type CsrfProof, CsrfProofService, decodeCsrfProof } from '@fight/react/account';
-
 import {
   configuration,
   correlationId,
@@ -12,6 +8,8 @@ import {
   expiresAt,
   jsonResponse
 } from '@fixtures/apiFixtures';
+import { ApiClient, type ApiTransport } from '@fixtures/transport';
+import { describe, expect, it, vi } from 'vitest';
 
 const model = Object.freeze({ proof: csrfData.proof, expiresAt });
 const success: ApiResult<CsrfProof> = { ok: true, value: model, correlationId };

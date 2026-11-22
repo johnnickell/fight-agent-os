@@ -1,10 +1,5 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { apiFailure } from '@fight/react/account';
 import { OwnedSessionsPage } from '@fight/react/account';
-
 import {
   nearExpirySessionWire,
   sessionDependencies,
@@ -12,6 +7,9 @@ import {
   sessionsResponse,
   sessionWire
 } from '@fixtures/sessionFixtures';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthorityCache } from '@fight/react/account';
 
@@ -45,11 +43,13 @@ describe('OwnedSessionsPage', () => {
   });
 
   it('reads previous and first pages only when selected', async () => {
-    const load = vi.fn(async (page: number) => ({
-      ok: true as const,
-      correlationId: null,
-      value: { page, perPage: 25, totalPages: 3, totalRecords: 75, records: [] }
-    }));
+    const load = vi.fn((page: number) =>
+      Promise.resolve({
+        ok: true as const,
+        correlationId: null,
+        value: { page, perPage: 25, totalPages: 3, totalRecords: 75, records: [] }
+      })
+    );
     const d = sessionDependencies(vi.fn());
     caches.push(d.cache);
     await d.cache.load();

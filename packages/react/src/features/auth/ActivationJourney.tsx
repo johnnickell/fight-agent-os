@@ -3,12 +3,12 @@ import { flushSync } from 'react-dom';
 
 import { ApiClient } from '../../api/ApiClient.js';
 import { ContentState } from '../../components/ContentState.js';
+import { ActivationPage } from '../../pages/ActivationPage.js';
+import { PublicSchemaService } from '../validation/PublicSchemaService.js';
 import { ActivationCredential } from './ActivationCredential.js';
 import { ActivationService } from './ActivationService.js';
 import { CsrfProofService } from './CsrfProofService.js';
 import { MemoryAccessToken } from './MemoryAccessToken.js';
-import { PublicSchemaService } from '../validation/PublicSchemaService.js';
-import { ActivationPage } from '../../pages/ActivationPage.js';
 
 import type { ApiConfiguration } from '../../ApiConfiguration.js';
 

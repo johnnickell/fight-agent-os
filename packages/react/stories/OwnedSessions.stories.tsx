@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
-
-import { Button } from '@fight/react/controls';
 import { OwnedSessionsPage } from '@fight/react/account';
-
+import { Button } from '@fight/react/controls';
 import {
   sessionDependencies,
   sessionPage,
   sessionsResponse,
   sessionWire
 } from '@fixtures/sessionFixtures';
+import { expect, userEvent, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

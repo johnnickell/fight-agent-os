@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@fixtures/*": ["./tests/*"],
+      "@fixtures/transport": ["./node_modules/@fight/react/dist/api/ApiClient.d.ts"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "@fight/react/*": ["./node_modules/@fight/react/dist/*"],
+      "@storybook/react-vite": ["./node_modules/@storybook/react-vite/dist/index.d.ts"],
+      "@testing-library/user-event/dist/cjs/*.js": [
+        "./node_modules/@testing-library/user-event/dist/types/*.d.ts"
+      ],
+      "storybook/test": ["./node_modules/storybook/dist/test/index.d.ts"],
+      "*": ["./node_modules/@types/*", "./node_modules/*"]
+    }
+  },
+  "include": [
+    "../packages/react/src",
+    "../packages/react/tests",
+    "../packages/react/stories",
+    "src",
+    "tests",
+    "stories",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
+    "vitest.config.ts",
+    "vitest.storybook.config.ts"
+  ]
+}

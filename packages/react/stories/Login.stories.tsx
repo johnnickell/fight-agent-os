@@ -1,11 +1,9 @@
 import { useState } from 'react';
 
-import { expect, userEvent, waitFor, within } from 'storybook/test';
-
 import { LoginPage } from '@fight/react/account';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { loginDependencies, loginRejected, loginSuccess } from '@fixtures/loginFixtures';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

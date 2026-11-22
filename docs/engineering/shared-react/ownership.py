@@ -20,6 +20,7 @@ with Diagram(
 ):
     with Cluster("Agent OS | client/"):
         host = Node("ShellApplication\nRoutes, brand and frame", nodeid="host")
+        swagger = Node("SwaggerService\nPrivate document path and decoder", nodeid="swagger")
     with Cluster("Library | packages/react/"):
         controls = Node("controls.ts + styles.css\nShell, controls and style defaults", nodeid="controls")
         account = Node("account.ts\nAccount screens and session entry", nodeid="account")
@@ -31,4 +32,5 @@ with Diagram(
     host >> Edge(label="S2: mounts") >> account
     account >> Edge(label="S3: exports") >> session
     session >> Edge(label="S4: constructs") >> api
-    api >> Edge(label="R1: browser fetch", style="dotted") >> server
+    swagger >> Edge(label="R1: protected JSON read", style="dotted") >> api
+    api >> Edge(label="R2: browser fetch", style="dotted") >> server

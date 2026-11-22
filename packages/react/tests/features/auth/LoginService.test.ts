@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import { loginDependencies, loginRejected, loginSuccess } from '@fixtures/loginFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 const values = { email: 'Person@Example.test', password: 'é' };
 

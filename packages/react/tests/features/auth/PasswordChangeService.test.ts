@@ -1,9 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import { principal } from '@fixtures/authorityFixtures';
 import { passwordChangeDependencies } from '@fixtures/passwordChangeFixtures';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiTransport } from '@fight/react/account';
 import type { PrincipalLoadResult } from '@fight/react/account';

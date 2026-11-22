@@ -1,7 +1,6 @@
+import { SystemErrorBoundary } from '@fight/react/controls';
 import { render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
-
-import { SystemErrorBoundary } from '@fight/react/controls';
 
 it('contains a render failure without exposing its message', () => {
   function BrokenPage(): never {

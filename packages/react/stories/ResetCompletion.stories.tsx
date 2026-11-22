@@ -1,11 +1,9 @@
 import { useState } from 'react';
 
-import { expect, userEvent, waitFor, within } from 'storybook/test';
-
 import { ResetCompletionPage } from '@fight/react/account';
-
 import { jsonResponse, passwordGuidance } from '@fixtures/activationFixtures';
 import { resetCompletionDependencies } from '@fixtures/resetCompletionFixtures';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

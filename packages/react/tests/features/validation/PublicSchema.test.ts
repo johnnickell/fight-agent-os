@@ -1,8 +1,6 @@
-import { describe, expect, it } from 'vitest';
-
 import { decodePublicSchema, validatePublicSchema } from '@fight/react/account';
-
 import { fixture } from '@fixtures/features/validation/fixtures';
+import { describe, expect, it } from 'vitest';
 
 const schema = decodePublicSchema(fixture)!;
 

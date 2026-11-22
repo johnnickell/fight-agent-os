@@ -1,14 +1,12 @@
 import { useState } from 'react';
 
-import { expect, userEvent, waitFor, within } from 'storybook/test';
-
-import { ApiClient } from '@fixtures/transport';
 import { CsrfProofService } from '@fight/react/account';
 import { CurrentSessionControls } from '@fight/react/account';
 import { MemoryAccessToken } from '@fight/react/account';
 import { SessionService } from '@fight/react/account';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
+import { ApiClient } from '@fixtures/transport';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

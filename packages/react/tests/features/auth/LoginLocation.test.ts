@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-
 import { clearLoginLocation } from '@fight/react/account';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('login URL retirement', () => {
   it('drops the entire query, fragment and history state without serializing any caller values', () => {

@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
-
-import { ApiClient } from '@fixtures/transport';
 import { CatalogService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
+import { describe, expect, it, vi } from 'vitest';
 
 const roleId = crypto.randomUUID();
 const permissionId = crypto.randomUUID();

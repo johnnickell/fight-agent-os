@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { decodeResponse } from '@fight/react/account';
+import { describe, expect, it } from 'vitest';
 
 const decode = (value: unknown) => (value === null ? true : null);
 const partial = () => ({

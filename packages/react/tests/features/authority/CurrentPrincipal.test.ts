@@ -1,8 +1,6 @@
-import { describe, expect, it } from 'vitest';
-
 import { decodeCurrentPrincipal } from '@fight/react/account';
-
 import { principal } from '@fixtures/authorityFixtures';
+import { describe, expect, it } from 'vitest';
 
 describe('safe current principal', () => {
   it('copies and freezes approved fields without retaining loader mutations', () => {

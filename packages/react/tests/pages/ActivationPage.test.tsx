@@ -1,9 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-
 import { ActivationPage, apiFailure } from '@fight/react/account';
-
 import {
   activationDependencies,
   activationSchemaSource,
@@ -11,6 +6,9 @@ import {
   passwordGuidance
 } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 function fill() {
   fireEvent.change(screen.getByLabelText('New password (required)'), {

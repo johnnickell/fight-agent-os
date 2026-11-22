@@ -24,6 +24,7 @@ export function LoginJourney({
         message="Reload this page to sign in again. Browser history does not restore credentials."
       />
     );
+  if (!session) return null;
   return (
     <SessionContinuity coordinator={session.coordinator}>
       <LoginPage

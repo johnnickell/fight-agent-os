@@ -1,12 +1,10 @@
+import { AuthorityCache } from '@fight/react/account';
+import { InviteSuperAdminPage } from '@fight/react/account';
+import { deferred } from '@fixtures/apiFixtures';
+import { authenticatedCache, principal } from '@fixtures/authorityFixtures';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { AuthorityCache } from '@fight/react/account';
-import { InviteSuperAdminPage } from '@fight/react/account';
-
-import { deferred } from '@fixtures/apiFixtures';
-import { authenticatedCache, principal } from '@fixtures/authorityFixtures';
 
 import type { PrincipalLoadResult } from '@fight/react/account';
 import type { InvitationIssuanceOutcome } from '@fight/react/account';

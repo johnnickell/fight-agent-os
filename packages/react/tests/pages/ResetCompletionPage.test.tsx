@@ -1,17 +1,15 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-
 import { apiFailure, ResetCompletionJourney } from '@fight/react/account';
 import { ResetCredential } from '@fight/react/account';
 import { ResetCompletionPage } from '@fight/react/account';
-
 import { jsonResponse, passwordGuidance } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import {
   resetCompletionDependencies,
   resetCompletionSchema
 } from '@fixtures/resetCompletionFixtures';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 async function enter() {
   fireEvent.change(await screen.findByLabelText('New password (required)'), {

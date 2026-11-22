@@ -1,6 +1,6 @@
-import { Button } from './Button.js';
 import { evaluateAccess } from '../features/authority/evaluateAccess.js';
 import { useAuthority } from '../features/authority/useAuthority.js';
+import { Button } from './Button.js';
 
 import type { AuthorityCache, AuthorityScope } from '../features/authority/AuthorityCache.js';
 import type { ReactNode } from 'react';

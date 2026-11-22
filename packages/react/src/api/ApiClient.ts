@@ -53,16 +53,20 @@ export class ApiClient {
     return this.#get(path, decode, options);
   }
 
-  /** Reads only the guarded raw OpenAPI resource, never a caller-selected URL. */
-  getPrivateOpenApi<T>(decode: ResponseDecoder<T>, signal: AbortSignal): Promise<ApiResult<T>> {
-    return this.#get('/documentation/openapi', decode, { access: 'required', signal }, true);
+  /** Reads bounded raw JSON from a same-origin API path using the current access token. */
+  getProtectedJson<T>(
+    path: string,
+    decode: ResponseDecoder<T>,
+    signal: AbortSignal
+  ): Promise<ApiResult<T>> {
+    return this.#get(path, decode, { access: 'required', signal }, true);
   }
 
   #get<T>(
     path: string,
     decode: ResponseDecoder<T>,
     options: GetOptions,
-    privateDocument = false
+    rawJson = false
   ): Promise<ApiResult<T>> {
     const { signal } = options;
     if (signal?.aborted) return Promise.resolve(apiFailure('cancelled'));
@@ -76,7 +80,7 @@ export class ApiClient {
       };
       const abort = () => finish(apiFailure('cancelled'));
       signal?.addEventListener('abort', abort, { once: true });
-      void this.#request(path, decode, options, undefined, privateDocument).then(finish, () =>
+      void this.#request(path, decode, options, undefined, rawJson).then(finish, () =>
         finish(apiFailure('system'))
       );
     });
@@ -122,7 +126,7 @@ export class ApiClient {
       csrfProof?: string;
       successStatus?: 200 | 201;
     }>,
-    privateDocument = false
+    rawJson = false
   ): Promise<ApiResult<T>> {
     // Paths belong to feature services, not user input. No raw query, fragment,
     // encoding, dot segments, backslash, authority or alternative origin is supported.
@@ -195,9 +199,9 @@ export class ApiClient {
     }
     if (options.signal?.aborted) return apiFailure('cancelled');
     try {
-      if (privateDocument && source.length > 2097152) return apiFailure('protocol', correlationId);
+      if (rawJson && source.length > 2_097_152) return apiFailure('protocol', correlationId);
       const envelope: unknown = JSON.parse(source);
-      if (privateDocument && response.status === 200) {
+      if (rawJson && response.status === 200) {
         const value = decode(envelope);
         return value === null
           ? apiFailure('protocol', correlationId)

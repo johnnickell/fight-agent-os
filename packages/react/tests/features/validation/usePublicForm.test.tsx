@@ -1,15 +1,13 @@
+import { apiFailure, type ApiResult } from '@fight/react/account';
+import { decodeResponse } from '@fight/react/account';
+import { decodePublicSchema } from '@fight/react/account';
+import { usePublicForm } from '@fight/react/account';
+import { TextField } from '@fight/react/controls';
+import { deferred } from '@fixtures/apiFixtures';
+import { fixture } from '@fixtures/features/validation/fixtures';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-
-import { apiFailure, type ApiResult } from '@fight/react/account';
-import { decodeResponse } from '@fight/react/account';
-import { TextField } from '@fight/react/controls';
-import { decodePublicSchema } from '@fight/react/account';
-import { usePublicForm } from '@fight/react/account';
-
-import { deferred } from '@fixtures/apiFixtures';
-import { fixture } from '@fixtures/features/validation/fixtures';
 
 const schema = decodePublicSchema(fixture)!;
 const singleFieldSchema = decodePublicSchema({
@@ -64,7 +62,10 @@ describe('Formik shared error lifecycle', () => {
     );
     act(() => result.current.setFieldValue('unexpected', 'synthetic-private-marker'));
     expect(() => result.current.field('unexpected')).toThrow('Unregistered form field');
-    await act(async () => result.current.handleSubmit());
+    await act(async () => {
+      result.current.handleSubmit();
+      await Promise.resolve();
+    });
     expect(submit).toHaveBeenCalledExactlyOnceWith({ displayName: 'Valid' });
   });
 

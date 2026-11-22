@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import {
   broadcastPasswordReset,
   browserSessionPlatform,
   decodeSessionMessage,
   sessionChannelName
 } from '@fight/react/account';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -57,7 +56,7 @@ describe('browser session messaging', () => {
     expect(opened).toHaveBeenCalledWith(sessionChannelName);
     expect(postMessage).toHaveBeenCalledExactlyOnceWith({
       version: 1,
-      sender: expect.stringMatching(/^[a-f0-9]{32}$/),
+      sender: expect.stringMatching(/^[a-f0-9]{32}$/) as unknown,
       sequence: 1,
       kind: 'password-reset',
       userId

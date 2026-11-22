@@ -26,12 +26,14 @@ function SignIn() {
   return (
     <BrandProvider brand={{ name: 'Harbor Desk', logo: { src: '/brand/sailboat.svg', alt: 'Harbor sailboat' } }}>
       <ShellLayout>
-        {retired ? <p>Reload to sign in again.</p> : <LoginPage service={session.coordinator} schemas={session.schemas} />}
+        {retired ? <p>Reload to sign in again.</p> : session && <LoginPage service={session.coordinator} schemas={session.schemas} />}
       </ShellLayout>
     </BrandProvider>
   );
 }
 ```
+
+The hook creates the session after mount and returns `null` before setup and after terminal retirement. Supply a factory that creates a fresh graph each time React sets up the effect, including development Strict Mode replay.
 
 An intent owner can clear a host's pending destination at session retirement. Supply `AccountLinksProvider` to map semantic destinations such as `signIn`, `account`, and `invitation` to trusted same-origin paths and applicable display requirements. A destination can be omitted. The host still owns routing, outlet admission, and navigation. The credential readers follow the existing `/activate` and `/reset-password/complete` link and fragment contract.
 

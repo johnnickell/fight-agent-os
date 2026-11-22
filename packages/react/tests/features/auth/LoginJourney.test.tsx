@@ -1,10 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-
 import { LoginJourney } from '@fight/react/account';
-
 import { jsonResponse } from '@fixtures/activationFixtures';
 import { loginSchemaSource, loginSuccess } from '@fixtures/loginFixtures';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 const runtime = {
   schemaVersion: 2,

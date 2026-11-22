@@ -1,15 +1,13 @@
-import { act, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { apiFailure } from '@fight/react/account';
 import { UserDetail } from '@fight/react/account';
-
 import {
   directoryDependencies,
   directoryResponse,
   directoryUser
 } from '@fixtures/userDirectoryFixtures';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthorityCache } from '@fight/react/account';
 

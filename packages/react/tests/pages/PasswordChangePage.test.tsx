@@ -1,12 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-
 import { apiFailure, PasswordChangePage } from '@fight/react/account';
-
 import { jsonResponse, passwordGuidance } from '@fixtures/activationFixtures';
 import { deferred } from '@fixtures/apiFixtures';
 import { passwordChangeDependencies, passwordChangeSchema } from '@fixtures/passwordChangeFixtures';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 async function enter() {
   fireEvent.change(await screen.findByLabelText('Current password (required)'), {

@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { decodeSessionAccess } from '@fight/react/account';
+import { describe, expect, it } from 'vitest';
 
 const valid = { access_token: 'header.payload.signature', issued_at: 1000, expires_at: 1900 };
 describe('shared session access response', () => {

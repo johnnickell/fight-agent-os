@@ -150,9 +150,10 @@ roles or administrative metadata. Screenshot evidence is not visual approval or 
   before catalog-only styles. Existing inline `type` specifiers remain type-only. ESLint also enforces
   application-root paths for static imports/re-exports and literal dynamic/mock targets; TypeScript and
   builds validate actual resolution. Do not construct application module paths dynamically.
-- Supported TypeScript type-aware recommendations run against the production/test and separate catalog
-  projects, including `.storybook/` configuration. React Hooks, JSX accessibility, strict optional/index
-  checks and zero-warning lint remain enabled. JavaScript tooling retains ordinary semantic/import lint.
+- The same lint command applies type-aware rules, React Hooks, JSX accessibility and import sorting to the host
+  and the real package source, tests and stories. The package uses relative imports for its own modules, not
+  the host's `@/` alias. `tsconfig.lint.json` lets ESLint resolve types from the one client installation without
+  linting through the installed package link. The application and catalog keep their separate type checks.
 - Prettier owns formatting: 100 columns, single quotes, semicolons, two spaces, no tabs or trailing commas.
   `./bin/client lint` and `format-check` do not fix or install anything; use `lint-fix` and `format` explicitly,
   review their diff and run affected focused checks before the final complete gate. Dependency changes use
