@@ -110,7 +110,7 @@ their own prerequisites are satisfied; this TICKET does not imply a monolithic r
 | [TASK-00578](../tasks/00578-TASK.md) | Correct directory authority catalogs and existing Role administration | done |
 | [TASK-00579](../tasks/00579-TASK.md) | Correct authentication session and CSRF ownership | done |
 | [TASK-00580](../tasks/00580-TASK.md) | Correct activation and password capabilities | done |
-| [TASK-00581](../tasks/00581-TASK.md) | Correct credential recovery expiry and mail ownership | ready-for-agent |
+| [TASK-00581](../tasks/00581-TASK.md) | Correct credential recovery expiry and mail ownership | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
