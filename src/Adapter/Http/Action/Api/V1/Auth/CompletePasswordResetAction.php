@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Auth;
 
+use App\Adapter\Http\Api\V1\Auth\PasswordMutationUnconfirmed;
 use App\Adapter\Http\Api\V1\Auth\ResetBrowserSession;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\ResetCompletionResponder;
-use App\Application\Security\PasswordReset\CompletePasswordReset;
+use App\Application\Security\Password\PasswordSetting;
 use App\Domain\Security\Password\PasswordStructure;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\StateConflict;
+use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
+use SensitiveParameter;
+use Throwable;
 
 /**
  * Class CompletePasswordResetAction
@@ -28,9 +37,10 @@ final readonly class CompletePasswordResetAction
      * Constructs CompletePasswordResetAction
      */
     public function __construct(
-        private CompletePasswordReset $reset,
-        private ResetBrowserSession $browserSession,
-        private ResetCompletionResponder $responder
+        private PasswordSetting $passwordSetting,
+        private PasswordManagement $passwordManagement,
+        private ResetBrowserSession $resetBrowserSession,
+        private ResetCompletionResponder $resetCompletionResponder
     ) {
     }
 
@@ -143,15 +153,29 @@ final readonly class CompletePasswordResetAction
             'rules' => 'required|type[string]|min_length[8]|max_length[128]|same[password]'
         ]
     ])]
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    public function handle(#[SensitiveParameter] ServerRequestInterface $request): ResponseInterface
     {
         /** @var array{user_id: string, credential: string, password: string, password_confirmation: string} $input */
         $input = $request->getAttribute(JsonBody::class);
-        $target = UserId::fromString($input['user_id']);
+        $userId = UserId::fromString($input['user_id']);
         // Inspect cookie ownership before reset; it is cleanup context only and grants no authority.
-        $clear = $this->browserSession->matches($request, $target);
-        $this->reset->complete($target, $input['credential'], $input['password']);
+        $clearBrowserSession = $this->resetBrowserSession->matches($request, $userId);
+        $this->passwordSetting->requireAccepted($input['password']);
+        try {
+            $this->passwordManagement->resetPassword(
+                $userId,
+                $input['credential'],
+                $input['password'],
+                AnonymousId::generate()
+            );
+        } catch (AuthenticationRequired) {
+            throw new StateConflict();
+        } catch (EventDispatchFailed) {
+            throw new PasswordMutationUnconfirmed();
+        } catch (Throwable) {
+            throw new RuntimeException('Password reset outcome could not be confirmed.');
+        }
 
-        return $this->responder->respond($clear);
+        return $this->resetCompletionResponder->respond($clearBrowserSession);
     }
 }

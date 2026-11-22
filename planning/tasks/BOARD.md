@@ -32,7 +32,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 3 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
-| 6 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | ready-for-agent | — | — |
 | 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -69,7 +68,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | [TASK-00577](00577-TASK.md), [TASK-00580](00580-TASK.md), [TASK-00581](00581-TASK.md) | — |
+| 8 | [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | [TICKET-00142 — Share white-label React and Bootstrap account journeys](../tickets/00142-TICKET.md) | ready-for-agent | [TASK-00577](00577-TASK.md), [TASK-00581](00581-TASK.md) | — |
 | 9 | [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | [TICKET-00143 — Browse shared stateful tables with restorable URL queries](../tickets/00143-TICKET.md) | ready-for-agent | [TASK-00596](00596-TASK.md) | — |
 | 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00121](00121-TASK.md), [TASK-00597](00597-TASK.md) | — |
 | 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
@@ -524,6 +523,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | done | — | [PR #10](https://github.com/johnnickell/fight-agent-os/pull/10) |
 | 6 | [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | — (standalone chore) | done | — | — |
 | 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #226](https://github.com/johnnickell/fight-agent-os/pull/226) |
+| 6 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | done | — | [PR #301](https://github.com/johnnickell/fight-agent-os/pull/301) |
 | 7 | [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | — |
 | 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #228](https://github.com/johnnickell/fight-agent-os/pull/228) |
 | 8 | [TASK-00008](00008-TASK.md) | Replace inherited receipts with the Agent OS smoke baseline | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | [PR #12](https://github.com/johnnickell/fight-agent-os/pull/12) |

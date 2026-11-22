@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Security\PasswordReset\CompletePasswordReset;
+use App\Application\Security\Password\PasswordSetting;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
+use Fight\AccessControl\Domain\AccessControl\Audit\AnonymousId;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\RequestPasswordReset;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -56,14 +59,16 @@ final class ResetCompletionRaceWorker
                         EmailAddress::fromString('reset@example.test')
                     ));
                 } else {
-                    $container->get(CompletePasswordReset::class)->complete(
+                    $container->get(PasswordSetting::class)->requireAccepted($input['password']);
+                    $container->get(PasswordManagement::class)->resetPassword(
                         UserId::fromString($input['user']),
                         $input['credential'],
-                        $input['password']
+                        $input['password'],
+                        AnonymousId::generate()
                     );
                 }
                 echo "committed\n";
-            } catch (StateConflict) {
+            } catch (AuthenticationRequired | StateConflict) {
                 echo "conflict\n";
             }
         } catch (Throwable) {

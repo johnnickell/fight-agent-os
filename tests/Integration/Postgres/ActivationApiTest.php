@@ -14,6 +14,10 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
+use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetCredentialGenerator;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\RequestPasswordReset;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserActivated;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -102,7 +106,8 @@ final class ActivationApiTest extends TestCase
      */
     protected function tearDown(): void
     {
-        foreach (['users', 'refresh_sessions', 'activation_grants', 'activation_rate_limits'] as $table) {
+        $tables = ['users', 'refresh_sessions', 'activation_grants', 'activation_rate_limits', 'audit_evidence'];
+        foreach ($tables as $table) {
             $this->connection->executeStatement('ALTER TABLE '.$table.' DROP CONSTRAINT IF EXISTS activation_abort');
         }
         foreach ($this->environment as $name => $value) {
@@ -123,7 +128,10 @@ final class ActivationApiTest extends TestCase
                 $observed[] = [
                     $this->container->get(Connection::class)->isTransactionActive(),
                     $this->connection->fetchOne('SELECT state FROM users WHERE id = ?', [$this->target->toString()]),
-                    (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions')
+                    (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'),
+                    (int) $this->connection->fetchOne(
+                        "SELECT count(*) FROM audit_evidence WHERE action = 'user.activated'"
+                    )
                 ];
             }
         );
@@ -137,7 +145,16 @@ final class ActivationApiTest extends TestCase
         self::assertSame('tablet', $metadata['device_class']);
         self::assertStringNotContainsString('private-ua-marker', serialize($metadata));
         $data = $this->assertResponse($response, 200)['data'];
-        self::assertSame([[false, 'active', 1]], $observed);
+        self::assertSame([[false, 'active', 1, 1]], $observed);
+        $audit = $this->connection->fetchAssociative(
+            "SELECT subject_id, context->'actor'->>'kind' AS actor_kind, context::text FROM audit_evidence
+             WHERE action = 'user.activated'"
+        );
+        self::assertIsArray($audit);
+        self::assertSame($this->target->toString(), $audit['subject_id']);
+        self::assertSame('anonymous', $audit['actor_kind']);
+        self::assertStringNotContainsString($this->credential, $audit['context']);
+        self::assertStringNotContainsString($this->password, $audit['context']);
         self::assertSame(['access_token', 'issued_at', 'expires_at'], array_keys($data));
         self::assertSame(900, $data['expires_at'] - $data['issued_at']);
         $cookies = $response->getHeader('Set-Cookie');
@@ -168,6 +185,81 @@ final class ActivationApiTest extends TestCase
         $this->assertResponse($this->request(), 409);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
         self::assertCount(1, $observed);
+    }
+
+    /**
+     * Refuses a real reset credential on the activation route without altering either account
+     */
+    public function testActivationDoesNotAcceptPasswordResetAuthority(): void
+    {
+        $invitationCredential = $this->credential;
+        $resetUser = UserId::generate();
+        $resetEmail = EmailAddress::fromString('purpose-reset@example.test');
+        $bus = $this->container->get(CommandBus::class);
+        $bus->execute(new InvitePendingUser(UserId::generate(), $resetUser, $resetEmail));
+        $this->assertResponse($this->request(['user_id' => $resetUser->toString()]), 200);
+        $this->credential = $invitationCredential;
+
+        $resetCredential = PasswordResetCredential::fromString(bin2hex(random_bytes(32)));
+        $generator = $this->createStub(PasswordResetCredentialGenerator::class);
+        $generator->method('generate')->willReturn($resetCredential);
+        $this->container->set(
+            PasswordResetCredentialGenerator::class,
+            static fn(): PasswordResetCredentialGenerator => $generator
+        );
+        $bus->execute(new RequestPasswordReset($resetEmail));
+        $grant = $this->container->get(PasswordResetGrantRepository::class)->getLatestByUserId($resetUser);
+        self::assertNotNull($grant);
+        self::assertTrue($grant->matchesCredential($resetCredential));
+        self::assertTrue($grant->isUsableAt(new DateTimeImmutable()));
+
+        $before = $this->authoritySnapshot();
+        $refusal = $this->request(['credential' => $resetCredential->toString()]);
+        self::assertSame(
+            ['status' => 'fail', 'data' => ['message' => 'State conflict.']],
+            $this->assertResponse($refusal, 409)
+        );
+        $this->assertSecretObservability($refusal, $this->connection, $this->logs, [$resetCredential->toString()]);
+        self::assertSame($before, $this->authoritySnapshot());
+
+        $this->assertResponse($this->request(), 200);
+    }
+
+    /**
+     * Compares committed rows without printing password hashes or encrypted delivery material on failure
+     *
+     * @return array<string, string>
+     */
+    private function authoritySnapshot(): array
+    {
+        $snapshot = [];
+        $tables = ['users', 'activation_grants', 'password_reset_grants', 'refresh_sessions', 'audit_evidence'];
+        foreach ($tables as $table) {
+            $snapshot[$table] = hash('sha256', serialize($this->connection->fetchAllAssociative(
+                'SELECT * FROM '.$table.' ORDER BY id'
+            )));
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Keeps a committed activation distinct from a refusal even when a subscriber throws a conflict
+     */
+    public function testPostCommitConflictDoesNotLookLikeActivationRefusal(): void
+    {
+        $this->container->get(EventDispatcher::class)->addHandler(
+            \Fight\Common\Domain\Utility\ClassName::underscore(UserActivated::class),
+            function (): void {
+                throw new \Fight\Common\Application\Error\Exception\StateConflict($this->credential);
+            }
+        );
+        $response = $this->request();
+        $this->assertResponse($response, 500);
+        self::assertSame([], $response->getHeader('Set-Cookie'));
+        self::assertSame('active', $this->connection->fetchOne('SELECT state FROM users'));
+        self::assertNotNull($this->connection->fetchOne('SELECT consumed_at FROM activation_grants'));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
     }
 
     /**
@@ -403,6 +495,9 @@ final class ActivationApiTest extends TestCase
         self::assertNull($this->connection->fetchOne('SELECT consumed_at FROM activation_grants'));
         self::assertSame('pending_activation', $this->connection->fetchOne('SELECT state FROM users'));
         self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions'));
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM audit_evidence WHERE action = 'user.activated'"
+        ));
         self::assertSame(2, (int) $this->connection->fetchOne(
             'SELECT count(*) FROM activation_rate_limits WHERE attempts = 1'
         ));
@@ -418,6 +513,7 @@ final class ActivationApiTest extends TestCase
         yield 'grant' => ['activation_grants'];
         yield 'user' => ['users'];
         yield 'session' => ['refresh_sessions'];
+        yield 'required audit' => ['audit_evidence'];
     }
 
     /**

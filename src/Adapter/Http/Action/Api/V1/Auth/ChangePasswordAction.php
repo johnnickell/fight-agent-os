@@ -4,17 +4,24 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Auth;
 
+use App\Adapter\Http\Api\V1\Auth\PasswordMutationUnconfirmed;
 use App\Adapter\Http\Attribute\Authenticated;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Responder\Api\V1\Auth\PasswordChangeResponder;
-use App\Application\Security\PasswordChange\ChangePassword;
+use App\Application\Security\Password\PasswordSetting;
 use App\Domain\Security\Password\PasswordStructure;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\CurrentPrincipalProvider;
+use Fight\AccessControl\Application\AccessControl\User\PasswordManagement;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\StateConflict;
+use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
+use SensitiveParameter;
+use Throwable;
 
 /**
  * Class ChangePasswordAction
@@ -27,8 +34,11 @@ final readonly class ChangePasswordAction
     /**
      * Constructs ChangePasswordAction
      */
-    public function __construct(private ChangePassword $change, private PasswordChangeResponder $responder)
-    {
+    public function __construct(
+        private PasswordSetting $passwordSetting,
+        private PasswordManagement $passwordManagement,
+        private PasswordChangeResponder $passwordChangeResponder
+    ) {
     }
 
     /**
@@ -128,7 +138,7 @@ final readonly class ChangePasswordAction
             'rules' => 'required|type[string]|min_length[8]|max_length[128]|same[password]'
         ]
     ])]
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    public function handle(#[SensitiveParameter] ServerRequestInterface $request): ResponseInterface
     {
         $provider = $request->getAttribute(CurrentPrincipalProvider::class);
         if (!$provider instanceof CurrentPrincipalProvider) {
@@ -136,12 +146,22 @@ final readonly class ChangePasswordAction
         }
         /** @var array{current_password: string, password: string, password_confirmation: string} $input */
         $input = $request->getAttribute(JsonBody::class);
-        $this->change->change(
-            $provider->getCurrentPrincipal()->getUserId(),
-            $input['current_password'],
-            $input['password']
-        );
+        $authenticatedUserId = $provider->getCurrentPrincipal()->getUserId();
+        $this->passwordSetting->requireAccepted($input['password']);
+        try {
+            $this->passwordManagement->changePassword(
+                $authenticatedUserId,
+                $input['current_password'],
+                $input['password']
+            );
+        } catch (AuthenticationRequired) {
+            throw new StateConflict();
+        } catch (EventDispatchFailed) {
+            throw new PasswordMutationUnconfirmed();
+        } catch (Throwable) {
+            throw new RuntimeException('Password change outcome could not be confirmed.');
+        }
 
-        return $this->responder->respond();
+        return $this->passwordChangeResponder->respond();
     }
 }

@@ -45,14 +45,11 @@ and normalized peer keys are stored. No target ID, grant or password is a limite
 atomically before policy/reset, survive business rollback and deny on capacity/lock/storage failure. Shared
 capacity and bounded retry/history/deadline guarantees are unchanged. This is not production ingress or DDoS certification.
 
-`CompletePasswordReset` applies shared candidate policy, then calls the shared package
-`PasswordManagement::resetPassword()` directly. The package owns current active identity, latest usable
-one-hour purpose-bound grant, credential verification, consume-once, Argon2id replacement, authentication
-version/revision advancement, all-target-session revocation, atomic audit and post-commit event. There is no
-consumer persistence shortcut or duplicate lifecycle policy. Original qualification used Access Control
-**v0.8.0**, source/lock `319738255e682d587642b67856039f882b9588d6`, and Common **v1.3.0**,
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582` against the actual integration. TASK-00582's
-[safe-error cutover](SAFE_HTTP_ERRORS.md) selects Common v1.4.1 while retaining that Access Control version.
+The HTTP action checks shared candidate policy, then directly calls the locked Access Control v0.11.0
+`PasswordManagement::resetPassword()` with an anonymous audit actor. The package verifies the active identity
+and latest usable one-hour reset grant. It consumes the grant, replaces the Argon2id hash, advances authority,
+revokes target sessions and records audit in one transaction. It dispatches `PasswordResetCompleted` after
+commit. Agent OS does not duplicate the grant policy or write these records directly.
 
 Success is exactly HTTP 200, no-store `{"status":"success","data":{"completed":true}}`. No TokenSet, access,
 refresh, identity or grant metadata is returned; fresh sign-in is required. Invalid/unknown/used/expired/revoked/

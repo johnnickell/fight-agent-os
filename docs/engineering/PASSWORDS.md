@@ -1,20 +1,18 @@
 # Shared password acceptance and hashing
 
-TASK-00039 supplies a reusable library boundary. [Public activation](ACTIVATION.md) now consumes it;
-reset/change/login endpoint work remains separate.
-Fight Access Control still owns identity transitions; no package policy is modified.
+[Activation](ACTIVATION.md), [password change](PASSWORD_CHANGE.md) and
+[reset completion](PASSWORD_RESET_COMPLETION.md) enforce the same password acceptance policy before calling
+Fight Access Control. The package owns hashing during the credential transition and the transaction itself.
 
 ## Calling contract
 
-Resolve the shared `App\Application\Security\Password\PasswordSetting` service. `rejection($candidate)` returns
-`null` for acceptance or a `PasswordRejection` enum; it does not retain the candidate. `hash($candidate)` checks
-acceptance before hashing and returns a sensitive encoded Argon2id string, or throws `PasswordRejected` with only
-a safe enum reason. Infrastructure failure throws a generic exception without retaining the downstream cause.
-These operations have no persistence, audit, metrics, delivery or network effects.
+Call the shared `PasswordSetting::requireAccepted($candidate)` before entering a package mutation. It returns
+nothing on acceptance and throws `PasswordRejected` with a safe enum reason on rejection. Checker failure is
+an internal error, not a rejection; the exception retains no downstream cause. Policy checking does not hash,
+persist or send anything.
 
-Activation and later reset/change orchestration must call this boundary before dispatching the package's password-setting
-operation. When the package operation hashes internally, call `rejection()` first and pass the **original bytes**
-only after acceptance; do not hash twice or feed a hash as plaintext. The package's shared `PasswordHasher` and
+Pass the **original bytes** to the package's synchronous operation only after acceptance. Do not hash twice or
+feed a hash as plaintext. The package's shared `PasswordHasher` and
 `PasswordValidator` both resolve to the same `Argon2idPasswords` instance. They deliberately do **not** enforce
 new-password acceptance: verification and login-time rehash must continue to work for older passwords that do not
 meet a later setting policy. Raw trusted in-process hashing is not authorization to bypass acceptance in a new

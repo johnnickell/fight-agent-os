@@ -7,7 +7,6 @@ use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
 use App\Adapter\Security\Authentication\AuthenticationEvents;
-use App\Application\Security\Activation\ActivateInvitation;
 use App\Application\Security\Password\PasswordSetting;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
@@ -37,11 +36,10 @@ return static function (Container $container): void {
             $container->get(AuthenticationEvents::class),
             $container->get(AuditEvidenceRepository::class)
         ));
-    $container->set(ActivateInvitation::class, static fn(Container $container): ActivateInvitation =>
-        new ActivateInvitation($container->get(PasswordSetting::class), $container->get(UserAuthentication::class)));
     $container->set(ActivateInvitationAction::class, static fn(Container $container): ActivateInvitationAction =>
         new ActivateInvitationAction(
-            $container->get(ActivateInvitation::class),
+            $container->get(PasswordSetting::class),
+            $container->get(UserAuthentication::class),
             $container->get(SessionResponder::class),
             $container->get(CaptureSessionPresentation::class)
         ));
