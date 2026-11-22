@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Invitations;
 
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
@@ -18,7 +18,6 @@ use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
-use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -100,13 +99,8 @@ final readonly class ReadInvitationStatusAction
         if ($this->userRepository->getById($userId) === null) {
             throw new ResourceNotFound();
         }
+        /** @var InvitationDeliveryStatusView|CredentialDeliveryAbsent $delivery */
         $delivery = $this->queryBus->fetch(new FindInvitationDeliveryStatus($userId));
-        if ($delivery instanceof CredentialDeliveryAbsent) {
-            return $this->responder->respond(null);
-        }
-        if (!$delivery instanceof InvitationDeliveryStatusView || !$delivery->getUserId()->equals($userId)) {
-            throw new LogicException('Invitation status is unavailable.');
-        }
 
         return $this->responder->respond($delivery);
     }

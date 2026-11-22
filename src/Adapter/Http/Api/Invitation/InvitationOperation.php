@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Invitation;
+namespace App\Adapter\Http\Api\Invitation;
 
 /**
  * Enum InvitationOperation

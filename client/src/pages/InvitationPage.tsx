@@ -321,19 +321,21 @@ export default function InvitationPage({
                 >
                   Resend invitation
                 </Button>
-                <Button
-                  onClick={(event) => {
-                    if (!busy.current) {
-                      returnFocus.current = event.currentTarget;
-                      setEditing(true);
-                      setInvalid(false);
-                    }
-                  }}
-                >
-                  Correct email
-                </Button>
+                {delivery.origin === 'private_invitation' && (
+                  <Button
+                    onClick={(event) => {
+                      if (!busy.current) {
+                        returnFocus.current = event.currentTarget;
+                        setEditing(true);
+                        setInvalid(false);
+                      }
+                    }}
+                  >
+                    Correct email
+                  </Button>
+                )}
               </div>
-              {editing && (
+              {editing && delivery.origin === 'private_invitation' && (
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();

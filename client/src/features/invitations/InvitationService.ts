@@ -20,6 +20,7 @@ export const isUserId = (value: string): boolean =>
 export type InvitationDelivery = Readonly<{
   userId: string;
   generation: string;
+  origin: 'private_invitation' | 'registration';
   status:
     | 'pending'
     | 'claimed'
@@ -49,7 +50,8 @@ const timestamp = (value: unknown): value is string =>
   new Date(value).toISOString().replace('.000Z', '+00:00') === value;
 const decodeDelivery: ResponseDecoder<InvitationDelivery> = (value) => {
   if (
-    !hasExactKeys(value, ['user_id', 'status', 'expires_at', 'activation_delivery_id']) ||
+    !hasExactKeys(value, ['user_id', 'status', 'expires_at', 'activation_delivery_id', 'origin']) ||
+    (value.origin !== 'private_invitation' && value.origin !== 'registration') ||
     typeof value.user_id !== 'string' ||
     !isUserId(value.user_id) ||
     typeof value.activation_delivery_id !== 'string' ||
@@ -70,6 +72,7 @@ const decodeDelivery: ResponseDecoder<InvitationDelivery> = (value) => {
   return Object.freeze({
     userId: value.user_id,
     generation: value.activation_delivery_id,
+    origin: value.origin,
     status: value.status as InvitationDelivery['status'],
     expiresAt: value.expires_at
   });

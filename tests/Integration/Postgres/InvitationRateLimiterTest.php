@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
-use App\Domain\Invitation\InvitationOperation;
-use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;

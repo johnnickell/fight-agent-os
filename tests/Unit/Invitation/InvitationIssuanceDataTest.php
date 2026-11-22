@@ -44,7 +44,8 @@ final class InvitationIssuanceDataTest extends TestCase
                 'user_id'                => $userId->toString(),
                 'status'                 => 'retry_pending',
                 'expires_at'             => '2026-11-10T12:00:00+00:00',
-                'activation_delivery_id' => $deliveryId->toString()
+                'activation_delivery_id' => $deliveryId->toString(),
+                'origin'                 => 'private_invitation'
             ]
         ], $data->toArray());
     }

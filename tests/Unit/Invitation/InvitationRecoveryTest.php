@@ -7,12 +7,12 @@ namespace Tests\Unit\Invitation;
 use App\Adapter\Http\Action\Api\V1\Invitations\CorrectInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ResendInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\RetryInvitationAction;
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationMutationResponder;
 use App\Application\Failure\InvitationRecoveryUncertain;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Domain\Invitation\InvitationOperation;
-use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ResendInvitationDelivery;
@@ -26,9 +26,12 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
+use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Messaging\Command\Command;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
@@ -52,8 +55,7 @@ final class InvitationRecoveryTest extends TestCase
 {
     /** @var list<Command> */
     private array $commands = [];
-    /** @var list<InvitationOperation> */
-    private array $admissions = [];
+
     /**
      * Sends trusted actor and canonical input while acknowledging no user data
      */
@@ -80,7 +82,6 @@ final class InvitationRecoveryTest extends TestCase
         if ($command instanceof CorrectPendingInvitation) {
             self::assertSame('corrected@example.test', $command->getEmail()->toString());
         }
-        self::assertSame([InvitationOperation::from($operation)], $this->admissions);
     }
 
     /**
@@ -128,6 +129,33 @@ final class InvitationRecoveryTest extends TestCase
     }
 
     /**
+     * Rejects invalid recovery requests without consuming a budget or sending a command
+     *
+     * @phpstan-param class-string<Throwable> $expected
+     */
+    #[DataProvider('rejectedRequests')]
+    public function testRejectsInvalidRequest(string $operation, string $rejection, string $expected): void
+    {
+        [$action, $request] = $this->action($operation, rejection: $rejection);
+        $this->expectException($expected);
+        $action->handle($request);
+    }
+
+    /**
+     * Supplies each recovery operation with an independent admission failure
+     *
+     * @return iterable<array{string, string, class-string<Throwable>}>
+     */
+    public static function rejectedRequests(): iterable
+    {
+        foreach (['retry', 'resend', 'correct'] as $operation) {
+            yield "$operation missing authentication" => [$operation, 'unauthenticated', AuthenticationRequired::class];
+            yield "$operation malformed target" => [$operation, 'malformed', ValidationException::class];
+            yield "$operation unknown target" => [$operation, 'missing', PermissionDenied::class];
+        }
+    }
+
+    /**
      * Rejects disabling or unbounded recovery budgets
      */
     #[DataProvider('invalidBudgets')]
@@ -158,7 +186,7 @@ final class InvitationRecoveryTest extends TestCase
      * @return array{RetryInvitationAction|ResendInvitationAction|CorrectInvitationAction, ServerRequestInterface,
      *     UserId, UserId}
      */
-    private function action(string $operation, ?Throwable $failure = null): array
+    private function action(string $operation, ?Throwable $failure = null, ?string $rejection = null): array
     {
         $actor = UserId::generate();
         $target = User::invite(
@@ -166,28 +194,33 @@ final class InvitationRecoveryTest extends TestCase
             EmailAddress::fromString('pending@example.test'),
             new DateTimeImmutable()
         );
-        $users = $this->createStub(UserRepository::class);
-        $users->method('getById')->willReturn($target);
-        $bus = $this->createStub(CommandBus::class);
-        $bus->method('execute')->willReturnCallback(function (Command $command) use ($failure): void {
-            if ($failure !== null) {
-                throw $failure;
-            }
-            $this->commands[] = $command;
-        });
-        $limiter = $this->createStub(InvitationRateLimiter::class);
-        $limiter->method('consume')->willReturnCallback(function (
-            UserId $actorId,
-            InvitationOperation $op,
-            ?UserId $targetId
-        ) use (
-            $actor,
-            $target
-        ): void {
-            self::assertTrue($actor->equals($actorId));
-            self::assertTrue($target->getId()->equals($targetId));
-            $this->admissions[] = $op;
-        });
+        $users = $this->createMock(UserRepository::class);
+        if ($rejection === null || $rejection === 'missing') {
+            $users->expects(self::once())->method('getById')->with($target->getId())
+                ->willReturn($rejection === 'missing' ? null : $target);
+        } else {
+            $users->expects(self::never())->method('getById');
+        }
+        $bus = $this->createMock(CommandBus::class);
+        $limiter = $this->createMock(InvitationRateLimiter::class);
+        if ($rejection !== null) {
+            $bus->expects(self::never())->method('execute');
+            $limiter->expects(self::never())->method('consume');
+        } else {
+            $bus->expects(self::once())->method('execute')->willReturnCallback(function (Command $command) use (
+                $failure
+            ): void {
+                if ($failure !== null) {
+                    throw $failure;
+                }
+                $this->commands[] = $command;
+            });
+            $limiter->expects(self::once())->method('consume')->with(
+                $actor,
+                InvitationOperation::from($operation),
+                $target->getId()
+            );
+        }
         $responder = new InvitationMutationResponder(new JSendResponseFactory(
             new ResponseFactory(),
             new StreamFactory()
@@ -199,17 +232,22 @@ final class InvitationRecoveryTest extends TestCase
         };
         $action = new $class($bus, $users, $limiter, $responder);
         $route = $this->createStub(RouteInterface::class);
-        $route->method('getArgument')->willReturn($target->getId()->toString());
+        $route->method('getArgument')->willReturn(
+            $rejection === 'malformed' ? 'not-a-user-id' : $target->getId()->toString()
+        );
         $request = (new ServerRequestFactory())->createServerRequest('POST', '/api/v1/invitations')
-            ->withAttribute(AuthenticationContext::class, new AuthenticationContext(
-                $actor,
-                RefreshSessionId::generate(),
-                1
-            ))
             ->withAttribute(JsonBody::class, ['email' => 'Corrected@EXAMPLE.test'])
             ->withAttribute(RouteContext::ROUTE, $route)
             ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
             ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
+
+        if ($rejection !== 'unauthenticated') {
+            $request = $request->withAttribute(AuthenticationContext::class, new AuthenticationContext(
+                $actor,
+                RefreshSessionId::generate(),
+                1
+            ));
+        }
 
         return [$action, $request, $actor, $target->getId()];
     }

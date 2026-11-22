@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Security\Authentication\AuthAdmission;
 use App\Adapter\Security\HttpSecurityConfiguration;
-use App\Domain\Invitation\InvitationRatePolicy;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\Common\Application\Service\Container;
 use Slim\Factory\AppFactory;

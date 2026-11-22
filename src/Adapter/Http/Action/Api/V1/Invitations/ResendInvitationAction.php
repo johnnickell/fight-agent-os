@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Invitations;
 
+use App\Adapter\Http\Api\Invitation\InvitationOperation;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationMutationResponder;
 use App\Application\Failure\InvitationRecoveryUncertain;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ResendInvitationDelivery;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotResendableException;

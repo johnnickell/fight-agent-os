@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Invitation\InvitationRateLimiter;
 use App\Domain\Authorization\InstallationManagedPolicy;
-use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -195,7 +195,10 @@ final class InvitationRecoveryApiTest extends TestCase
         self::assertSame($read ? 200 : 403, $response->getStatusCode());
         $data = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR)['data'] ?? null;
         if ($read) {
-            self::assertSame(['user_id', 'status', 'expires_at', 'activation_delivery_id'], array_keys($data));
+            self::assertSame(
+                ['user_id', 'status', 'expires_at', 'activation_delivery_id', 'origin'],
+                array_keys($data)
+            );
             self::assertSame('retry_pending', $data['status']);
         } else {
             self::assertSame(['message' => 'Permission denied.'], $data);
@@ -892,7 +895,8 @@ SQL,
         ]);
         self::assertIsArray($user);
         self::assertSame($this->grant()['delivery_id'], $data['activation_delivery_id']);
-        self::assertSame(['user_id', 'status', 'expires_at', 'activation_delivery_id'], array_keys($data));
+        self::assertSame(['user_id', 'status', 'expires_at', 'activation_delivery_id', 'origin'], array_keys($data));
+        self::assertSame('private_invitation', $data['origin']);
         $detail = $this->request('GET', '/api/v1/users/'.$this->target);
         self::assertSame(200, $detail->getStatusCode());
         $identity = json_decode((string) $detail->getBody(), true, flags: JSON_THROW_ON_ERROR)['data'];

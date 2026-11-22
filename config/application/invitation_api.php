@@ -7,20 +7,18 @@ use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ResendInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\RetryInvitationAction;
+use App\Adapter\Http\Api\Invitation\InvitationRateLimiter;
+use App\Adapter\Http\Api\Invitation\InvitationRatePolicy;
 use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationMutationResponder;
 use App\Adapter\Http\Responder\Api\V1\Invitations\IssueInvitationResponder;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
-use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Authorization\InstallationAssignmentPolicy;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Invitation\InvitationRateLimiter;
-use App\Application\Invitation\IssueInvitation;
+use App\Application\Invitation\CommandHandler\IssueInvitationHandler;
 use App\Domain\Authorization\MembershipEvidenceRepository;
-use App\Domain\Invitation\InvitationRatePolicy;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\QueryHandler\FindInvitationDeliveryStatusHandler;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
@@ -37,11 +35,6 @@ return static function (Container $container): void {
         FindInvitationDeliveryStatusHandler::queryRegistration() => FindInvitationDeliveryStatusHandler::class
     ]);
     $container->set(PermissionGuard::class, static fn(): PermissionGuard => new PermissionGuard());
-    $container->set(AuthenticatedPermissions::class, static fn(Container $container): AuthenticatedPermissions =>
-        new AuthenticatedPermissions(
-            $container->get(AuthoritativePrincipalResolver::class),
-            $container->get(PermissionGuard::class)
-        ));
     $container->set(InvitationRatePolicy::class, static function (): InvitationRatePolicy {
         $integer = static function (string $name, int $default): int {
             $raw = getenv($name);
@@ -81,16 +74,16 @@ return static function (Container $container): void {
             $container->get(InvitationMutationResponder::class)
         ));
     }
-    $container->set(IssueInvitation::class, static fn(Container $container): IssueInvitation => new IssueInvitation(
-        $container->get(AuthenticatedPermissions::class),
-        $container->get(InvitationRateLimiter::class),
-        $container->get(InstallationAssignmentPolicy::class),
-        $container->get(UserRepository::class),
-        $container->get(CommandBus::class),
-        $container->get(QueryBus::class),
-        $container->get(TransactionalUnitOfWork::class),
-        $container->get(MembershipEvidenceRepository::class)
-    ));
+    $container->set(IssueInvitationHandler::class, static fn(Container $container): IssueInvitationHandler =>
+        new IssueInvitationHandler(
+            $container->get(CommandBus::class),
+            $container->get(QueryBus::class),
+            $container->get(TransactionalUnitOfWork::class),
+            $container->get(MembershipEvidenceRepository::class)
+        ));
+    $container->get('messaging.command.router')->registerHandlers([
+        IssueInvitationHandler::commandRegistration() => IssueInvitationHandler::class
+    ]);
     $container->set(IssueInvitationResponder::class, static fn(Container $container): IssueInvitationResponder =>
         new IssueInvitationResponder($container->get(JSendResponseFactory::class)));
     $container->set(ReadInvitationStatusResponder::class, static fn(
@@ -99,7 +92,12 @@ return static function (Container $container): void {
         new ReadInvitationStatusResponder($container->get(JSendResponseFactory::class)));
     $container->set(IssueInvitationAction::class, static fn(Container $container): IssueInvitationAction =>
         new IssueInvitationAction(
-            $container->get(IssueInvitation::class),
+            $container->get(PermissionGuard::class),
+            $container->get(InvitationRateLimiter::class),
+            $container->get(InstallationAssignmentPolicy::class),
+            $container->get(UserRepository::class),
+            $container->get(CommandBus::class),
+            $container->get(QueryBus::class),
             $container->get(IssueInvitationResponder::class)
         ));
     $container->set(ReadInvitationStatusAction::class, static fn(Container $container): ReadInvitationStatusAction =>

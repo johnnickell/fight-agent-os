@@ -13,6 +13,7 @@ export function issuanceData() {
     delivery: {
       user_id: userId,
       activation_delivery_id: crypto.randomUUID(),
+      origin: 'private_invitation' as const,
       status: 'retry_pending',
       expires_at: '2027-01-01T00:00:00+00:00'
     }

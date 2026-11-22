@@ -24,7 +24,7 @@ use Psr\Http\Message\ResponseInterface;
         new OA\Property(property: 'audit', type: 'string', enum: ['confirmed', 'unconfirmed']),
         new OA\Property(
             property: 'delivery',
-            required: ['user_id', 'status', 'expires_at', 'activation_delivery_id'],
+            required: ['user_id', 'status', 'expires_at', 'activation_delivery_id', 'origin'],
             properties: [
                 new OA\Property(property: 'user_id', type: 'string', format: 'uuid'),
                 new OA\Property(
@@ -41,7 +41,8 @@ use Psr\Http\Message\ResponseInterface;
                     ]
                 ),
                 new OA\Property(property: 'expires_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'activation_delivery_id', type: 'string', format: 'uuid')
+                new OA\Property(property: 'activation_delivery_id', type: 'string', format: 'uuid'),
+                new OA\Property(property: 'origin', type: 'string', enum: ['private_invitation', 'registration'])
             ],
             type: 'object',
             nullable: true,
