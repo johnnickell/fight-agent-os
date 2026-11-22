@@ -6,6 +6,33 @@ reuses a qualifying success. Use `./bin/build --force` for deliberate fresh exec
 [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) for reporting and administrative-only changes.
 A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
 
+## Standalone PHP verification
+
+`./bin/php-pass` runs the same PHP checks as the full build without installing client dependencies, starting
+an HTTPS gateway, or running browser checks. It uses the selected checkout’s running Compose `web` tooling
+service, so the host needs neither PHP nor Composer. For a fresh registered worktree, prepare it explicitly:
+
+```sh
+./bin/runtime setup
+./bin/up --worktree "$PWD" --build-only
+./bin/composer install --no-interaction --prefer-dist --no-progress
+./bin/runtime docker compose up --detach --wait web
+./bin/openapi export
+./bin/validations export
+./bin/php-pass
+```
+
+For main, use `./bin/up --build-only` instead. Starting just `web` also starts its declared PostgreSQL
+services; the pass verifies and resets only the guarded test schema. Repeat the exports when their source
+contracts change. The pass checks source stability and writes the usual backend reports under
+`.runs/build/reports/backend/`. It does not issue a full-build receipt. Replacing backend evidence can cause
+the next full build to miss its cache.
+
+Native GitHub jobs share one PHP setup action. The targeted **PHP pass qualification** workflow runs
+`php scripts/php_pass.php` on pull requests changing the pass or its setup. It uses native PHP and PostgreSQL
+with no container or client setup. It is not a replacement for **Build** or a new merge requirement. The full
+build runs the same PHP checks once and retains its Planning, frontend and browser phases.
+
 ## Automatic build reuse
 
 `./bin/build` and native `php scripts/build.php` accept `--force`. With no option, the gate checks the latest

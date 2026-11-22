@@ -1,0 +1,35 @@
+name: Prepare native PHP verification
+description: Install locked PHP tooling, export contract fixtures, and provision the guarded PostgreSQL target
+
+runs:
+  using: composite
+  steps:
+    - name: Set up native PHP and coverage
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.5'
+        extensions: pdo_pgsql, mbstring, dom, xml, xmlwriter, simplexml, sodium
+        coverage: xdebug
+        tools: composer:v2
+        ini-values: xdebug.mode=off, date.timezone=UTC, memory_limit=512M, zend.assertions=1, error_reporting=E_ALL
+      env:
+        fail-fast: true
+    - name: Prepare native guarded PostgreSQL
+      shell: bash
+      run: |
+        sudo systemctl start postgresql.service
+        sudo -u postgres psql --set ON_ERROR_STOP=1 <<'SQL'
+        CREATE ROLE agent_os_test LOGIN PASSWORD 'agent_os_test_ci' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+        SQL
+        sudo -u postgres createdb --owner=agent_os_test agent_os_test
+        {
+          printf '%s\n' 'DATABASE_URL=postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test'
+          printf '%s\n' 'TEST_DATABASE_URL=postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test'
+          printf '%s\n' 'TEST_DATABASE_ALLOWED_HOST=127.0.0.1'
+        } >> "$GITHUB_ENV"
+    - name: Install locked PHP dependencies and export contract fixtures
+      shell: bash
+      run: |
+        composer install --no-interaction --prefer-dist --no-progress
+        php scripts/openapi.php export
+        php scripts/validations.php export

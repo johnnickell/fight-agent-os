@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -eu
+
+cd "$(dirname "$0")/.."
+if [ "$#" -ne 0 ]; then
+    echo 'Usage: ./bin/php-pass' >&2
+    exit 2
+fi
+
+if ! ./bin/runtime docker compose ps --status running --services | grep -Fxq web; then
+    echo 'The Compose web service is not running. Prepare PHP tooling as shown in docs/engineering/BUILD.md.' >&2
+    exit 1
+fi
+
+./bin/runtime storage-admit
+exec ./bin/runtime docker compose exec -T web php scripts/php_pass.php

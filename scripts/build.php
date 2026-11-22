@@ -5,9 +5,13 @@ declare(strict_types=1);
 use Composer\InstalledVersions;
 use Symfony\Component\Process\Process;
 use Tooling\Build\BuildCache;
+use Tooling\Build\PhpPass;
+use Tooling\Build\VerificationWorkspace;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 require __DIR__.'/BuildCache.php';
+require __DIR__.'/PhpPass.php';
+require __DIR__.'/VerificationWorkspace.php';
 
 if (array_slice($argv ?? [], 1) !== [] && array_slice($argv ?? [], 1) !== ['--force']) {
     fwrite(STDERR, "Usage: php scripts/build.php [--force]\n");
@@ -17,16 +21,10 @@ $force = ($argv[1] ?? null) === '--force';
 
 $root = dirname(__DIR__);
 $directory = $root.'/.runs/build';
-if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
-    throw new RuntimeException('Cannot create the ignored build report directory.');
-}
-// Host CI consumes only top-level JSON/log evidence, never the private tool HOME.
-if (!chmod($directory, 0755)) {
-    throw new RuntimeException('Cannot make the build report directory traversable by its host consumer.');
-}
-$lock = fopen($directory.'/gate.lock', 'c');
-if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
-    fwrite(STDERR, "Another canonical gate is running; wait for it to finish.\n");
+try {
+    $lock = VerificationWorkspace::lock($root);
+} catch (RuntimeException $error) {
+    fwrite(STDERR, $error->getMessage()."\n");
     exit(1);
 }
 $started = microtime(true);
@@ -200,87 +198,20 @@ $execute = static function (
     }
 };
 
-/**
- * Captures index, status and actual tracked/unignored bytes including dirty starting work
- */
-$snapshot = static function () use ($root): array {
-    $git = static function (array $arguments) use ($root): string {
-        $process = new Process(
-            ['git', '-c', 'safe.directory='.$root, ...$arguments],
-            $root,
-            ['GIT_OPTIONAL_LOCKS' => '0']
-        );
-        $process->mustRun();
-
-        return $process->getOutput();
-    };
-    $files = [];
-    $paths = explode("\0", $git(['ls-files', '-z', '--cached', '--others', '--exclude-standard']));
-    foreach (array_unique($paths) as $path) {
-        if ($path === '') {
-            continue;
-        }
-        $full = $root.'/'.$path;
-        if (is_link($full)) {
-            $files[$path] = ['link' => readlink($full)];
-        } elseif (is_file($full)) {
-            $digest = hash_file('sha256', $full);
-            $mode = fileperms($full);
-            if ($digest === false || $mode === false) {
-                throw new RuntimeException('Cannot snapshot source bytes and mode.');
-            }
-            $files[$path] = ['sha256' => $digest, 'executable' => $mode & 0111];
-        } else {
-            $files[$path] = ['absent' => true];
-        }
-    }
-    ksort($files);
-
-    return [
-        'head'          => trim($git(['rev-parse', 'HEAD'])),
-        'branch'        => trim($git(['rev-parse', '--abbrev-ref', 'HEAD'])),
-        'index_sha256'  => hash('sha256', $git(['ls-files', '--stage', '-z'])),
-        'status_sha256' => hash('sha256', $git(['status', '--porcelain=v1', '-z', '--untracked-files=all'])),
-        'files'         => $files
-    ];
-};
-
 $exitCode = 1;
 $before = null;
 try {
-    $before = $snapshot();
+    $before = VerificationWorkspace::snapshot($root);
     $writeEvidence($run.'/before.json', $before);
-    if (!extension_loaded('xdebug') || !is_file($root.'/client/node_modules/.fight-install.json')) {
+    if (!is_file($root.'/client/node_modules/.fight-install.json')) {
         throw new RuntimeException(
-            'Missing coverage/frontend setup. Run ./bin/client setup before web; see docs/engineering/BUILD.md.'
+            'Missing frontend setup. Run ./bin/client setup before web; see docs/engineering/BUILD.md.'
         );
     }
 
-    $steps = [
-        'Composer version'       => ['composer', '--version', '--no-interaction'],
-        'Composer manifest/lock' => ['composer', 'validate', '--strict', '--no-interaction'],
-        'PHP syntax/namespaces'  => ['php', 'scripts/php_syntax.php'],
-        'PHP style'              => ['php', 'vendor/bin/phpcs', '-s'],
-        'PHP types'              => ['php', 'vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=512M'],
-        'PHP dependencies'       => [
-            'php', 'vendor/bin/deptrac', 'analyse', '--config-file=deptrac.php', '--formatter=table',
-            '--no-progress', '--report-uncovered', '--fail-on-uncovered'
-        ],
-        'Rector (dry-run)'       => ['php', 'vendor/bin/rector', 'process', '--dry-run', '--no-progress-bar'],
-        'OpenAPI freshness'      => ['php', 'scripts/openapi.php', 'check'],
-        'Validation freshness'   => ['php', 'scripts/validations.php', 'check'],
-        'Backend coverage'       => ['php', 'scripts/backend_tests.php']
-    ];
-    foreach ($steps as $name => $command) {
-        $environment = ['COMPOSER_ROOT_VERSION' => 'dev-develop', 'COMPOSER_DISABLE_NETWORK' => '1'];
-        if ($name === 'Backend coverage') {
-            $environment['APP_ENV'] = 'test';
-            $environment['XDEBUG_MODE'] = 'coverage';
-        }
-        $exitCode = $execute($name, $command, $root, $environment);
-        if ($exitCode !== 0) {
-            throw new RuntimeException('Build failed during '.$name.'.');
-        }
+    $exitCode = PhpPass::run($root, $execute);
+    if ($exitCode !== 0) {
+        throw new RuntimeException('Build failed during the PHP pass.');
     }
 
     // Frontend tools receive no application, database, provider or host credential environment.
@@ -330,7 +261,7 @@ try {
     fwrite(STDERR, $error->getMessage()."\n");
 } finally {
     try {
-        $after = $snapshot();
+        $after = VerificationWorkspace::snapshot($root);
         $writeEvidence($run.'/after.json', $after);
         $receipt['source_unchanged'] = $before !== null && $before === $after;
         if (!$receipt['source_unchanged']) {

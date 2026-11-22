@@ -10,9 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env:
-      DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
-      TEST_DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
-      TEST_DATABASE_ALLOWED_HOST: 127.0.0.1
       BROWSER_SMOKE_NATIVE: '1'
     steps:
       - uses: actions/checkout@v5
@@ -24,24 +21,14 @@ jobs:
           sudo apt-get install --no-install-recommends --yes \
             php8.5-cli php8.5-fpm php8.5-pgsql php8.5-mbstring php8.5-xml \
             libnss3-tools openssl
-      - name: Set up native PHP and coverage
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.5'
-          extensions: pdo_pgsql, mbstring, dom, xml, xmlwriter, simplexml, sodium
-          coverage: xdebug
-          tools: composer:v2
-          ini-values: xdebug.mode=off, date.timezone=UTC, memory_limit=512M, zend.assertions=1, error_reporting=E_ALL
-        env:
-          fail-fast: true
+      - uses: ./.github/actions/native-php
       - name: Set up locked Node runtime
         uses: actions/setup-node@v5
         with:
           node-version-file: client/package.json
           package-manager-cache: false
-      - name: Explicit locked tooling and dependency setup
+      - name: Explicit locked frontend and browser setup
         run: |
-          composer install --no-interaction --prefer-dist --no-progress
           export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/playwright"
           printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH" >> "$GITHUB_ENV"
           mkdir -p .runs/build/reports/client
@@ -56,15 +43,6 @@ jobs:
             node node_modules/playwright/cli.js install --with-deps chromium
             npm run build
           )
-          php scripts/openapi.php export
-          php scripts/validations.php export
-      - name: Prepare native guarded PostgreSQL
-        run: |
-          sudo systemctl start postgresql.service
-          sudo -u postgres psql --set ON_ERROR_STOP=1 <<'SQL'
-          CREATE ROLE agent_os_test LOGIN PASSWORD 'agent_os_test_ci' NOSUPERUSER NOCREATEDB NOCREATEROLE;
-          SQL
-          sudo -u postgres createdb --owner=agent_os_test agent_os_test
       - name: Prepare disposable browser TLS and catcher prerequisites
         run: |
           php --version
