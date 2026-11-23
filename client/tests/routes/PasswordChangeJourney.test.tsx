@@ -1,9 +1,9 @@
+import { PasswordChangeService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ApiClient } from '@/api/ApiClient';
-import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 
 import { jsonResponse } from '../activationFixtures';
@@ -20,7 +20,7 @@ describe('password-change terminal application transition', () => {
       const post = vi.fn(() => pending.promise);
       owner.passwordChange = new PasswordChangeService(
         new ApiClient(
-          { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+          { schemaVersion: 2, apiBasePath: '/api/v1' },
           {
             accessTokens: { getAccessToken: () => 'synthetic.access.signature' },
             fetch: post

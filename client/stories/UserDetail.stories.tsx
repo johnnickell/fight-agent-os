@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
+import { UserDetail } from '@fight/react/account';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import UserDetail from '@/pages/UserDetail';
 
 import {
   directoryDependencies,

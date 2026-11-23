@@ -1,6 +1,6 @@
-import { ApiClient } from '@/api/ApiClient';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { UserDirectoryService } from '@/features/users/UserDirectoryService';
+import { AuthorityCache } from '@fight/react/account';
+import { UserDirectoryService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 export function directoryUser(overrides: Record<string, unknown> = {}) {
   return {
@@ -66,7 +66,7 @@ export function directoryDependencies(
     })
   );
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       fetch,
       accessTokens: { getAccessToken: () => 'test.access.signature' }

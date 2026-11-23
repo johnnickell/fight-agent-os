@@ -1,12 +1,12 @@
-import { ApiClient } from '@/api/ApiClient';
-import { CsrfProofService } from '@/features/auth/CsrfProofService';
-import { ResetCompletionService } from '@/features/auth/ResetCompletionService';
-import { ResetCredential } from '@/features/auth/ResetCredential';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { CsrfProofService } from '@fight/react/account';
+import { ResetCompletionService } from '@fight/react/account';
+import { ResetCredential } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 import { activationSchemaSource, jsonResponse } from './activationFixtures';
 
-import type { ApiTransport } from '@/api/ApiClient';
+import type { ApiTransport } from '@fight/react/account';
 
 export const resetCompletionSchema = {
   ...activationSchemaSource,
@@ -20,7 +20,7 @@ export function resetCompletionDependencies(
   const userId = crypto.randomUUID();
   const credential = new ResetCredential({ userId, credential: 'synthetic-reset-marker' });
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       fetch: (url, init) => {
         if (url.endsWith('/validations/password_reset_completion'))

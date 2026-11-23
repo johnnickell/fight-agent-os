@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 
+import { AuthorityCache } from '@fight/react/account';
+import { CurrentPrincipalService } from '@fight/react/account';
+import { Button } from '@fight/react/controls';
+import { ContentPanel } from '@fight/react/controls';
+import { PermissionButton } from '@fight/react/controls';
+import { ApiClient } from '@fixtures/transport';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ApiClient } from '@/api/ApiClient';
-import { Button } from '@/components/Button';
-import { ContentPanel } from '@/components/ContentPanel';
-import { PermissionButton } from '@/components/PermissionButton';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 
-import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
+import type { PrincipalLoadResult } from '@fight/react/account';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 const route: RegisteredRoute = {
@@ -51,7 +51,7 @@ function AuthorityExample({ scenario }: { scenario: Scenario }) {
         // Exercise the production transport/codec with a local safe View, never real credentials.
         return new CurrentPrincipalService(
           new ApiClient(
-            { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+            { schemaVersion: 2, apiBasePath: '/api/v1' },
             {
               accessTokens: { getAccessToken: () => 'catalog-only' },
               fetch: () =>

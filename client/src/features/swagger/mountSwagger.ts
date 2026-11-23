@@ -2,10 +2,10 @@ import SwaggerUI from 'swagger-ui-dist/swagger-ui-bundle.js';
 
 import { supportsSwaggerOperation } from '@/features/swagger/SwaggerDocument';
 
-import type { AuthorityScope } from '@/features/authority/AuthorityCache';
 import type { SwaggerDocument } from '@/features/swagger/SwaggerDocument';
 import type { SwaggerService } from '@/features/swagger/SwaggerService';
 import type { SwaggerRequest, SwaggerSystem } from '@/features/swagger/SwaggerSystem';
+import type { AuthorityScope } from '@fight/react/account';
 
 type Action = (...arguments_: unknown[]) => unknown;
 

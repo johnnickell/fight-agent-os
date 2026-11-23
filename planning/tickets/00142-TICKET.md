@@ -2,7 +2,7 @@
 id: TICKET-00142
 epic: EPIC-00027
 title: Share white-label React and Bootstrap account journeys
-status: ready-for-agent
+status: done
 ---
 
 # Share white-label React and Bootstrap account journeys
@@ -67,7 +67,7 @@ Test composition and extension through public exports rather than allowing deep 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00596](../tasks/00596-TASK.md) | Run white-label account journeys from the shared React package | ready-for-agent |
+| [TASK-00596](../tasks/00596-TASK.md) | Run white-label account journeys from the shared React package | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

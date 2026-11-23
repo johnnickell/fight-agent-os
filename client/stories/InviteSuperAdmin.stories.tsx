@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
+import { InviteSuperAdminPage } from '@fight/react/account';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import InviteSuperAdminPage from '@/pages/InviteSuperAdminPage';
 
 import { jsonResponse } from '../tests/apiFixtures';
 import {

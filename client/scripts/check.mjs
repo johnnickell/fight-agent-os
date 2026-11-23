@@ -10,6 +10,8 @@ const steps = [
   ['npm', '--version'],
   ['npm', 'ls', '--depth=0'],
   ...[
+    'package-build',
+    'pack-check',
     'typecheck',
     'lint',
     'format-check',

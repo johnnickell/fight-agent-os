@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { ContentState } from '@/components/ContentState';
-import { useAuthority } from '@/features/authority/useAuthority';
+import { useAuthority } from '@fight/react/account';
+import { ContentState } from '@fight/react/controls';
+
 import { mountSwagger } from '@/features/swagger/mountSwagger';
 
-import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type { SwaggerService } from '@/features/swagger/SwaggerService';
+import type { AuthorityCache } from '@fight/react/account';
 
 export default function SwaggerPage({
   service,

@@ -41,7 +41,11 @@ independent acceptance.
 - `src/Domain/`: business state, invariants, value objects, and capability interfaces as introduced
 - `src/Application/`: command/query handlers and application coordination as introduced
 - `src/Adapter/`: HTTP Actions/Responders, persistence, external services, and runtime integrations
-- `client/`: React/strict TypeScript application frame with the permission-aware Dashboard at `/`; Routes/Layouts/Pages/Components, typed public
+- `packages/react/`: independently versioned [`@fight/react`](packages/react/README.md) owns shared controls,
+  account screens, branding, styles, and the sole volatile session/current-principal graph. The library uses
+  the same-origin `/api/v1` contract; it never grants server authority. See the [ownership map](docs/engineering/shared-react/README.md).
+- `client/`: the package consumer, retaining Agent OS routes, branding configuration, navigation, Dashboard,
+  and Swagger. Its React/strict TypeScript application frame with the permission-aware Dashboard at `/`; Routes/Layouts/Pages/Components, typed public
   boot config, Docker-pinned tooling, typed API/CSRF service boundary, and a semantic production-component
   Storybook catalog; injectable fail-closed authority cache, shared permissions, guarded outlets/actions and
   bounded in-memory navigation intent now drive the single production route manifest and responsive frame (TASK-00051, pending independent Review/QA); an independently

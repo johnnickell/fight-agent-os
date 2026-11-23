@@ -110,7 +110,8 @@ def up(root, selector=None, build_only=False, shared=False, task=None, unregiste
             env=environment())
         url = 'https://localhost:18443'
     require((checkout / 'vendor/autoload.php').is_file(), 'Install locked dependencies explicitly before startup')
-    for value in ('var', 'var/client/build', 'var/openapi', 'var/validations', '.runs/cache/client'):
+    for value in ('var', 'var/client/build', 'var/client/shared-react', 'packages/react/dist',
+                  'var/openapi', 'var/validations', '.runs/cache/client'):
         (checkout / value).mkdir(parents=True, exist_ok=True)
     # Private dependencies first; traffic is admitted only with the reviewed schema already applied.
     # This query cannot migrate, install dependencies or enroll shared infrastructure.

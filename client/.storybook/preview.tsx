@@ -1,5 +1,7 @@
+import '@fight/react/styles.css';
 import '../styles/app.scss';
 import './preview.scss';
+import './harbor.scss';
 
 import type { Preview } from '@storybook/react-vite';
 
@@ -25,6 +27,7 @@ const preview: Preview = {
       parameters.applicationFrame ? (
         <div
           className="catalog-preview catalog-frame-preview"
+          data-brand={parameters.harbor ? 'harbor' : undefined}
           data-bs-theme={parameters.mode === 'dark' ? 'dark' : 'light'}
         >
           <Story />

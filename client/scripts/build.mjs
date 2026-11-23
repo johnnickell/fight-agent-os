@@ -26,6 +26,7 @@ const result = await build({
   assetNames: '[name]-[hash]',
   loader: { '.woff2': 'file' },
   bundle: true,
+  preserveSymlinks: true,
   plugins: [
     {
       name: 'sass',
@@ -56,6 +57,7 @@ const result = await build({
 // It bundles the very same preference mapping imported by the React owner.
 const prepaint = await build({
   entryPoints: ['src/features/theme/prepaint.ts'],
+  preserveSymlinks: true,
   outdir,
   write: false,
   entryNames: 'prepaint-[hash]',

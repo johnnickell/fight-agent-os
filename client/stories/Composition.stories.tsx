@@ -1,14 +1,13 @@
 import { useState, useSyncExternalStore } from 'react';
 
+import { Button } from '@fight/react/controls';
+import { ContentPanel } from '@fight/react/controls';
+import { ContentState } from '@fight/react/controls';
+import { TextField } from '@fight/react/controls';
+import { Notice } from '@fight/react/controls';
+import { ThemePreferenceStore } from '@fight/react/controls';
+import { ThemeSelector } from '@fight/react/controls';
 import { expect, userEvent, within } from 'storybook/test';
-
-import { Button } from '@/components/Button';
-import { ContentPanel } from '@/components/ContentPanel';
-import { ContentState } from '@/components/ContentState';
-import { TextField } from '@/components/forms/TextField';
-import { Notice } from '@/components/Notice';
-import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
-import { ThemeSelector } from '@/features/theme/ThemeSelector';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 

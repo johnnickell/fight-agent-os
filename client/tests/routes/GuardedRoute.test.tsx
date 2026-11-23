@@ -1,18 +1,18 @@
 import { lazy, Suspense, useEffect } from 'react';
 
+import { AuthorityCache } from '@fight/react/account';
+import { PermissionButton } from '@fight/react/controls';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PermissionButton } from '@/components/PermissionButton';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 import { IntendedRoute } from '@/routes/IntendedRoute';
 
 import { deferred } from '../apiFixtures';
 import { principal, reportRoute } from '../authorityFixtures';
 
-import type { AuthorityScope, PrincipalLoadResult } from '@/features/authority/AuthorityCache';
+import type { AuthorityScope, PrincipalLoadResult } from '@fight/react/account';
 
 const caches: AuthorityCache[] = [];
 afterEach(() => {

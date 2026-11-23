@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
+import { apiFailure } from '@fight/react/account';
+import { OwnedSessionsService } from '@fight/react/account';
+import { UserDirectoryService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiClient } from '@/api/ApiClient';
-import { apiFailure } from '@/api/ApiResult';
-import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
-import { UserDirectoryService } from '@/features/users/UserDirectoryService';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 
@@ -14,7 +14,7 @@ import { deferred } from '../apiFixtures';
 import { applicationSession } from '../applicationFixtures';
 import { principal } from '../authorityFixtures';
 
-import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
+import type { PrincipalLoadResult } from '@fight/react/account';
 
 const owned: ReturnType<typeof applicationSession>[] = [];
 function session(...args: Parameters<typeof applicationSession>) {
@@ -73,7 +73,7 @@ describe('authoritative frame transitions', () => {
     );
     owner.sessions = new OwnedSessionsService(
       new ApiClient(
-        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+        { schemaVersion: 2, apiBasePath: '/api/v1' },
         { fetch, accessTokens: { getAccessToken: () => 'synthetic.memory.only' } }
       ),
       {
@@ -101,7 +101,7 @@ describe('authoritative frame transitions', () => {
     );
     owner.users = new UserDirectoryService(
       new ApiClient(
-        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+        { schemaVersion: 2, apiBasePath: '/api/v1' },
         { fetch, accessTokens: { getAccessToken: () => 'synthetic.memory.only' } }
       ),
       {

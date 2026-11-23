@@ -1,7 +1,7 @@
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
+import { AuthorityCache } from '@fight/react/account';
 
-import type { CurrentPrincipal } from '@/features/authority/CurrentPrincipal';
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
+import type { CurrentPrincipal } from '@fight/react/account';
 
 export const principal: CurrentPrincipal = {
   userId: crypto.randomUUID(),

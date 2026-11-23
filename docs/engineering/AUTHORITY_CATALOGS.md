@@ -38,7 +38,7 @@ authorized absent target becomes safe 404. Unavailable permission declarations f
 errors through the existing API gate. OpenAPI attributes on the real Actions and responder own the private
 export; no public specification or policy-dump route is added.
 
-`client/src/features/authority/CatalogService.ts` exposes typed role/permission page and get reads via
+`packages/react/src/features/authority/CatalogService.ts` exposes typed role/permission page and get reads via
 `ApiClient`, requiring the current memory-only Bearer credential each time. It maps only exact safe fields,
 checks returned get identity, tiers and page metadata, freezes results, and retains no catalog cache or
 authority. The shared GET transport supports only a closed numeric pagination option, never raw query URLs.

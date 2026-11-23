@@ -1,10 +1,9 @@
+import { ActivationCredential } from '@fight/react/account';
+import { activationSchemaSource, jsonResponse } from '@fixtures/activationFixtures';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ActivationCredential } from '@/features/auth/ActivationCredential';
 import { ShellApplication } from '@/ShellApplication';
-
-import { activationSchemaSource, jsonResponse } from '../../activationFixtures';
 
 /** The browser can retain a document on history traversal; retirement must clear its mounted form. */
 describe('activation document lifecycle', () => {

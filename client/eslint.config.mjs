@@ -27,7 +27,7 @@ const restrictApplicationImports = (pattern) => ({
 });
 
 export default tseslint.config(
-  { ignores: ['node_modules/**'] },
+  { ignores: ['**/node_modules/**'] },
   js.configs.recommended,
   {
     files: ['**/*.{ts,tsx,mjs}'],
@@ -53,10 +53,7 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.catalog.json'],
-        tsconfigRootDir: import.meta.dirname
-      }
+      parserOptions: { project: './tsconfig.lint.json', tsconfigRootDir: import.meta.dirname }
     },
     plugins: { 'react-hooks': hooks, 'jsx-a11y': a11y },
     rules: {
@@ -65,13 +62,13 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }]
     }
   },
-  { files: ['src/**/*.{ts,tsx}'], rules: restrictApplicationImports(sourceRelative) },
+  { files: ['client/src/**/*.{ts,tsx}'], rules: restrictApplicationImports(sourceRelative) },
   {
-    files: ['tests/**/*.{ts,tsx}', 'stories/**/*.tsx'],
+    files: ['client/tests/**/*.{ts,tsx}', 'client/stories/**/*.tsx'],
     rules: restrictApplicationImports(sourceTraversal)
   },
   {
-    files: ['scripts/*.mjs'],
+    files: ['client/scripts/*.mjs'],
     languageOptions: { globals: { console: 'readonly' } }
   }
 );

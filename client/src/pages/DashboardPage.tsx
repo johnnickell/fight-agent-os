@@ -1,11 +1,12 @@
-import { ContentPanel } from '@/components/ContentPanel';
-import { PageHeading } from '@/components/PageHeading';
-import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
+import { evaluateAccess } from '@fight/react/account';
+import { useAuthority, useAuthorityPresentation } from '@fight/react/account';
+import { ContentPanel } from '@fight/react/controls';
+import { PageHeading } from '@fight/react/controls';
+
 import { applicationRoutes } from '@/routes/applicationRoutes';
 
-import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type { ApplicationRoute } from '@/routes/applicationRoutes';
+import type { AuthorityCache } from '@fight/react/account';
 
 function DestinationLinks({
   routes,

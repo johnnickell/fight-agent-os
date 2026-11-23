@@ -2,15 +2,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import Dropdown from 'react-bootstrap/Dropdown';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 
-import { Button } from '@/components/Button';
-import { PresentationIcon } from '@/components/PresentationIcon';
-import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
-import { ThemeSelector } from '@/features/theme/ThemeSelector';
+import { evaluateAccess } from '@fight/react/account';
+import { useAuthority, useAuthorityPresentation } from '@fight/react/account';
+import { BrandLink, Button, useBrand } from '@fight/react/controls';
+import { PresentationIcon } from '@fight/react/controls';
+import { ThemeSelector } from '@fight/react/controls';
+
+import { agentOsBrand } from '@/agentOsBrand';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 
-import type { AuthorityCache } from '@/features/authority/AuthorityCache';
-import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
+import type { AuthorityCache } from '@fight/react/account';
+import type { ThemePreferenceStore } from '@fight/react/controls';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from 'react';
 
 function useFrameNavigation(frame: RefObject<HTMLDivElement | null>) {
@@ -70,6 +72,7 @@ export function ApplicationFrame(props: FrameProps) {
 }
 
 function FrameContent({ cache, pathname, title, theme, onLogout, children }: FrameProps) {
+  const brand = useBrand(agentOsBrand);
   const state = useAuthorityPresentation(cache);
   const dispatch = useAuthority(cache);
   const opener = useRef<HTMLButtonElement>(null);
@@ -113,9 +116,13 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
   const rail = (
     <>
       <div className="application-rail-heading">
-        <a href="/">
-          FIGHT <span>AGENT OS</span>
-        </a>
+        {brand.name === agentOsBrand.name && !brand.logo ? (
+          <a href="/">
+            FIGHT <span>AGENT OS</span>
+          </a>
+        ) : (
+          <BrandLink brand={brand} />
+        )}
         {expanded && (
           <Button onClick={close} aria-label="Close navigation" aria-expanded={true}>
             <PresentationIcon name="collapse" />
@@ -183,7 +190,7 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
           </button>
         )}
         <header className="application-utility" aria-label="Application utilities">
-          <a href="/">Fight Agent OS</a>
+          <BrandLink brand={brand} />
           <Dropdown className="application-account" align="end" focusFirstItemOnShow="keyboard">
             <Dropdown.Toggle variant="" className="application-user-toggle" aria-label="User Menu">
               <PresentationIcon name="user" />

@@ -1,15 +1,15 @@
+import { THEME_KEY, ThemePreferenceStore } from '@fight/react/controls';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { THEME_KEY, ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
 
 import { deferred } from '../apiFixtures';
 import { applicationSession } from '../applicationFixtures';
 import { principal } from '../authorityFixtures';
 
-import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
+import type { PrincipalLoadResult } from '@fight/react/account';
 
 const owners: ReturnType<typeof applicationSession>[] = [];
 afterEach(() => {
