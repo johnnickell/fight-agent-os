@@ -169,35 +169,44 @@ last installed footer wins and shutdown restores Pi's footer. API-unavailable na
 
 ## Verification and packaging
 
-Run owning Harness behavior checks with `npm --prefix harness/pi test` or the network-none
-`./bin/harness-check`, which reuses this checkout's explicitly prepared tooling image (`./bin/up --build-only`).
-Git and Python are required by the shared-custody and Sync process checks. For changes to the bundled engine,
-run `npm --prefix harness/pi/vendor/pi-subagents run check` for lint, type checking and its full test suite.
-Run both owning checks separately from `./bin/build`, which neither installs nor requires Pi dependencies.
-Use private task scratch for the engine's `TMPDIR` and `GIT_CEILING_DIRECTORIES`.
+Run the standalone pass from the checkout you want to verify:
 
-For Docker tooling, `./bin/runtime setup` prepares both
-the Harness and engine dependencies automatically. Use `./bin/pi-dependencies setup` to prepare an existing
-checkout or `./bin/pi-dependencies check` for an offline readiness check. Setup reuses valid installations;
-finish active checks and stop this checkout's web service before replacing stale dependencies. Receipts identify the manifests,
-lockfiles, Node/npm versions, OS and architecture; validation executes the local native tools.
+```sh
+./bin/harness-check setup    # Build just the checkout's Harness tooling image
+./bin/pi-dependencies setup  # Prepare locked Linux dependencies for this checkout
+./bin/harness-check          # Verify offline; no image pull or dependency install
+```
 
-For separate host-side development, install on the OS where checks execute (native optional modules are
-platform-specific); do not copy host node_modules into the Docker installation:
+This does not need `./bin/runtime setup`, `./bin/up`, an application image, or any application service.
+The check mounts the Harness and its dependencies read-only in a temporary network-none container. Its
+private scratch holds test fixtures, Git state, npm cache, and a disposable package archive. Git and Python
+are still needed for custody and Build/Sync process checks. The Docker check and dependency commands share
+one container name per checkout, so a concurrent command in that checkout is rejected until the container
+is removed. Other checkouts can run independently. Dependency setup reuses valid installations; finish
+one-off tooling and stop this checkout's web service before replacing stale dependencies. The existing
+`./bin/runtime setup` also prepares these dependencies if you already use the application runtime.
+
+The separate GitHub Harness qualification job uses Node 24, npm, Git, Python 3 and tar on the runner, with
+no Docker commands. For the same direct invocation, use a checkout prepared for the OS where checks execute.
+Do not share host-installed `node_modules` with a Docker run; the native optional modules differ by platform.
 
 ```sh
 node harness/pi/scripts/dependencies.mjs setup
+CI=1 sh harness/pi/scripts/check.sh
 ```
 
-For Docker, use the selected checkout's writable maintenance service and task-owned scratch/cache locations.
-Never replace dependencies beneath a running gate. Pi supplies host peers; do not bundle another SDK.
-`croner` and `nanoid` remain actual bundled-engine dependencies. `npm pack --ignore-scripts --pack-destination PATH`
-creates a private distributable containing runtime source, bin, agents/profile, runbooks/licenses, not tests or
-node_modules. Keep artifacts under ignored task scratch.
+The pass checks dependency readiness, runs `npm --prefix harness/pi test` and
+`npm --prefix harness/pi/vendor/pi-subagents run check` (lint, types and tests), then verifies a real local
+`npm pack --ignore-scripts` archive. The archive check covers runtime entry points, agents, profiles,
+runbooks, both licenses and the bundled engine's tintinweb attribution. It rejects tests, check scripts and
+`node_modules` in the archive. There is no package installation or publication. The normal `./bin/build`
+application gate remains separate and unchanged.
 
-Use explicit isolated native/SDK probes in [qualification](WORKFLOW.md#direct-qualification). Tested Pi versions
-are evidence, not equality gates or future compatibility promises. Controlled scripted model responses are not
-live provider qualification, a genuine Build assignment, native visual evidence or independent acceptance.
+Use the separate [installed Pi and SDK probes](WORKFLOW.md#direct-qualification) for extension loading,
+session lifecycle, native tools and stage bindings. Installed workspace/Herdr behavior and live-provider runs
+also need separate qualification. The routine pass disables the engine's live e2e mode; scripted model
+responses do not qualify live providers, genuine Build dispatch, native visuals or independent acceptance.
+Record tested Pi capabilities and versions as evidence, not pins or future compatibility promises.
 
 ## Local project names
 
