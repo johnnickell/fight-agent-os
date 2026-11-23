@@ -856,6 +856,191 @@ final class UserLifecycleApiTest extends TestCase
     }
 
     /**
+     * Commits role changes with audit and rejects revoked authority on the next request
+     */
+    public function testRoleRoutesAndFreshPermission(): void
+    {
+        $target = $this->user(false);
+        $targetToken = $this->tokenFor($target);
+        $me = new ServerRequestFactory()->createServerRequest('GET', 'https://agent-os.test/api/v1/me')
+            ->withHeader('Authorization', 'Bearer '.$targetToken);
+        self::assertStringContainsString('ROLE_USER', (string) $this->app->handle($me)->getBody());
+        $role = InstallationManagedPolicy::USER_ROLE_ID;
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name <> ?)',
+            ['MANAGE_USER_ROLES']
+        );
+        self::assertSame(401, $this->roleRequest($target, $role, 'DELETE', '')->getStatusCode());
+        self::assertSame(200, $this->roleRequest($target, $role, 'DELETE')->getStatusCode());
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM user_role_assignments WHERE user_id = ? AND role_id = ?',
+            [$target->getId()->toString(), $role]
+        ));
+        self::assertStringNotContainsString('ROLE_USER', (string) $this->app->handle($me)->getBody());
+        self::assertSame(200, $this->roleRequest($target, $role, 'PUT')->getStatusCode());
+        self::assertStringContainsString('ROLE_USER', (string) $this->app->handle($me)->getBody());
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM user_role_assignments WHERE user_id = ? AND role_id = ?',
+            [$target->getId()->toString(), $role]
+        ));
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        $evidence = json_encode(
+            $this->connection->fetchAllAssociative('SELECT * FROM audit_evidence'),
+            JSON_THROW_ON_ERROR
+        );
+        self::assertStringContainsString($target->getId()->toString(), $evidence);
+        self::assertStringContainsString($this->actor->getId()->toString(), $evidence);
+        self::assertStringNotContainsString($this->token, $evidence);
+        self::assertStringNotContainsString($target->getPasswordHash()->toString(), $evidence);
+        $this->connection->executeStatement('DELETE FROM role_permissions');
+        foreach (['PUT', 'DELETE'] as $method) {
+            self::assertSame(403, $this->roleRequest($target, $role, $method)->getStatusCode());
+        }
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Refuses both public routes before bus dispatch when current permission is absent
+     */
+    public function testRolePermissionDenialNeverDispatches(): void
+    {
+        $target = $this->user(false);
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+            ['MANAGE_USER_ROLES']
+        );
+        $bus = $this->createMock(CommandBus::class);
+        $bus->expects(self::never())->method('execute');
+        $this->container->set(CommandBus::class, static fn() => $bus);
+        foreach (['PUT', 'DELETE'] as $method) {
+            self::assertSame(403, $this->roleRequest(
+                $target,
+                InstallationManagedPolicy::USER_ROLE_ID,
+                $method
+            )->getStatusCode());
+        }
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Refuses anonymous mutations and protected removal even with the full managed permission catalog
+     */
+    public function testRoleAuthenticationAndProtectedRemovalNeverDispatch(): void
+    {
+        $target = $this->user(true);
+        $bus = $this->createMock(CommandBus::class);
+        $bus->expects(self::never())->method('execute');
+        $this->container->set(CommandBus::class, static fn() => $bus);
+        foreach (['PUT', 'DELETE'] as $method) {
+            self::assertSame(401, $this->roleRequest(
+                $target,
+                InstallationManagedPolicy::USER_ROLE_ID,
+                $method,
+                ''
+            )->getStatusCode());
+        }
+        self::assertSame(409, $this->roleRequest(
+            $target,
+            InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID,
+            'DELETE'
+        )->getStatusCode());
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Refuses ineligible targets through both public routes without dispatch
+     */
+    #[DataProvider('roleTargetDenials')]
+    public function testRoleTargetDenialNeverDispatches(string $method, string $state): void
+    {
+        $target = $state === 'self' ? $this->actor : $this->user(false);
+        if ($state !== 'self') {
+            $this->connection->executeStatement(
+                "UPDATE users SET state = ?,
+                password_hash = CASE WHEN ? = 'pending_activation' THEN NULL ELSE password_hash END WHERE id = ?",
+                [$state, $state, $target->getId()->toString()]
+            );
+        }
+        $bus = $this->createMock(CommandBus::class);
+        $bus->expects(self::never())->method('execute');
+        $this->container->set(CommandBus::class, static fn() => $bus);
+        self::assertSame(409, $this->roleRequest(
+            $target,
+            InstallationManagedPolicy::USER_ROLE_ID,
+            $method
+        )->getStatusCode());
+    }
+
+    /**
+     * Supplies admission-only state and self restrictions for each route
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function roleTargetDenials(): iterable
+    {
+        foreach (['PUT', 'DELETE'] as $method) {
+            foreach (['pending_activation', 'disabled', 'deleted', 'self'] as $state) {
+                yield $method.' '.$state => [$method, $state];
+            }
+        }
+    }
+
+    /**
+     * Rolls back actual membership writes when required role audit cannot persist
+     */
+    #[DataProvider('roleMethods')]
+    public function testRoleAuditRollback(string $method): void
+    {
+        $target = $this->user(false);
+        $role = InstallationManagedPolicy::USER_ROLE_ID;
+        if ($method === 'PUT') {
+            self::assertSame(200, $this->roleRequest($target, $role, 'DELETE')->getStatusCode());
+        }
+        $this->connection->executeStatement('TRUNCATE audit_evidence');
+        $audit = $this->createStub(AuditEvidenceRepository::class);
+        $audit->method('add')->willThrowException(new \RuntimeException('private-role-audit-failure'));
+        $this->container->set(AuditEvidenceRepository::class, static fn() => $audit);
+        $response = $this->roleRequest($target, $role, $method);
+        self::assertSame(500, $response->getStatusCode());
+        self::assertStringNotContainsString('private-role-audit-failure', (string) $response->getBody());
+        self::assertSame($method === 'PUT' ? 0 : 1, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM user_role_assignments WHERE user_id = ? AND role_id = ?',
+            [$target->getId()->toString(), $role]
+        ));
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Supplies both public role mutation methods
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function roleMethods(): iterable
+    {
+        yield 'assign' => ['PUT'];
+        yield 'remove' => ['DELETE'];
+    }
+
+    /**
+     * Sends role mutations through registered routes and the configured application graph
+     */
+    private function roleRequest(User $target, string $role, string $method, ?string $token = null): ResponseInterface
+    {
+        $path = '/api/v1/users/'.$target->getId()->toString().'/roles/'.$role;
+        $request = new ServerRequestFactory()->createServerRequest(
+            $method,
+            'https://agent-os.test'.$path,
+            ['REQUEST_URI' => $path]
+        )->withHeader('Content-Type', 'application/json');
+        if (($token ?? $this->token) !== '') {
+            $request = $request->withHeader('Authorization', 'Bearer '.($token ?? $this->token));
+        }
+        $request->getBody()->write('{"confirm":true}');
+
+        return $this->app->handle($request);
+    }
+
+    /**
      * Issues an actual signed token bound to a persisted session and identity
      */
     private function tokenFor(User $user): string
