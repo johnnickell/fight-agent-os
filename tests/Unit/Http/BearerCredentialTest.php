@@ -91,6 +91,26 @@ final class BearerCredentialTest extends TestCase
     }
 
     /**
+     * Rejects an oversized stream even when it cannot report its size
+     */
+    public function testOversizedBodyWithUnknownSize(): void
+    {
+        $body = $this->createMock(StreamInterface::class);
+        $body->method('isSeekable')->willReturn(true);
+        $body->method('getSize')->willReturn(null);
+        $body->method('tell')->willReturn(4);
+        $body->expects(self::once())->method('rewind');
+        $body->expects(self::once())->method('read')->with(16385)->willReturn(str_repeat('a', 16385));
+        $body->expects(self::once())->method('seek')->with(4);
+        $request = new ServerRequestFactory()->createServerRequest('POST', '/api/v1/owned')
+            ->withHeader('Authorization', 'Bearer abc.def.ghi')->withBody($body);
+
+        $this->expectException(AuthenticationRequired::class);
+        $this->expectExceptionMessage('Unauthorized.');
+        new BearerCredential()->extract($request);
+    }
+
+    /**
      * Rejects ambiguous and alternative credentials before any authority query
      *
      * @param array<string> $headers

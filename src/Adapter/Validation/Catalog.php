@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Validation;
 
+use Closure;
 use RuntimeException;
 use stdClass;
 
@@ -17,10 +18,10 @@ final readonly class Catalog
     /**
      * Constructs Catalog
      *
-     * @param string       $file
+     * @param string|Closure(): (string|false) $file
      * @param array<int, string> $allowedNames
      */
-    public function __construct(private string $file, private array $allowedNames)
+    public function __construct(private string|Closure $file, private array $allowedNames)
     {
     }
 
@@ -77,9 +78,6 @@ final readonly class Catalog
         }
         /** @var stdClass $forms */
         $forms = $catalog->forms;
-        if (!property_exists($forms, $name)) {
-            throw new RuntimeException('Incomplete public form catalog.');
-        }
         /** @var stdClass $form */
         $form = $forms->{$name};
 
@@ -134,17 +132,26 @@ final readonly class Catalog
     }
 
     /**
+     * Reads the installed artifact only from a canonical local file
+     */
+    private static function readArtifact(string $path): string|false
+    {
+        if (
+            is_link($path) || realpath(dirname($path)) !== dirname($path)
+            || !is_file($path) || filesize($path) > 262144
+        ) {
+            return false;
+        }
+
+        return file_get_contents($path);
+    }
+
+    /**
      * Validates the entire generation before resolving any name
      */
     private function load(): stdClass
     {
-        if (
-            is_link($this->file) || realpath(dirname($this->file)) !== dirname($this->file)
-            || !is_file($this->file) || filesize($this->file) > 262144
-        ) {
-            throw new RuntimeException('Public form catalog unavailable.');
-        }
-        $bytes = file_get_contents($this->file);
+        $bytes = $this->file instanceof Closure ? ($this->file)() : self::readArtifact($this->file);
         if ($bytes === false || strlen($bytes) > 262144) {
             throw new RuntimeException('Public form catalog unavailable.');
         }

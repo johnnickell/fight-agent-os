@@ -344,15 +344,11 @@ Write testable behavior, then tests at the narrowest boundary that proves it. Pr
 
 Product suites test owned application behavior and important integration contracts. They do not test architecture or dependency rules, container/configuration wiring, migrations, generated files, repository wrappers, build/planning/static-analysis mechanisms, test infrastructure, or upstream package behavior. Validate those concerns directly with their owning tools. Do not write product tests proving that Deptrac, PHPStan or other quality tools detect seeded failures. Focused mutation analysis of application behavior is allowed under [test quality guidance](QUALITY.md#tests-that-protect-contracts).
 
-Require 100% unit-test line coverage of owned unit-testable production behavior. Report unit coverage
-separately from integration/functional coverage, with denominator, driver availability and justified gaps; a combined
-suite percentage is not a unit-coverage result. Follow [test shape and suite balance](QUALITY.md#test-shape-and-suite-balance).
-The current [backend coverage phase](BACKEND_TESTS.md) enforces 100%
-meaningful Domain/Application line coverage across one all-suite execution and reports unit attribution separately;
-the [canonical gate](BUILD.md) includes it once. This combined gate does not yet enforce the new unit-only
-requirement. Its Adapter report also has no 100% gate; report these enforcement gaps and actual unit-only
-results explicitly. Unit-testable Adapter behavior remains within the required unit denominator; contracts
-that require real external systems retain meaningful Integration/Functional checks.
+Require 100% Unit line coverage of owned unit-testable production behavior, including Adapter behavior.
+The [backend phase](BACKEND_TESTS.md) runs each suite once in the [canonical gate](BUILD.md), collects coverage
+only from Unit, and reports its denominator, exact count and any gaps. The other suites retain meaningful
+checks of contracts that need real application services or external systems, without coverage quotas.
+Follow [test shape and suite balance](QUALITY.md#test-shape-and-suite-balance).
 Coverage remains a completeness aid, including Adapter behavior where practical. Report actual configured coverage and omissions without claiming that a percentage establishes correctness or protocol conformance. A covered line does not justify a test by itself: tests must assert an observable contract, outcome, or side effect. Exclude non-behavioral composition and generated code rather than manufacturing tests for percentages.
 
 For a bug, reproduce the behavior and make one regression test fail before repair when technically possible. Record why when it is not possible. Focused checks shorten the loop; only the repository canonical gate establishes complete local verification.

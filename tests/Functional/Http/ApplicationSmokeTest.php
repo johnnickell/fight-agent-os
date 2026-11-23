@@ -8,6 +8,8 @@ use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
 use Fight\Common\Application\Service\Container;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Tests\Support\ApiContract;
@@ -38,7 +40,7 @@ final class ApplicationSmokeTest extends TestCase
             $container = $app->getContainer();
             self::assertInstanceOf(Container::class, $container);
             $container->set(ClientShellAction::class, static fn(Container $container) => new ClientShellAction(
-                new ClientAssetManifest($directory),
+                new ClientAssetManifest(new Filesystem(new LocalFilesystemAdapter($directory, lazyRootCreation: true))),
                 $container->get(ClientShellResponder::class)
             ));
             $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', $path));

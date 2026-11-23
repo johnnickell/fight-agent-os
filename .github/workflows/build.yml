@@ -71,8 +71,8 @@ jobs:
             .runs/build/[0-9]*/*.json
             .runs/build/[0-9]*/*.log
             .runs/build/reports/browser-smoke/summary.json
-            .runs/build/reports/backend/*.json
-            .runs/build/reports/backend/junit.xml
+            .runs/build/reports/backend/unit-coverage.json
+            .runs/build/reports/backend/junit-*.xml
             .runs/build/reports/client/coverage/coverage-summary.json
             .runs/build/reports/client/*-artifacts.json
             .runs/build/reports/client/catalog-evidence/receipt.json

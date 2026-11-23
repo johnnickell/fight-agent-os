@@ -21,9 +21,18 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     exit(1);
 }
 // Never accept a report left behind by a failed or interrupted execution.
-$reportFiles = ['coverage.php', 'clover.xml', 'junit.xml', 'summary.json', 'domain-application.json', 'adapter.json'];
+$suites = ['Unit', 'Integration', 'Functional', 'Postgres'];
+$reportFiles = [
+    // Retire the known combined outputs from checkouts that previously ran the old phase.
+    'coverage.php', 'clover.xml', 'junit.xml', 'summary.json', 'domain-application.json', 'adapter.json',
+    'unit-coverage.php', 'unit-coverage.json'
+];
+foreach ($suites as $suite) {
+    $reportFiles[] = 'junit-'.strtolower($suite).'.xml';
+}
 foreach ($reportFiles as $file) {
-    if (is_file($reports.'/'.$file) && !unlink($reports.'/'.$file)) {
+    $path = $reports.'/'.$file;
+    if ((file_exists($path) || is_link($path)) && !unlink($path)) {
         throw new RuntimeException('Cannot clear an old backend report.');
     }
 }
@@ -31,21 +40,30 @@ foreach ($reportFiles as $file) {
 $steps = [
     'Guarded PostgreSQL identity/version' => ['php', 'scripts/guarded_test_database.php', 'check'],
     'Guarded PostgreSQL reset'            => ['php', 'scripts/guarded_test_database.php', 'reset'],
-    'Test migrations'                     => ['php', 'vendor/bin/doctrine-migrations', 'migrate', '--no-interaction'],
-    'All backend suites with coverage'    => [
-        'php', 'vendor/bin/phpunit', '--fail-on-warning', '--fail-on-risky', '--fail-on-skipped',
-        '--fail-on-incomplete', '--fail-on-deprecation', '--fail-on-notice',
-        '--coverage-php', $reports.'/coverage.php', '--coverage-clover', $reports.'/clover.xml',
-        '--log-junit', $reports.'/junit.xml'
-    ],
-    'Owned coverage policy'               => ['php', '-d', 'memory_limit=384M', 'scripts/backend_coverage.php']
+    'Test migrations'                     => ['php', 'vendor/bin/doctrine-migrations', 'migrate', '--no-interaction']
+];
+foreach ($suites as $suite) {
+    $options = $suite === 'Unit' ? ['--coverage-php', $reports.'/unit-coverage.php'] : ['--no-coverage'];
+    $steps[$suite.' PHPUnit'] = [
+        'php', 'vendor/bin/phpunit', '--testsuite', $suite, '--fail-on-empty-test-suite',
+        '--fail-on-warning', '--fail-on-risky', '--fail-on-skipped', '--fail-on-incomplete', '--fail-on-deprecation',
+        '--fail-on-notice', '--log-junit', $reports.'/junit-'.strtolower($suite).'.xml', ...$options
+    ];
+}
+$steps['Unit-only coverage policy'] = [
+    'php', '-d', 'memory_limit=384M', '-d', 'opcache.enable_cli=1', '-d', 'opcache.optimization_level=0',
+    'scripts/backend_coverage.php'
 ];
 $exit = 1;
 $resetCompleted = false;
 try {
     foreach ($steps as $name => $command) {
         fwrite(STDOUT, sprintf("\n==> %s\n", $name));
-        $environment = $name === 'Test migrations' ? ['DATABASE_URL' => getenv('TEST_DATABASE_URL')] : null;
+        $environment = match ($name) {
+            'Test migrations' => ['DATABASE_URL' => getenv('TEST_DATABASE_URL'), 'XDEBUG_MODE' => 'off'],
+            'Unit PHPUnit', 'Unit-only coverage policy' => ['XDEBUG_MODE' => 'coverage'],
+            default => ['XDEBUG_MODE' => 'off']
+        };
         $process = new Process($command, $root, $environment);
         $process->setTimeout(null);
         $exit = $process->run(static function (string $type, string $output): void {

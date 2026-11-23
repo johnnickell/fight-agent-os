@@ -190,9 +190,6 @@ final readonly class ApiInputValidation implements MiddlewareInterface
         }
 
         if ($source === JsonBody::class) {
-            if ($request->getUri()->getQuery() !== '') {
-                return $this->reject(['query' => ['Query is not allowed.']]);
-            }
             if (
                 !preg_match(
                     '/\Aapplication\/json(?:\s*;\s*charset=utf-8)?\z/i',
@@ -259,10 +256,7 @@ final readonly class ApiInputValidation implements MiddlewareInterface
                 }
             }
             $failures = [];
-            foreach ($exception->getErrors() as $field => $messages) {
-                if (!isset($allowed[$field])) {
-                    continue;
-                }
+            foreach (array_intersect_key($exception->getErrors(), $allowed) as $field => $messages) {
                 $approved = array_column($public[$field]['rules'] ?? [], 'message');
                 // The package returns text, not rule identities. A private rule with identical
                 // text is ambiguous, so never publish that text as a selected rule's failure.

@@ -7,7 +7,9 @@ namespace Tests\Unit\Http;
 use App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction;
 use App\Adapter\Http\Action\Api\V1\Sessions\ListUserSessionsAction;
 use App\Adapter\Http\Action\Api\V1\Sessions\RevokeOwnedSessionAction;
+use App\Adapter\Http\Action\Api\V1\Sessions\RevokeUserSessionAction;
 use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
+use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Responder\Api\V1\Sessions\OwnedSessionsResponder;
 use App\Adapter\Http\Responder\Api\V1\Sessions\SessionRevocationResponder;
@@ -270,6 +272,98 @@ final class SessionActionsTest extends TestCase
         yield ['missing', new StateConflict()];
         yield ['foreign', new StateConflict()];
         yield ['aliased', new StateConflict()];
+    }
+
+    /**
+     * Dispatches the exact authorized actor, current session, target session and bounded reason
+     */
+    public function testAdministrativeRevocationDispatchesAdmittedTarget(): void
+    {
+        $owner = UserId::generate();
+        $target = RefreshSessionId::generate();
+        $reason = 'Device retired';
+        $sessions = $this->createMock(RefreshSessionRepository::class);
+        $sessions->expects(self::once())->method('getById')->with($target)
+            ->willReturn($this->session($target, $owner));
+        $commands = $this->createMock(CommandBus::class);
+        $commands->expects(self::once())->method('execute')->with(self::callback(
+            fn(RevokeSession $command): bool => $command->getActorId()->equals($this->actor->getId())
+                && $command->getCurrentSessionId()->equals($this->current->getId())
+                && $command->getTargetSessionId()->equals($target) && $command->getReason()?->toString() === $reason
+        ));
+        $action = new RevokeUserSessionAction($sessions, $commands, new SessionRevocationResponder($this->responses));
+
+        $response = $action->handle($this->revocationRequest($owner->toString(), $target->toString(), $reason));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame(['status' => 'success', 'data' => null], json_decode((string) $response->getBody(), true));
+    }
+
+    /**
+     * Rejects invalid intent or ownership without issuing a revocation command
+     */
+    #[DataProvider('adminRevocationRefusals')]
+    public function testAdministrativeRevocationRefusal(string $case, Throwable $expected): void
+    {
+        $owner = $case === 'self' ? $this->actor->getId() : UserId::generate();
+        $target = RefreshSessionId::generate();
+        $reason = match ($case) {
+            'empty reason'   => '',
+            'private reason' => 'Password is private',
+            default          => 'Device retired',
+        };
+        $request = $this->revocationRequest(
+            $case === 'bad user' ? 'invalid' : $owner->toString(),
+            $case === 'bad session' ? 'invalid' : $target->toString(),
+            $reason
+        );
+        if ($case === 'unauthenticated') {
+            $request = $request->withoutAttribute(CurrentPrincipalProvider::class);
+        }
+        $sessions = $this->createMock(RefreshSessionRepository::class);
+        if ($case === 'unknown' || $case === 'wrong owner') {
+            $sessions->expects(self::once())->method('getById')->with($target)->willReturn(
+                $case === 'unknown' ? null : $this->session($target, UserId::generate())
+            );
+        } else {
+            $sessions->expects(self::never())->method('getById');
+        }
+        $commands = $this->createMock(CommandBus::class);
+        $commands->expects(self::never())->method('execute');
+        $action = new RevokeUserSessionAction($sessions, $commands, new SessionRevocationResponder($this->responses));
+        $this->expectException($expected::class);
+
+        $action->handle($request);
+    }
+
+    /**
+     * Lists the admission failures that must not dispatch a command
+     *
+     * @return iterable<string, array{string, Throwable}>
+     */
+    public static function adminRevocationRefusals(): iterable
+    {
+        yield 'no trusted actor' => ['unauthenticated', new AuthenticationRequired()];
+        yield 'invalid user ID' => ['bad user', new ValidationException(['user_id' => ['Invalid value.']])];
+        yield 'invalid session ID' => ['bad session', new ValidationException(['session_id' => ['Invalid value.']])];
+        yield 'no reason' => ['empty reason', new ValidationException(['reason' => ['Required.']])];
+        yield 'sensitive reason' => ['private reason', new ValidationException(['reason' => ['Unsafe reason.']])];
+        yield 'self target' => ['self', new PermissionDenied()];
+        yield 'unknown session' => ['unknown', new StateConflict()];
+        yield 'foreign session' => ['wrong owner', new StateConflict()];
+    }
+
+    /**
+     * Supplies both independently checked route identities and a source-validated reason
+     */
+    private function revocationRequest(string $userId, string $sessionId, string $reason): ServerRequestInterface
+    {
+        $route = $this->createStub(RouteInterface::class);
+        $route->method('getArgument')->willReturnMap([['userId', null, $userId], ['sessionId', null, $sessionId]]);
+
+        return $this->request('userId', $userId)->withMethod('DELETE')->withAttribute(RouteContext::ROUTE, $route)
+            ->withAttribute(JsonBody::class, ['reason' => $reason]);
     }
 
     /**

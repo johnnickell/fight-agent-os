@@ -20,6 +20,8 @@ use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 return static function (Container $container): void {
     $container->set(ClientShellResponder::class, static function (Container $container): ClientShellResponder {
@@ -28,12 +30,17 @@ return static function (Container $container): void {
             $container->get(PublicRuntimeConfiguration::class)
         );
     });
-    $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
+    $container->set('client.buildAssets', static function (): Filesystem {
         $smoke = getenv('APP_ENV') === 'test' && getenv('FIGHT_BROWSER_SMOKE_ASSETS') === '1';
         $assetPath = $smoke ? '/var/client/check/production' : '/var/client/build';
 
+        return new Filesystem(new LocalFilesystemAdapter(dirname(__DIR__, 2).$assetPath, lazyRootCreation: true));
+    });
+    $container->set(ClientAssetManifest::class, static fn (Container $container): ClientAssetManifest =>
+        new ClientAssetManifest($container->get('client.buildAssets')));
+    $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
         return new ClientShellAction(
-            new ClientAssetManifest(dirname(__DIR__, 2).$assetPath),
+            $container->get(ClientAssetManifest::class),
             $container->get(ClientShellResponder::class)
         );
     });

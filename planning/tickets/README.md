@@ -148,7 +148,7 @@
 | [TICKET-00143](00143-TICKET.md) | Browse shared stateful tables with restorable URL queries | ready-for-agent | [EPIC-00027](../epics/00027-EPIC.md) |
 | [TICKET-00144](00144-TICKET.md) | Release the shared frontend and adopt it in independent framework skeletons | ready-for-agent | [EPIC-00027](../epics/00027-EPIC.md) |
 | [TICKET-00145](00145-TICKET.md) | Validate Planning without the application stack | done | [EPIC-00028](../epics/00028-EPIC.md) |
-| [TICKET-00146](00146-TICKET.md) | Verify PHP independently and enforce Unit-only coverage | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |
+| [TICKET-00146](00146-TICKET.md) | Verify PHP independently and enforce Unit-only coverage | done | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00147](00147-TICKET.md) | Verify the client and cross-stack browser journeys | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00148](00148-TICKET.md) | Verify the Pi Harness independently | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00149](00149-TICKET.md) | Select, reuse, and require the four verification passes | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |

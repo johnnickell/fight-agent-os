@@ -614,7 +614,7 @@
 | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | ready-for-agent | — |
 | [TASK-00610](00610-TASK.md) | Run Planning validation and refresh through PHP without the application stack | done | [TICKET-00145](../tickets/00145-TICKET.md) |
 | [TASK-00611](00611-TASK.md) | Run the existing PHP checks as a standalone pass | done | [TICKET-00146](../tickets/00146-TICKET.md) |
-| [TASK-00612](00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | ready-for-agent | [TICKET-00146](../tickets/00146-TICKET.md) |
+| [TASK-00612](00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | done | [TICKET-00146](../tickets/00146-TICKET.md) |
 | [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | done | [TICKET-00147](../tickets/00147-TICKET.md) |
 | [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | ready-for-agent | [TICKET-00147](../tickets/00147-TICKET.md) |
 | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
