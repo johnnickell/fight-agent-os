@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\AccessControl\User;
 
+use App\Adapter\Persistence\AccessControl\CatalogOrdering;
 use App\Adapter\Persistence\AccessControl\PasswordResetGrant\PasswordResetGrantRecords;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
@@ -570,11 +571,10 @@ final readonly class PostgresUserRepository implements UserRepository
      */
     public function getAll(Pagination $pagination): ResultSet
     {
-        $rows = $this->connection->createQueryBuilder()
-            ->select('*')
-            ->from('users')
-            ->orderBy('created_at')
-            ->addOrderBy('id')
+        $rows = CatalogOrdering::apply(
+            $this->connection->createQueryBuilder()->select('*')->from('users'),
+            $pagination
+        )
             ->setMaxResults($pagination->limit())
             ->setFirstResult($pagination->offset())
             ->fetchAllAssociative();

@@ -1,7 +1,7 @@
 import { apiFailure, type ApiResult } from '../../api/ApiResult.js';
 import { hasExactKeys } from '../../api/decodeResponse.js';
 
-import type { ApiClient } from '../../api/ApiClient.js';
+import type { ApiClient, PageOptions } from '../../api/ApiClient.js';
 import type { ResponseDecoder } from '../../api/decodeResponse.js';
 
 export type CatalogRole = Readonly<{
@@ -23,7 +23,7 @@ export type CatalogPage<T> = Readonly<{
   totalRecords: number;
   records: readonly T[];
 }>;
-export type CatalogPagination = Readonly<{ page: number; perPage: number }>;
+export type CatalogPagination = PageOptions;
 
 const uuid = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}(?![\s\S])/.test(value);

@@ -42,16 +42,19 @@ final readonly class ListRolesAction
     #[OA\Get(
         path: '/api/v1/roles',
         operationId: 'listRoles',
-        summary: 'Read safe roles ordered by created_at then id ascending',
+        summary: 'Read a sorted page of safe roles',
         description: <<<'TEXT'
             Requires current protected READ_ROLES. No grant membership or mutations.
             Offset pages are deterministic for a committed state, not a cross-request snapshot.
+            Defaults to ascending creation time; ties use ascending ID. No search or filters.
             Responses are no-store.
             TEXT,
         security: [['AccessBearer' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/CatalogPage'),
-            new OA\Parameter(ref: '#/components/parameters/CatalogPerPage')
+            new OA\Parameter(ref: '#/components/parameters/CatalogPerPage'),
+            new OA\Parameter(ref: '#/components/parameters/CatalogSort'),
+            new OA\Parameter(ref: '#/components/parameters/CatalogOrder')
         ],
         responses: [
             new OA\Response(
@@ -68,11 +71,13 @@ final readonly class ListRolesAction
     #[QueryString]
     #[Validation(rules: [
         ['field' => 'page', 'label' => 'Page', 'rules' => 'digits|min_number[1]|max_number[1000]'],
-        ['field' => 'per_page', 'label' => 'Per page', 'rules' => 'digits|min_number[1]|max_number[100]']
+        ['field' => 'per_page', 'label' => 'Per page', 'rules' => 'digits|min_number[1]|max_number[100]'],
+        ['field' => 'sort', 'label' => 'Sort', 'rules' => 'in_list[ID,Created]'],
+        ['field' => 'order', 'label' => 'Order', 'rules' => 'in_list[asc,desc]']
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array{page?: string, per_page?: string} $input */
+        /** @var array{page?: string, per_page?: string, sort?: string, order?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 
         $this->installationAuthority->assertInstallationPermission(
@@ -80,9 +85,10 @@ final readonly class ListRolesAction
             PermissionName::fromString('READ_ROLES')
         );
         /** @var ResultSet<RoleView> $page */
-        $page = $this->queryBus->fetch(new ListRoles(new Pagination(
+        $page = $this->queryBus->fetch(new ListRoles(Pagination::strict(
             (int) ($input['page'] ?? '1'),
-            (int) ($input['per_page'] ?? '25')
+            (int) ($input['per_page'] ?? '25'),
+            CatalogInput::orderings($input['sort'] ?? null, $input['order'] ?? null)
         )));
 
         return $this->responder->respond($page);

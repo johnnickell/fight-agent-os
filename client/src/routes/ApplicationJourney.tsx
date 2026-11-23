@@ -126,13 +126,22 @@ export function ApplicationView({
       credential.signOutUnconfirmed === undefined
     ) {
       const target =
-        window.location.pathname === pathname
+        route.destination !== 'users' && window.location.pathname === pathname
           ? pathname + window.location.search + window.location.hash
           : pathname;
       session.intent.capture(target);
     }
-    if (window.location.pathname === pathname && (window.location.search || window.location.hash))
+    if (window.location.pathname !== pathname) return;
+    // Users owns its query string, including while a reload is restoring the session.
+    if (
+      route?.destination === 'users' &&
+      !['anonymous', 'logout', 'terminal'].includes(credential.status)
+    ) {
+      if (window.location.hash)
+        window.history.replaceState(window.history.state, '', pathname + window.location.search);
+    } else if (window.location.search || window.location.hash) {
       window.history.replaceState(null, '', route ? pathname : '/not-found');
+    }
   }, [
     pathname,
     route,

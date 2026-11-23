@@ -89,6 +89,47 @@ describe('authoritative frame transitions', () => {
     expect(owner.load).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('list', { name: 'Owned active sessions' })).not.toBeInTheDocument();
   });
+  it('preserves Users query options through application session restoration', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/admin/users?page=2&per_page=1&sort=ID&order=desc&host=kept'
+    );
+    const owner = session(['READ_USERS']);
+    const fetch = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            status: 'success',
+            data: {
+              page: 2,
+              per_page: 1,
+              total_pages: 2,
+              total_records: 2,
+              records: []
+            }
+          }),
+          { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
+        )
+      )
+    );
+    owner.users = new UserDirectoryService(
+      new ApiClient(
+        { schemaVersion: 2, apiBasePath: '/api/v1' },
+        { fetch, accessTokens: { getAccessToken: () => 'synthetic.memory.only' } }
+      )
+    );
+    render(<Mounted owner={owner} initial="/admin/users" />);
+    expect(window.location.search).toContain('page=2');
+    await act(() => owner.coordinator.restore());
+    expect(await screen.findByText('Page 2 of 2. 2 results.')).toBeVisible();
+    expect(fetch).toHaveBeenCalledExactlyOnceWith(
+      '/api/v1/users?page=2&per_page=1&sort=ID&order=desc',
+      expect.anything()
+    );
+    expect(window.location.search).toContain('host=kept');
+  });
+
   it('does not replay a denied directory when current-authority revalidation remounts its guard', async () => {
     const owner = session(['READ_USERS']);
     const fetch = vi.fn(() =>

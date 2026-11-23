@@ -10,11 +10,14 @@ export type AccessTokenProvider = Readonly<{
   getAccessToken: () => string | null;
 }>;
 
+export type CatalogOrdering = Readonly<{ sort: 'ID' | 'Created'; order: 'asc' | 'desc' }>;
+export type PageOptions = Readonly<{ page: number; perPage: number; ordering?: CatalogOrdering }>;
+
 export type GetOptions = Readonly<{
   signal?: AbortSignal;
   access?: 'required';
-  /** Closed numeric pagination; arbitrary query strings remain unsupported. */
-  pagination?: Readonly<{ page: number; perPage: number }>;
+  /** Closed page and Access Control ordering options; no arbitrary query values. */
+  pagination?: PageOptions;
 }>;
 
 export type ApiTransport = (url: string, init: RequestInit) => Promise<Response>;
@@ -145,7 +148,18 @@ export class ApiClient {
         perPage > 100
       )
         return apiFailure('protocol');
-      query = `?page=${String(page)}&per_page=${String(perPage)}`;
+      const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+      const ordering = options.pagination.ordering;
+      if (ordering !== undefined) {
+        if (
+          (ordering.sort !== 'ID' && ordering.sort !== 'Created') ||
+          (ordering.order !== 'asc' && ordering.order !== 'desc')
+        )
+          return apiFailure('protocol');
+        params.set('sort', ordering.sort);
+        params.set('order', ordering.order);
+      }
+      query = `?${params.toString()}`;
     }
     const headers = new Headers({ Accept: 'application/json' });
     headers.set('X-Correlation-ID', crypto.randomUUID().replaceAll('-', ''));

@@ -53,7 +53,11 @@ final readonly class ListDirectoryUsersHandler implements QueryHandler
         }
 
         /** @var ResultSet<UserView> $page */
-        $page = $this->queryBus->fetch(new ListUsers(new Pagination($query->page, $query->perPage)));
+        $page = $this->queryBus->fetch(new ListUsers(Pagination::strict(
+            $query->page,
+            $query->perPage,
+            $query->orderings
+        )));
         $roles = [];
         $names = [];
         $users = [];

@@ -264,12 +264,41 @@ final class UsersReadActionsTest extends TestCase
     }
 
     /**
+     * Dispatches only mapped public orderings through the package query
+     *
+     * @param array<string, string> $input
+     * @param array<string, string> $expected
+     */
+    #[DataProvider('orderedDirectoryPages')]
+    public function testDirectoryOrdering(array $input, array $expected): void
+    {
+        $this->result = new ResultSet(1, 25, 0, ArrayList::of(UserView::class));
+        $this->directory->handle($this->request->withAttribute(QueryString::class, $input));
+        self::assertInstanceOf(ListUsers::class, $this->queries[0]);
+        self::assertSame($expected, $this->queries[0]->getPagination()->orderings());
+    }
+
+    /**
+     * Supplies explicit and partially defaulted ordering controls
+     *
+     * @return iterable<array{array<string, string>, array<string, string>}>
+     */
+    public static function orderedDirectoryPages(): iterable
+    {
+        yield [['sort' => 'ID', 'order' => 'desc'], ['id' => 'DESC']];
+        yield [['sort' => 'Created'], ['created_at' => 'ASC']];
+        yield [['order' => 'desc'], ['created_at' => 'DESC']];
+    }
+
+    /**
      * Preserves page intent across the owned query message representation
      */
     public function testDirectoryQueryRoundTrip(): void
     {
         $payload = ['page' => 1000, 'per_page' => 100];
         self::assertSame($payload, ListDirectoryUsers::fromArray($payload)->toArray());
+        $ordered = $payload + ['orderings' => ['id' => 'desc']];
+        self::assertSame($ordered, ListDirectoryUsers::fromArray($ordered)->toArray());
     }
 
     /**

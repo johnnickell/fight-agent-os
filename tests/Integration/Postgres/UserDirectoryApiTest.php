@@ -266,6 +266,15 @@ final class UserDirectoryApiTest extends TestCase
             self::assertSame($data, $this->check($this->request('?page='.$page.'&per_page=1'), 200)['data']);
         }
         self::assertSame($expected, $ids);
+        foreach (['ID' => 'id DESC', 'Created' => 'created_at DESC, id ASC'] as $sort => $orderBy) {
+            $expectedSorted = $this->connection->fetchFirstColumn('SELECT id FROM users ORDER BY '.$orderBy);
+            foreach ($expectedSorted as $offset => $id) {
+                $query = '?page='.($offset + 1).'&per_page=1&sort='.$sort.'&order=desc';
+                $page = $this->check($this->request($query), 200)['data'];
+                self::assertSame(count($expectedSorted), $page['total_records']);
+                self::assertSame([$id], array_column($page['records'], 'user_id'));
+            }
+        }
         self::assertContains('pending_activation', $states);
         self::assertContains('active', $states);
         self::assertContains('disabled', $states);
@@ -323,7 +332,8 @@ final class UserDirectoryApiTest extends TestCase
             '?page=0', '?page=1001', '?per_page=0', '?per_page=101', '?page=-1', '?page=1.5', '?page=1e2',
             '?page=', '?page=false', '?page=%GG', '?page=%00', '?page=1&%70age=2', '?page[]=1',
             '?per_page=1&per%5Fpage=2', '?per.page=1', '?page=%201', '?page=1%20',
-            '?sort=email', '?order=id%20DESC', '?include_deleted=false', '?filter[email]=person',
+            '?sort=email', '?order=id%20DESC', '?sort=', '?order=', '?sort=ID&sort=Created',
+            '?search=person', '?filters=e30', '?include_deleted=false', '?filter[email]=person',
             '?actor_id=private-marker', '?permission=READ_USERS', '?scope=all', '?workspace_id=private-marker',
             '?roles=ROLE_SUPER_ADMIN', '?include=password_hash', '?page='.str_repeat('1', 8193)
         ];

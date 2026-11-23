@@ -14,7 +14,8 @@ non-active authority fails closed. A displayed `ROLE_SUPER_ADMIN`, JWT/HTML clai
 route never grants a read. No new identity, principal, session or authorization store is introduced.
 
 Fight Access Control owns identity pagination and safe `UserView` production. The existing PostgreSQL user
-repository fixes ordering to `created_at ASC, id ASC`; callers supply no ordering expression. The Action
+repository defaults to `created_at ASC, id ASC`. It applies allowlisted ordering to the full dataset before
+paging. Creation time uses ascending ID for ties. The Action
 uses the registered `ListDirectoryUsers` query. Its handler fetches the canonical `ListUsers` page and
 calls `GetRoleById` for each unique assigned Role. It returns a typed page of joined User and Role Views;
 the Responder maps those Views into HTTP data without a lookup. Missing,
@@ -24,7 +25,9 @@ are sorted by exact role name. An empty assignment remains empty; it does not im
 
 ## HTTP contract
 
-- Optional source-only `QueryString`/Validation fields: `page` **1–1000**, `per_page` **1–100**; defaults **1/25**.
+- Optional validated query fields: `page` **1–1000**, `per_page` **1–100**, `sort` **ID or Created**, and
+  `order` **asc or desc**. Defaults are **1**, **25**, **Created**, and **asc**. The same controls apply to the
+  Role and Permission list APIs, with their own READ admission.
   Checked decimal-digit strings are explicitly converted to package pagination integers. Leading zeroes and
   valid percent-encoded names/values are accepted; empty, signed, fractional, ambiguous, duplicate decoded,
   nested, unknown or malformed fields are rejected before the Action/query. A GET body is rejected, not merged.
@@ -32,8 +35,8 @@ are sorted by exact role name. An empty assignment remains empty; it does not im
   select actor, authority, workspace, role, relations, hidden fields or visibility. There is no search, filter,
   free-form ordering or mutation. The client does not filter one partial page as though it were the installation.
 - Offset pages are deterministic for a committed state, **not** a transactionally consistent cross-request
-  snapshot. Concurrent writes can shift rows/counts; explicitly reload or return to page one. The browser never
-  extrapolates unseen identities. Page 1000 is the last navigable page even if the count implies more.
+  snapshot. Concurrent writes can shift rows and counts. The browser replaces an out-of-range page once and
+  offers a reload if counts continue shrinking. It never extrapolates unseen identities. Page 1000 is the last navigable page even if the count implies more.
 - Success is JSend `{status: "success", data: {page, per_page, total_pages, total_records, records}}`.
   Empty results have at least one total page; out-of-range pages can have no records.
 - Every record has exactly `user_id`, canonical `email`, `state`, `roles`, `created_at`, `updated_at`.
@@ -57,7 +60,9 @@ coercible values are protocol failures. Its only retained state is a safe refusa
 remount from replaying a denied read. `UsersPage` owns one volatile page and an AuthorityCache scope: authority retirement, context replacement,
 unmount and page changes abort/fence pending work and remove private rows. `401` uses the sole bounded session
 restoration owner; `403` revalidates current authority. Neither automatically replays the refused operation;
-recovery needs explicit Retry. Nothing is stored in browser persistence or history.
+recovery needs explicit Retry. The shared table owns interactions. UsersPage writes canonical `page`,
+`per_page`, `sort`, and `order` to the URL and restores from reload and Back/Forward. Unsupported search and
+filter options are dropped and never forwarded. History stores no user rows, identities, or credentials.
 
 The single production route manifest independently guards every destination, and shared `evaluateAccess`
 controls presentation and link activation:
@@ -108,8 +113,9 @@ callers. Independent acceptance and browser QA remain separate from Work's local
 
 ## Responsive and verification boundaries
 
-The same captioned table, scoped headers and rows reflow as cards below 1100px; no duplicate hidden data tree
-or second mobile loader exists. Long canonical email and role labels wrap. Text lifecycle labels and managed/
+One captioned table has scoped headers and keyboard-accessible horizontal scrolling when it is wider than
+its container. Controls wrap independently; there is no second data tree or mobile loader. Long email and role
+labels wrap. Text lifecycle labels and managed/
 custom markers do not depend on color. Native links/buttons, at least 44px controls, explicit loading/empty/
 forbidden/system states, polite page-count announcements and post-pagination/retry heading focus use the
 existing frame, themes, fonts, focus and reduced-motion rules. Pagination clears previous-page rows while

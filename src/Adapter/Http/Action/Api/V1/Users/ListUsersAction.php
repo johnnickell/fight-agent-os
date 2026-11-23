@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Users;
 
+use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
@@ -31,7 +32,7 @@ final readonly class ListUsersAction
     }
 
     /**
-     * Maps only checked pagination into the authoritative installation directory
+     * Maps checked pagination and ordering into the authoritative installation directory
      */
     #[OA\Get(
         path: '/api/v1/users',
@@ -41,9 +42,9 @@ final readonly class ListUsersAction
             Requires Bearer authentication and exact current READ_USERS, centrally enforced from this
             Action's permission metadata before execution and package ListUsers dispatch.
             Role names and token claims grant nothing. Includes pending_activation, active, disabled and deleted
-            identities, ordered by created_at ASC then stable user ID ASC. Offset pages describe committed state,
-            not a cross-request snapshot. Defaults: page 1, per_page 25. Only these two query fields are accepted;
-            no search, filtering, sorting, include, workspace, actor, role or mutation input is supported.
+            identities. Defaults: page 1, per_page 25, sort Created, order asc. Ties use ascending user ID.
+            Offset pages describe committed state, not a cross-request snapshot. Search, filters, include,
+            workspace, actor, role and mutation input are not supported.
             Roles expose only authoritative name and managed ownership marker, never memberships or editability.
             Unresolved or duplicate role references fail closed. No credentials, sessions, revisions, grants,
             reservations, delivery, audit or permission internals are returned. Cache-Control: no-store.
@@ -51,7 +52,9 @@ final readonly class ListUsersAction
         security: [['AccessBearer' => []]],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/CatalogPage'),
-            new OA\Parameter(ref: '#/components/parameters/CatalogPerPage')
+            new OA\Parameter(ref: '#/components/parameters/CatalogPerPage'),
+            new OA\Parameter(ref: '#/components/parameters/CatalogSort'),
+            new OA\Parameter(ref: '#/components/parameters/CatalogOrder')
         ],
         responses: [
             new OA\Response(
@@ -72,17 +75,20 @@ final readonly class ListUsersAction
     #[QueryString]
     #[Validation(rules: [
         ['field' => 'page', 'label' => 'Page', 'rules' => 'digits|min_number[1]|max_number[1000]'],
-        ['field' => 'per_page', 'label' => 'Per page', 'rules' => 'digits|min_number[1]|max_number[100]']
+        ['field' => 'per_page', 'label' => 'Per page', 'rules' => 'digits|min_number[1]|max_number[100]'],
+        ['field' => 'sort', 'label' => 'Sort', 'rules' => 'in_list[ID,Created]'],
+        ['field' => 'order', 'label' => 'Order', 'rules' => 'in_list[asc,desc]']
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array{page?: string, per_page?: string} $input */
+        /** @var array{page?: string, per_page?: string, sort?: string, order?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 
         /** @var UserDirectoryPage $page */
         $page = $this->queryBus->fetch(new ListDirectoryUsers(
             (int) ($input['page'] ?? '1'),
-            (int) ($input['per_page'] ?? '25')
+            (int) ($input['per_page'] ?? '25'),
+            CatalogInput::orderings($input['sort'] ?? null, $input['order'] ?? null)
         ));
 
         return $this->responder->respond($page);

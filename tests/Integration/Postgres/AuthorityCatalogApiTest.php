@@ -236,6 +236,14 @@ final class AuthorityCatalogApiTest extends TestCase
                 self::assertSame($fields, array_keys($record));
             }
             self::assertSame($expected, $ids);
+            $expectedDescending = $this->connection->fetchFirstColumn('SELECT id FROM '.$catalog.' ORDER BY id DESC');
+            $idKey = $catalog === 'roles' ? 'role_id' : 'permission_id';
+            foreach ($expectedDescending as $offset => $id) {
+                $query = '?page='.($offset + 1).'&per_page=1&sort=ID&order=desc';
+                $sorted = $this->assertResponse($this->request('/api/v1/'.$catalog.$query), 200)['data'];
+                self::assertSame(count($expectedDescending), $sorted['total_records']);
+                self::assertSame([$id], array_column($sorted['records'], $idKey));
+            }
             $response = $this->request('/api/v1/'.$catalog.'?page=1000&per_page=100');
             $empty = $this->assertResponse($response, 200)['data'];
             self::assertSame([], $empty['records']);
@@ -274,7 +282,8 @@ final class AuthorityCatalogApiTest extends TestCase
     {
         $suffixes = [
             '/invalid', '?page=0', '?page=1001', '?per_page=0', '?per_page=101', '?page=-1', '?page=1.5',
-            '?page=1&page=2', '?per_page[]=1', '?order=name', '?page=', '?page=%GG'
+            '?page=1&page=2', '?per_page[]=1', '?order=name', '?page=', '?page=%GG',
+            '?sort=Unknown', '?search=role', '?filters=e30'
         ];
         foreach ($suffixes as $suffix) {
             yield [$suffix];

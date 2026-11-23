@@ -1,7 +1,7 @@
 import { apiFailure } from '../../api/ApiResult.js';
 import { hasExactKeys } from '../../api/decodeResponse.js';
 
-import type { ApiClient } from '../../api/ApiClient.js';
+import type { ApiClient, CatalogOrdering } from '../../api/ApiClient.js';
 import type { ApiResult } from '../../api/ApiResult.js';
 import type { ResponseDecoder } from '../../api/decodeResponse.js';
 
@@ -120,7 +120,12 @@ export class UserDirectoryService {
     return this.#accept(result, signal);
   }
 
-  async load(page = 1, perPage = 25, signal?: AbortSignal): Promise<ApiResult<DirectoryPage>> {
+  async load(
+    page = 1,
+    perPage = 25,
+    signal?: AbortSignal,
+    ordering?: CatalogOrdering
+  ): Promise<ApiResult<DirectoryPage>> {
     if (this.#blocked) return apiFailure(this.#blocked);
     const generation = this.#generation;
     const result = await this.#api.get<DirectoryPage>(
@@ -147,7 +152,13 @@ export class UserDirectoryService {
           if (!user || ids.has(user.userId)) return null;
           const previous = records.at(-1);
           // Persisted ordering has finer time precision than the safe second-precision wire.
-          if (previous && previous.createdAt > user.createdAt) return null;
+          if (previous) {
+            const [before, after] =
+              ordering?.sort === 'ID'
+                ? [previous.userId, user.userId]
+                : [previous.createdAt, user.createdAt];
+            if (ordering?.order === 'desc' ? before < after : before > after) return null;
+          }
           ids.add(user.userId);
           records.push(user);
         }
@@ -159,7 +170,11 @@ export class UserDirectoryService {
           records: Object.freeze(records)
         });
       },
-      { access: 'required', pagination: { page, perPage }, ...(signal ? { signal } : {}) }
+      {
+        access: 'required',
+        pagination: { page, perPage, ...(ordering ? { ordering } : {}) },
+        ...(signal ? { signal } : {})
+      }
     );
     if (generation !== this.#generation) return apiFailure('cancelled');
     return this.#accept(result, signal);

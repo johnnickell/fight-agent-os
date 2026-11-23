@@ -10,11 +10,12 @@ import {
 } from '@fixtures/userDirectoryFixtures';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { matchApplicationRoute } from '@/routes/applicationRoutes';
 
 const caches: AuthorityCache[] = [];
+beforeEach(() => window.history.replaceState(null, '', '/admin/users'));
 afterEach(() => {
   for (const cache of caches.splice(0)) cache.dispose();
 });
@@ -48,28 +49,123 @@ describe('UsersPage', () => {
         )
       )
     );
-    const before = window.location.href;
     await mount(fetch, ['READ_USERS']);
-    await screen.findByRole('table');
+    await screen.findByText('person0@example.test');
     await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
     await screen.findByText(user.email);
+    const before = window.location.href;
     await userEvent.click(screen.getByRole('button', { name: `View details for ${user.email}` }));
     expect(await screen.findByText('disabled')).toBeVisible();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'User detail' })).toHaveFocus();
     expect(window.location.href).toBe(before);
     await userEvent.click(screen.getByRole('button', { name: 'Back to user list' }));
-    expect(await screen.findByRole('table')).toBeVisible();
+    expect(await screen.findByText(user.email)).toBeVisible();
     expect(screen.getByRole('status')).toHaveTextContent('Page 2 of 2');
     await userEvent.click(screen.getByRole('button', { name: 'Previous page' }));
     await screen.findByText('person0@example.test');
     expect(fetch.mock.calls.map(([url]) => url)).toEqual([
-      '/api/v1/users?page=1&per_page=25',
-      '/api/v1/users?page=2&per_page=25',
+      '/api/v1/users?page=1&per_page=25&sort=Created&order=asc',
+      '/api/v1/users?page=2&per_page=25&sort=Created&order=asc',
       `/api/v1/users/${user.user_id}`,
-      '/api/v1/users?page=2&per_page=25',
-      '/api/v1/users?page=1&per_page=25'
+      '/api/v1/users?page=2&per_page=25&sort=Created&order=asc',
+      '/api/v1/users?page=1&per_page=25&sort=Created&order=asc'
     ]);
+  });
+
+  it('normalizes a deep link without forwarding search, then restores sort and page through history', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/admin/users?page=2&per_page=10&sort=ID&order=desc&search=unused&host=kept'
+    );
+    const descending = 'id-desc-2@example.test';
+    const ascending = 'created-asc-1@example.test';
+    const fetch = vi.fn((url: string) => {
+      const params = new URL(url, window.location.origin).searchParams;
+      const page = Number(params.get('page'));
+      const marker = `${params.get('sort')}-${params.get('order')}-${page}`;
+      return Promise.resolve(
+        directoryResponse(
+          directoryPage([directoryUser({ email: `${marker.toLowerCase()}@example.test` })], {
+            page,
+            per_page: 10,
+            total_records: 15,
+            total_pages: 2
+          })
+        )
+      );
+    });
+    await mount(fetch);
+    expect(await screen.findByText(descending)).toBeVisible();
+    expect(screen.getByRole('alert')).toHaveTextContent('invalid or unsupported');
+    expect(window.location.search).toContain('host=kept');
+    expect(window.location.search).not.toContain('search');
+    expect(fetch.mock.calls[0]?.[0]).not.toMatch(/search|host/);
+    await userEvent.click(screen.getByRole('button', { name: 'Created (UTC)' }));
+    expect(await screen.findByText(ascending)).toBeVisible();
+    window.history.back();
+    expect(await screen.findByText(descending)).toBeVisible();
+    expect(screen.getByRole('columnheader', { name: 'ID' })).toHaveAttribute(
+      'aria-sort',
+      'descending'
+    );
+    window.history.forward();
+    expect(await screen.findByText(ascending)).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
+
+  it('cancels superseded ordering requests and ignores their late results', async () => {
+    const pending: {
+      signal: AbortSignal | null | undefined;
+      resolve: (response: Response) => void;
+    }[] = [];
+    const fetch = vi.fn(
+      (_url: string, init: RequestInit) =>
+        new Promise<Response>((resolve) => {
+          pending.push({ signal: init.signal, resolve });
+        })
+    );
+    await mount(fetch);
+    const sort = screen.getByRole('button', { name: 'ID' });
+    await userEvent.click(sort);
+    await userEvent.click(sort);
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(pending.map((read) => read.signal?.aborted)).toEqual([true, true, false]);
+    await act(async () => {
+      pending[2]?.resolve(
+        directoryResponse(directoryPage([directoryUser({ email: 'latest@example.test' })]))
+      );
+      await Promise.resolve();
+    });
+    expect(await screen.findByText('latest@example.test')).toBeVisible();
+    await act(async () => {
+      pending[0]?.resolve(
+        directoryResponse(directoryPage([directoryUser({ email: 'stale@example.test' })]))
+      );
+      pending[1]?.resolve(new Response(null, { status: 403 }));
+      await Promise.resolve();
+    });
+    expect(screen.queryByText('stale@example.test')).not.toBeInTheDocument();
+    expect(screen.getByText('latest@example.test')).toBeVisible();
+  });
+
+  it('corrects a shrinking page once and reports continued shrinkage', async () => {
+    window.history.replaceState(null, '', '/admin/users?page=5');
+    const historyLength = window.history.length;
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        directoryResponse(directoryPage([], { page: 5, total_records: 50, total_pages: 2 }))
+      )
+      .mockResolvedValueOnce(
+        directoryResponse(directoryPage([], { page: 2, total_records: 0, total_pages: 1 }))
+      );
+    await mount(fetch);
+    expect(await screen.findByText('The user directory changed again')).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(window.history.length).toBe(historyLength);
+    expect(new URLSearchParams(window.location.search).get('page')).toBe('2');
   });
 
   it('replaces stale rows after the directory service signals invalidation', async () => {
@@ -93,8 +189,9 @@ describe('UsersPage', () => {
       Promise.resolve(directoryResponse(url.includes('?') ? directoryPage([user]) : user))
     );
     const d = await mount(fetch, ['READ_USERS']);
-    await screen.findByRole('table');
-    await userEvent.click(screen.getByRole('button', { name: `View details for ${user.email}` }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: `View details for ${user.email}` })
+    );
     await screen.findByRole('heading', { name: 'User detail' });
     await act(() => d.cache.signal('logout'));
     expect(screen.queryByText(user.email)).not.toBeInTheDocument();
@@ -108,7 +205,7 @@ describe('UsersPage', () => {
       const permissions = directoryPermissions.filter((_, index) => Boolean(mask & (1 << index)));
       const fetch = vi.fn(() => Promise.resolve(directoryResponse(directoryPage())));
       await mount(fetch, permissions);
-      if (mask & 1) await screen.findByRole('table');
+      if (mask & 1) await screen.findByRole('link', { name: /Invitation status for/ });
       else expect(fetch).not.toHaveBeenCalled();
       const ordinary = screen.queryByRole('link', { name: 'Invite User' });
       const elevated = screen.queryByRole('link', { name: 'Invite Super Admin' });
@@ -145,9 +242,10 @@ describe('UsersPage', () => {
         )
       )
     );
-    const table = await screen.findByRole('table', { name: 'Installation users — current page' });
+    await screen.findByRole('rowheader', { name: email });
+    const table = screen.getByRole('table', { name: 'Installation users — current page' });
     expect(within(table).getAllByRole('row')).toHaveLength(5);
-    expect(within(table).getAllByRole('columnheader')).toHaveLength(5);
+    expect(within(table).getAllByRole('columnheader')).toHaveLength(7);
     expect(within(table).getByRole('rowheader', { name: email })).toBeVisible();
     expect(screen.getByText('No roles assigned')).toBeVisible();
     expect(screen.getByText('(Custom)')).toBeVisible();
@@ -155,24 +253,25 @@ describe('UsersPage', () => {
     expect(screen.getByText('Disabled')).toBeVisible();
     expect(screen.getByText('Deleted')).toBeVisible();
     expect(document.querySelectorAll('time')).toHaveLength(8);
-    expect(screen.getByRole('status')).toHaveTextContent('4 users');
+    expect(screen.getByRole('status')).toHaveTextContent('4 results');
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
   it('R59-01 lets an ordinary reader view another identity with quoted canonical email', async () => {
-    const emails = ['ordinary@example.test', '"a@b"@example.test'];
+    const emails = ['ordinary@example.test', '"a@b"@example.test'] as const;
     const fetch = vi.fn(() =>
       Promise.resolve(
         directoryResponse(directoryPage(emails.map((email) => directoryUser({ email }))))
       )
     );
     await mount(fetch, ['READ_USERS']);
-    const table = await screen.findByRole('table', { name: 'Installation users — current page' });
+    await screen.findByRole('rowheader', { name: emails[0] });
+    const table = screen.getByRole('table', { name: 'Installation users — current page' });
     expect(within(table).getAllByRole('row')).toHaveLength(3);
     for (const email of emails)
       expect(within(table).getByRole('rowheader', { name: email })).toBeVisible();
-    expect(screen.getByRole('status')).toHaveTextContent('2 users');
+    expect(screen.getByRole('status')).toHaveTextContent('2 results');
     expect(screen.queryByText('Users unavailable')).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /Invitation status for/ })).toHaveLength(2);
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -210,10 +309,14 @@ describe('UsersPage', () => {
     );
     caches.push(cache);
     await cache.load();
-    const { service, cache: unused } = directoryDependencies();
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(directoryResponse(directoryPage()))
+      .mockImplementation(() => new Promise<Response>(() => {}));
+    const { service, cache: unused } = directoryDependencies(fetch);
     unused.dispose();
     render(<UsersPage cache={cache} service={service} />);
-    await screen.findByRole('table');
+    await screen.findByRole('rowheader');
     const link = screen.getByRole('link', { name: 'Invite User' });
     now = 60_000;
     const click = new MouseEvent('click', { bubbles: true, cancelable: true });
@@ -222,7 +325,7 @@ describe('UsersPage', () => {
       await Promise.resolve();
     });
     expect(click.defaultPrevented).toBe(true);
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('rowheader')).not.toBeInTheDocument();
   });
 
   it('announces loading and empty and hands keyboard retry focus to the heading', async () => {
@@ -234,12 +337,12 @@ describe('UsersPage', () => {
         })
     );
     await mount(fetch);
-    expect(screen.getByText('Loading users')).toBeVisible();
+    expect(screen.getByText('Loading results')).toBeVisible();
     await act(async () => {
       finish?.(directoryResponse(directoryPage([])));
       await Promise.resolve();
     });
-    expect(await screen.findByText('No users on this page')).toBeVisible();
+    expect(await screen.findByText('No results')).toBeVisible();
     const reload = screen.getByRole('button', { name: 'Reload users' });
     reload.focus();
     await userEvent.keyboard('{Enter}');
@@ -271,7 +374,7 @@ describe('UsersPage', () => {
       )
     );
     await mount(fetch);
-    await screen.findByRole('table');
+    await screen.findByText('person0@example.test');
     await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
     expect(await screen.findByText('last@example.test')).toBeVisible();
     expect(screen.queryByText('person0@example.test')).not.toBeInTheDocument();
