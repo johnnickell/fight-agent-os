@@ -82,6 +82,47 @@ final class UserRoleActionsTest extends TestCase
     }
 
     /**
+     * Refuses misleading managed identities without treating custom names as authority
+     */
+    public function testMisleadingRoleIdentities(): void
+    {
+        foreach ([false, true] as $remove) {
+            foreach ([false, true] as $managed) {
+                foreach ([false, true] as $stableId) {
+                    foreach (['ROLE_SUPER_ADMIN', 'ROLE_ORDINARY'] as $name) {
+                        if (!$managed && $name === 'ROLE_SUPER_ADMIN') {
+                            continue;
+                        }
+                        $id = RoleId::generate();
+                        if ($stableId) {
+                            $id = RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID);
+                        }
+                        if ($managed) {
+                            $role = Role::defineManaged($id, RoleName::fromString($name), [], new DateTimeImmutable());
+                        } else {
+                            $role = Role::define($id, RoleName::fromString($name), [], new DateTimeImmutable());
+                        }
+                        $protected = $managed && $name === 'ROLE_SUPER_ADMIN';
+                        if ($stableId && $protected && !$remove) {
+                            continue;
+                        }
+                        $allowed = !$stableId && !$protected;
+                        $this->exercise(
+                            $remove,
+                            UserState::ACTIVE,
+                            UserId::generate(),
+                            UserId::generate(),
+                            $role,
+                            $allowed,
+                            elevationPermission: false
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Enumerates unauthenticated, unconfirmed and malformed route admission
      *
      * @return iterable<array{bool, string, class-string<\Throwable>}>
