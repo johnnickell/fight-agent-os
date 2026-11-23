@@ -32,7 +32,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 9 | [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | [TICKET-00143 — Browse shared stateful tables with restorable URL queries](../tickets/00143-TICKET.md) | ready-for-agent | — | — |
-| 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
@@ -58,7 +57,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00121](00121-TASK.md), [TASK-00597](00597-TASK.md) | — |
+| 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00597](00597-TASK.md) | — |
 | 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
 | 14 | [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00128](00128-TASK.md) | — |
 | 16 | [TASK-00600](00600-TASK.md) | Adopt the shared React frontend in the Slim skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
@@ -522,6 +521,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 9 | [TASK-00009](00009-TASK.md) | Accept the application ownership and orchestration ADR | [TICKET-00008 — Establish application ownership and orchestration boundaries](../tickets/00008-TICKET.md) | done | — | [PR #13](https://github.com/johnnickell/fight-agent-os/pull/13) |
 | 9 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | done | — | [PR #253](https://github.com/johnnickell/fight-agent-os/pull/253) |
 | 10 | [TASK-00010](00010-TASK.md) | Prove and enforce application ownership boundaries | [TICKET-00008 — Establish application ownership and orchestration boundaries](../tickets/00008-TICKET.md) | done | — | [PR #14](https://github.com/johnnickell/fight-agent-os/pull/14) |
+| 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | done | — | [PR #315](https://github.com/johnnickell/fight-agent-os/pull/315) |
 | 11 | [TASK-00011](00011-TASK.md) | Accept the PostgreSQL consistency and durable-effects ADR | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #15](https://github.com/johnnickell/fight-agent-os/pull/15) |
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | done | — | [PR #236](https://github.com/johnnickell/fight-agent-os/pull/236) |
 | 12 | [TASK-00012](00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #17](https://github.com/johnnickell/fight-agent-os/pull/17) |

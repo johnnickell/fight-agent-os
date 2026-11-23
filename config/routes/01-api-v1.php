@@ -125,6 +125,14 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
         RevokeUserSessionAction::class.':handle'
     )->setName('api.v1.users.sessions.revoke');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
+    $api->put(
+        '/users/{userId}/roles/{roleId}',
+        \App\Adapter\Http\Action\Api\V1\Users\AssignUserRoleAction::class.':handle'
+    )->setName('api.v1.users.roles.assign');
+    $api->delete(
+        '/users/{userId}/roles/{roleId}',
+        \App\Adapter\Http\Action\Api\V1\Users\RemoveUserRoleAction::class.':handle'
+    )->setName('api.v1.users.roles.remove');
     $api->get('/users/{userId}', GetUserAction::class.':handle')->setName('api.v1.users.get');
     $api->delete('/users/{userId}', DeleteUserAction::class.':handle')->setName('api.v1.users.delete');
     $api->post('/users/{userId}/restore', RestoreUserAction::class.':handle')->setName('api.v1.users.restore');
