@@ -63,8 +63,13 @@ jobs:
           cli_version=$(php -r 'echo PHP_VERSION;')
           fpm_version=$(php-fpm8.5 --version | awk 'NR == 1 {print $2}')
           printf 'PHP binary versions: CLI %s; FPM %s\n' "$cli_version" "$fpm_version"
-          [[ "$cli_version" == 8.5.* && "$cli_version" == "$fpm_version" ]]
-          for extensions in "$(php -m)" "$(php-fpm8.5 -m)"; do
+          if [[ "$cli_version" != 8.5.* || "$cli_version" != "$fpm_version" ]]; then
+            printf 'Expected matching PHP 8.5 CLI and FPM binaries.\n' >&2
+            exit 1
+          fi
+          cli_extensions=$(php -m) || { printf 'Could not list PHP CLI modules.\n' >&2; exit 1; }
+          fpm_extensions=$(php-fpm8.5 -m) || { printf 'Could not list PHP FPM modules.\n' >&2; exit 1; }
+          for extensions in "$cli_extensions" "$fpm_extensions"; do
             for extension in pdo_pgsql pgsql mbstring dom xml xmlwriter SimpleXML; do
               grep --fixed-strings --line-regexp "$extension" <<< "$extensions"
             done
