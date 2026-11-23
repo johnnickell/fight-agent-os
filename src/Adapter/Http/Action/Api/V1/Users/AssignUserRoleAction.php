@@ -63,7 +63,49 @@ final readonly class AssignUserRoleAction
             current authority on the next request. A failure may follow commit; do not blindly retry.
             TEXT,
         security: [['AccessBearer' => []]],
-        responses: [new OA\Response(response: 200, description: 'No-store dispatch acknowledgement')]
+        parameters: [
+            new OA\Parameter(
+                name: 'userId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid', maxLength: 36, minLength: 36)
+            ),
+            new OA\Parameter(
+                name: 'roleId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid', maxLength: 36, minLength: 36)
+            )
+        ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['confirm'],
+            properties: [
+                new OA\Property(property: 'confirm', type: 'boolean', enum: [true]),
+                new OA\Property(
+                    property: 'confirm_super_admin',
+                    description: 'Must be true when assigning managed Super Admin',
+                    type: 'boolean'
+                )
+            ],
+            type: 'object'
+        )),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'No-store void dispatch acknowledgement',
+                content: new OA\JsonContent(ref: '#/components/schemas/UserLifecycleSuccess')
+            ),
+            new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
+            new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
+            new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
+            new OA\Response(ref: '#/components/responses/NotFound', response: 404),
+            new OA\Response(
+                response: 409,
+                description: 'Self, inactive, identity or conflicting assignment',
+                content: new OA\JsonContent(ref: '#/components/schemas/Error')
+            ),
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+        ]
     )]
     #[JsonBody]
     #[Validation(rules: [

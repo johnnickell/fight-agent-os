@@ -99,7 +99,7 @@ final class UserRoleActionsTest extends TestCase
     /**
      * Refuses invalid entry requests before any command dispatch
      *
-     * @param class-string<\Throwable> $exception
+     * @phpstan-param class-string<\Throwable> $exception
      */
     #[DataProvider('invalidRequests')]
     public function testInvalidRequest(bool $remove, string $invalid, string $exception): void
@@ -114,6 +114,38 @@ final class UserRoleActionsTest extends TestCase
             false,
             $invalid,
             $exception
+        );
+    }
+
+    /**
+     * Enumerates absent or mismatched authoritative identity projections
+     *
+     * @return iterable<array{bool, string}>
+     */
+    public static function invalidIdentities(): iterable
+    {
+        foreach ([false, true] as $remove) {
+            foreach (['missing_user', 'wrong_user', 'missing_role', 'wrong_role'] as $invalid) {
+                yield [$remove, $invalid];
+            }
+        }
+    }
+
+    /**
+     * Refuses absent or aliased authoritative identities without dispatch
+     */
+    #[DataProvider('invalidIdentities')]
+    public function testInvalidIdentity(bool $remove, string $invalid): void
+    {
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_ORDINARY'), [], new DateTimeImmutable());
+        $this->exercise(
+            $remove,
+            UserState::ACTIVE,
+            UserId::generate(),
+            UserId::generate(),
+            $role,
+            false,
+            $invalid
         );
     }
 
@@ -159,6 +191,10 @@ final class UserRoleActionsTest extends TestCase
     #[DataProvider('elevations')]
     public function testElevation(bool $permission, bool $confirmation): void
     {
+        $exception = \Fight\Common\Application\Error\Exception\PermissionDenied::class;
+        if ($permission) {
+            $exception = \Fight\Common\Application\Validation\Exception\ValidationException::class;
+        }
         $role = Role::defineManaged(
             RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID),
             RoleName::fromString('ROLE_SUPER_ADMIN'),
@@ -173,9 +209,7 @@ final class UserRoleActionsTest extends TestCase
             $role,
             $permission && $confirmation,
             '',
-            $permission
-                ? \Fight\Common\Application\Validation\Exception\ValidationException::class
-                : \Fight\Common\Application\Error\Exception\PermissionDenied::class,
+            $exception,
             $permission,
             $confirmation
         );
@@ -184,7 +218,7 @@ final class UserRoleActionsTest extends TestCase
     /**
      * Drives a real Action with safe package Views and a dispatch observer
      *
-     * @param class-string<\Throwable> $exception
+     * @phpstan-param class-string<\Throwable> $exception
      */
     private function exercise(
         bool $remove,
@@ -199,10 +233,22 @@ final class UserRoleActionsTest extends TestCase
         bool $elevationConfirmation = true
     ): void {
         $now = new DateTimeImmutable();
-        $user = new UserView($target, EmailAddress::fromString('target@example.test'), $state, [], $now, $now);
+        $resolvedTarget = $invalid === 'wrong_user' ? UserId::generate() : $target;
+        $user = new UserView($resolvedTarget, EmailAddress::fromString('target@example.test'), $state, [], $now, $now);
+        $resolvedRole = $role;
+        if ($invalid === 'wrong_role') {
+            $resolvedRole = Role::define(
+                RoleId::generate(),
+                RoleName::fromString('ROLE_OTHER'),
+                [],
+                $now
+            );
+        }
+        $userView = $invalid === 'missing_user' ? null : $user;
+        $roleView = $invalid === 'missing_role' ? null : RoleView::fromRole($resolvedRole);
         $queries = $this->createStub(QueryBus::class);
         $queries->method('fetch')->willReturnCallback(static fn(Query $query) =>
-            $query instanceof GetRoleById ? RoleView::fromRole($role) : $user);
+            $query instanceof GetRoleById ? $roleView : $userView);
         $commands = $this->createMock(CommandBus::class);
         $commands->expects($allowed ? self::once() : self::never())->method('execute');
         $responder = new UserLifecycleResponder(new JSendResponseFactory(new ResponseFactory(), new StreamFactory()));
@@ -219,9 +265,9 @@ final class UserRoleActionsTest extends TestCase
             ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(\Slim\Interfaces\RouteParserInterface::class))
             ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(\Slim\Routing\RoutingResults::class))
             ->withAttribute(JsonBody::class, [
-                'confirm' => $invalid !== 'confirmation',
-                'actor_id' => UserId::generate()->toString(),
-                'permissions' => ['ASSIGN_SUPER_ADMIN'],
+                'confirm'             => $invalid !== 'confirmation',
+                'actor_id'            => UserId::generate()->toString(),
+                'permissions'         => ['ASSIGN_SUPER_ADMIN'],
                 'confirm_super_admin' => $elevationConfirmation
             ])
             ->withAttribute(
