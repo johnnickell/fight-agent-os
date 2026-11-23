@@ -2,7 +2,7 @@
 id: TICKET-00146
 epic: EPIC-00028
 title: Verify PHP independently and enforce Unit-only coverage
-status: ready-for-agent
+status: done
 ---
 
 # Verify PHP independently and enforce Unit-only coverage
@@ -35,7 +35,7 @@ Demonstrate the pass locally and on a container-free runner without frontend set
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00611](../tasks/00611-TASK.md) | Run the existing PHP checks as a standalone pass | done |
-| [TASK-00612](../tasks/00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | ready-for-agent |
+| [TASK-00612](../tasks/00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
