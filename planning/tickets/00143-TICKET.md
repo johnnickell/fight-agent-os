@@ -2,7 +2,7 @@
 id: TICKET-00143
 epic: EPIC-00027
 title: Browse shared stateful tables with restorable URL queries
-status: ready-for-agent
+status: done
 ---
 
 # Browse shared stateful tables with restorable URL queries
@@ -129,7 +129,7 @@ only list state, never authentication material.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00597](../tasks/00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | ready-for-agent |
+| [TASK-00597](../tasks/00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
