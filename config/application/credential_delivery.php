@@ -81,9 +81,11 @@ return static function (Container $container): void {
             getenv('APP_PASSWORD_RESET_ORIGIN') ?: '',
             getenv('APP_PASSWORD_RESET_PATH') ?: ''
         ));
-    $container->set(SmtpTransport::class, static function (): SmtpTransport {
-        // This fixed, private Compose endpoint is not a user-selectable DSN or production fallback.
-        $transport = new EsmtpTransport('mailcatcher', 1025, false);
+    $container->set(SmtpTransport::class, static function () use ($environment): SmtpTransport {
+        // Only the explicit test fixture can choose the fixed runner-local endpoint.
+        $nativeSmoke = $environment === 'test' && getenv('FIGHT_BROWSER_SMOKE_ASSETS') === '1'
+            && getenv('BROWSER_SMOKE_NATIVE') === '1';
+        $transport = new EsmtpTransport($nativeSmoke ? '127.0.0.1' : 'mailcatcher', 1025, false);
         $transport->setAutoTls(false);
         $stream = $transport->getStream();
         assert($stream instanceof SocketStream);
