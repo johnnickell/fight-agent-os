@@ -409,6 +409,21 @@ describe('shared API transport', () => {
   });
 });
 
+describe('catalog ordering', () => {
+  it.each([
+    { sort: 'Email', order: 'asc' },
+    { sort: 'ID', order: 'descending' }
+  ])('rejects unsupported ordering before dispatch: %o', async (ordering) => {
+    const { client, fetch } = setup();
+    expect(
+      await client.get('/users', vi.fn(), {
+        pagination: { page: 2, perPage: 10, ordering: ordering as { sort: 'ID'; order: 'asc' } }
+      })
+    ).toEqual(apiFailure('protocol'));
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
 describe('cancellation', () => {
   it('does not dispatch already-aborted work', async () => {
     const { client, fetch } = setup();

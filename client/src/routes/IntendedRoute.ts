@@ -106,6 +106,10 @@ export class IntendedRoute {
         )
       )
         return null;
+      if (typeof route.intendedRoute === 'function') {
+        const search = route.intendedRoute(url.search);
+        return { target: `${path}?${search}`, route };
+      }
       const query = new URLSearchParams();
       for (const [key, value] of url.searchParams) {
         if (

@@ -12,11 +12,23 @@ export function useApplicationNavigation(initialPathname: string) {
     previousPath.current = pathname;
   }, [pathname]);
   const navigate = useCallback((target: string, replace = false) => {
-    // All registered destinations currently admit no query or fragment state.
-    if (!matchApplicationRoute(target)) return;
-    if (replace) window.history.replaceState(null, '', target);
-    else window.history.pushState(null, '', target);
-    setPathname(target);
+    const separator = target.indexOf('?');
+    const path = separator < 0 ? target : target.slice(0, separator);
+    const route = matchApplicationRoute(path);
+    if (!route || target.includes('#')) return;
+    const samePath = window.location.pathname === path;
+    if (route.destination === 'users' && samePath && separator < 0) return;
+    let address = path;
+    if (separator >= 0) {
+      if (typeof route.intendedRoute !== 'function') return;
+      address += `?${route.intendedRoute(target.slice(separator))}`;
+      if (samePath && address === window.location.pathname + window.location.search) return;
+    }
+    if (replace) window.history.replaceState(null, '', address);
+    else window.history.pushState(null, '', address);
+    setPathname(path);
+    // A same-path query navigation does not remount its table or generate a native popstate.
+    if (samePath && separator >= 0) window.dispatchEvent(new PopStateEvent('popstate'));
   }, []);
   useEffect(() => {
     const pop = () => setPathname(window.location.pathname);

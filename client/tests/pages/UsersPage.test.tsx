@@ -168,6 +168,21 @@ describe('UsersPage', () => {
     expect(new URLSearchParams(window.location.search).get('page')).toBe('2');
   });
 
+  it('offers safe recovery if the directory service unexpectedly rejects', async () => {
+    const row = directoryUser({ email: 'recovered@example.test' });
+    const data = directoryDependencies(() =>
+      Promise.resolve(directoryResponse(directoryPage([row])))
+    );
+    caches.push(data.cache);
+    await data.cache.load();
+    vi.spyOn(data.service, 'load').mockRejectedValueOnce(new Error('synthetic private diagnostic'));
+    render(<UsersPage {...data} />);
+    expect(await screen.findByText('Reload users to try again.')).toBeVisible();
+    expect(screen.queryByText(/synthetic private diagnostic/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Retry user list' }));
+    expect(await screen.findByText(row.email)).toBeVisible();
+  });
+
   it('replaces stale rows after the directory service signals invalidation', async () => {
     const before = directoryUser({ email: 'before@example.test' });
     const after = directoryUser({ email: 'after@example.test' });

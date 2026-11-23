@@ -15,9 +15,7 @@ export type TableChange = 'page' | 'perPage' | 'sort' | 'search' | 'filters';
 export function useTableLocation<S extends string, F extends TableFilters>(
   policy: TablePolicy<S, F>
 ) {
-  const [initial] = useState(() =>
-    readTableQuery(new URLSearchParams(window.location.search), policy)
-  );
+  const [initial] = useState(() => readTableQuery(window.location.search, policy));
   const [query, setQuery] = useState(initial.query);
   const current = useRef(initial.query);
   const [pathname] = useState(() => window.location.pathname);
@@ -41,7 +39,7 @@ export function useTableLocation<S extends string, F extends TableFilters>(
   );
 
   useEffect(() => {
-    const read = () => readTableQuery(new URLSearchParams(window.location.search), policy);
+    const read = () => readTableQuery(window.location.search, policy);
     const sync = () => {
       if (window.location.pathname !== pathname) return;
       const next = read();

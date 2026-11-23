@@ -127,23 +127,39 @@ export function tableQueryKey(query: TableQuery<string, TableFilters>): string {
   ]);
 }
 
+type TableKey = (typeof keys)[number];
+const ownedKeys = new Set<string>(keys);
+const decodeForm = (value: string) => decodeURIComponent(value.replaceAll('+', ' '));
+
+/** Read the raw location search; URLSearchParams has already lost malformed encoding information. */
 export function readTableQuery<S extends string, F extends TableFilters>(
-  input: URLSearchParams,
+  input: string,
   policy: TablePolicy<S, F>
 ): { query: TableQuery<S, F>; invalid: boolean } {
   let invalid = false;
-  const oversized = input.toString().length > 8192;
-  const get = (key: (typeof keys)[number]): string | undefined => {
-    const values = input.getAll(key);
-    if (
-      values.length > 1 ||
-      (values.length === 1 && (oversized || values[0]?.includes('\uFFFD')))
-    ) {
-      invalid = true;
-      return undefined;
+  const values = new Map<TableKey, string | undefined>();
+  // Only owned parameters spend the decoding budget. Do not decode unrelated host values.
+  for (const [, name = '', value = ''] of input
+    .replace(/^\?/, '')
+    .matchAll(/([^&=]*)(?:=([^&]*))?(?:&|$)/g)) {
+    if (!name || name.length > 24) continue;
+    let key: TableKey;
+    try {
+      const decoded = decodeForm(name);
+      if (!ownedKeys.has(decoded)) continue;
+      key = decoded as TableKey;
+    } catch {
+      continue;
     }
-    return values[0];
-  };
+    try {
+      if (values.has(key) || value.length > 8192) throw new URIError();
+      values.set(key, decodeForm(value));
+    } catch {
+      values.set(key, undefined);
+      invalid = true;
+    }
+  }
+  const get = (key: TableKey) => values.get(key);
   const number = (key: 'page' | 'per_page', max: number, fallback: number) => {
     const value = get(key);
     if (value === undefined) return fallback;

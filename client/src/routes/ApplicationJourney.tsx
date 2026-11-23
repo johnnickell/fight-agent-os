@@ -125,10 +125,13 @@ export function ApplicationView({
       credential.status !== 'logout' &&
       credential.signOutUnconfirmed === undefined
     ) {
+      const atPath = window.location.pathname === pathname;
+      const search = atPath ? window.location.search : '';
+      // Project only bounded directory options before handing the target to the intent owner.
       const target =
-        route.destination !== 'users' && window.location.pathname === pathname
-          ? pathname + window.location.search + window.location.hash
-          : pathname;
+        typeof route.intendedRoute === 'function'
+          ? `${pathname}?${route.intendedRoute(search)}`
+          : pathname + search + (atPath ? window.location.hash : '');
       session.intent.capture(target);
     }
     if (window.location.pathname !== pathname) return;

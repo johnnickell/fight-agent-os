@@ -13,11 +13,11 @@ import { useTableLocation } from '../components/useTableLocation.js';
 import { readUsers, useAccountLinks } from '../features/auth/AccountLinks.js';
 import { evaluateAccess } from '../features/authority/evaluateAccess.js';
 import { useAuthority } from '../features/authority/useAuthority.js';
+import { usersTablePolicy as policy } from '../features/users/usersTablePolicy.js';
 import UserDetail from './UserDetail.js';
 
 import type { CatalogOrdering } from '../api/ApiClient.js';
 import type { TableColumn, TableData } from '../components/DataTable.js';
-import type { TablePolicy } from '../components/tableQuery.js';
 import type { AuthorityCache, AuthorityScope } from '../features/authority/AuthorityCache.js';
 import type {
   DirectoryUser,
@@ -25,11 +25,6 @@ import type {
 } from '../features/users/UserDirectoryService.js';
 
 type Sort = CatalogOrdering['sort'];
-const policy: TablePolicy<Sort, Record<string, never>> = {
-  sorts: ['ID', 'Created'],
-  defaultSort: 'Created',
-  emptyFilters: {}
-};
 const loading: TableData<DirectoryUser> = { kind: 'loading' };
 
 /** Owns directory navigation and reads under the current verified principal. */

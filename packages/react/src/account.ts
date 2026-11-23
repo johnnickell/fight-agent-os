@@ -40,6 +40,7 @@ export * from './features/invitations/InvitationService.js';
 export * from './features/sessions/OwnedSessionsService.js';
 export * from './features/sessions/RevokeSessionConfirmation.js';
 export * from './features/users/UserDirectoryService.js';
+export { usersTablePolicy } from './features/users/usersTablePolicy.js';
 export * from './features/validation/PublicSchema.js';
 export * from './features/validation/PublicSchemaService.js';
 export * from './features/validation/usePublicForm.js';

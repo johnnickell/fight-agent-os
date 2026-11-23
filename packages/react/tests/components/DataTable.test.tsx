@@ -108,6 +108,7 @@ function Books({
       filterControls={CityFilter}
       columns={[{ key: 'title', sort: 'Title', label: 'Title', cell: (book) => book.title }]}
     >
+      {location.notice && <p role="status">Invalid table options were reset.</p>}
       <TableSearch />
       <TablePagination />
       <TablePageSize />
@@ -154,6 +155,38 @@ describe('stateful tables', () => {
     expect(changed).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['%GG', '', true],
+    ['%ED%A0%80', '', true],
+    ['%EF%BF%BD', '\uFFFD', false],
+    ['%E9%9B%AA+%2B', '雪 +', false]
+  ])('restores or rejects raw search %s before the query runs', (encoded, value, invalid) => {
+    window.history.replaceState(null, '', `/books?%73earch=${encoded}`);
+    const read = vi.fn(findBooks);
+    render(<Books read={read} changed={vi.fn()} />);
+    expect(read).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ search: value }),
+      expect.anything()
+    );
+    expect(screen.queryByText('Invalid table options were reset.') !== null).toBe(invalid);
+    expect(new URLSearchParams(window.location.search).get('search')).toBe(value || null);
+  });
+
+  it('round-trips page and search with a large unrelated host value', () => {
+    const input = new URLSearchParams({ host: 'x'.repeat(8193) });
+    const expected: Query = {
+      page: 2,
+      perPage: 1,
+      sort: 'Title',
+      order: 'desc',
+      search: '\uFFFD',
+      filters: {}
+    };
+    const written = writeTableQuery(input, expected);
+    expect(written.get('host')).toBe(input.get('host'));
+    expect(readTableQuery(written.toString(), policy)).toEqual({ query: expected, invalid: false });
+  });
+
   it('commits typed filters and page size as normalized transitions', async () => {
     window.history.replaceState(null, '', '/books?page=2&per_page=1');
     const changed = vi.fn<(query: Query, reason: TableChange) => void>();
@@ -161,7 +194,7 @@ describe('stateful tables', () => {
     expect(await screen.findByText('Snow')).toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Filter cities' }));
     expect(await screen.findByText('Rain')).toBeVisible();
-    const { query } = readTableQuery(new URLSearchParams(window.location.search), policy);
+    const { query } = readTableQuery(window.location.search, policy);
     expect(query.filters).toEqual({ cities: ['Montréal', 'São Paulo'] });
     expect(query.page).toBe(1);
     await userEvent.selectOptions(screen.getByLabelText('Rows per page'), '10');
@@ -169,13 +202,28 @@ describe('stateful tables', () => {
     expect(changed.mock.calls.map(([, reason]) => reason)).toEqual(['filters', 'perPage']);
   });
 
-  it('normalizes malformed known parameters while preserving host values', () => {
-    const input = new URLSearchParams(
-      'page=2&page=3&per_page=101&sort=Other&order=down&search=%FF&filters=bad=&host=other&host=also'
+  it('drops malformed filter JSON and oversized owned values without losing usable options', () => {
+    const { invalid, query } = readTableQuery(
+      `?pa%ge=3&page=2&filters=ew&search=${'x'.repeat(8193)}`,
+      policy
     );
+    expect(invalid).toBe(true);
+    expect(query).toEqual({
+      page: 2,
+      perPage: 25,
+      sort: 'Title',
+      order: 'asc',
+      search: '',
+      filters: {}
+    });
+  });
+
+  it('normalizes malformed known parameters while preserving host values', () => {
+    const input =
+      'page=2&page=3&per_page=101&sort=Other&order=down&search=%FF&filters=bad=&host=other&host=also';
     const { invalid, query } = readTableQuery(input, policy);
     expect(invalid).toBe(true);
-    expect(writeTableQuery(input, query).toString()).toBe(
+    expect(writeTableQuery(new URLSearchParams(input), query).toString()).toBe(
       'host=other&host=also&page=1&per_page=25&sort=Title&order=asc'
     );
   });

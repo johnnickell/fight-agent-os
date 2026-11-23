@@ -1,3 +1,6 @@
+import { usersTablePolicy } from '@fight/react/account';
+import { readTableQuery, writeTableQuery } from '@fight/react/controls';
+
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
 import type { ResolveAccountLink } from '@fight/react/account';
 import type { PresentationIconName } from '@fight/react/controls';
@@ -122,7 +125,11 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: permission('READ_USERS'),
     destination: 'users',
     group: 'Administration',
-    intendedRoute: {},
+    intendedRoute: (search) =>
+      writeTableQuery(
+        new URLSearchParams(),
+        readTableQuery(search, usersTablePolicy).query
+      ).toString(),
     availability: 'Read the installation-wide user directory and current role assignments.'
   },
   {
