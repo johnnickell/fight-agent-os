@@ -192,9 +192,10 @@ configuration, publishing a port or touching development data. Retire only that 
 /absolute/selected/checkout`, then `./bin/browser-smoke setup --ca /absolute/existing/public/rootCA.pem`;
 this selects only their real gateway's isolated FPM supplier. Their journeys retain the existing external front
 door and verified shared ingress. Exact setup, capable OpenSSL selection, safe direct qualification and cleanup
-are in [browser smoke](BROWSER_SMOKE.md). Acceptance never creates/edits/reloads gateways. Native CI explicitly
-prepares its direct production Nginx envelope, native FPM, disposable localhost CA/leaf and pinned catcher first;
-it is not workstation/shared-ingress evidence. Neither mode enrolls global trust.
+are in [browser smoke](BROWSER_SMOKE.md). Local smoke uses only its explicitly prepared gateway. Native CI
+uses pinned runner-native Nginx and Mailpit, native FPM, and a disposable localhost CA/leaf. The same PHP
+setup command supports a focused smoke run without the full gate; it owns its native processes and cleans up
+after the command returns. Neither mode enrolls global trust.
 
 The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied

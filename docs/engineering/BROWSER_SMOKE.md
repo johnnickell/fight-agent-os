@@ -3,6 +3,7 @@
 `./bin/browser-smoke [all|fragment|reload|tabs|revocation|theme]` executes five deliberately narrow
 platform contracts. `./bin/build` runs the same PHP-owned phase once, after the existing catalog phases.
 There is no test retry, quarantine, screenshot baseline or general E2E expansion.
+See the [runtime-flow diagram and source traces](browser-smoke/README.md) for the native and local worktree routes.
 
 ## Explicit prerequisites and isolation
 
@@ -10,9 +11,9 @@ Prepare the selected checkout normally using [local tooling](LOCAL_TOOLING.md). 
 the matching digest-pinned PHP FPM binary, OpenSSL and NSS `certutil`; rebuild/start it explicitly after this
 change. Locked client dependencies,
 checked production assets and validation exports must already exist. `./bin/build` produces the assets once
-through the shared client pass before smoke; for direct smoke, run `./bin/client check` first. Smoke reads
-`var/client/check/production/`; it does not publish or rebuild the application's live assets. No acceptance
-command installs tools, updates locks, writes planning or starts Docker services.
+through the client pass before smoke; for focused smoke, run `./bin/client check` first if the checked output
+is missing or stale. Smoke reads `var/client/check/production/`; it does not rebuild assets or run PHPUnit.
+No smoke command installs tools, updates locks, writes planning or starts Docker services.
 
 The existing Playwright **1.61.0** lock selects two exact browser suppliers. The digest-pinned local image
 supplies Chromium **149.0.7827.0**, revision **1228**, and the container runner still requires that exact version.
@@ -26,10 +27,18 @@ Node **24.22.1** / npm **11.19.1** install receipt. Local execution remains cont
 image; native CI retains its existing explicit locked browser provisioning.
 On Ubuntu 24.04, CI explicitly enables `ppa:ondrej/php` and installs PHP 8.5 CLI/FPM plus the PostgreSQL,
 mbstring and XML packages together before `setup-php` configures extensions/coverage. A cached CLI install alone
-does not make `php8.5-fpm` available to apt. CI then prepares the production direct Nginx configuration, a
-disposable localhost TLS leaf/CA and the same digest-pinned Nginx/Mailpit before acceptance; the gate never
-operates Docker. Native CI is a direct Nginx/FPM envelope, not a claim of the workstation's shared ingress
-or default trust.
+does not make `php8.5-fpm` available to apt. CI verifies the SHA-256 digests of the native Nginx and Mailpit
+downloads and extracts them without installing or starting system services. The PHP setup command starts only
+its own loopback Nginx and Mailpit processes, with a disposable localhost TLS leaf/CA and catcher database.
+The job records each guarded PostgreSQL resource after creating it. It drops only the resources it created,
+even after partial setup or a failed listener check. No containers may be running. This is not a claim
+about workstation shared ingress or default trust.
+
+On that prepared runner, use `php scripts/browser_smoke_setup.php native php scripts/browser_smoke.php all`
+for a focused run against existing checked assets. `php scripts/browser_smoke_setup.php native php scripts/build.php`
+keeps the existing full gate, which runs smoke once after the client checks. These are alternative invocations,
+not two smoke steps in the same gate. Native setup requires `nginx`, `mailpit`, `php-fpm8.5`, OpenSSL and NSS;
+set `FIGHT_BROWSER_SMOKE_MIME_TYPES` to the absolute path from the pinned Nginx package when needed.
 
 The phase holds the backend coverage database lock, verifies the configured AND connected guarded test
 database, resets/migrates it before **each** scenario, and resets it again in `finally`. It never reads the
@@ -61,9 +70,13 @@ verification, e.g. `FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openss
 
 The reserved `<compose-project>-browser-https` container carries native project/service labels and exact mounts.
 An existing container is refused rather than replaced; `setup --remove-direct` checks ownership before stopping
-and removing only that fixture and its prepared direct metadata/configuration/public CA. Main `bin/down` also
-removes the project-labeled orphan, without deleting persistent data. After interrupted preparation, inspect
-that exact container and use the same scoped removal before preparing again; do not overwrite unknown state.
+and removing only that fixture and its verified direct configuration, metadata, and public CA. Removal uses
+an already-built CLI image in a disposable container; it does not need the `web` service running or Composer
+installed. Unrecognized files and containers are preserved. Main `bin/down` also removes the project-labeled
+orphan without deleting persistent data. After interrupted preparation, inspect that exact container and use
+the same scoped removal before preparing again; do not overwrite unknown state. Direct setup publishes the
+public CA and its digests together in one file. If publication fails, the exact configuration and any owned
+container can be removed without a CA file or a working `web` service.
 Do not run teardown or startup beneath a gate. A stale removed/recreated gateway requires fresh explicit setup.
 
 For safe direct-topology qualification inside an already selected worktree, `setup --direct --ca PUBLIC_CA
@@ -151,9 +164,14 @@ retention remains subject to TASK-00064's narrow S64-HISTORY-01 amendment, not a
 promise. Passing byte scans describe only the observed disposable profile, not forensic certification.
 
 Normal success/failure closes profiles/FPM, empties the owned mailbox, resets the guarded schema and removes
-per-run keys, NSS stores and runtime scratch under `var/browser-smoke/run-*`. The prepared public CA and gateway
+per-run keys, NSS stores and runtime scratch under `var/browser-smoke/run-*`. To qualify cleanup separately
+from the gate, run just `fragment` with `PLAYWRIGHT_BROWSERS_PATH` set to a nonexistent directory (pass it
+with `docker compose exec -e` for local tooling). Require a nonzero exit at `browser-launch`, then inspect the
+cleanup fields in the summary and the owned services. This exercises cleanup after seeding without editing
+checked assets or running another PHP suite. The prepared public CA and gateway
 metadata are not secret test keys; they remain for subsequent invocations until owned task runtime teardown.
-Native CI additionally removes its entire prepared envelope/CA/leaf/catcher in an always-run setup cleanup step.
+Native setup stops its owned Nginx and Mailpit and removes the envelope, CA, leaf and catcher database on
+normal return or bounded failure. The workflow checks for leftover listeners and files even if the gate failed.
 Abrupt engine loss/SIGKILL cannot guarantee cleanup: preserve the failed result,
 inspect native processes and exact task state before retry. No prior success substitutes for interrupted evidence.
 
