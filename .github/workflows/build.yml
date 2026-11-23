@@ -45,7 +45,7 @@ jobs:
           dpkg-deb --extract nginx.deb nginx
           tar -xzf mailpit.tar.gz mailpit
           "$tools/nginx/usr/sbin/nginx" -v
-          "$tools/mailpit" version
+          "$tools/mailpit" version --no-release-check
           printf '%s\n%s\n' "$tools" "$tools/nginx/usr/sbin" >> "$GITHUB_PATH"
           printf 'FIGHT_BROWSER_SMOKE_MIME_TYPES=%s\n' "$tools/nginx/etc/nginx/mime.types" >> "$GITHUB_ENV"
       - uses: ./.github/actions/native-php
