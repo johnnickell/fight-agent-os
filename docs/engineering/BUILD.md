@@ -233,7 +233,7 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
 3. PHP syntax/namespace checks, locked Fight Common PHPCS, PHPStan level 7, Deptrac and Rector dry-run.
 4. OpenAPI and public-validation artifact freshness through their owning PHP scripts.
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
-   migrations, **one unfiltered coverage-enabled PHPUnit execution**, coverage policy, guarded test-schema cleanup.
+   migrations, one PHPUnit invocation per suite, Unit-only coverage policy, guarded test-schema cleanup.
 6. Installed frontend lock/runtime validation and versions.
 7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
    zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
@@ -251,8 +251,8 @@ pass's inspected bundle and manifest without invoking the build again.
 For Pi changes, run the separate [Harness and subagent engine checks](../../harness/pi/README.md#verification-and-packaging).
 The application gate and its hosted setup do not run or provision those suites.
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).
-No percentage-only frontend threshold is invented. Backend Domain/Application line coverage requires 100%; Adapter
-coverage remains a practical target with counted gaps, not a hidden exclusion baseline or a claimed 100% result.
+No percentage-only frontend threshold is invented. Backend coverage requires all owned unit-testable lines
+(including Adapter behavior) to be covered by Unit tests. The other suites have no coverage quotas.
 Canonical and focused PHPStan use an explicit `512M` PHP memory allowance for cold-cache analysis; the web
 container retains its `2 GiB` memory ceiling. Analysis level, paths and exclusions are unchanged.
 

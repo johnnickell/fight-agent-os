@@ -7,6 +7,7 @@ namespace Tests\Unit\Http;
 use App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Auth\ChangePasswordAction;
 use App\Adapter\Http\Action\Api\V1\Auth\CompletePasswordResetAction;
+use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Action\Api\V1\Auth\RequestPasswordResetAction;
 use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Adapter\Http\Api\Failure\PublicFailureProjector;
@@ -127,6 +128,52 @@ final class PasswordActionsTest extends TestCase
         self::assertSame('__Secure-agent_os_refresh='.self::REFRESH.$scope, $cookies[0]);
         self::assertStringStartsWith('__Secure-agent_os_csrf=', $cookies[1]);
         self::assertStringEndsWith($scope, $cookies[1]);
+    }
+
+    /**
+     * Passes unmodified password bytes and remembered-session intent through login
+     */
+    public function testLoginReturnsRememberedSessionWithoutRefreshInJson(): void
+    {
+        $clock = new AccessClock();
+        $user = $this->user($clock);
+        $users = $this->createMock(UserRepository::class);
+        $users->expects(self::once())->method('getByEmail')->with($user->getEmail())->willReturn($user);
+        $users->expects(self::once())->method('replaceAuthenticationAuthorityAndAddRefreshSession')->with(
+            $user,
+            self::isInstanceOf(User::class),
+            self::isInstanceOf(RefreshSession::class)
+        )->willReturn(true);
+        $throttle = $this->createMock(LoginThrottle::class);
+        $throttle->expects(self::once())->method('allows')->with($user->getEmail())->willReturn(true);
+        $validator = $this->createMock(PasswordValidator::class);
+        $validator->expects(self::once())->method('validate')->with(self::CURRENT, $this->hash()->toString())
+            ->willReturn(true);
+        $presentation = $this->createMock(SessionPresentation::class);
+        $presentation->expects(self::once())->method('capture');
+        $action = new LoginAction(
+            $this->authentication(
+                $clock,
+                $users,
+                $this->createStub(ActivationGrantRepository::class),
+                $this->transaction(),
+                $this->createStub(PasswordHasher::class),
+                $throttle,
+                $validator
+            ),
+            new SessionResponder($this->responses(), new BrowserSessionCookies($clock)),
+            new CaptureSessionPresentation($presentation)
+        );
+        $request = $this->request($user->getId())->withAttribute(JsonBody::class, [
+            'email' => $user->getEmail()->toString(), 'password' => self::CURRENT, 'remember' => true
+        ]);
+
+        $response = $action->handle($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('fixture-access-token', (string) $response->getBody());
+        self::assertStringNotContainsString(self::REFRESH, (string) $response->getBody());
+        self::assertStringEndsWith('; Expires=Wed, 28 Oct 2026 12:00:00 GMT', $response->getHeader('Set-Cookie')[0]);
     }
 
     /**
@@ -367,27 +414,49 @@ final class PasswordActionsTest extends TestCase
         PasswordHasher $hasher,
         SessionPresentation $presentation
     ): ActivateInvitationAction {
+        return new ActivateInvitationAction(
+            $this->policy(),
+            $this->authentication(
+                $clock,
+                $users,
+                $grants,
+                $tx,
+                $hasher,
+                $this->createStub(LoginThrottle::class),
+                $this->createStub(PasswordValidator::class)
+            ),
+            new SessionResponder($this->responses(), new BrowserSessionCookies($clock)),
+            new CaptureSessionPresentation($presentation)
+        );
+    }
+
+    /**
+     * Runs the package authentication owner over isolated dependencies
+     */
+    private function authentication(
+        AccessClock $clock,
+        UserRepository $users,
+        ActivationGrantRepository $grants,
+        TransactionalUnitOfWork $tx,
+        PasswordHasher $hasher,
+        LoginThrottle $throttle,
+        PasswordValidator $validator
+    ): UserAuthentication {
         $credentials = $this->createStub(RefreshCredentialGenerator::class);
         $credentials->method('generate')->willReturn(RefreshCredential::fromString(self::REFRESH));
-        $authentication = new UserAuthentication(
+
+        return new UserAuthentication(
             $users,
             $grants,
             $tx,
             $clock,
-            $this->createStub(LoginThrottle::class),
+            $throttle,
             $credentials,
             $hasher,
-            $this->createStub(PasswordValidator::class),
+            $validator,
             $this->issuer(),
             $this->hash(),
             $this->createStub(EventDispatcher::class)
-        );
-
-        return new ActivateInvitationAction(
-            $this->policy(),
-            $authentication,
-            new SessionResponder($this->responses(), new BrowserSessionCookies($clock)),
-            new CaptureSessionPresentation($presentation)
         );
     }
 

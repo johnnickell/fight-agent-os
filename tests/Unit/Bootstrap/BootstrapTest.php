@@ -273,7 +273,7 @@ final class BootstrapTest extends TestCase
             if ($failure === 'preview') {
                 return null;
             }
-            $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
+            $policy = (new \Tests\Support\InstallationCatalogFixture())->load();
 
             return new ManagedPolicyPlan(
                 array_map(
@@ -343,7 +343,7 @@ final class BootstrapTest extends TestCase
             $queries,
             $users,
             $progress,
-            new \App\Adapter\Authorization\JsonManagedPolicy(),
+            new \Tests\Support\InstallationCatalogFixture(),
             $transactionalUnitOfWork,
             $membershipEvidenceRepository
         );

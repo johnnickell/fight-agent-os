@@ -26,5 +26,5 @@ jobs:
           name: php-pass-backend
           include-hidden-files: true
           path: |
-            .runs/build/reports/backend/*.json
-            .runs/build/reports/backend/junit.xml
+            .runs/build/reports/backend/unit-coverage.json
+            .runs/build/reports/backend/junit-*.xml

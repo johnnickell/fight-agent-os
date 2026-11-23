@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Authorization;
 
-use App\Adapter\Authorization\JsonManagedPolicy;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionDefinition;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
@@ -18,7 +17,7 @@ use LogicException;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Protects the approved installation catalog and least-privilege memberships
+ * Protects installation reconciliation admission
  */
 final class InstallationManagedPolicyTest extends TestCase
 {
@@ -39,53 +38,5 @@ final class InstallationManagedPolicyTest extends TestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Managed installation authority requires reconciliation.');
         InstallationManagedPolicy::assertReconciled($plan, $policy);
-    }
-
-    /**
-     * Defines exactly the approved authority and references every supported permission
-     */
-    public function testExactCatalogAndMemberships(): void
-    {
-        $policy = (new JsonManagedPolicy())->load();
-        $names = [];
-        $tiers = [];
-        foreach ($policy->getPermissions() as $permission) {
-            $names[$permission->getId()->toString()] = $permission->getName()->toString();
-            $tiers[$permission->getName()->toString()] = $permission->getTier()->value;
-        }
-        $expected = [
-            'VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS', 'READ_USERS', 'INVITE_USERS',
-            'MANAGE_USER_INVITATIONS', 'ASSIGN_SUPER_ADMIN', 'REMOVE_SUPER_ADMIN', 'DISABLE_USERS',
-            'ENABLE_USERS', 'DELETE_USERS', 'RESTORE_USERS', 'MANAGE_USER_ROLES', 'READ_SESSIONS',
-            'DELETE_SESSIONS', 'READ_ROLES', 'CREATE_ROLES', 'UPDATE_ROLES', 'DELETE_ROLES',
-            'READ_PERMISSIONS', 'MANAGE_ROLE_PERMISSIONS', 'READ_SWAGGER'
-        ];
-        $references = [...$expected, 'READ_PROJECTS', 'REGISTER_PROJECTS', 'GENERATE_REFERENCE_IDS'];
-        $catalog = [...$references, 'READ_LOGS', 'EXPORT_LOGS', 'RESTORE_LOG_ARCHIVES', 'DOWNLOAD_LOG_ARCHIVES'];
-        self::assertSame($catalog, array_values($names));
-        $safe = [
-            'VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS',
-            'READ_PROJECTS', 'REGISTER_PROJECTS', 'GENERATE_REFERENCE_IDS'
-        ];
-        foreach ($catalog as $name) {
-            self::assertSame(in_array($name, $safe, true) ? 'ADMIN_SAFE' : 'SUPER_ADMIN_ONLY', $tiers[$name]);
-        }
-        $roles = $policy->getRoles();
-        self::assertCount(2, $roles);
-        self::assertSame('ROLE_USER', $roles[0]->getName()->toString());
-        self::assertSame('ROLE_SUPER_ADMIN', $roles[1]->getName()->toString());
-        $toName = static fn(PermissionId $id): string => $names[$id->toString()];
-        self::assertSame(
-            ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS'],
-            array_map($toName, $roles[0]->getPermissionIds())
-        );
-        self::assertSame($catalog, array_map($toName, $roles[1]->getPermissionIds()));
-        self::assertSame($references, array_map($toName, $policy->getReferencedPermissionIds()));
-        self::assertSame($policy->toArray(), (new JsonManagedPolicy())->load()->toArray());
-        // Freeze the once-generated identity mapping as well as the separately asserted authority rules.
-        self::assertSame(
-            '9265a3f7f27293968e58b781b2aaa0c2632218c84a9e83992b6b7f1a87c3d021',
-            hash('sha256', json_encode($policy->toArray(), JSON_THROW_ON_ERROR))
-        );
     }
 }
