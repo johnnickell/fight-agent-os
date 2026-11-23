@@ -202,7 +202,7 @@ describe('complete route guard', () => {
       );
       expect(screen.getByText('Sign in required')).toBeVisible();
       await act(() => cache.beginAuthentication().acceptCredentials());
-      expect(intent.consume()).toBe(location ?? '/reports');
+      expect(intent.consume()).toEqual({ target: location ?? '/reports', invalid: false });
       await act(() => cache.signal('logout'));
       await act(() => cache.beginAuthentication().acceptCredentials());
       expect(intent.consume()).toBeNull();
