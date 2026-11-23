@@ -1,6 +1,6 @@
-import { ApiClient } from '@/api/ApiClient';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { InvitationService } from '@/features/invitations/InvitationService';
+import { AuthorityCache } from '@fight/react/account';
+import { InvitationService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 export function invitationTarget(overrides: Record<string, unknown> = {}) {
   const userId = crypto.randomUUID();
@@ -63,7 +63,7 @@ export function invitationDependencies(
     })
   );
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       fetch: async (url, init) => {
         const response = await fetch(url, init);

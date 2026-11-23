@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
+import { InvitationPage } from '@fight/react/account';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import InvitationPage from '@/pages/InvitationPage';
 
 import {
   invitationDependencies,

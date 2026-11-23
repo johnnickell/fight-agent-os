@@ -1,12 +1,12 @@
-import { ApiClient } from '@/api/ApiClient';
-import { CsrfProofService } from '@/features/auth/CsrfProofService';
-import { ResetRequestService } from '@/features/auth/ResetRequestService';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { CsrfProofService } from '@fight/react/account';
+import { ResetRequestService } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 import { jsonResponse } from './activationFixtures';
 import { loginSchemaSource } from './loginFixtures';
 
-import type { ApiTransport } from '@/api/ApiClient';
+import type { ApiTransport } from '@fight/react/account';
 
 export const resetSchemaSource = {
   ...loginSchemaSource,
@@ -20,7 +20,7 @@ export function resetDependencies(
 ) {
   const calls: string[] = [];
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       fetch: (url, init) => {
         calls.push(url);

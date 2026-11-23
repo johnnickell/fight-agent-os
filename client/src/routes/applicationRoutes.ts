@@ -1,5 +1,6 @@
-import type { PresentationIconName } from '@/components/PresentationIcon';
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
+import type { ResolveAccountLink } from '@fight/react/account';
+import type { PresentationIconName } from '@fight/react/controls';
 
 export type ApplicationRoute = RegisteredRoute &
   Readonly<{
@@ -157,6 +158,24 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
       'Choose a pending user in Users to inspect current invitation status. Recovery additionally requires MANAGE_USER_INVITATIONS.'
   }
 ];
+
+const accountPaths = {
+  home: '/',
+  account: '/account',
+  signIn: '/login',
+  requestReset: '/reset-password',
+  users: '/admin/users',
+  invite: '/admin/invite',
+  inviteElevated: '/admin/invite-super-admin'
+};
+
+export const resolveAccountLink: ResolveAccountLink = (destination, userId) => {
+  if (destination === 'invitation' && userId === undefined) return null;
+  const route = matchApplicationRoute(
+    destination === 'invitation' ? `/admin/invitations/${userId}` : accountPaths[destination]
+  );
+  return route ? { href: route.pathname, requirements: route.requirements } : null;
+};
 
 export function matchApplicationRoute(pathname: string): ApplicationRoute | undefined {
   const target =

@@ -152,13 +152,18 @@ export async function inspectArtifacts(metafile, files, styleInputs) {
     if (path.startsWith('node_modules/')) {
       const packagePath = path.match(/^node_modules\/(?:@[^/]+\/)?[^/]+/)?.[0];
       const dependency = lock.packages[packagePath];
-      if (!dependency || dependency.dev || dependency.link)
+      const shared =
+        packagePath === 'node_modules/@fight/react' &&
+        dependency?.resolved === '../packages/react' &&
+        /^node_modules\/@fight\/react\/dist\/[\w./-]+\.(?:js|css)$/.test(path);
+      if (!shared && (!dependency || dependency.dev || dependency.link))
         reject(`non-runtime dependency ${path}`);
     } else if (!fonts.has(path) && !/^(?:src\/.*\.(?:ts|tsx)|styles\/.*\.scss)$/.test(path)) {
       reject(`input outside production roots ${path}`);
     }
     // An upstream literal exception cannot be reused by authored code to embed a URL or identity.
-    if (/^src\/.*\.(?:ts|tsx)$/.test(path)) inspectJavascript(await readFile(path, 'utf8'), path);
+    if (/^(?:src\/.*\.(?:ts|tsx)|node_modules\/@fight\/react\/dist\/.*\.js)$/.test(path))
+      inspectJavascript(await readFile(path, 'utf8'), path);
   }
   for (const input of Object.values(metafile.inputs)) {
     if (input.imports.some((entry) => entry.external && !embeddedImport(entry)))

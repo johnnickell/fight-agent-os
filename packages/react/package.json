@@ -1,0 +1,29 @@
+{
+  "name": "@fight/react",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./account": {
+      "types": "./dist/account.d.ts",
+      "import": "./dist/account.js"
+    },
+    "./controls": {
+      "types": "./dist/controls.d.ts",
+      "import": "./dist/controls.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8",
+    "formik": "2.4.9",
+    "react-bootstrap": "2.10.10"
+  }
+}

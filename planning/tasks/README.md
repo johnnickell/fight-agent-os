@@ -598,7 +598,7 @@
 | [TASK-00593](00593-TASK.md) | Resolve configured comparison scope safely | done | [TICKET-00140](../tickets/00140-TICKET.md) |
 | [TASK-00594](00594-TASK.md) | Compare related projects and deliver polished reports | done | [TICKET-00141](../tickets/00141-TICKET.md) |
 | [TASK-00595](00595-TASK.md) | Simplify browser cookie handling and Workspace tests | done | — |
-| [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | ready-for-agent | [TICKET-00142](../tickets/00142-TICKET.md) |
+| [TASK-00596](00596-TASK.md) | Run white-label account journeys from the shared React package | done | [TICKET-00142](../tickets/00142-TICKET.md) |
 | [TASK-00597](00597-TASK.md) | Browse Users through shared stateful tables and URL-backed queries | ready-for-agent | [TICKET-00143](../tickets/00143-TICKET.md) |
 | [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | ready-for-agent | [TICKET-00144](../tickets/00144-TICKET.md) |
 | [TASK-00599](00599-TASK.md) | Publish the first shared frontend package and scoped skeleton handoff | needs-info | [TICKET-00144](../tickets/00144-TICKET.md) |
@@ -616,7 +616,7 @@
 | [TASK-00611](00611-TASK.md) | Run the existing PHP checks as a standalone pass | done | [TICKET-00146](../tickets/00146-TICKET.md) |
 | [TASK-00612](00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | done | [TICKET-00146](../tickets/00146-TICKET.md) |
 | [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | done | [TICKET-00147](../tickets/00147-TICKET.md) |
-| [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | ready-for-agent | [TICKET-00147](../tickets/00147-TICKET.md) |
+| [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | done | [TICKET-00147](../tickets/00147-TICKET.md) |
 | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00617](00617-TASK.md) | Port the Build stage launcher and monitor to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |

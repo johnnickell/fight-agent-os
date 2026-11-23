@@ -1,0 +1,22 @@
+// The interactive frame sets its own theme; apply Harbor overrides on that scope too.
+:is([data-brand='harbor'], [data-brand='harbor'] .catalog-frame-preview[data-bs-theme]) {
+  --ui-background: #edf8f4;
+  --ui-rail: #e4f2ed;
+  --ui-action: #126657;
+  --ui-action-hover: #0d4d42;
+  --ui-font: system-ui, sans-serif;
+  --ui-heading-font: Georgia, serif;
+  --ui-radius: 0.65rem;
+  --ui-space: 0.28rem;
+  --bs-primary-rgb: 18, 102, 87;
+  --bs-link-hover-color-rgb: 13, 77, 66;
+}
+
+:is([data-brand='harbor'], [data-brand='harbor'] .catalog-frame-preview)[data-bs-theme='dark'] {
+  --ui-background: #142220;
+  --ui-rail: #1b302b;
+  --ui-action: #a2e4d0;
+  --ui-action-hover: #c2f5e6;
+  --bs-primary-rgb: 162, 228, 208;
+  --bs-link-hover-color-rgb: 194, 245, 230;
+}

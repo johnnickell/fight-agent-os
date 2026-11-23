@@ -1,18 +1,18 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
+import { AuthorityCache } from '@fight/react/account';
+import { useAuthority } from '@fight/react/account';
+import { AuthorityStatus } from '@fight/react/controls';
+import { ThemePreferenceStore } from '@fight/react/controls';
+import { ShellLayout } from '@fight/react/controls';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { AuthorityStatus } from '@/components/AuthorityStatus';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { useAuthority } from '@/features/authority/useAuthority';
-import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import { ShellLayout } from '@/layouts/ShellLayout';
 import DashboardPage from '@/pages/DashboardPage';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 
-import type { ThemePreference } from '@/features/theme/ThemePreference';
+import type { ThemePreference } from '@fight/react/controls';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 const allPermissions = [

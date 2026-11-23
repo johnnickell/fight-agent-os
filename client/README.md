@@ -13,6 +13,13 @@ Explicit server routes and assets take precedence. API/MCP namespace misses, mis
 locations and unsupported server methods do not receive a successful shell. `/mcp/v1` is reserved only;
 MCP is not implemented. There are no legacy redirects or aliases, including `/dashboard`.
 
+## Shared React package
+
+Agent OS gets the existing human account screens, shared controls, styles, and sole session/principal owner from
+[`@fight/react`](../packages/react/README.md). This application retains route and outlet admission, navigation,
+Dashboard and Swagger. The backend still authorizes every protected operation. Shared behavior tests and stories
+live with the package; host route and real backend checks stay here.
+
 ## Toolchain and commands
 
 Use Docker and the repository wrapper; no host Node installation or global frontend tools are required:
@@ -21,6 +28,8 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/client setup        # Explicit pinned image pull and clean npm ci; requires registry access
 ./bin/client storybook-setup # Explicit pinned browser image build for the selected checkout
 ./bin/client versions
+./bin/client package-build # Compile the shared package for focused checks
+./bin/client pack-check    # Qualify the npm artifact in a separate consumer fixture
 ./bin/client check        # Complete focused frontend checks; no network or dependency changes
 ./bin/client build        # Publish inspected assets for the local application (check uses scratch output)
 ./bin/client coverage     # Scoped client unit/component coverage under .runs/build/reports/client/coverage/
@@ -43,7 +52,8 @@ Setup records hashes of the manifest, committed lock and npm's installed lock in
 a missing/stale receipt fails with an explicit setup instruction, never an automatic install. The receipt
 is local provenance/staleness evidence, not a tamper-proof integrity check of every installed byte.
 Acceptance containers mount source and dependencies read-only. Vite and Storybook caches live outside
-`node_modules`. Fix/install/lock commands are the explicit source or dependency write exceptions.
+`node_modules`. Package compilation writes `var/client/shared-react/`, mounted at the library's ignored
+`dist/` path. Fix/install/lock commands are the explicit source or dependency write exceptions.
 
 Selected from registry engine/peer contracts. The October security candidate passes focused typing with
 the catalog-only declaration-check exception described below; see the
@@ -141,9 +151,10 @@ roles or administrative metadata. Screenshot evidence is not visual approval or 
   before catalog-only styles. Existing inline `type` specifiers remain type-only. ESLint also enforces
   application-root paths for static imports/re-exports and literal dynamic/mock targets; TypeScript and
   builds validate actual resolution. Do not construct application module paths dynamically.
-- Supported TypeScript type-aware recommendations run against the production/test and separate catalog
-  projects, including `.storybook/` configuration. React Hooks, JSX accessibility, strict optional/index
-  checks and zero-warning lint remain enabled. JavaScript tooling retains ordinary semantic/import lint.
+- The same lint command applies type-aware rules, React Hooks, JSX accessibility and import sorting to the host
+  and the real package source, tests and stories. The package uses relative imports for its own modules, not
+  the host's `@/` alias. `tsconfig.lint.json` lets ESLint resolve types from the one client installation without
+  linting through the installed package link. The application and catalog keep their separate type checks.
 - Prettier owns formatting: 100 columns, single quotes, semicolons, two spaces, no tabs or trailing commas.
   `./bin/client lint` and `format-check` do not fix or install anything; use `lint-fix` and `format` explicitly,
   review their diff and run affected focused checks before the final complete gate. Dependency changes use
@@ -187,17 +198,14 @@ still needs its own interaction qualification, especially overlay focus and tran
 
 ### Styles and customization boundary
 
-`styles/app.scss` is the shared public source entrypoint for production and Storybook. Its thin ordered
-`@use` composition loads Bootstrap, semantic tokens, document/layout styles, component styles, then focus
-and reduced-motion rules. `settings/_bootstrap.scss` is the **only** legacy Sass-import boundary; Bootstrap
-5.3.8 requires it. Deliberate future static Bootstrap variable overrides belong before that import. This
-migration retains upstream defaults and does not load precompiled Bootstrap CSS or its JavaScript plugins.
+Production and Storybook import `@fight/react/styles.css` before the host's `styles/app.scss`. The package
+compiles Bootstrap 5.3.8, semantic tokens, layout and component defaults, then focus and reduced-motion rules.
+Its `settings/_bootstrap.scss` is the only legacy Sass import. Host styles add the local fonts and product
+screens; no consumer Sass recompilation or Bootstrap JavaScript plugin is required.
 
-Owned dependencies use namespaced Sass modules. Keep styles in small responsibility-named partials under
-`styles/base/`, `styles/layouts/` and `styles/components/`; add page styles only for a real page. Shared spinner
-sizing/spacing has one owner because both busy buttons and loading states use the library Spinner; Bootstrap
-owns its border shape and animation through supported `--bs-spinner-*` custom properties. Reusable styling uses shallow
-class selectors; the stable singleton `#app` belongs to the shell layout. Never couple styling to React-generated
+Keep styles in small responsibility-named partials under the owning package or host `styles/` tree. Shared
+spinner sizing has one owner; Bootstrap provides its border and animation through `--bs-spinner-*` properties.
+Reusable styling uses shallow class selectors; the shared public shell owns `.ui-shell`. Never couple styling to React-generated
 accessibility IDs or add broad ID-descendant overrides. Reduced-motion `!important` rules are deliberate
 accessibility overrides. `.storybook/preview.scss` contains catalog-only layout and is loaded **after** the
 production foundation; it never enters the production bundle. No CSS Modules, mixin framework or empty taxonomy

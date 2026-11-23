@@ -1,14 +1,14 @@
-import { ApiClient } from '@/api/ApiClient';
-import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { MemoryAccessToken } from '@fight/react/account';
+import { PasswordChangeService } from '@fight/react/account';
+import { AuthorityCache } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 import { activationSchemaSource, jsonResponse } from './activationFixtures';
 import { principal } from './authorityFixtures';
 
-import type { ApiTransport } from '@/api/ApiClient';
-import type { PrincipalLoader } from '@/features/authority/AuthorityCache';
+import type { ApiTransport } from '@fight/react/account';
+import type { PrincipalLoader } from '@fight/react/account';
 
 export const passwordChangeSchema = {
   ...activationSchemaSource,
@@ -52,7 +52,7 @@ export function passwordChangeDependencies(
   tokens.accept('synthetic.access.signature', performance.now());
   const authority = new AuthorityCache(loadPrincipal);
   const api = new ApiClient(
-    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+    { schemaVersion: 2, apiBasePath: '/api/v1' },
     {
       accessTokens: tokens,
       fetch: (url, init) =>

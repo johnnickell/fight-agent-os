@@ -9,6 +9,7 @@
 /node_modules/
 /harness/pi/node_modules/
 /client/node_modules/
+/packages/react/dist/
 /client/dist/
 /public/build/
 .DS_Store

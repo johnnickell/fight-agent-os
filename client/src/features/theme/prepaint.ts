@@ -1,11 +1,7 @@
-import {
-  captureActivation,
-  discardActivationFragment,
-  takeActivation
-} from '@/features/auth/ActivationCredential';
-import { clearLoginLocation } from '@/features/auth/LoginLocation';
-import { captureReset, discardResetFragment, takeReset } from '@/features/auth/ResetCredential';
-import { browserThemeEnvironment, prepaintTheme } from '@/features/theme/ThemePreference';
+import { captureActivation, discardActivationFragment, takeActivation } from '@fight/react/account';
+import { clearLoginLocation } from '@fight/react/account';
+import { captureReset, discardResetFragment, takeReset } from '@fight/react/account';
+import { browserThemeEnvironment, prepaintTheme } from '@fight/react/controls';
 
 if (!captureReset(window, window.location, window.history))
   window.location.replace('/reset-password/complete');

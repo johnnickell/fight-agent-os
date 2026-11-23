@@ -1,5 +1,5 @@
-import { ApiClient } from '@/api/ApiClient';
-import { InvitationIssuanceService } from '@/features/invitations/InvitationIssuanceService';
+import { InvitationIssuanceService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 
 import { configuration, jsonResponse } from './apiFixtures';
 import { authenticatedCache, principal } from './authorityFixtures';

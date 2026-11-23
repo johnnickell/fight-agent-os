@@ -53,8 +53,9 @@ The fingerprint covers sorted project paths, file bytes, permissions and symlink
 contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `.runs/`, `var/`, IDE state,
 `.DS_Store`, legacy `client/dist/` and `public/build/`, and the two legacy frontend cache directories
 (`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. Current OpenAPI and validation exports
-under `var/` are fingerprinted explicitly. The checked client bundle used by smoke is validated as output,
-not as an input to the gate. Missing inputs, unreadable or special files and cyclic links
+under `var/` are fingerprinted explicitly. The checked client bundle used by smoke and `packages/react/dist/`
+are validated as outputs, not as gate inputs. The package output exclusion also applies through the local npm
+link. Missing inputs, unreadable or special files and cyclic links
 disable caching; they are never silently omitted. Ordinary Markdown records under `planning/` are excluded from
 the application fingerprint: tasks, tickets, epics, progress notes and generated planning views do not rebuild
 unchanged application inputs. Every invocation first runs a fresh, read-only planning check, including cache hits.
@@ -91,9 +92,11 @@ warning while the normal full gate still runs. Identity becoming unknown or chan
 that run. `--force` follows the same receipt, stability and publication rules.
 
 A hit verifies the original successful receipt, every recorded phase exit, retained snapshots/logs, the complete
-report tree and required generated application/check outputs. Missing or altered evidence causes a miss. It
-rechecks inputs before returning success, prints the original receipt and keeps its warnings in the original
-logs. It reports fresh planning validation separately from reused application phases, leaves the original receipt
+report tree and required generated application/check outputs. This includes both the packed-consumer report and
+the actual compiled React package at `packages/react/dist/`, the same path the build uses in native and
+container runs. Missing or altered evidence causes a miss. The gate rechecks inputs before returning success,
+prints the original receipt and keeps its warnings in the original logs. It reports fresh planning validation
+separately from reused application phases, leaves the original receipt
 unchanged and grants no independent review, QA, merge or deployment verdict. Removing
 `.runs/build` or `var/build.json` simply loses reuse. Keep the selected original evidence while it is consumed.
 CI does not restore local success pointers or share acceptance between environments.
@@ -189,9 +192,10 @@ configuration, publishing a port or touching development data. Retire only that 
 /absolute/selected/checkout`, then `./bin/browser-smoke setup --ca /absolute/existing/public/rootCA.pem`;
 this selects only their real gateway's isolated FPM supplier. Their journeys retain the existing external front
 door and verified shared ingress. Exact setup, capable OpenSSL selection, safe direct qualification and cleanup
-are in [browser smoke](BROWSER_SMOKE.md). Acceptance never creates/edits/reloads gateways. Native CI explicitly
-prepares its direct production Nginx envelope, native FPM, disposable localhost CA/leaf and pinned catcher first;
-it is not workstation/shared-ingress evidence. Neither mode enrolls global trust.
+are in [browser smoke](BROWSER_SMOKE.md). Local smoke uses only its explicitly prepared gateway. Native CI
+uses pinned runner-native Nginx and Mailpit, native FPM, and a disposable localhost CA/leaf. The same PHP
+setup command supports a focused smoke run without the full gate; it owns its native processes and cleans up
+after the command returns. Neither mode enrolls global trust.
 
 The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
@@ -233,7 +237,7 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
 4. OpenAPI and public-validation artifact freshness through their owning PHP scripts.
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
    migrations, one PHPUnit invocation per suite, Unit-only coverage policy, guarded test-schema cleanup.
-6. Installed frontend lock/runtime validation and versions.
+6. Installed frontend lock/runtime validation and versions, then shared React compilation and packed-consumer checks.
 7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
    zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
 8. Scratch production build/artifact inspection, static Storybook build/artifact inspection, Chromium story/a11y

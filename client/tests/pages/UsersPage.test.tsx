@@ -1,19 +1,18 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { apiFailure } from '@/api/ApiResult';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import UsersPage from '@/pages/UsersPage';
-import { matchApplicationRoute } from '@/routes/applicationRoutes';
-
+import { apiFailure } from '@fight/react/account';
+import { AuthorityCache } from '@fight/react/account';
+import { UsersPage } from '@fight/react/account';
 import {
   directoryDependencies,
   directoryPage,
   directoryPermissions,
   directoryResponse,
   directoryUser
-} from '../userDirectoryFixtures';
+} from '@fixtures/userDirectoryFixtures';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { matchApplicationRoute } from '@/routes/applicationRoutes';
 
 const caches: AuthorityCache[] = [];
 afterEach(() => {
@@ -62,12 +61,30 @@ describe('UsersPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Back to user list' }));
     expect(await screen.findByRole('table')).toBeVisible();
     expect(screen.getByRole('status')).toHaveTextContent('Page 2 of 2');
+    await userEvent.click(screen.getByRole('button', { name: 'Previous page' }));
+    await screen.findByText('person0@example.test');
     expect(fetch.mock.calls.map(([url]) => url)).toEqual([
       '/api/v1/users?page=1&per_page=25',
       '/api/v1/users?page=2&per_page=25',
       `/api/v1/users/${user.user_id}`,
-      '/api/v1/users?page=2&per_page=25'
+      '/api/v1/users?page=2&per_page=25',
+      '/api/v1/users?page=1&per_page=25'
     ]);
+  });
+
+  it('replaces stale rows after the directory service signals invalidation', async () => {
+    const before = directoryUser({ email: 'before@example.test' });
+    const after = directoryUser({ email: 'after@example.test' });
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(directoryResponse(directoryPage([before])))
+      .mockResolvedValueOnce(directoryResponse(directoryPage([after])));
+    const { service } = await mount(fetch, ['READ_USERS']);
+    expect(await screen.findByText(before.email)).toBeVisible();
+    act(() => service.invalidate());
+    expect(screen.queryByText(before.email)).not.toBeInTheDocument();
+    expect(await screen.findByText(after.email)).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it('clears a selected detail on logout without replaying a directory read', async () => {

@@ -1,17 +1,17 @@
+import { apiFailure } from '@fight/react/account';
+import { MemoryAccessToken } from '@fight/react/account';
+import { PasswordChangeService } from '@fight/react/account';
+import { SessionCoordinator } from '@fight/react/account';
+import { AuthorityCache } from '@fight/react/account';
+import { InvitationIssuanceService } from '@fight/react/account';
+import { InvitationService } from '@fight/react/account';
+import { OwnedSessionsService } from '@fight/react/account';
+import { UserDirectoryService } from '@fight/react/account';
+import { PublicSchemaService } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 import { vi } from 'vitest';
 
-import { ApiClient } from '@/api/ApiClient';
-import { apiFailure } from '@/api/ApiResult';
-import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
-import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { InvitationIssuanceService } from '@/features/invitations/InvitationIssuanceService';
-import { InvitationService } from '@/features/invitations/InvitationService';
-import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
-import { UserDirectoryService } from '@/features/users/UserDirectoryService';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
 
@@ -20,8 +20,8 @@ import { principal } from './authorityFixtures';
 import { loginSchemaSource } from './loginFixtures';
 import { passwordChangeSchema } from './passwordChangeFixtures';
 
-import type { ApiResult } from '@/api/ApiResult';
-import type { PrincipalLoader } from '@/features/authority/AuthorityCache';
+import type { ApiResult } from '@fight/react/account';
+import type { PrincipalLoader } from '@fight/react/account';
 
 export function applicationSession(
   permissions: string[] = ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS'],
@@ -53,7 +53,7 @@ export function applicationSession(
   });
   const schemas = new PublicSchemaService(
     new ApiClient(
-      { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+      { schemaVersion: 2, apiBasePath: '/api/v1' },
       {
         fetch: (url) =>
           Promise.resolve(
@@ -74,9 +74,7 @@ export function applicationSession(
     passwordChange: new PasswordChangeService(
       new ApiClient({
         schemaVersion: 2,
-        apiBasePath: '/api/v1',
-        appDebug: false,
-        swaggerAvailable: false
+        apiBasePath: '/api/v1'
       }),
       authority,
       coordinator.terminal
@@ -84,9 +82,7 @@ export function applicationSession(
     invitationIssuance: new InvitationIssuanceService(
       new ApiClient({
         schemaVersion: 2,
-        apiBasePath: '/api/v1',
-        appDebug: false,
-        swaggerAvailable: false
+        apiBasePath: '/api/v1'
       }),
       authority,
       { invalidated: () => {}, accessRejected: () => {}, authorityRejected: () => {} }
@@ -94,9 +90,7 @@ export function applicationSession(
     invitations: new InvitationService(
       new ApiClient({
         schemaVersion: 2,
-        apiBasePath: '/api/v1',
-        appDebug: false,
-        swaggerAvailable: false
+        apiBasePath: '/api/v1'
       }),
       authority,
       {
@@ -108,25 +102,19 @@ export function applicationSession(
     users: new UserDirectoryService(
       new ApiClient({
         schemaVersion: 2,
-        apiBasePath: '/api/v1',
-        appDebug: false,
-        swaggerAvailable: false
+        apiBasePath: '/api/v1'
       })
     ),
     sessions: new OwnedSessionsService(
       new ApiClient({
         schemaVersion: 2,
-        apiBasePath: '/api/v1',
-        appDebug: false,
-        swaggerAvailable: false
+        apiBasePath: '/api/v1'
       })
     ),
     swagger: new SwaggerService(
       new ApiClient({
         schemaVersion: 2,
-        apiBasePath: '/api/v1',
-        appDebug: false,
-        swaggerAvailable: false
+        apiBasePath: '/api/v1'
       }),
       authority,
       false,

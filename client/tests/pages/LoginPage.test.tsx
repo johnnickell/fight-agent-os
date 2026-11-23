@@ -1,19 +1,18 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-
-import { LoginPage } from '@/pages/LoginPage';
-import { IntendedRoute } from '@/routes/IntendedRoute';
-
-import { jsonResponse } from '../activationFixtures';
-import { deferred } from '../apiFixtures';
-import { authenticatedCache, reportRoute } from '../authorityFixtures';
+import { LoginPage } from '@fight/react/account';
+import { jsonResponse } from '@fixtures/activationFixtures';
+import { deferred } from '@fixtures/apiFixtures';
+import { authenticatedCache, reportRoute } from '@fixtures/authorityFixtures';
 import {
   loginDependencies,
   loginRejected,
   loginSchemaSource,
   loginSuccess
-} from '../loginFixtures';
+} from '@fixtures/loginFixtures';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+
+import { IntendedRoute } from '@/routes/IntendedRoute';
 
 function fill() {
   fireEvent.change(screen.getByLabelText('Email (required)'), {
@@ -43,6 +42,21 @@ const structuralFailure = () =>
   );
 
 describe('schema-backed production login', () => {
+  it('distinguishes failed request protection from invalid credentials without retrying automatically', async () => {
+    const post = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ status: 'fail', data: { message: 'Permission denied.' } }, 403, false)
+      );
+    const deps = loginDependencies(post);
+    render(<LoginPage {...deps} />);
+    await screen.findByLabelText('Password (required)');
+    fill();
+    submit();
+    expect(await screen.findByText(/renew request protection/)).toBeVisible();
+    expect(post).toHaveBeenCalledOnce();
+    deps.service.dispose();
+  });
   it('provides managers, paste, labels, first-invalid focus and no password-setting gate', async () => {
     const post = vi.fn().mockResolvedValue(loginRejected());
     const deps = loginDependencies(post);

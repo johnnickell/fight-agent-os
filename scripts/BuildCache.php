@@ -16,7 +16,7 @@ final class BuildCache
 {
     private const array EXCLUSIONS = [
         '.git', '.runs', 'var', '.idea', '.DS_Store', 'client/dist', 'public/build', 'planning',
-        'client/node_modules/.cache', 'client/node_modules/.vite-temp'
+        'client/node_modules/.cache', 'client/node_modules/.vite-temp', 'packages/react/dist'
     ];
 
     /**
@@ -240,7 +240,11 @@ final class BuildCache
                 throw new RuntimeException('Missing or cyclic symlink target.');
             }
             $record['link'] = readlink($path);
-            $record['target'] = $this->tree($real, false, $parents);
+            // The local npm link reaches the same owned package tree. Omit its generated dist
+            // here as well as at the source path; the gate compiles and packs it from source.
+            $sharedPackage = $project && $path === $this->root.'/client/node_modules/@fight/react' &&
+                $real === $this->root.'/packages/react';
+            $record['target'] = $this->tree($real, $sharedPackage, $parents);
         } elseif ($kind === 0100000) {
             $record['bytes'] = hash_file('sha256', $path);
             if ($record['bytes'] === false) {
@@ -276,7 +280,7 @@ final class BuildCache
     }
 
     /**
-     * Validates retained logs, snapshots, reports and required generated application inputs
+     * Validates retained logs, snapshots, reports and required generated artifacts
      */
     private function evidence(string $run): string
     {
@@ -291,7 +295,8 @@ final class BuildCache
         }
         foreach (
             [
-            '.runs/build/reports', 'var/openapi', 'var/validations', 'var/client/check/production'
+                '.runs/build/reports', 'var/openapi', 'var/validations',
+                'var/client/check/production', 'packages/react/dist'
             ] as $path
         ) {
             $files[$path] = $this->tree($this->root.'/'.$path);

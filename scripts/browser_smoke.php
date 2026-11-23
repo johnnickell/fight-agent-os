@@ -96,6 +96,7 @@ $results = [];
 $server = null;
 $exit = 1;
 $reset = false;
+$schemaClean = false;
 $mailOwned = false;
 $mailClean = false;
 $started = microtime(true);
@@ -115,15 +116,37 @@ $runCommand = static function (array $command) use ($root, $environment): void {
  */
 $mailbox = static function (bool $delete = false): int {
     $host = getenv('BROWSER_SMOKE_NATIVE') === '1' ? '127.0.0.1' : 'mailcatcher';
-    $context = stream_context_create(['http' => ['method' => $delete ? 'DELETE' : 'GET', 'timeout' => 5]]);
+    $context = stream_context_create(['http' => [
+        'method' => $delete ? 'DELETE' : 'GET', 'timeout' => 5, 'follow_location' => 0
+    ]]);
     $body = file_get_contents('http://'.$host.':8025/api/v1/messages', false, $context);
     if ($body === false) {
         throw new RuntimeException('Disposable catcher unavailable.');
     }
 
-    return $delete ? 0 : (int) json_decode($body, true, flags: JSON_THROW_ON_ERROR)['total'];
+    if ($delete) {
+        return 0;
+    }
+    $total = json_decode($body, true, flags: JSON_THROW_ON_ERROR)['total'] ?? null;
+    if (!is_int($total) || $total < 0) {
+        throw new RuntimeException('Unknown disposable catcher response.');
+    }
+
+    return $total;
 };
 try {
+    $caPath = $root.'/var/browser-smoke/rootCA.pem';
+    if (array_key_exists('public_ca', $envelope)) {
+        $publicCa = $envelope['public_ca'];
+        $caPath = $run.'/rootCA.pem';
+        if (
+            $envelope['topology'] !== 'private-direct-nginx' || !is_string($publicCa)
+            || str_contains($publicCa, 'PRIVATE KEY') || hash('sha256', $publicCa) !== $envelope['ca_sha256']
+            || file_put_contents($caPath, $publicCa) !== strlen($publicCa)
+        ) {
+            throw new RuntimeException('Invalid bundled browser trust.');
+        }
+    }
     if ($mailbox() !== 0) {
         throw new RuntimeException('Disposable catcher is not empty; preserve unknown mail.');
     }
@@ -135,8 +158,8 @@ try {
     }
     $runCommand(['php', 'scripts/guarded_test_database.php', 'check']);
     foreach ($selected === 'all' ? $scenarios : [$selected] as $scenario) {
-        $runCommand(['php', 'scripts/guarded_test_database.php', 'reset']);
         $reset = true;
+        $runCommand(['php', 'scripts/guarded_test_database.php', 'reset']);
         $runCommand(['php', 'vendor/bin/doctrine-migrations', 'migrate', '--no-interaction']);
         $runCommand(['php', 'scripts/browser_smoke_seed.php']);
         // Real FPM executes public/index.php behind the separately prepared owning
@@ -146,7 +169,8 @@ try {
         file_put_contents($run.'/correlation.php', "<?php header('X-Browser-Smoke-Fixture: ".$fixtureId."');");
         file_put_contents($run.'/fpm.conf', implode("\n", [
             '[global]', 'error_log = /dev/null', 'daemonize = no',
-            '[smoke]', 'user = root', 'group = root', 'listen = 0.0.0.0:19087',
+            '[smoke]', 'user = root', 'group = root',
+            'listen = '.(getenv('BROWSER_SMOKE_NATIVE') === '1' ? '127.0.0.1' : '0.0.0.0').':19087',
             'pm = static', 'pm.max_children = 2', 'clear_env = no', 'catch_workers_output = no',
             'php_admin_flag[log_errors] = off', 'php_admin_flag[display_errors] = off',
             'php_admin_value[auto_prepend_file] = '.$run.'/correlation.php', ''
@@ -162,7 +186,7 @@ try {
             'BROWSER_SMOKE_FIXTURE'      => $fixtureId,
             'BROWSER_SMOKE_ORIGIN'       => $origin,
             'BROWSER_SMOKE_ADDRESS'      => $envelope['address'],
-            'BROWSER_SMOKE_CA'           => $root.'/var/browser-smoke/rootCA.pem',
+            'BROWSER_SMOKE_CA'           => $caPath,
             'TZ'                         => 'UTC',
             'npm_config_offline'         => 'true',
             'npm_config_update_notifier' => 'false',
@@ -203,6 +227,7 @@ try {
     if ($reset) {
         try {
             $runCommand(['php', 'scripts/guarded_test_database.php', 'reset']);
+            $schemaClean = true;
         } catch (Throwable) {
             fwrite(STDERR, "Browser test schema cleanup incomplete.\n");
             $exit = 1;
@@ -247,6 +272,7 @@ try {
         'seconds'          => round(microtime(true) - $started, 3),
         'scratch_removed'  => !file_exists($run),
         'mailbox_empty'    => $mailClean,
+        'schema_reset'     => $schemaClean,
         'topology'         => $envelope['topology'],
         'origin'           => $origin,
         'gateway_sha256'   => $envelope['gateway_sha256'],

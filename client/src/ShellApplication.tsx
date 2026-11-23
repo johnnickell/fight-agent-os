@@ -1,20 +1,25 @@
 import { useLayoutEffect } from 'react';
 
-import { SystemErrorBoundary } from '@/components/SystemErrorBoundary';
-import { ActivationJourney } from '@/features/auth/ActivationJourney';
-import { ResetCompletionJourney } from '@/features/auth/ResetCompletionJourney';
-import { ResetRequestJourney } from '@/features/auth/ResetRequestJourney';
-import { ShellLayout } from '@/layouts/ShellLayout';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { SystemErrorPage } from '@/pages/SystemErrorPage';
+import { AccountLinksProvider } from '@fight/react/account';
+import { ActivationJourney } from '@fight/react/account';
+import { ResetCompletionJourney } from '@fight/react/account';
+import { ResetRequestJourney } from '@fight/react/account';
+import { BrandProvider } from '@fight/react/controls';
+import { SystemErrorBoundary } from '@fight/react/controls';
+import { ShellLayout } from '@fight/react/controls';
+import { NotFoundPage } from '@fight/react/controls';
+import { SystemErrorPage } from '@fight/react/controls';
+
+import { agentOsBrand } from '@/agentOsBrand';
 import { ApplicationJourney } from '@/routes/ApplicationJourney';
-import { matchApplicationRoute } from '@/routes/applicationRoutes';
+import { matchApplicationRoute, resolveAccountLink } from '@/routes/applicationRoutes';
 import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 import { decodeRuntimeConfiguration } from '@/runtimeConfiguration';
 
-import type { ActivationCredential } from '@/features/auth/ActivationCredential';
-import type { ResetCredential } from '@/features/auth/ResetCredential';
-import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
+import type { ActivationCredential } from '@fight/react/account';
+import type { ResetCredential } from '@fight/react/account';
+import type { Brand } from '@fight/react/controls';
+import type { ThemePreferenceStore } from '@fight/react/controls';
 
 export function ShellApplication({
   configuration,
@@ -22,6 +27,7 @@ export function ShellApplication({
   theme,
   activation,
   reset,
+  brand = agentOsBrand,
   onAuthenticated
 }: {
   configuration: string | null;
@@ -29,6 +35,7 @@ export function ShellApplication({
   theme?: ThemePreferenceStore;
   activation?: ActivationCredential;
   reset?: ResetCredential;
+  brand?: Brand;
   onAuthenticated?: () => void;
 }) {
   const runtime = decodeRuntimeConfiguration(configuration);
@@ -57,38 +64,42 @@ export function ShellApplication({
     }
   }, [validRuntime, inertPublic, pathname, route, reset]);
   return (
-    <SystemErrorBoundary
-      fallback={
-        <ShellLayout theme={theme} publicJourney>
-          <SystemErrorPage />
-        </ShellLayout>
-      }
-    >
-      {runtime === null ? (
-        <ShellLayout theme={theme}>
-          <SystemErrorPage />
-        </ShellLayout>
-      ) : inertPublic ? (
-        <ShellLayout theme={theme} publicJourney>
-          {route?.destination === 'activation' ? (
-            <ActivationJourney runtime={runtime} credential={activation} />
-          ) : route?.destination === 'reset-completion' ? (
-            <ResetCompletionJourney runtime={runtime} credential={reset} />
-          ) : route?.destination === 'recovery' ? (
-            <ResetRequestJourney runtime={runtime} />
+    <BrandProvider brand={brand}>
+      <AccountLinksProvider resolve={resolveAccountLink}>
+        <SystemErrorBoundary
+          fallback={
+            <ShellLayout theme={theme} publicJourney>
+              <SystemErrorPage />
+            </ShellLayout>
+          }
+        >
+          {runtime === null ? (
+            <ShellLayout theme={theme}>
+              <SystemErrorPage />
+            </ShellLayout>
+          ) : inertPublic ? (
+            <ShellLayout theme={theme} publicJourney>
+              {route?.destination === 'activation' ? (
+                <ActivationJourney runtime={runtime} credential={activation} />
+              ) : route?.destination === 'reset-completion' ? (
+                <ResetCompletionJourney runtime={runtime} credential={reset} />
+              ) : route?.destination === 'recovery' ? (
+                <ResetRequestJourney runtime={runtime} />
+              ) : (
+                <NotFoundPage />
+              )}
+            </ShellLayout>
           ) : (
-            <NotFoundPage />
+            <ApplicationJourney
+              runtime={runtime}
+              pathname={pathname}
+              navigate={navigate}
+              theme={theme}
+              onAuthenticated={onAuthenticated}
+            />
           )}
-        </ShellLayout>
-      ) : (
-        <ApplicationJourney
-          runtime={runtime}
-          pathname={pathname}
-          navigate={navigate}
-          theme={theme}
-          onAuthenticated={onAuthenticated}
-        />
-      )}
-    </SystemErrorBoundary>
+        </SystemErrorBoundary>
+      </AccountLinksProvider>
+    </BrandProvider>
   );
 }

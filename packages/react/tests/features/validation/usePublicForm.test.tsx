@@ -1,0 +1,356 @@
+import { apiFailure, type ApiResult } from '@fight/react/account';
+import { decodeResponse } from '@fight/react/account';
+import { decodePublicSchema } from '@fight/react/account';
+import { usePublicForm } from '@fight/react/account';
+import { TextField } from '@fight/react/controls';
+import { deferred } from '@fixtures/apiFixtures';
+import { fixture } from '@fixtures/features/validation/fixtures';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+
+const schema = decodePublicSchema(fixture)!;
+const singleFieldSchema = decodePublicSchema({
+  ...fixture,
+  fields: { display_name: fixture.fields.display_name }
+})!;
+const initialValues = { displayName: '', confirmation: '' };
+function Example({
+  submit,
+  success = () => {},
+  activeSchema = schema
+}: {
+  submit: (values: Readonly<Record<string, string>>) => Promise<ApiResult<string>>;
+  success?: (value: string) => void;
+  activeSchema?: typeof schema | null;
+}) {
+  const form = usePublicForm({ schema: activeSchema, initialValues, submit, onSuccess: success });
+  return (
+    <form onSubmit={form.handleSubmit} noValidate>
+      {activeSchema && <TextField label="Name" {...form.field('displayName')} />}
+      {activeSchema?.fields.confirmation && (
+        <TextField label="Confirm" {...form.field('confirmation')} />
+      )}
+      {form.formError && <p role="status">{form.formError}</p>}
+      <button type="submit" disabled={form.busy}>
+        Submit
+      </button>
+      <button type="button" onClick={() => form.setFieldValue('displayName', 'Other')}>
+        Change value
+      </button>
+      <button type="button" onClick={form.reset}>
+        Reset
+      </button>
+    </form>
+  );
+}
+const rejection = (messages: readonly string[]) =>
+  apiFailure('validation', null, {
+    'body.display_name': messages
+  });
+
+describe('Formik shared error lifecycle', () => {
+  it('does not add unregistered fields to the data sent by a form', async () => {
+    const submit = vi.fn().mockResolvedValue(apiFailure('cancelled'));
+    const { result } = renderHook(() =>
+      usePublicForm({
+        schema: singleFieldSchema,
+        initialValues: { displayName: 'Valid' },
+        submit,
+        onSuccess: vi.fn()
+      })
+    );
+    act(() => result.current.setFieldValue('unexpected', 'synthetic-private-marker'));
+    expect(() => result.current.field('unexpected')).toThrow('Unregistered form field');
+    await act(async () => {
+      result.current.handleSubmit();
+      await Promise.resolve();
+    });
+    expect(submit).toHaveBeenCalledExactlyOnceWith({ displayName: 'Valid' });
+  });
+
+  it('refuses submission without a current validation schema', async () => {
+    const submit = vi.fn();
+    render(<Example submit={submit} activeSchema={null} />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Validation is unavailable');
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it('recovers after a rejected submit promise without exposing its raw error', async () => {
+    const submit = vi.fn().mockRejectedValue(new Error('synthetic-private-marker'));
+    render(<Example submit={submit} activeSchema={singleFieldSchema} />);
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Unable to complete the request. Please try again.'
+    );
+    expect(screen.queryByText('synthetic-private-marker')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  });
+  it('leaves same-form submit focus free of blur layout changes, then validates and focuses on submission', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn();
+    render(<Example submit={submit} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const button = screen.getByRole('button', { name: 'Submit' });
+    name.focus();
+    // Native focus transfer happens between pointer press and release, before click/submit.
+    act(() => button.focus());
+    expect(name).not.toHaveAttribute('aria-invalid');
+    await user.keyboard('{Enter}');
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveFocus();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it('still validates ordinary field blur, focus leaving the form and unrelated submit controls', () => {
+    render(<Example submit={vi.fn()} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const confirmation = screen.getByRole('textbox', { name: 'Confirm' });
+    name.focus();
+    act(() => confirmation.focus());
+    expect(name).toHaveAccessibleDescription('Error: Use two characters.');
+    fireEvent.change(name, { target: { value: 'Valid' } });
+    fireEvent.blur(confirmation);
+    expect(confirmation).toHaveAccessibleDescription('Error: Values must match.');
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(name).not.toHaveAttribute('aria-invalid');
+    const unrelatedForm = document.createElement('form');
+    const unrelatedSubmit = document.createElement('button');
+    unrelatedForm.append(unrelatedSubmit);
+    document.body.append(unrelatedForm);
+    try {
+      fireEvent.blur(name, { relatedTarget: unrelatedSubmit });
+      expect(name).toHaveAccessibleDescription('Error: Use two characters.');
+    } finally {
+      unrelatedForm.remove();
+    }
+  });
+
+  it('discards an obsolete non-field rejection after an edit while preserving real success', async () => {
+    const pending = deferred<ApiResult<string>>();
+    render(<Example submit={() => pending.promise} activeSchema={singleFieldSchema} />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Valid' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'Edited' }
+    });
+    await act(async () => {
+      pending.resolve(apiFailure('rate-limited'));
+      await pending.promise;
+    });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
+  });
+  it('focuses invalid input, shows current multiple messages, clears on edits and retains unrelated errors', async () => {
+    const user = userEvent.setup();
+    const submit = vi
+      .fn()
+      .mockResolvedValue(rejection(['Use two characters.', 'Provide a value.']));
+    render(<Example submit={submit} />);
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    expect(name).toHaveFocus();
+    expect(submit).not.toHaveBeenCalled();
+    await user.type(name, 'Long');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Long');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(name).toHaveAccessibleDescription(/Use two characters/));
+    expect(submit).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: 'Change value' }));
+    expect(name).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('retains an unchanged server error on locally invalid resubmission', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue(rejection(['Use two characters.']));
+    render(<Example submit={submit} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const confirm = screen.getByRole('textbox', { name: 'Confirm' });
+    await user.type(name, 'Valid');
+    await user.type(confirm, 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(name).toHaveAccessibleDescription('Error: Use two characters.'));
+    await user.clear(confirm);
+    await user.type(confirm, 'Other');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(submit).toHaveBeenCalledOnce();
+    expect(name).toHaveAccessibleDescription('Error: Use two characters.');
+    expect(confirm).toHaveAccessibleDescription('Error: Values must match.');
+    expect(name).toHaveFocus();
+  });
+
+  it('renders an approved PHP validation envelope through the shared decoder', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue(
+      decodeResponse(
+        400,
+        {
+          status: 'fail',
+          data: { fields: { 'body.display_name': ['Use two characters.', 'Invalid value.'] } }
+        },
+        () => null,
+        null
+      )
+    );
+    render(<Example submit={submit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAccessibleDescription(
+        'Error: Use two characters.'
+      )
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Please check the form');
+    expect(screen.queryByText('Invalid value.')).not.toBeInTheDocument();
+  });
+
+  it('ignores old A to B to A responses while still reporting real success', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    const success = vi.fn();
+    render(<Example submit={() => pending.promise} success={success} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Change value' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Name' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    pending.resolve(rejection(['Use two characters.']));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled());
+    expect(screen.queryByText('Use two characters.')).not.toBeInTheDocument();
+    expect(success).not.toHaveBeenCalled();
+  });
+
+  it('does not turn a wholly stale field rejection into a form-level error', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    render(<Example submit={() => pending.promise} activeSchema={singleFieldSchema} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    await user.type(name, 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.clear(name);
+    await user.type(name, 'Other');
+    const reset = screen.getByRole('button', { name: 'Reset' });
+    reset.focus();
+    await act(async () => {
+      pending.resolve(rejection(['Use two characters.']));
+      await pending.promise;
+    });
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
+    expect(name).not.toHaveAttribute('aria-invalid');
+    expect(reset).toHaveFocus();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('rejects superseded failures and reset responses without moving focus', async () => {
+    const user = userEvent.setup();
+    const earlier = deferred<ApiResult<string>>();
+    const later = deferred<ApiResult<string>>();
+    const submit = vi.fn().mockReturnValueOnce(earlier.promise).mockReturnValueOnce(later.promise);
+    render(<Example submit={submit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    // Programmatic submit while the first attempt is still outstanding.
+    fireEvent.submit(screen.getByRole('textbox', { name: 'Name' }).closest('form')!);
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(2));
+    later.resolve(rejection(['Use two characters.']));
+    await waitFor(() => expect(screen.getByText('Error: Use two characters.')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Reset' }));
+    earlier.resolve(rejection(['Use two characters.']));
+    await earlier.promise;
+    expect(screen.queryByText('Error: Use two characters.')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Name' })).not.toHaveFocus();
+  });
+
+  it('keeps independent current server errors while discarding a stale comparison error', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    render(<Example submit={() => pending.promise} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const confirm = screen.getByRole('textbox', { name: 'Confirm' });
+    await user.type(name, 'Valid');
+    await user.type(confirm, 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.clear(confirm);
+    await user.type(confirm, 'Other');
+    pending.resolve(
+      apiFailure('validation', null, {
+        'body.display_name': ['Use two characters.'],
+        'body.confirmation': ['Values must match.']
+      })
+    );
+    await waitFor(() => expect(name).toHaveAccessibleDescription('Error: Use two characters.'));
+    expect(confirm).toHaveAccessibleDescription('Error: Values must match.');
+    // The comparison error is now from the current local value, not an old server result.
+    expect(name).not.toHaveFocus();
+  });
+
+  it('does not attach unknown fields or unpublished server messages as field errors', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue(
+      apiFailure('validation', null, {
+        'body.display_name': ['server internal path /private'],
+        'body.unknown_field': ['Use two characters.']
+      })
+    );
+    render(<Example submit={submit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('Please check the form')
+    );
+    expect(screen.queryByText(/internal path/)).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Name' })).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('fences outstanding failures after schema replacement and unmount', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    const submit = vi.fn().mockReturnValue(pending.promise);
+    const { rerender, unmount } = render(<Example submit={submit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    rerender(<Example submit={submit} activeSchema={null} />);
+    pending.resolve(rejection(['Use two characters.']));
+    await pending.promise;
+    expect(screen.queryByText(/Use two characters/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    unmount();
+  });
+
+  it('discards a pending rejection after unmount', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    const submit = vi.fn().mockReturnValue(pending.promise);
+    const { unmount } = render(<Example submit={submit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    unmount();
+    pending.resolve(rejection(['Use two characters.']));
+    await pending.promise;
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('never treats an edit or reset as cancellation of an already successful server mutation', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    const success = vi.fn();
+    render(<Example submit={() => pending.promise} success={success} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Reset' }));
+    pending.resolve({ ok: true, value: 'completed', correlationId: null });
+    await waitFor(() => expect(success).toHaveBeenCalledWith('completed'));
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('');
+  });
+});

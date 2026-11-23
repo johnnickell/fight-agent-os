@@ -1,10 +1,8 @@
-import type { RuntimeConfiguration } from '@/runtimeConfiguration';
+import type { ApiConfiguration } from '@fight/react/account';
 
-export const configuration: RuntimeConfiguration = Object.freeze({
+export const configuration: ApiConfiguration = Object.freeze({
   schemaVersion: 2,
-  apiBasePath: '/api/v1',
-  appDebug: false,
-  swaggerAvailable: false
+  apiBasePath: '/api/v1'
 });
 export const correlationId = crypto.randomUUID().replaceAll('-', '');
 export const expiresAt = 2000000000;

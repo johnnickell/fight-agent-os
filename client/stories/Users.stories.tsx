@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import { UsersPage } from '@fight/react/account';
+import { Button } from '@fight/react/controls';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Button } from '@/components/Button';
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
-import UsersPage from '@/pages/UsersPage';
 import { matchApplicationRoute } from '@/routes/applicationRoutes';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 

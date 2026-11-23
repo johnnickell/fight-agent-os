@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import { AuthorityCache } from '@fight/react/account';
+import { OwnedSessionsService } from '@fight/react/account';
+import { OwnedSessionsPage } from '@fight/react/account';
+import { ApiClient } from '@fixtures/transport';
 import { expect, userEvent, within } from 'storybook/test';
-
-import { ApiClient } from '@/api/ApiClient';
-import { AuthorityCache } from '@/features/authority/AuthorityCache';
-import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
-import OwnedSessionsPage from '@/pages/OwnedSessionsPage';
 
 import { principal } from '../tests/authorityFixtures';
 import { sessionPage, sessionsResponse, sessionWire } from '../tests/sessionFixtures';
@@ -48,7 +47,7 @@ function Example({
     let committed = false;
     const service = new OwnedSessionsService(
       new ApiClient(
-        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+        { schemaVersion: 2, apiBasePath: '/api/v1' },
         {
           accessTokens: { getAccessToken: () => 'synthetic.memory.only' },
           fetch: (_url, init) => {

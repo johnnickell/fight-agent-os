@@ -1,12 +1,11 @@
 import { useState, useSyncExternalStore } from 'react';
 
+import { ThemePreferenceStore } from '@fight/react/controls';
+import { ShellLayout } from '@fight/react/controls';
+import { LoadingPage } from '@fight/react/controls';
+import { NotFoundPage } from '@fight/react/controls';
+import { SystemErrorPage } from '@fight/react/controls';
 import { expect, userEvent, within } from 'storybook/test';
-
-import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
-import { ShellLayout } from '@/layouts/ShellLayout';
-import { LoadingPage } from '@/pages/LoadingPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { SystemErrorPage } from '@/pages/SystemErrorPage';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
@@ -90,7 +89,7 @@ export const WithoutTheme: Story = {
   args: { withoutTheme: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('link', { name: 'Fight Agent OS' })).toHaveAttribute('href', '/');
+    await expect(canvas.getByRole('link', { name: 'Application' })).toHaveAttribute('href', '/');
     await expect(canvas.queryByRole('group', { name: 'Appearance' })).not.toBeInTheDocument();
     await expect(canvas.getByRole('main')).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(
