@@ -22,6 +22,17 @@ def run(*args):
     return result.stdout
 
 
+def smoke_assets(configuration):
+    live_root = 'root /app/var/client;'
+    check_root = 'rewrite ^/build/(.*)$ /production/$1 break;\n        root /app/var/client/check;'
+    if configuration.count(check_root) == 3 and live_root not in configuration:
+        return configuration
+    if configuration.count(live_root) != 3 or check_root in configuration:
+        raise ValueError('Unrecognized gateway asset routes; preserve its configuration.')
+    # Keep the production asset allowlist and headers; only change where it reads.
+    return configuration.replace(live_root, check_root)
+
+
 def direct_state(config):
     output = next(v["source"] for v in config["services"]["web"]["volumes"] if v["target"] == "/app/var")
     return Path(output) / "browser-smoke"
@@ -66,8 +77,10 @@ def prepare_direct(runtime, config, ca, cert_dir):
     configuration = configuration.replace("fastcgi_pass https_php:9000;", "fastcgi_pass web:19087;")
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     gateway = state / "direct.conf"
+    configuration = smoke_assets(configuration)
     gateway.write_text(configuration)
-    assets = next(v["source"] for v in services["https"]["volumes"] if v["target"] == "/app/var/client/build")
+    assets = state.parent / 'client/check'
+    assets.mkdir(parents=True, exist_ok=True)
     network = config["networks"]["default"]["name"]
     # Same selected project/private network, no published port, development upstream or shared ingress.
     run(runtime, "docker", "run", "--detach", "--pull", "never", "--name", name,
@@ -79,7 +92,7 @@ def prepare_direct(runtime, config, ca, cert_dir):
         "--mount", f"type=bind,source={gateway},target=/etc/nginx/conf.d/default.conf,readonly",
         "--mount", f"type=bind,source={cert_dir / 'localhost.pem'},target=/etc/nginx/certs/localhost.pem,readonly",
         "--mount", f"type=bind,source={cert_dir / 'localhost-key.pem'},target=/etc/nginx/certs/localhost-key.pem,readonly",
-        "--mount", f"type=bind,source={assets},target=/app/var/client/build,readonly",
+        "--mount", f"type=bind,source={assets},target=/app/var/client/check,readonly",
         "--entrypoint", "nginx", services["https"]["image"], "-g", "daemon off;")
     run(runtime, "docker", "exec", name, "nginx", "-t")
     container = json.loads(run(runtime, "docker", "inspect", name))[0]
@@ -127,7 +140,9 @@ def main():
         configuration = configuration.replace("SCRIPT_FILENAME /app/public/index.php", f"SCRIPT_FILENAME {ROOT}/public/index.php")
         configuration = configuration.replace("DOCUMENT_ROOT /app/public", f"DOCUMENT_ROOT {ROOT}/public")
         gateway = state / "default.conf"
+        configuration = smoke_assets(configuration)
         gateway.write_text(configuration)
+        (ROOT / 'var/client/check').mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ca, state / "rootCA.pem")
         # The CI setup step starts pinned Nginx separately, before the read-only gate.
         topology = "native-nginx"
@@ -157,9 +172,7 @@ def main():
         old, new = "fastcgi_pass https_php:9000;", "fastcgi_pass web:19087;"
         if configuration.count(old) + configuration.count(new) != 1:
             raise ValueError("Unrecognized gateway upstream; preserve its configuration.")
-        configuration = configuration.replace(old, new)
-        # Only the task gateway's FastCGI supplier changes. Every TLS, authority,
-        # header, static-asset and logging directive remains the owning envelope.
+        configuration = smoke_assets(configuration.replace(old, new))
         gateway.write_text(configuration)
         try:
             run(runtime, "docker", "compose", "exec", "-T", "https", "nginx", "-t")

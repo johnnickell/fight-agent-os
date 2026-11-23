@@ -186,6 +186,10 @@ def ingress(safe, checkout, project, isolated=True):
     # on refresh. Never expose the parent state directory (it contains task.env).
     gateway_config = state / 'gateway/default.conf'
     write_private(gateway_config, gateway(checkout, host))
+    check_assets = checkout / 'var/client/check'
+    if isolated:
+        check_assets = output_path(safe, checkout, project, check_assets)
+    check_assets.mkdir(parents=True, exist_ok=True)
     settings = {'https': {'environment': {'FIGHT_LOCAL_INGRESS': '1', 'VIRTUAL_HOST': host,
                                          'VIRTUAL_PORT': '8443', 'VIRTUAL_PROTO': 'https'},
                   'networks': ['default', 'ingress'], 'volumes': [
@@ -196,14 +200,16 @@ def ingress(safe, checkout, project, isolated=True):
                       {'type': 'bind', 'source': str(output_path(safe, checkout, project, checkout / 'var/client/build')
                                                    if isolated else checkout / 'var/client/build'),
                        'target': '/app/var/client/build', 'read_only': True,
-                       'bind': {'create_host_path': False}}]}, 'web': {}, 'mailcatcher': {}}
+                       'bind': {'create_host_path': False}},
+                      {'type': 'bind', 'source': str(check_assets), 'target': '/app/var/client/check',
+                       'read_only': True, 'bind': {'create_host_path': False}}]}, 'web': {}, 'mailcatcher': {}}
     origin = {'APP_BROWSER_ORIGIN': 'https://' + host, 'APP_ACTIVATION_ORIGIN': 'https://' + host,
               'APP_PASSWORD_RESET_ORIGIN': 'https://' + host, 'APP_AUTH_TRANSPORT': 'direct',
               'APP_AUTH_TRUSTED_PROXIES': '[]'}
     settings['web']['environment'] = origin
     settings['https_php'] = {'environment': origin}
     # Replace inherited file mounts too: a nested default.conf bind would mask
-    # the refreshed directory on main. Retain only the three gateway-owned mounts.
+    # the refreshed directory on main. Retain only gateway-owned mounts.
     config = override(settings, replace_volumes=True) + 'networks:\n  ingress: {external: true, name: fight-local-ingress}\n'
     target = state / 'ingress.yaml'
     write_private(target, config)

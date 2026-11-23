@@ -6,6 +6,42 @@ reuses a qualifying success. Use `./bin/build --force` for deliberate fresh exec
 [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) for reporting and administrative-only changes.
 A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
 
+## Standalone PHP verification
+
+`./bin/php-pass` runs the same PHP checks as the full build without installing client dependencies, starting
+an HTTPS gateway, or running browser checks. It uses the selected checkout’s running Compose `web` tooling
+service, so the host needs neither PHP nor Composer. For a fresh registered worktree, prepare it explicitly:
+
+```sh
+./bin/runtime setup
+./bin/up --worktree "$PWD" --build-only
+./bin/composer install --no-interaction --prefer-dist --no-progress
+./bin/runtime docker compose up --detach --wait web
+./bin/openapi export
+./bin/validations export
+./bin/php-pass
+```
+
+For main, use `./bin/up --build-only` instead. Starting just `web` also starts its declared PostgreSQL
+services; the pass verifies and resets only the guarded test schema. Repeat the exports when their source
+contracts change. The pass checks source stability and writes the usual backend reports under
+`.runs/build/reports/backend/`. It does not issue a full-build receipt. Replacing backend evidence can cause
+the next full build to miss its cache.
+
+Native GitHub jobs share one PHP setup action. The targeted **PHP pass qualification** workflow runs
+`php scripts/php_pass.php` on pull requests changing the pass or its setup. It uses native PHP and PostgreSQL
+with no container or client setup. It is not a replacement for **Build** or a new merge requirement. The full
+build runs the same PHP checks once and retains its Planning, frontend and browser phases.
+
+## Standalone client verification
+
+Run `./bin/client setup` and `./bin/client storybook-setup` explicitly, then `./bin/client check`.
+No application services, PostgreSQL, or backend setup are needed. On a native GitHub runner, the
+[`native-client` action](../../.github/actions/native-client/action.yml) owns the same locked tool preparation,
+and the qualification workflow invokes `npm run check` from `client/` without containers. The full build
+calls that same command once and passes `var/client/check/production/` to browser smoke. This directory
+is separate from the local application's assets in `var/client/build/`.
+
 ## Automatic build reuse
 
 `./bin/build` and native `php scripts/build.php` accept `--force`. With no option, the gate checks the latest
@@ -16,10 +52,10 @@ ignored cache pointer, not another acceptance report. Old receipts without these
 The fingerprint covers sorted project paths, file bytes, permissions and symlink targets plus their resolved
 contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `.runs/`, `var/`, IDE state,
 `.DS_Store`, legacy `client/dist/` and `public/build/`, and the two legacy frontend cache directories
-(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. The gate produces
-`packages/react/dist/`, so it excludes that directory from inputs, including through the local npm link.
-Current generated OpenAPI, validation and live client-build inputs under `var/` are fingerprinted explicitly.
-Missing inputs, unreadable or special files and cyclic links
+(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. Current OpenAPI and validation exports
+under `var/` are fingerprinted explicitly. The checked client bundle used by smoke and `packages/react/dist/`
+are validated as outputs, not as gate inputs. The package output exclusion also applies through the local npm
+link. Missing inputs, unreadable or special files and cyclic links
 disable caching; they are never silently omitted. Ordinary Markdown records under `planning/` are excluded from
 the application fingerprint: tasks, tickets, epics, progress notes and generated planning views do not rebuild
 unchanged application inputs. Every invocation first runs a fresh, read-only planning check, including cache hits.
@@ -192,13 +228,15 @@ The local host wrapper checks that `web` is running and admits storage, then del
 with `docker compose exec -T web php scripts/build.php`. Hosted CI invokes `php scripts/build.php` directly
 on the runner after explicit native setup. Both entries use the same PHP-owned phases, in order:
 
-1. Authoritative `./bin/planning-check`, without `--write`, before application cache lookup on every invocation.
+1. Authoritative `php -n scripts/planning_portfolio.php` in the build's own PHP runtime, without `--write`,
+   before application cache lookup on every invocation. The standalone host wrapper runs the same check
+   in its own prepared Docker image; build does not invoke that wrapper.
 2. On an application cache miss, Composer version and strict manifest/lock validation, with network access disabled for Composer.
 3. PHP syntax/namespace checks, locked Fight Common PHPCS, PHPStan level 7, Deptrac and Rector dry-run.
 4. OpenAPI and public-validation artifact freshness through their owning PHP scripts.
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
    migrations, **one unfiltered coverage-enabled PHPUnit execution**, coverage policy, guarded test-schema cleanup.
-6. Installed frontend lock/runtime validation and versions.
+6. Installed frontend lock/runtime validation and versions, then shared React compilation and packed-consumer checks.
 7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
    zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
 8. Scratch production build/artifact inspection, static Storybook build/artifact inspection, Chromium story/a11y
@@ -210,7 +248,8 @@ on the runner after explicit native setup. Both entries use the same PHP-owned p
    and focused source stability. Local task runs exercise the existing shared HTTPS envelope.
 10. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
-Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
+Each mandatory command executes once. Steps 6–8 are one shared `npm run check` pass; step 9 reads that
+pass's inspected bundle and manifest without invoking the build again.
 For Pi changes, run the separate [Harness and subagent engine checks](../../harness/pi/README.md#verification-and-packaging).
 The application gate and its hosted setup do not run or provision those suites.
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).
@@ -282,12 +321,14 @@ an accepted requirement makes it mandatory; a local container pass is not native
 
 ## Runner-native CI
 
-The [hosted workflow](../../.github/workflows/build.yml) installs PHP 8.5/extensions/Xdebug and Composer 2,
-selects Node and npm from `client/package.json`, and runs the existing locked installation commands.
-`node scripts/dependencies.mjs record` owns the install receipt; the gate owns its subsequent validation.
-The installed Playwright CLI provisions Chromium and its Ubuntu dependencies into a job-private browser path.
-Explicit setup builds live client assets and exports private OpenAPI/validation metadata through their owning
-JS/PHP commands. Acceptance never installs or exports.
+The [hosted workflow](../../.github/workflows/build.yml) installs PHP 8.5, its extensions and Xdebug, and
+Composer 2. Setup installs the locked PHP and client dependencies and exports private OpenAPI and validation
+metadata. The [client setup action](../../.github/actions/native-client/action.yml) selects Node and npm from
+`client/package.json`, records the installation with `node scripts/dependencies.mjs record`, and uses Playwright
+to provision Chromium in a job-private browser path and install its Ubuntu dependencies. The gate validates
+the install receipt and runs `npm run check` to build and inspect the production assets in
+`var/client/check/production/`. Browser smoke uses those assets without building them again. Setup does not
+build live client assets, and the gate does not install dependencies or export the contract metadata.
 
 Ubuntu 24.04's native PostgreSQL service supplies a dedicated non-superuser `agent_os_test` role/database over
 allowlisted loopback TCP. Only the guarded backend phase resets/migrates/cleans that test schema. Product tests

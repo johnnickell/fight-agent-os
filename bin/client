@@ -20,9 +20,11 @@ case "${1:-}" in
             echo 'Frontend installation is current; dependencies were not replaced.'
             exit 0
         fi
-        consumers=$(./bin/runtime docker compose ps --all --status running --status created \
-            --status restarting --status paused --status removing --services web composer)
-        if [ -n "$consumers" ]; then
+        project=$(./bin/runtime project-name)
+        services=$(./bin/runtime docker ps --all --filter "label=com.docker.compose.project=$project" \
+            --filter status=running --filter status=created --filter status=restarting \
+            --filter status=paused --filter status=removing --format '{{.Label "com.docker.compose.service"}}')
+        if printf '%s\n' "$services" | grep -Eq '^(web|composer)$'; then
             echo 'Frontend installation needs replacement, but this checkout has active tooling containers.' >&2
             echo 'Finish active checks and one-off web/composer commands, then run from this checkout:' >&2
             echo '  ./bin/runtime docker compose stop web' >&2
@@ -51,16 +53,11 @@ case "${1:-}" in
         image="$browser_image"
         set -- npm run "$1" ;;
     check)
-        # Separate containers share the same installed lock/runtime, not a second toolchain.
-        started=$(date +%s)
-        for step in versions package-build pack-check typecheck lint format-check coverage build-check storybook-build storybook-test storybook-capture; do
-            printf '\n== Frontend %s ==\n' "$step"
-            ./bin/client "$step"
-        done
-        printf '\nFrontend checks passed in %ss\n' "$(($(date +%s) - started))"
-        exit 0 ;;
-    format) source_mode=''; package_mode=''; set -- npm run "$1" ;;
-    lint-fix) source_mode=''; package_mode=''; set -- npm run "$1" ;;
+        image="$browser_image"
+        verify_install=no # The shared pass validates the locked installation first.
+        dist_mode=''
+        set -- npm run check ;;
+    lint-fix|format) source_mode=''; package_mode=''; set -- npm run "$1" ;;
     package-build) dist_mode=''; set -- npm run package-build ;;
     build) build_mode=''; dist_mode=''; set -- sh -c 'npm run package-build && npm run build' ;;
     pack-check|typecheck|lint|format-check|test|coverage|build-check|storybook-build) set -- npm run "$1" ;;

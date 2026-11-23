@@ -29,8 +29,11 @@ return static function (Container $container): void {
         );
     });
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
+        $smoke = getenv('APP_ENV') === 'test' && getenv('FIGHT_BROWSER_SMOKE_ASSETS') === '1';
+        $assetPath = $smoke ? '/var/client/check/production' : '/var/client/build';
+
         return new ClientShellAction(
-            new ClientAssetManifest(dirname(__DIR__, 2).'/var/client/build'),
+            new ClientAssetManifest(dirname(__DIR__, 2).$assetPath),
             $container->get(ClientShellResponder::class)
         );
     });

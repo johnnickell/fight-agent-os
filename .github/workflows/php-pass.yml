@@ -1,0 +1,30 @@
+name: PHP pass qualification
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - '.github/actions/native-php/action.yml'
+      - '.github/workflows/php-pass.yml'
+      - 'bin/php-pass'
+      - 'scripts/php_pass.php'
+      - 'scripts/PhpPass.php'
+      - 'scripts/VerificationWorkspace.php'
+
+jobs:
+  php-pass:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/native-php
+      - name: Run the standalone PHP pass
+        run: php scripts/php_pass.php
+      - name: Retain backend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-pass-backend
+          include-hidden-files: true
+          path: |
+            .runs/build/reports/backend/*.json
+            .runs/build/reports/backend/junit.xml
