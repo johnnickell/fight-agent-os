@@ -208,7 +208,7 @@ describe('authoritative frame transitions', () => {
     const owner = session(['READ_USERS']);
     const fetch = directoryFetch(owner);
     const saved = 'page=2&per_page=1&sort=ID&order=asc';
-    render(<Navigable owner={owner} destination={`/admin/users?${saved}`} />);
+    render(<Navigable owner={owner} destination={`/admin/users?host=saved&${saved}&host=kept`} />);
     expect(window.location.search).toContain('page=2');
     await act(() => owner.coordinator.restore());
     expect(await screen.findByText('Page 2 of 2. 2 results.')).toBeVisible();
@@ -230,8 +230,11 @@ describe('authoritative frame transitions', () => {
     expect(await screen.findByText('Page 2 of 2. 2 results.')).toBeVisible();
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(fetch).toHaveBeenLastCalledWith(`/api/v1/users?${saved}`, expect.anything());
+    const savedAddress = `?host=saved&host=kept&${saved}`;
+    expect(window.location.search).toBe(savedAddress);
     expect(window.history.length).toBe(entries + 1);
     fireEvent.click(screen.getByRole('button', { name: 'Open saved view' }));
+    expect(window.location.search).toBe(savedAddress);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(window.history.length).toBe(entries + 1);
   });
@@ -239,10 +242,12 @@ describe('authoritative frame transitions', () => {
   it.each([usersOptions, resetOptions])(
     'shows a notice for an invalid explicit Users destination from %s',
     async (initial) => {
-      window.history.replaceState(null, '', `/admin/users?${initial}`);
+      window.history.replaceState(null, '', `/admin/users?host=kept&${initial}`);
       const owner = session(['READ_USERS']);
       const fetch = directoryFetch(owner);
-      render(<Navigable owner={owner} invalidDestination={`/admin/users?${invalidOptions}`} />);
+      render(
+        <Navigable owner={owner} invalidDestination={`/admin/users?${invalidOptions}&host=kept`} />
+      );
       await act(() => owner.coordinator.restore());
       expect(await screen.findByRole('table')).toBeVisible();
       expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
@@ -253,7 +258,7 @@ describe('authoritative frame transitions', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Open invalid saved view' }));
         expect(await screen.findByText(resetNotice)).toBeVisible();
         const changesQuery = initial !== resetOptions;
-        expect(window.location.search).toBe(`?${resetOptions}`);
+        expect(window.location.search).toBe(`?host=kept&${resetOptions}`);
         expect(window.history.length).toBe(entries + Number(changesQuery));
         expect(replace).not.toHaveBeenCalled();
         expect(window.history.state).toBeNull();

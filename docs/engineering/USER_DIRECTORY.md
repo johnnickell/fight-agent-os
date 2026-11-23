@@ -94,8 +94,9 @@ Existing implementation at `b7d458ec98e76b26d9710d8d54552635704a23bd`.
 | Request the current authorized page and publish only while current | [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) fences by query, abort signal and live scope. [`UserDirectoryService.load`](../../packages/react/src/features/users/UserDirectoryService.ts) uses the same-origin API client. [`ListUsersAction.handle`](../../src/Adapter/Http/Action/Api/V1/Users/ListUsersAction.php) declares `READ_USERS` and returns a safe page. |
 | Fetch the ordered page, then read its total separately | The Action dispatches through the query bus to the [registered directory handler](../../config/application/user_directory.php), which [calls package user and role reads](../../src/Application/AccessControl/User/QueryHandler/ListDirectoryUsersHandler.php). [`PostgresUserRepository::getAll`](../../src/Adapter/Persistence/AccessControl/User/PostgresUserRepository.php) applies `CatalogOrdering` before offset and limit, fetches the page, then runs the separate `COUNT(*)` query. |
 
-The host also restores explicit Users destinations through `useTableLocation`. Before navigation or sign-in,
-it keeps only the canonical Users options and a yes/no reset flag. A malformed destination that resolves to the
+The host also restores explicit Users destinations through `useTableLocation`. It normalizes the Users options
+and preserves unrelated destination parameters in the address, not in list requests. The sign-in intent instead
+keeps only the canonical Users options and a yes/no reset flag. A malformed destination that resolves to the
 current address shows the notice without adding a history entry or making another list request.
 
 This source view compresses bus and mapping steps. It omits programmatic navigation, sign-in, detail,

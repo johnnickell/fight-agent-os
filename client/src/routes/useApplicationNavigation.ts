@@ -24,10 +24,10 @@ export function useApplicationNavigation(initialPathname: string) {
       if (route.destination === 'users' && samePath && separator < 0) return;
       let address = path;
       if (separator >= 0) {
-        if (typeof route.intendedRoute !== 'function') return;
-        const projected = route.intendedRoute(target.slice(separator));
-        address += `?${projected.search}`;
-        const notice = invalid || projected.invalid;
+        if (!route.normalizeSearch) return;
+        const normalized = route.normalizeSearch(target.slice(separator));
+        address += `?${normalized.search}`;
+        const notice = invalid || normalized.invalid;
         if (samePath && address === window.location.pathname + window.location.search) {
           if (notice) restoreTable({ invalid: true });
           return;
