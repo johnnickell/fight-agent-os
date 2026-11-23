@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Persistence;
 
 use App\Adapter\Persistence\AccessControl\ActivationGrant\ActivationGrantRecords;
+use App\Adapter\Persistence\AccessControl\ActivationGrant\ActivationGrantTransitions;
 use App\Adapter\Persistence\AccessControl\ActivationGrant\PostgresActivationGrantRepository;
 use App\Adapter\Persistence\PersistenceConflict;
 use DateTimeImmutable;
@@ -446,6 +447,49 @@ final class PostgresActivationGrantRepositoryTest extends TestCase
         yield 'expired before dispatch' => ['expired before dispatch', 'expired', false];
         yield 'backoff crosses deadline' => ['backoff crosses deadline', 'expired', false];
         yield 'consumed' => ['consumed', 'invalidated', false];
+    }
+
+    /**
+     * Rejects proposed snapshots that the current grant cannot produce
+     */
+    #[DataProvider('invalidSnapshots')]
+    public function testRejectsImpossibleGrantReplacement(string $scenario): void
+    {
+        $issued = $this->grant();
+        $at = $this->now();
+        $token = CredentialDeliveryClaimToken::generate();
+        $claimed = $issued->claimDelivery($token, $at, $at->modify('+5 minutes'));
+        $before = $scenario === 'live lease' ? $claimed : $issued;
+        $row = match ($scenario) {
+            'live lease' => ActivationGrantRecords::fields($claimed),
+            'unexpected expiry history' => ActivationGrantRecords::fields(
+                $issued->expireDeliveryAt($issued->getExpiresAt())
+            ),
+            default => ActivationGrantRecords::fields($issued->consume($at))
+        };
+        $row['revision'] = $before->getRevision() + 1;
+        if ($scenario === 'conflicting terminal state') {
+            $row['revoked_at'] = ActivationGrantRecords::date($at);
+        } elseif ($scenario === 'issued with invalidated delivery') {
+            $row['consumed_at'] = null;
+        } elseif ($scenario === 'unexpected expiry history') {
+            $row['delivery_last_outcome_at'] = ActivationGrantRecords::date($at);
+        }
+
+        self::assertFalse(ActivationGrantTransitions::replacement($before, ActivationGrantRecords::hydrate($row)));
+    }
+
+    /**
+     * Supplies independent grant replay and state-consistency failures
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function invalidSnapshots(): iterable
+    {
+        yield 'lease is still live' => ['live lease'];
+        yield 'expiry cannot rewrite outcome history' => ['unexpected expiry history'];
+        yield 'consumption and revocation are exclusive' => ['conflicting terminal state'];
+        yield 'issued grant cannot invalidate delivery alone' => ['issued with invalidated delivery'];
     }
 
     /**

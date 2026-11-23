@@ -68,6 +68,24 @@ $fileExclusions = [
     'src/Adapter/Persistence/Guard/DatabaseTargetGuard.php' => 'Destructive test-tool safety, verified directly',
     'src/Adapter/Validation/PublicForms.php'                => 'Publication composition registry'
 ];
+$runtimeMethods = [
+    'Adapter/Http/Documentation/PrivateOpenApi' => ['readArtifact', 'Native private OpenAPI filesystem admission'],
+    'Adapter/Validation/Catalog'                => ['readArtifact', 'Native validation catalog filesystem admission']
+];
+$runtimeLines = [
+    'src/Adapter/Authorization/JsonManagedPolicy.php'     => [
+        49 => ["throw new LogicException('Required installation catalog could not be read.');",
+            'Native read failed after the installed catalog passed the file and readability checks']
+    ],
+    'src/Adapter/Security/Password/Argon2idPasswords.php' => [
+        30 => ['throw new RuntimeException();', 'Installed PHP lacks native Argon2id support'],
+        38 => ['} catch (Throwable) {', 'Catch an installed-runtime failure during the Argon2id startup probe'],
+        39 => ["throw new RuntimeException('Argon2id password support is unavailable.');",
+            'Report a failed native Argon2id startup probe'],
+        50 => ['} catch (Throwable) {', 'Catch native password_hash failure using fixed valid options'],
+        51 => ["throw new RuntimeException('Password hashing failed.');", 'Report native password_hash failure']
+    ]
+];
 $excludedMethods = [
     'Application/AccessControl/User/QueryHandler/ListDirectoryUsersHandler'                 => 'queryRegistration',
     'Application/Authorization/CommandHandler/AddUserRoleHandler'                           => 'commandRegistration',
@@ -105,6 +123,23 @@ foreach ($excludedMethods as $class => $name) {
     $methodExclusions[$path] = [$method->getStartLine(), $method->getEndLine(), $reason];
 }
 
+foreach ($runtimeMethods as $class => [$name, $reason]) {
+    $path = 'src/'.$class.'.php';
+    $method = new ReflectionMethod('App\\'.str_replace('/', '\\', $class), $name);
+    if ($method->getFileName() !== $root.'/'.$path || !$method->isPrivate()) {
+        throw new RuntimeException('Invalid coverage exclusion: '.$path.'::'.$name);
+    }
+    $methodExclusions[$path] = [$method->getStartLine(), $method->getEndLine(), $reason];
+}
+foreach ($runtimeLines as $path => $entries) {
+    $contents = file($root.'/'.$path);
+    foreach ($entries as $line => [$statement, $reason]) {
+        if (trim($contents[$line - 1] ?? '') !== $statement || !isset($data[$root.'/'.$path][$line])) {
+            throw new RuntimeException('Stale runtime coverage exclusion: '.$path.':'.$line);
+        }
+    }
+}
+
 ksort($data);
 $required = $covered = 0;
 $gaps = $exclusions = [];
@@ -116,7 +151,8 @@ foreach ($data as $file => $lines) {
         if ($executable === null) {
             continue;
         }
-        $exclusion = $fileExclusions[$path] ?? ($line >= $start && $line <= $end ? $reason : null);
+        $methodReason = $line >= $start && $line <= $end ? $reason : null;
+        $exclusion = $runtimeLines[$path][$line][1] ?? $fileExclusions[$path] ?? $methodReason;
         if ($exclusion !== null) {
             $exclusions[$path][$line] = $exclusion;
             continue;

@@ -206,11 +206,8 @@ final readonly class AccessJwt implements TokenEncoder, TokenDecoder
         $scalar = '(?:'.$string.'|-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|true|false|null)';
         $value = '(?:'.$scalar.'|\[\s*(?:'.$scalar.'(?:\s*,\s*'.$scalar.')*)?\s*\])';
         $pattern = '~\G\s*('.$string.')\s*:\s*'.$value.'\s*([,}])~';
-        if (preg_match('/\A\s*\{/', $json, $opening) !== 1) {
-            throw new TokenException();
-        }
-
-        $offset = strlen($opening[0]);
+        // A decoded JSON object starts with an opening brace after optional JSON whitespace.
+        $offset = strspn($json, " \t\r\n") + 1;
         $seen = [];
         do {
             if (preg_match($pattern, $json, $member, 0, $offset) !== 1) {
@@ -225,10 +222,8 @@ final readonly class AccessJwt implements TokenEncoder, TokenDecoder
             $seen[$name] = true;
             $offset += strlen($member[0]);
         } while ($member[2] === ',');
-        if (trim(substr($json, $offset)) !== '') {
-            throw new TokenException();
-        }
 
+        // The grammar check above already rejected any trailing content.
         return get_object_vars($decoded);
     }
 }

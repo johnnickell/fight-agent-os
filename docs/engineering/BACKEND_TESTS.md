@@ -67,9 +67,19 @@ The existing coverage exclusions identify:
   not use-case behavior.
 - The named empty private constructors listed there: prevent instantiating static persistence helpers without
   excluding any of their behavior.
+- `PrivateOpenApi::readArtifact` and `Catalog::readArtifact`: only the native file-path, size and read checks.
+  `SwaggerApiTest` and `ValidationCatalogTest` exercise real files; document and catalog parsing still count.
+- The late read-failure throw in `JsonManagedPolicy::read`: depends on the installed file becoming unreadable
+  after its file and readability checks. The ordinary installed read is exercised by `ManagedPolicyTest`;
+  this late I/O failure is not simulated, and decoding and list validation still count.
+- The missing Argon2id branch and the two native error handlers in `Argon2idPasswords`: depend on missing
+  platform support or native hashing failure with fixed options. `PasswordSettingTest` exercises the real
+  supported runtime; it does not simulate an unavailable or failing native implementation. The remaining
+  lines, including the probe result check and ordinary hash operation, still count.
 
-The checker resolves exclusions against the current files. No persistence, HTTP, delivery, hydration or
-validation capability is exempted. Vendor code, tests, bootstrap/configuration, migrations, public entrypoint
+The checker resolves exclusions against the current files and verifies that each exact line exclusion still
+matches the expected source statement. No entire persistence, HTTP, delivery, hydration or validation adapter
+is exempted for runtime admission. Vendor code, tests, bootstrap/configuration, migrations, public entrypoint
 wiring, scripts/wrappers, generated assets and caches are outside `src/`. Validate those with their owning tools.
 
 ## Focused iteration and build integration

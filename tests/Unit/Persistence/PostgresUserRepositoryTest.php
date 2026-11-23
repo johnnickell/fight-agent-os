@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Persistence;
 
 use App\Adapter\Persistence\AccessControl\PasswordResetGrant\PasswordResetGrantRecords;
+use App\Adapter\Persistence\AccessControl\User\PersistedUser;
 use App\Adapter\Persistence\AccessControl\User\PostgresUserRepository;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
@@ -43,6 +44,60 @@ use PHPUnit\Framework\TestCase;
  */
 final class PostgresUserRepositoryTest extends TestCase
 {
+    /**
+     * Rejects a password change smuggled into a lifecycle write
+     */
+    #[DataProvider('invalidLifecycleCredentials')]
+    public function testLifecycleWriteCannotReplacePassword(UserState $before, UserState $after): void
+    {
+        $user = $this->activeUser();
+        $snapshot = PersistedUser::reconstitute(
+            $user->getId(),
+            $user->getEmail(),
+            $before,
+            $user->getCreatedAt(),
+            $user->getUpdatedAt(),
+            $user->getPasswordHash(),
+            1,
+            0,
+            [],
+            0,
+            null,
+            0,
+            0
+        );
+        $proposed = PersistedUser::reconstitute(
+            $user->getId(),
+            $user->getEmail(),
+            $after,
+            $user->getCreatedAt(),
+            $this->later(),
+            $after === UserState::PENDING_ACTIVATION ? $this->hash() : null,
+            $after === UserState::DISABLED ? 2 : 1,
+            0,
+            [],
+            0,
+            null,
+            0,
+            0
+        );
+        $connection = $this->connection(true);
+        $connection->expects(self::never())->method('createQueryBuilder');
+
+        self::assertFalse($this->repository($connection)->replaceLifecycleState($snapshot, $proposed));
+    }
+
+    /**
+     * Supplies reactivation with a leftover password and disabling with a changed password
+     *
+     * @return iterable<string, array{UserState, UserState}>
+     */
+    public static function invalidLifecycleCredentials(): iterable
+    {
+        yield 'pending must clear password' => [UserState::DELETED, UserState::PENDING_ACTIVATION];
+        yield 'disable must retain password' => [UserState::ACTIVE, UserState::DISABLED];
+    }
+
     /**
      * Looks up the canonical claim and restores the original address, reservation, roles and distinct revisions
      */

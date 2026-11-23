@@ -447,6 +447,16 @@ final class ApiInputValidationTest extends TestCase
     public static function invalid_declarations(): iterable
     {
         yield 'missing rules' => [MissingValidation::class, 'POST'];
+        $action = new class {
+            #[JsonBody('unexpected')] // @phpstan-ignore attribute.noConstructor
+            /**
+             * Represents a misconfigured source marker
+             */
+            public function handle(): void
+            {
+            }
+        };
+        yield 'source with arguments' => [$action::class, 'POST'];
         yield 'conflicting sources' => [AmbiguousInput::class, 'POST'];
         yield 'unsupported rule' => [InvalidRulesInput::class, 'GET'];
         yield 'duplicate field' => [DuplicateFieldInput::class, 'GET'];
@@ -484,6 +494,15 @@ final class ApiInputValidationTest extends TestCase
         yield 'implicit invocation' => [JsonInput::class];
         yield 'wrong method' => [JsonInput::class.':__invoke'];
         yield 'missing handle' => [self::class.':handle'];
+        $action = new class {
+            /**
+             * Represents an Action entry point that routing must not call
+             */
+            protected function handle(): void
+            {
+            }
+        };
+        yield 'nonpublic handle' => [$action::class.':handle'];
         yield 'array callable' => [[JsonInput::class, 'handle']];
     }
 

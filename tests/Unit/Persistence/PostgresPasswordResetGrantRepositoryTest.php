@@ -384,6 +384,45 @@ final class PostgresPasswordResetGrantRepositoryTest extends TestCase
     }
 
     /**
+     * Refuses an impossible delivery replay without updating the stored generation
+     */
+    #[DataProvider('invalidDeliverySnapshots')]
+    public function testImpossibleDeliveryReplayDoesNotWrite(bool $claimed): void
+    {
+        $issued = $this->grant();
+        $at = $this->now();
+        $before = $issued;
+        if ($claimed) {
+            $before = $issued->claimDelivery(CredentialDeliveryClaimToken::generate(), $at, $at->modify('+5 minutes'));
+        }
+        $row = PasswordResetGrantRecords::fields(
+            $claimed ? $before : $issued->expireDeliveryAt($issued->getExpiresAt())
+        );
+        $row['revision'] = $before->getRevision() + 1;
+        if (!$claimed) {
+            $row['delivery_last_outcome_at'] = $at->format('Y-m-d H:i:s.uP');
+        }
+        $connection = $this->connection($before, current: false);
+        $connection->expects(self::once())->method('fetchAssociative')
+            ->willReturn(PasswordResetGrantRecords::fields($before));
+        $connection->expects(self::never())->method('update');
+        $replacement = PasswordResetGrantRecords::hydrate($row);
+
+        self::assertFalse(new PostgresPasswordResetGrantRepository($connection)->replace($before, $replacement));
+    }
+
+    /**
+     * Supplies a live claim and an expiry with rewritten outcome history
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function invalidDeliverySnapshots(): iterable
+    {
+        yield 'lease remains live' => [true];
+        yield 'expiry must match the replayed outcome' => [false];
+    }
+
+    /**
      * Does not persist a delivery claim if its issuing authority or grant snapshot is stale
      */
     #[DataProvider('claimAdmission')]
