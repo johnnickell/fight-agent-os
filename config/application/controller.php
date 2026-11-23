@@ -30,10 +30,12 @@ return static function (Container $container): void {
             $container->get(PublicRuntimeConfiguration::class)
         );
     });
-    $container->set('client.buildAssets', static fn (): Filesystem => new Filesystem(new LocalFilesystemAdapter(
-        dirname(__DIR__, 2).'/var/client/build',
-        lazyRootCreation: true
-    )));
+    $container->set('client.buildAssets', static function (): Filesystem {
+        $smoke = getenv('APP_ENV') === 'test' && getenv('FIGHT_BROWSER_SMOKE_ASSETS') === '1';
+        $assetPath = $smoke ? '/var/client/check/production' : '/var/client/build';
+
+        return new Filesystem(new LocalFilesystemAdapter(dirname(__DIR__, 2).$assetPath, lazyRootCreation: true));
+    });
     $container->set(ClientAssetManifest::class, static fn (Container $container): ClientAssetManifest =>
         new ClientAssetManifest($container->get('client.buildAssets')));
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {

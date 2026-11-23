@@ -1,0 +1,22 @@
+name: Native client setup
+description: Install the locked Node, npm, client dependencies and Chromium on the runner
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version-file: client/package.json
+        package-manager-cache: false
+    - name: Explicit locked frontend and browser setup
+      shell: bash
+      run: |
+        export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/playwright"
+        printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH" >> "$GITHUB_ENV"
+        npm install --global "npm@$(node -p "require('./client/package.json').engines.npm")" --ignore-scripts --no-fund --no-audit
+        # Qualify only the selected tool directories, not the runner's entire ambient PATH.
+        printf 'FIGHT_BUILD_TOOL_PATH=%s:%s:/usr/local/bin:/usr/bin:/bin\n' \
+          "$(dirname "$(command -v node)")" "$(dirname "$(command -v npm)")" >> "$GITHUB_ENV"
+        cd client
+        npm ci --ignore-scripts --no-fund --no-audit
+        node scripts/dependencies.mjs record
+        node node_modules/playwright/cli.js install --with-deps chromium

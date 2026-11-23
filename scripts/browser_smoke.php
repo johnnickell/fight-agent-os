@@ -23,6 +23,10 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     fwrite(STDERR, "Another database verification phase is running.\n");
     exit(1);
 }
+if (!is_file($root.'/var/client/check/production/manifest.json')) {
+    fwrite(STDERR, "Run the client checks before browser smoke; the checked production manifest is missing.\n");
+    exit(1);
+}
 $envelopeFile = $root.'/var/browser-smoke/envelope.json';
 if (!is_file($envelopeFile)) {
     fwrite(STDERR, "Explicit browser gateway setup is required before acceptance.\n");
@@ -41,6 +45,7 @@ $fixtureId = bin2hex(random_bytes(16));
 $environment = [
     'APP_ENV'                         => 'test',
     'APP_DEBUG'                       => 'false',
+    'FIGHT_BROWSER_SMOKE_ASSETS'      => '1',
     'DATABASE_URL'                    => getenv('TEST_DATABASE_URL'),
     'APP_BROWSER_ORIGIN'              => $origin,
     'APP_ACTIVATION_ORIGIN'           => $origin,

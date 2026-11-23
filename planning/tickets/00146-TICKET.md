@@ -34,7 +34,7 @@ Demonstrate the pass locally and on a container-free runner without frontend set
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00611](../tasks/00611-TASK.md) | Run the existing PHP checks as a standalone pass | ready-for-agent |
+| [TASK-00611](../tasks/00611-TASK.md) | Run the existing PHP checks as a standalone pass | done |
 | [TASK-00612](../tasks/00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | ready-for-agent |
 <!-- /planning:children -->
 

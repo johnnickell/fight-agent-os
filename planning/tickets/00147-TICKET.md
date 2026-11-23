@@ -35,7 +35,7 @@ Account for existing client and browser checks. Demonstrate smoke selection from
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00613](../tasks/00613-TASK.md) | Run the existing client checks as a standalone pass | ready-for-agent |
+| [TASK-00613](../tasks/00613-TASK.md) | Run the existing client checks as a standalone pass | done |
 | [TASK-00614](../tasks/00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | ready-for-agent |
 <!-- /planning:children -->
 
