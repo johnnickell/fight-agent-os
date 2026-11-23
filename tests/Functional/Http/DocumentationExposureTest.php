@@ -8,6 +8,8 @@ use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
 use Fight\Common\Application\Service\Container;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -55,7 +57,10 @@ final class DocumentationExposureTest extends TestCase
             // Force unavailable assets independently of the developer's current client deployment.
             $absentAssets = dirname(__DIR__, 3).'/.runs/build/tmp/absent-client-'.bin2hex(random_bytes(8));
             $container->set(ClientShellAction::class, static fn(Container $container) => new ClientShellAction(
-                new ClientAssetManifest($absentAssets),
+                new ClientAssetManifest(new Filesystem(new LocalFilesystemAdapter(
+                    $absentAssets,
+                    lazyRootCreation: true
+                ))),
                 $container->get(ClientShellResponder::class)
             ));
             $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', $path));

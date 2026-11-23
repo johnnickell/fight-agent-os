@@ -31,6 +31,19 @@ final class HmacCsrfProofsTest extends TestCase
     }
 
     /**
+     * Publishes the canonical origin but not the signing key in diagnostics
+     */
+    public function testPublicOriginAndDiagnostics(): void
+    {
+        $signer = new HmacCsrfProofs(bin2hex(random_bytes(32)), 'https://AGENT-OS.test:443');
+
+        self::assertSame('https://agent-os.test', $signer->origin());
+        self::assertSame(['origin' => 'https://agent-os.test', 'key' => '[redacted]'], $signer->__debugInfo());
+        self::assertFalse($signer->acceptsOrigin('https://agent-os.test.'));
+        self::assertFalse($signer->acceptsOrigin('https://agent-os.test:65536'));
+    }
+
+    /**
      * Lists distinct tampering and expiry boundaries
      *
      * @return iterable<string, array{string}>

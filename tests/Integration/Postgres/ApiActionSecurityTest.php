@@ -46,6 +46,8 @@ use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Monolog\Handler\TestHandler;
@@ -530,7 +532,7 @@ final class ApiActionSecurityTest extends TestCase
             $container = $this->app->getContainer();
             self::assertInstanceOf(Container::class, $container);
             $container->set(ClientShellAction::class, static fn(Container $container) => new ClientShellAction(
-                new ClientAssetManifest($directory),
+                new ClientAssetManifest(new Filesystem(new LocalFilesystemAdapter($directory, lazyRootCreation: true))),
                 $container->get(ClientShellResponder::class)
             ));
 

@@ -2,18 +2,18 @@
 id: TICKET-00146
 epic: EPIC-00028
 title: Verify PHP independently and enforce Unit-only coverage
-status: ready-for-agent
+status: done
 ---
 
 # Verify PHP independently and enforce Unit-only coverage
 
 ## Problem statement
 
-PHP checks currently share the application gate with frontend checks. The current coverage gate counts combined Domain/Application coverage and reports Unit attribution, but does not enforce the required Unit-only result.
+At planning time, PHP checks shared the application gate with frontend checks, and combined Domain/Application coverage did not enforce the required Unit-only result.
 
 ## Solution and boundaries
 
-Run PHP syntax, style, static analysis, dependency rules, generated contract freshness, and PHPUnit as an independent pass. Keep integration, functional, and PostgreSQL-backed tests. Enforce 100% Unit-only line coverage of owned unit-testable code, with an explicit denominator and justified exclusions. Do not count coverage from other suites toward it or weaken existing coverage checks to reach it.
+Run PHP syntax, style, static analysis, dependency rules, generated contract freshness, and PHPUnit as an independent pass. Keep integration, functional, and PostgreSQL-backed tests. Enforce 100% Unit-only line coverage of owned unit-testable code, with an explicit denominator and justified exclusions. Replace the combined coverage gate rather than counting coverage from other suites or setting quotas for them.
 
 ## Use cases
 
@@ -23,11 +23,11 @@ Run PHP syntax, style, static analysis, dependency rules, generated contract fre
 
 ## Validation and permissions
 
-Preserve source stability, offline checks after setup, and test database identity safeguards. Preserve the [accepted execution model](../adr/0001-application-ownership-and-orchestration.md): do not rerun suites merely to obtain a second report. Qualify the existing coverage attribution before choosing enforcement; an incompatible execution change needs an explicit ADR amendment.
+Preserve source stability, offline checks after setup, and test database identity safeguards. Follow the [maintainer's execution amendment](../adr/0001-application-ownership-and-orchestration.md#maintainer-amendment--unit-only-coverage-task-00612): run each suite once, without overlap or omissions, and collect coverage only from Unit.
 
 ## Acceptance and evidence
 
-Demonstrate the pass locally and on a container-free runner without frontend setup. Show that unexecuted owned source remains in scope, Unit-only results are independently attributable, and a combined pass cannot conceal a Unit-only failure. Account for every existing PHP check and the retained database-backed tests.
+Demonstrate the pass locally and on a container-free runner without frontend setup. Show that unexecuted owned source remains in scope, only Unit contributes coverage, and missing reports or uncovered required lines fail verification. Account for every existing PHP check and the retained database-backed tests.
 
 ## TASKs
 
@@ -35,7 +35,7 @@ Demonstrate the pass locally and on a container-free runner without frontend set
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00611](../tasks/00611-TASK.md) | Run the existing PHP checks as a standalone pass | done |
-| [TASK-00612](../tasks/00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | ready-for-agent |
+| [TASK-00612](../tasks/00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

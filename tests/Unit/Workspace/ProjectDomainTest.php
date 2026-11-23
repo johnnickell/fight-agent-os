@@ -7,6 +7,7 @@ namespace Tests\Unit\Workspace;
 use App\Application\Workspace\Project\View\ProjectView;
 use App\Domain\Workspace\Project\Event\ProjectRegistered;
 use App\Domain\Workspace\Project\Project;
+use App\Domain\Workspace\Project\ProjectConflict;
 use App\Domain\Workspace\Project\ProjectId;
 use App\Domain\Workspace\Project\ProjectInputRejected;
 use App\Domain\Workspace\Project\ProjectMetadata;
@@ -66,6 +67,17 @@ final class ProjectDomainTest extends TestCase
         ));
         $event = new ProjectRegistered($workspace, $projectId);
         self::assertEquals($event, ProjectRegistered::fromArray($event->toArray()));
+    }
+
+    /**
+     * Retains the claim kind without copying it into the safe exception message
+     */
+    public function testProjectConflictKeepsItsMessageGeneric(): void
+    {
+        $conflict = new ProjectConflict('name');
+
+        self::assertSame('name', $conflict->reason);
+        self::assertSame('Project conflicts.', $conflict->getMessage());
     }
 
     /**

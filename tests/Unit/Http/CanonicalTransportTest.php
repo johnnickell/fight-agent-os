@@ -119,6 +119,23 @@ final class CanonicalTransportTest extends TestCase
     }
 
     /**
+     * Preserves the direct development request and downstream response
+     */
+    public function testDevelopmentTransportDelegates(): void
+    {
+        $request = new ServerRequestFactory()->createServerRequest('GET', 'http://localhost/app');
+        $response = new ResponseFactory()->createResponse(204);
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects(self::once())->method('handle')->with(self::identicalTo($request))->willReturn($response);
+        $transport = new CanonicalTransport(
+            new HmacCsrfProofs(bin2hex(random_bytes(32)), 'https://agent-os.test'),
+            false
+        );
+
+        self::assertSame($response, $transport->process($request, $handler));
+    }
+
+    /**
      * Creates direct canonical transport with an ephemeral independent key
      */
     private function transport(): CanonicalTransport

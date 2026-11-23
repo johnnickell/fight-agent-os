@@ -56,5 +56,9 @@ final class EmailChangeGrantRecordsTest extends TestCase
         $next = EmailChangeGrantRecords::fields($consumed);
         self::assertSame($requester->toString(), $next['requester_id']);
         self::assertSame('original@example.test', $next['old_mailbox']);
+
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Invalid persisted email reservation binding.');
+        EmailChangeGrantRecords::hydrate(array_replace($row, ['email_change_reservation_revision' => 0]));
     }
 }
