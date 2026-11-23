@@ -13,13 +13,15 @@ export type TableChange = 'page' | 'perPage' | 'sort' | 'search' | 'filters';
 
 /** Optional browser adapter; the table itself has no browser or router dependency. */
 export function useTableLocation<S extends string, F extends TableFilters>(
-  policy: TablePolicy<S, F>
+  policy: TablePolicy<S, F>,
+  navigation?: Readonly<{ invalid: boolean }>
 ) {
   const [initial] = useState(() => readTableQuery(window.location.search, policy));
   const [query, setQuery] = useState(initial.query);
   const current = useRef(initial.query);
   const [pathname] = useState(() => window.location.pathname);
-  const [notice, setNotice] = useState(initial.invalid);
+  const [notice, setNotice] = useState(initial.invalid || navigation?.invalid === true);
+  const previousNavigation = useRef(navigation);
   const [restore, setRestore] = useState({ query: initial.query, revision: 0 });
 
   const store = useCallback((next: TableQuery<S, F>) => {
@@ -38,20 +40,30 @@ export function useTableLocation<S extends string, F extends TableFilters>(
     [pathname]
   );
 
-  useEffect(() => {
-    const read = () => readTableQuery(window.location.search, policy);
-    const sync = () => {
+  const sync = useCallback(
+    (invalid = false) => {
       if (window.location.pathname !== pathname) return;
-      const next = read();
+      const next = readTableQuery(window.location.search, policy);
       write(next.query, 'replaceState');
       store(next.query);
-      setNotice(next.invalid);
+      setNotice(next.invalid || invalid);
       setRestore((previous) => ({ query: next.query, revision: previous.revision + 1 }));
-    };
-    write(read().query, 'replaceState');
-    window.addEventListener('popstate', sync);
-    return () => window.removeEventListener('popstate', sync);
-  }, [pathname, policy, store, write]);
+    },
+    [pathname, policy, store, write]
+  );
+
+  useEffect(() => {
+    write(readTableQuery(window.location.search, policy).query, 'replaceState');
+    const pop = () => sync();
+    window.addEventListener('popstate', pop);
+    return () => window.removeEventListener('popstate', pop);
+  }, [policy, sync, write]);
+
+  useEffect(() => {
+    const changed = previousNavigation.current !== navigation;
+    previousNavigation.current = navigation;
+    if (changed && navigation) sync(navigation.invalid);
+  }, [navigation, sync]);
 
   const restoreQuery = useCallback(
     (input: TableQuery<S, F>) => {

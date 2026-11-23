@@ -30,16 +30,18 @@ const loading: TableData<DirectoryUser> = { kind: 'loading' };
 /** Owns directory navigation and reads under the current verified principal. */
 export default function UsersPage({
   service,
-  cache
+  cache,
+  locationRestoration
 }: {
   service: Pick<UserDirectoryService, 'load' | 'detail' | 'retry'> &
     Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
+  locationRestoration?: Readonly<{ invalid: boolean }> | undefined;
 }) {
   const authority = useAuthority(cache);
   const allowed = evaluateAccess(authority, readUsers) === 'allowed';
   const scope = cache.captureScope();
-  const location = useTableLocation(policy);
+  const location = useTableLocation(policy, locationRestoration);
   const { query, current, restoreQuery } = location;
   const [selected, select] = useState<{
     id: string;

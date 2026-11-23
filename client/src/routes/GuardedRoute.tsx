@@ -18,7 +18,9 @@ export type RegisteredRoute = Readonly<{
   /**
    * Opts in static paths only. Enumerate safe values or canonicalize bounded, non-sensitive options.
    */
-  intendedRoute?: Readonly<Record<string, readonly string[]>> | ((search: string) => string);
+  intendedRoute?:
+    | Readonly<Record<string, readonly string[]>>
+    | ((search: string) => Readonly<{ search: string; invalid: boolean }>);
 }>;
 
 /**

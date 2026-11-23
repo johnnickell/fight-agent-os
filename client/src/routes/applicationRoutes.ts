@@ -125,11 +125,10 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: permission('READ_USERS'),
     destination: 'users',
     group: 'Administration',
-    intendedRoute: (search) =>
-      writeTableQuery(
-        new URLSearchParams(),
-        readTableQuery(search, usersTablePolicy).query
-      ).toString(),
+    intendedRoute: (search) => {
+      const { query, invalid } = readTableQuery(search, usersTablePolicy);
+      return { search: writeTableQuery(new URLSearchParams(), query).toString(), invalid };
+    },
     availability: 'Read the installation-wide user directory and current role assignments.'
   },
   {

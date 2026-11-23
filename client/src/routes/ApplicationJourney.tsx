@@ -20,6 +20,7 @@ import { applicationRoutes, matchApplicationRoute } from '@/routes/applicationRo
 import { GuardedRoute } from '@/routes/GuardedRoute';
 
 import type { ApplicationSession } from '@/features/auth/useApplicationSession';
+import type { ApplicationNavigation } from '@/routes/useApplicationNavigation';
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 import type { ThemePreferenceStore } from '@fight/react/controls';
 
@@ -51,8 +52,9 @@ export function ApplicationJourney({
 }: {
   runtime: RuntimeConfiguration;
   pathname: string;
+  tableRestoration?: Readonly<{ invalid: boolean }> | undefined;
   theme?: ThemePreferenceStore | undefined;
-  navigate: (target: string, replace?: boolean) => void;
+  navigate: ApplicationNavigation;
   onAuthenticated?: (() => void) | undefined;
 }) {
   const { session, retired } = useApplicationSession(runtime);
@@ -77,12 +79,14 @@ export function ApplicationView({
   session,
   pathname,
   navigate,
+  tableRestoration,
   theme,
   onAuthenticated
 }: {
   session: ApplicationSession;
   pathname: string;
-  navigate: (target: string, replace?: boolean) => void;
+  navigate: ApplicationNavigation;
+  tableRestoration?: Readonly<{ invalid: boolean }> | undefined;
   theme?: ThemePreferenceStore | undefined;
   onAuthenticated?: (() => void) | undefined;
 }) {
@@ -128,11 +132,10 @@ export function ApplicationView({
       const atPath = window.location.pathname === pathname;
       const search = atPath ? window.location.search : '';
       // Project only bounded directory options before handing the target to the intent owner.
-      const target =
-        typeof route.intendedRoute === 'function'
-          ? `${pathname}?${route.intendedRoute(search)}`
-          : pathname + search + (atPath ? window.location.hash : '');
-      session.intent.capture(target);
+      if (typeof route.intendedRoute === 'function') {
+        const projected = route.intendedRoute(search);
+        session.intent.capture(`${pathname}?${projected.search}`, projected.invalid);
+      } else session.intent.capture(pathname + search + (atPath ? window.location.hash : ''));
     }
     if (window.location.pathname !== pathname) return;
     // Users owns its query string, including while a reload is restoring the session.
@@ -165,11 +168,12 @@ export function ApplicationView({
     if (authority.status !== 'authenticated' || credential.status !== 'authenticated') return;
     const intended = session.intent.consume();
     if (route?.destination === 'login') {
-      const target = intended ?? '/';
+      const target = intended?.target ?? '/';
       // One replace, never a redirect-to-login cycle for a resolved denied principal.
       if (pendingTarget.current !== target) {
         pendingTarget.current = target;
-        navigate(target, true);
+        if (intended?.invalid) navigate(target, true, true);
+        else navigate(target, true);
       }
     } else pendingTarget.current = null;
   }, [authority, credential.status, route, navigate, session]);
@@ -298,7 +302,11 @@ export function ApplicationView({
             ) : route.destination === 'password-change' ? (
               <PasswordChangePage service={session.passwordChange} schemas={session.schemas} />
             ) : route.destination === 'users' ? (
-              <UsersPage service={session.users} cache={session.authority} />
+              <UsersPage
+                service={session.users}
+                cache={session.authority}
+                locationRestoration={tableRestoration}
+              />
             ) : route.destination === 'invite-user' ? (
               <InviteUserPage service={session.invitationIssuance} cache={session.authority} />
             ) : route.destination === 'invite-super-admin' ? (

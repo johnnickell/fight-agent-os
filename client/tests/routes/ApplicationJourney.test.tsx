@@ -53,10 +53,12 @@ function Mounted({
 
 function Navigable({
   owner,
-  destination
+  destination,
+  invalidDestination
 }: {
   owner: ReturnType<typeof applicationSession>;
   destination?: string;
+  invalidDestination?: string;
 }) {
   const navigation = useApplicationNavigation(window.location.pathname);
   return (
@@ -66,18 +68,29 @@ function Navigable({
           Open saved view
         </button>
       )}
+      {invalidDestination && (
+        <button type="button" onClick={() => navigation.navigate(invalidDestination)}>
+          Open invalid saved view
+        </button>
+      )}
       <ApplicationView session={owner} {...navigation} />
     </>
   );
 }
 
 function directoryFetch(owner: ReturnType<typeof applicationSession>) {
-  const fetch = vi.fn(() =>
+  const fetch = vi.fn((path: string) =>
     Promise.resolve(
       new Response(
         JSON.stringify({
           status: 'success',
-          data: { page: 2, per_page: 1, total_pages: 2, total_records: 2, records: [] }
+          data: {
+            page: Number(new URL(path, window.location.origin).searchParams.get('page')),
+            per_page: 1,
+            total_pages: 2,
+            total_records: 2,
+            records: []
+          }
         }),
         { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
       )
@@ -93,16 +106,24 @@ function directoryFetch(owner: ReturnType<typeof applicationSession>) {
 }
 
 const usersOptions = 'page=2&per_page=1&sort=ID&order=desc';
+const resetOptions = 'page=1&per_page=1&sort=ID&order=desc';
+const invalidOptions = `${usersOptions}&page=private-marker&search=ignored`;
+const resetNotice = /directory options in the URL were invalid or unsupported and were reset/;
 
 describe('authoritative frame transitions', () => {
-  it.each([true, false])(
-    're-admits a signed-out Users link only for a reader (%s)',
-    async (allowed) => {
+  it.each([
+    [true, false],
+    [true, true],
+    [false, true]
+  ])(
+    'restores a signed-out Users link for a reader (%s) and notifies on invalid options (%s)',
+    async (allowed, invalid) => {
       window.history.replaceState(
         null,
         '',
-        `/admin/users?${usersOptions}&search=ignored&host=private-marker#ignored`
+        `/admin/users?${invalid ? invalidOptions : usersOptions}&host=private-marker#ignored`
       );
+      const entries = window.history.length;
       const owner = session(allowed ? ['READ_USERS'] : ['VIEW_DASHBOARD'], undefined, true);
       const fetch = directoryFetch(owner);
       owner.refresh.mockResolvedValueOnce(apiFailure('authentication'));
@@ -121,19 +142,23 @@ describe('authoritative frame transitions', () => {
       });
       fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
       if (allowed) {
-        expect(await screen.findByText('Page 2 of 2. 2 results.')).toBeVisible();
-        expect(window.location.pathname + window.location.search).toBe(
-          `/admin/users?${usersOptions}`
-        );
+        const options = invalid ? resetOptions : usersOptions;
+        expect(await screen.findByRole('table')).toBeVisible();
+        if (invalid) expect(screen.getByText(resetNotice)).toBeVisible();
+        else expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
+        expect(window.location.pathname + window.location.search).toBe(`/admin/users?${options}`);
+        expect(window.history.state).toBeNull();
         expect(fetch).toHaveBeenCalledExactlyOnceWith(
-          `/api/v1/users?${usersOptions}`,
+          `/api/v1/users?${options}`,
           expect.anything()
         );
       } else {
         expect(await screen.findByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
         expect(window.location.pathname + window.location.search).toBe('/');
         expect(fetch).not.toHaveBeenCalled();
+        expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
       }
+      expect(window.history.length).toBe(entries);
     }
   );
   it('redirects an anonymous root entry to canonical login without exposing Dashboard content', async () => {
@@ -210,6 +235,35 @@ describe('authoritative frame transitions', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(window.history.length).toBe(entries + 1);
   });
+
+  it.each([usersOptions, resetOptions])(
+    'shows a notice for an invalid explicit Users destination from %s',
+    async (initial) => {
+      window.history.replaceState(null, '', `/admin/users?${initial}`);
+      const owner = session(['READ_USERS']);
+      const fetch = directoryFetch(owner);
+      render(<Navigable owner={owner} invalidDestination={`/admin/users?${invalidOptions}`} />);
+      await act(() => owner.coordinator.restore());
+      expect(await screen.findByRole('table')).toBeVisible();
+      expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const entries = window.history.length;
+      const replace = vi.spyOn(window.history, 'replaceState');
+      try {
+        fireEvent.click(screen.getByRole('button', { name: 'Open invalid saved view' }));
+        expect(await screen.findByText(resetNotice)).toBeVisible();
+        const changesQuery = initial !== resetOptions;
+        expect(window.location.search).toBe(`?${resetOptions}`);
+        expect(window.history.length).toBe(entries + Number(changesQuery));
+        expect(replace).not.toHaveBeenCalled();
+        expect(window.history.state).toBeNull();
+        expect(fetch).toHaveBeenCalledTimes(1 + Number(changesQuery));
+        expect(fetch).toHaveBeenLastCalledWith(`/api/v1/users?${resetOptions}`, expect.anything());
+      } finally {
+        replace.mockRestore();
+      }
+    }
+  );
 
   it('does not replay a denied directory when current-authority revalidation remounts its guard', async () => {
     const owner = session(['READ_USERS']);
