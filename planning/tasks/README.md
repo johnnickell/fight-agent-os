@@ -616,7 +616,7 @@
 | [TASK-00611](00611-TASK.md) | Run the existing PHP checks as a standalone pass | done | [TICKET-00146](../tickets/00146-TICKET.md) |
 | [TASK-00612](00612-TASK.md) | Enforce 100% Unit-only line coverage of owned unit-testable PHP behavior | done | [TICKET-00146](../tickets/00146-TICKET.md) |
 | [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | done | [TICKET-00147](../tickets/00147-TICKET.md) |
-| [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | ready-for-agent | [TICKET-00147](../tickets/00147-TICKET.md) |
+| [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | done | [TICKET-00147](../tickets/00147-TICKET.md) |
 | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00617](00617-TASK.md) | Port the Build stage launcher and monitor to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |

@@ -3,6 +3,7 @@
 `./bin/browser-smoke [all|fragment|reload|tabs|revocation|theme]` executes five deliberately narrow
 platform contracts. `./bin/build` runs the same PHP-owned phase once, after the existing catalog phases.
 There is no test retry, quarantine, screenshot baseline or general E2E expansion.
+See the [runtime-flow diagram and source traces](browser-smoke/README.md) for the native and local worktree routes.
 
 ## Explicit prerequisites and isolation
 
