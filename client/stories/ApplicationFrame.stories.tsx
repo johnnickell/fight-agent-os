@@ -20,8 +20,8 @@ import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
 import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 
-import { harborBrand } from './HarborBrand';
 import { expectHarborTheme } from './expectHarborTheme';
+import { harborBrand } from './HarborBrand';
 
 import type { ThemePreference } from '@fight/react/controls';
 import type { Meta, StoryObj } from '@storybook/react-vite';

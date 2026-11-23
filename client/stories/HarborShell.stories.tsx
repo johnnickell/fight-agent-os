@@ -7,8 +7,8 @@ import {
 } from '@fight/react/controls';
 import { expect, within } from 'storybook/test';
 
-import { harborBrand } from './HarborBrand';
 import { expectHarborTheme } from './expectHarborTheme';
+import { harborBrand } from './HarborBrand';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
