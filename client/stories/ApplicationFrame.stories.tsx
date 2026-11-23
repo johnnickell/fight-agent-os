@@ -21,6 +21,7 @@ import { IntendedRoute } from '@/routes/IntendedRoute';
 import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 
 import { harborBrand } from './HarborBrand';
+import { expectHarborTheme } from './expectHarborTheme';
 
 import type { ThemePreference } from '@fight/react/controls';
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -278,11 +279,12 @@ const harborFrame: Story = {
       </BrandProvider>
     )
   ],
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const utilities = await canvas.findByRole('banner', { name: 'Application utilities' });
     await expect(within(utilities).getByRole('img', { name: 'Harbor sailboat' })).toBeVisible();
     await expect(canvasElement.ownerDocument.title).toMatch(/ — Harbor Desk$/);
+    await expectHarborTheme(canvasElement, args.preference === 'dark');
   }
 };
 export const HarborAccountLight: Story = {
@@ -295,6 +297,15 @@ export const HarborAdminDarkNarrow: Story = {
   args: { initial: '/admin/invitations', preference: 'dark' },
   globals: { viewport: { value: 'narrow' } },
   parameters: { ...harborFrame.parameters, mode: 'dark' }
+};
+export const HarborAccountDark: Story = {
+  ...harborFrame,
+  args: { initial: '/account', preference: 'dark' },
+  parameters: { ...harborFrame.parameters, mode: 'dark' }
+};
+export const HarborAdminLight: Story = {
+  ...harborFrame,
+  args: { initial: '/admin/invitations', preference: 'light' }
 };
 export const AccountMenuKeyboard: Story = {
   play: async ({ canvasElement }) => {
