@@ -18,8 +18,8 @@ if ! ./bin/runtime docker image inspect "$image" >/dev/null 2>&1; then
   echo 'Missing Harness tooling image; run ./bin/harness-check setup.' >&2
   exit 1
 fi
-exec ./bin/runtime docker run --rm --pull=never --network=none --read-only \
-  --label "fight.pi-dependency-reader=$project" \
+# Use the same checkout-scoped container name as pi-dependencies to exclude replacement.
+exec ./bin/runtime docker run --rm --name="$project-pi-dependencies" --pull=never --network=none --read-only \
   --user "$(id -u):$(id -g)" --cap-drop=ALL --security-opt=no-new-privileges:true \
   --pids-limit=256 --memory=2g --cpus=2 --tmpfs /tmp:rw,noexec,nosuid,size=512m \
   --env CI=1 --mount "type=bind,source=$(pwd)/harness/pi,target=/app/harness/pi,readonly" --workdir /app \

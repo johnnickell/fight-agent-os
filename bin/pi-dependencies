@@ -15,8 +15,9 @@ if ! ./bin/runtime docker image inspect "$image" >/dev/null 2>&1; then
     fi
     ./bin/runtime docker pull "$image"
 fi
+project=$(./bin/runtime project-name)
 run() {
-    ./bin/runtime docker run --rm --pull=never --network="$1" --read-only \
+    ./bin/runtime docker run --rm --name="$project-pi-dependencies" --pull=never --network="$1" --read-only \
         --user "$(id -u):$(id -g)" --cap-drop=ALL --security-opt=no-new-privileges:true \
         --pids-limit=256 --memory=2g --cpus=2 --tmpfs /tmp:rw,nosuid,size=512m \
         --env HOME=/tmp --env CI=1 --env npm_config_update_notifier=false \
@@ -25,18 +26,19 @@ run() {
 }
 if run none ',readonly' check; then
     exit 0
+else
+    status=$?
 fi
-[ "$mode" = setup ] || exit 1
-# Use native labels so a clean checkout needs no prepared Compose configuration.
-project=$(./bin/runtime project-name)
+# Only a failed readiness check permits setup, not Docker admission failure.
+[ "$mode" = setup ] && [ "$status" -eq 1 ] || exit "$status"
+# Keep the existing application-tooling guard without requiring Compose configuration.
 active() {
     ./bin/runtime docker ps --all --filter status=running --filter status=created \
         --filter status=restarting --filter status=paused --filter status=removing "$@"
 }
 services=$(active --filter "label=com.docker.compose.project=$project" \
     --format '{{.Label "com.docker.compose.service"}}')
-checks=$(active --filter "label=fight.pi-dependency-reader=$project" --quiet)
-if [ -n "$checks" ] || printf '%s\n' "$services" | grep -Exq 'web|composer'; then
+if printf '%s\n' "$services" | grep -Exq 'web|composer'; then
     echo "Pi dependencies need replacement. Finish active checks and one-off tooling, then stop this checkout's web service and rerun ./bin/pi-dependencies setup." >&2
     exit 1
 fi
