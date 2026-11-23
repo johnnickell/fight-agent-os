@@ -16,8 +16,10 @@ ignored cache pointer, not another acceptance report. Old receipts without these
 The fingerprint covers sorted project paths, file bytes, permissions and symlink targets plus their resolved
 contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `.runs/`, `var/`, IDE state,
 `.DS_Store`, legacy `client/dist/` and `public/build/`, and the two legacy frontend cache directories
-(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. Current generated OpenAPI, validation
-and live client-build inputs under `var/` are fingerprinted explicitly. Missing inputs, unreadable or special files and cyclic links
+(`client/node_modules/.cache/` and `.vite-temp/`) left by earlier tooling. The gate produces
+`packages/react/dist/`, so it excludes that directory from inputs, including through the local npm link.
+Current generated OpenAPI, validation and live client-build inputs under `var/` are fingerprinted explicitly.
+Missing inputs, unreadable or special files and cyclic links
 disable caching; they are never silently omitted. Ordinary Markdown records under `planning/` are excluded from
 the application fingerprint: tasks, tickets, epics, progress notes and generated planning views do not rebuild
 unchanged application inputs. Every invocation first runs a fresh, read-only planning check, including cache hits.
@@ -54,9 +56,11 @@ warning while the normal full gate still runs. Identity becoming unknown or chan
 that run. `--force` follows the same receipt, stability and publication rules.
 
 A hit verifies the original successful receipt, every recorded phase exit, retained snapshots/logs, the complete
-report tree and required generated application/check outputs. Missing or altered evidence causes a miss. It
-rechecks inputs before returning success, prints the original receipt and keeps its warnings in the original
-logs. It reports fresh planning validation separately from reused application phases, leaves the original receipt
+report tree and required generated application/check outputs. This includes both the packed-consumer report and
+the actual compiled React package at `packages/react/dist/`, the same path the build uses in native and
+container runs. Missing or altered evidence causes a miss. The gate rechecks inputs before returning success,
+prints the original receipt and keeps its warnings in the original logs. It reports fresh planning validation
+separately from reused application phases, leaves the original receipt
 unchanged and grants no independent review, QA, merge or deployment verdict. Removing
 `.runs/build` or `var/build.json` simply loses reuse. Keep the selected original evidence while it is consumed.
 CI does not restore local success pointers or share acceptance between environments.

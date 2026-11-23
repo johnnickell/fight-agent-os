@@ -280,7 +280,7 @@ final class BuildCache
     }
 
     /**
-     * Validates retained logs, snapshots, reports and required generated application inputs
+     * Validates retained logs, snapshots, reports and required generated artifacts
      */
     private function evidence(string $run): string
     {
@@ -295,7 +295,8 @@ final class BuildCache
         }
         foreach (
             [
-            '.runs/build/reports', 'var/openapi', 'var/validations', 'var/client/build', 'var/client/check/production'
+                '.runs/build/reports', 'var/openapi', 'var/validations', 'var/client/build',
+                'var/client/check/production', 'packages/react/dist'
             ] as $path
         ) {
             $files[$path] = $this->tree($this->root.'/'.$path);
