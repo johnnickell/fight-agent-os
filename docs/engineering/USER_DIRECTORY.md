@@ -84,7 +84,7 @@ Forbidden controls are absent, not hidden focus targets. Client presentation nev
 
 ![Users table read and restoration flow](shared-react/users-table-flow.png)
 
-Existing implementation at `334699418e3dd5774660bad9f43a578471fa4abb`.
+Existing implementation at `b7d458ec98e76b26d9710d8d54552635704a23bd`.
 [Editable Python](shared-react/users-table-flow.py). Dotted arrows show runtime messages or reads, not static dependencies.
 
 | Flow | Source trace |
@@ -92,10 +92,14 @@ Existing implementation at `334699418e3dd5774660bad9f43a578471fa4abb`.
 | Commit one change; restore without another callback | [`DataTable`](../../packages/react/src/components/DataTable.tsx) emits `onChange` from `commit`; it takes external state from `restore.revision`. [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) wires the two directions. |
 | Seed/restore from the address; write a change or replace a correction | [`useTableLocation`](../../packages/react/src/components/useTableLocation.ts) reads the initial URL and `popstate`, pushes table gestures, and replaces a corrected page from `restoreQuery`. [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) checks the total before requesting a correction. |
 | Request the current authorized page and publish only while current | [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) fences by query, abort signal and live scope. [`UserDirectoryService.load`](../../packages/react/src/features/users/UserDirectoryService.ts) uses the same-origin API client. [`ListUsersAction.handle`](../../src/Adapter/Http/Action/Api/V1/Users/ListUsersAction.php) declares `READ_USERS` and returns a safe page. |
-| Count, sort and page before returning rows | The Action dispatches through the query bus to the [registered directory handler](../../config/application/user_directory.php), which [calls package user and role reads](../../src/Application/AccessControl/User/QueryHandler/ListDirectoryUsersHandler.php). [`PostgresUserRepository`](../../src/Adapter/Persistence/AccessControl/User/PostgresUserRepository.php) counts and applies `CatalogOrdering` before offset and limit. |
+| Fetch the ordered page, then read its total separately | The Action dispatches through the query bus to the [registered directory handler](../../config/application/user_directory.php), which [calls package user and role reads](../../src/Application/AccessControl/User/QueryHandler/ListDirectoryUsersHandler.php). [`PostgresUserRepository::getAll`](../../src/Adapter/Persistence/AccessControl/User/PostgresUserRepository.php) applies `CatalogOrdering` before offset and limit, fetches the page, then runs the separate `COUNT(*)` query. |
 
-This source view compresses bus and mapping steps. It omits sign-in, detail, Role/Permission endpoints,
-and the example consumer's search. It does not certify runtime behavior, accessibility, or independent acceptance.
+The host also restores explicit Users destinations through `useTableLocation`. Before navigation or sign-in,
+it keeps only the canonical Users options and a yes/no reset flag. A malformed destination that resolves to the
+current address shows the notice without adding a history entry or making another list request.
+
+This source view compresses bus and mapping steps. It omits programmatic navigation, sign-in, detail,
+Role/Permission endpoints, and the example consumer's search. It does not certify runtime behavior, accessibility, or independent acceptance.
 
 ## Safe user detail (TASK-00118 implementation)
 

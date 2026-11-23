@@ -28,7 +28,7 @@ with Diagram(
         location = Node("useTableLocation\nNormalized query and history", nodeid="location")
     with Cluster("Agent OS | HTTP and PostgreSQL"):
         action = Node("ListUsersAction\nAfter the READ_USERS gate", nodeid="action")
-        listing = Node("PostgresUserRepository\nCounts, orders, then slices", nodeid="listing")
+        listing = Node("PostgresUserRepository\nFetches ordered page, then total", nodeid="listing")
 
     table >> flow("Commit one normalized change") >> page
     page >> flow("Restore controls without a callback") >> table
