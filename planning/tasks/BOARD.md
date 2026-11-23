@@ -54,6 +54,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00625](00625-TASK.md) | Move Land target binding to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00626](00626-TASK.md) | Move Planning archive maintenance to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 
