@@ -364,6 +364,16 @@ one interaction per Action, correct authorization placement, event ownership, pa
 speculative abstractions require direct review where Deptrac cannot represent them. Later TICKETs add behavior
 evidence only when their real boundaries exist rather than manufacturing placeholder source or tests.
 
+## Maintainer amendment — Unit-only coverage (TASK-00612)
+
+The maintainer replaced the original single unfiltered PHPUnit coverage run described above. The canonical
+PHP phase now follows the Fight Common pattern: invoke each of Unit, Integration, Functional and Postgres
+once, with disjoint test membership, and collect coverage from Unit alone. Enforce exact 100% line coverage
+of owned unit-testable PHP behavior, including unexecuted source, with narrowly justified exclusions.
+Retire the combined coverage reports and percentage gate. The other suites keep their behavior checks and
+failure criteria without coverage quotas. There is no second execution to produce another report. The
+running-service gate, guarded database setup and cleanup, and other original decisions remain in force.
+
 ## Alternatives considered
 
 ### Recreate package behavior under `App` namespaces

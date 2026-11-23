@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Authorization;
 
-use App\Adapter\Authorization\JsonManagedPolicy;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\InstallationCatalogFixture;
 use Throwable;
 
 /**
@@ -22,7 +22,7 @@ final class ManagedCatalogTest extends TestCase
      */
     public function testFuturePermission(): void
     {
-        [$permissions, $roles] = self::catalogs();
+        [$permissions, $roles] = InstallationCatalogFixture::catalogs();
         $future = PermissionId::generate()->toString();
         $permissions[] = ['id' => $future, 'name' => 'FUTURE_CAPABILITY', 'tier' => 'ADMIN_SAFE'];
         $roles[] = [
@@ -44,7 +44,7 @@ final class ManagedCatalogTest extends TestCase
     #[DataProvider('invalidCatalogs')]
     public function testRejectsInvalidCatalog(string $defect): void
     {
-        [$permissions, $roles] = self::catalogs();
+        [$permissions, $roles] = InstallationCatalogFixture::catalogs();
         switch ($defect) {
             case 'missing permission':
                 array_shift($permissions);
@@ -146,32 +146,5 @@ final class ManagedCatalogTest extends TestCase
         ) {
             yield $defect => [$defect];
         }
-    }
-
-    /**
-     * Converts the qualified baseline to disposable inputs rather than editing production catalogs
-     *
-     * @return array{list<array<string, mixed>>, list<array<string, mixed>>}
-     */
-    public static function catalogs(): array
-    {
-        $policy = (new JsonManagedPolicy())->load();
-        $names = [];
-        foreach ($policy->getPermissions() as $permission) {
-            $names[$permission->getId()->toString()] = $permission->getName()->toString();
-        }
-        $roles = [];
-        foreach ($policy->getRoles() as $role) {
-            $roles[] = [
-                'id'          => $role->getId()->toString(),
-                'name'        => $role->getName()->toString(),
-                'permissions' => $role->getName()->toString() === 'ROLE_SUPER_ADMIN' ? '*' : array_map(
-                    static fn(PermissionId $id): string => $names[$id->toString()],
-                    $role->getPermissionIds()
-                )
-            ];
-        }
-
-        return [$policy->toArray()['permissions'], $roles];
     }
 }

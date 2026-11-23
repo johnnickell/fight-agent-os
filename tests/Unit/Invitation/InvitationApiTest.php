@@ -503,7 +503,7 @@ final class InvitationApiTest extends TestCase
             if ($this->fault === 'preview-fault') {
                 throw new \LogicException('Unexpected internal preview failure.');
             }
-            $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
+            $policy = (new \Tests\Support\InstallationCatalogFixture())->load();
             $permissionAction = ManagedPolicyChangeAction::UNCHANGED;
             if ($this->fault === 'policy') {
                 $permissionAction = ManagedPolicyChangeAction::RECONCILE;
@@ -577,7 +577,7 @@ final class InvitationApiTest extends TestCase
         $action = new IssueInvitationAction(
             $guard,
             $limiter,
-            new InstallationAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy()),
+            new InstallationAssignmentPolicy($queries, new \Tests\Support\InstallationCatalogFixture()),
             $users,
             $issuanceCommands,
             $queries,

@@ -62,14 +62,13 @@ final class ActivationGrantTransitions
 
         try {
             if ($before->isIssued() && !$after->isIssued()) {
-                if (!($after->isConsumed() xor $after->isRevoked())) {
-                    return false;
-                }
-                $at = $after->isConsumed() ? $after->getConsumedAt() : $after->getRevokedAt();
-                if (!$at instanceof DateTimeImmutable) {
-                    return false;
-                }
-                $expected = $after->isConsumed() ? $before->consume($at) : $before->revoke($at);
+                $consumed = $after->getConsumedAt();
+                $revoked = $after->getRevokedAt();
+                $expected = match (true) {
+                    $consumed !== null && $revoked === null => $before->consume($consumed),
+                    $revoked !== null && $consumed === null => $before->revoke($revoked),
+                    default => null,
+                };
             } elseif ($before->isIssued() && $after->isIssued()) {
                 $expected = match ($newDelivery->getStatus()) {
                     CredentialDeliveryStatus::CLAIMED => $before->claimDelivery(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Documentation;
 
+use Closure;
 use RuntimeException;
 use stdClass;
 use Throwable;
@@ -17,8 +18,10 @@ final readonly class PrivateOpenApi
 {
     /**
      * Constructs PrivateOpenApi
+     *
+     * @param string|Closure(): (string|false) $source
      */
-    public function __construct(private string $path)
+    public function __construct(private string|Closure $source)
     {
     }
 
@@ -28,14 +31,7 @@ final readonly class PrivateOpenApi
     public function read(): string
     {
         try {
-            if (realpath($this->path) !== $this->path || !is_file($this->path)) {
-                throw new RuntimeException();
-            }
-            $size = filesize($this->path);
-            if ($size === false || $size < 2 || $size > 2097152) {
-                throw new RuntimeException();
-            }
-            $source = file_get_contents($this->path);
+            $source = $this->source instanceof Closure ? ($this->source)() : self::readArtifact($this->source);
             if ($source === false || strlen($source) > 2097152) {
                 throw new RuntimeException();
             }
@@ -62,6 +58,22 @@ final readonly class PrivateOpenApi
         } catch (Throwable) {
             throw new RuntimeException('Private API documentation is unavailable.');
         }
+    }
+
+    /**
+     * Reads the installed artifact only from a bounded canonical local file
+     */
+    private static function readArtifact(string $path): string|false
+    {
+        if (realpath($path) !== $path || !is_file($path)) {
+            return false;
+        }
+        $size = filesize($path);
+        if ($size === false || $size < 2 || $size > 2097152) {
+            return false;
+        }
+
+        return file_get_contents($path);
     }
 
     /**
