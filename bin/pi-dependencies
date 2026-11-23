@@ -27,10 +27,16 @@ if run none ',readonly' check; then
     exit 0
 fi
 [ "$mode" = setup ] || exit 1
-# A cache hit above is safe while checks run; a replacement must not race readers.
-consumers=$(./bin/runtime docker compose ps --all --status running --status created \
-    --status restarting --status paused --status removing --services web composer)
-if [ -n "$consumers" ]; then
+# Use native labels so a clean checkout needs no prepared Compose configuration.
+project=$(./bin/runtime project-name)
+active() {
+    ./bin/runtime docker ps --all --filter status=running --filter status=created \
+        --filter status=restarting --filter status=paused --filter status=removing "$@"
+}
+services=$(active --filter "label=com.docker.compose.project=$project" \
+    --format '{{.Label "com.docker.compose.service"}}')
+checks=$(active --filter "label=fight.pi-dependency-reader=$project" --quiet)
+if [ -n "$checks" ] || printf '%s\n' "$services" | grep -Exq 'web|composer'; then
     echo "Pi dependencies need replacement. Finish active checks and one-off tooling, then stop this checkout's web service and rerun ./bin/pi-dependencies setup." >&2
     exit 1
 fi

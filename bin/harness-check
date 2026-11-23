@@ -3,12 +3,24 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-# Reuse the prepared checkout tooling image: custody/Build checks need Git and Python too.
-# Image setup is explicit (./bin/up --build-only); this network-none check never installs tools.
-image=$(./bin/runtime image-name web)
+project=$(./bin/runtime project-name)
+image=$project-pi-harness
+case "$#:${1:-}" in
+  1:setup)
+    ./bin/runtime storage-admit --protect-image "$image"
+    exec ./bin/runtime docker build --target pi-harness --tag "$image" \
+      --file etc/docker/cli/Dockerfile etc/docker/cli
+    ;;
+  0:) ;;
+  *) echo 'Usage: ./bin/harness-check [setup]' >&2; exit 2 ;;
+esac
+if ! ./bin/runtime docker image inspect "$image" >/dev/null 2>&1; then
+  echo 'Missing Harness tooling image; run ./bin/harness-check setup.' >&2
+  exit 1
+fi
 exec ./bin/runtime docker run --rm --pull=never --network=none --read-only \
-  --user 1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true \
-  --pids-limit=64 --memory=256m --cpus=1 --tmpfs /tmp:rw,noexec,nosuid,size=16m \
-  --mount "type=bind,source=$(pwd)/harness/pi,target=/app,readonly" --workdir /app \
-  "$image" \
-  node --test tests/*.test.mjs
+  --label "fight.pi-dependency-reader=$project" \
+  --user "$(id -u):$(id -g)" --cap-drop=ALL --security-opt=no-new-privileges:true \
+  --pids-limit=256 --memory=2g --cpus=2 --tmpfs /tmp:rw,noexec,nosuid,size=512m \
+  --env CI=1 --mount "type=bind,source=$(pwd)/harness/pi,target=/app/harness/pi,readonly" --workdir /app \
+  "$image" sh harness/pi/scripts/check.sh

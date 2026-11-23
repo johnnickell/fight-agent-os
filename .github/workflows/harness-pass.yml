@@ -1,0 +1,29 @@
+name: Pi Harness pass qualification
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - '.github/workflows/harness-pass.yml'
+      - 'harness/pi/**'
+      - 'bin/harness-check'
+      - 'bin/pi-dependencies'
+      - 'etc/docker/cli/Dockerfile'
+
+permissions:
+  contents: read
+
+jobs:
+  harness-pass:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Prepare locked Harness and engine dependencies
+        run: node harness/pi/scripts/dependencies.mjs setup
+      - name: Run Harness, engine and package checks directly
+        run: sh harness/pi/scripts/check.sh
