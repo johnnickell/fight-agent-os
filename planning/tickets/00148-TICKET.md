@@ -34,7 +34,7 @@ Exercise the local pass and native GitHub execution without the application stac
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00615](../tasks/00615-TASK.md) | Run Pi Harness verification as a standalone pass | ready-for-agent |
+| [TASK-00615](../tasks/00615-TASK.md) | Run Pi Harness verification as a standalone pass | done |
 | [TASK-00616](../tasks/00616-TASK.md) | Port the Harness session-file birth helper to PHP | ready-for-agent |
 | [TASK-00617](../tasks/00617-TASK.md) | Port the Build stage launcher and monitor to PHP | ready-for-agent |
 <!-- /planning:children -->
