@@ -82,7 +82,109 @@ final class UserRoleActionsTest extends TestCase
     }
 
     /**
+     * Enumerates unauthenticated, unconfirmed and malformed route admission
+     *
+     * @return iterable<array{bool, string, class-string<\Throwable>}>
+     */
+    public static function invalidRequests(): iterable
+    {
+        foreach ([false, true] as $remove) {
+            yield [$remove, 'anonymous', \Fight\Common\Application\Error\Exception\AuthenticationRequired::class];
+            yield [$remove, 'confirmation', \Fight\Common\Application\Validation\Exception\ValidationException::class];
+            yield [$remove, 'userId', \Fight\Common\Application\Validation\Exception\ValidationException::class];
+            yield [$remove, 'roleId', \Fight\Common\Application\Validation\Exception\ValidationException::class];
+        }
+    }
+
+    /**
+     * Refuses invalid entry requests before any command dispatch
+     *
+     * @param class-string<\Throwable> $exception
+     */
+    #[DataProvider('invalidRequests')]
+    public function testInvalidRequest(bool $remove, string $invalid, string $exception): void
+    {
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_ORDINARY'), [], new DateTimeImmutable());
+        $this->exercise(
+            $remove,
+            UserState::ACTIVE,
+            UserId::generate(),
+            UserId::generate(),
+            $role,
+            false,
+            $invalid,
+            $exception
+        );
+    }
+
+    /**
+     * Refuses elevation without authoritative security context despite claimed permission input
+     */
+    public function testElevationRequiresSecurityContext(): void
+    {
+        $role = Role::defineManaged(
+            RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
+            [],
+            new DateTimeImmutable()
+        );
+        $this->exercise(
+            false,
+            UserState::ACTIVE,
+            UserId::generate(),
+            UserId::generate(),
+            $role,
+            false,
+            '',
+            \Fight\Common\Application\Error\Exception\AuthenticationRequired::class
+        );
+    }
+
+    /**
+     * Enumerates the independent elevation permission and confirmation decisions
+     *
+     * @return iterable<array{bool, bool}>
+     */
+    public static function elevations(): iterable
+    {
+        yield [false, false];
+        yield [false, true];
+        yield [true, false];
+        yield [true, true];
+    }
+
+    /**
+     * Requires both authoritative elevation permission and distinct explicit confirmation
+     */
+    #[DataProvider('elevations')]
+    public function testElevation(bool $permission, bool $confirmation): void
+    {
+        $role = Role::defineManaged(
+            RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
+            [],
+            new DateTimeImmutable()
+        );
+        $this->exercise(
+            false,
+            UserState::ACTIVE,
+            UserId::generate(),
+            UserId::generate(),
+            $role,
+            $permission && $confirmation,
+            '',
+            $permission
+                ? \Fight\Common\Application\Validation\Exception\ValidationException::class
+                : \Fight\Common\Application\Error\Exception\PermissionDenied::class,
+            $permission,
+            $confirmation
+        );
+    }
+
+    /**
      * Drives a real Action with safe package Views and a dispatch observer
+     *
+     * @param class-string<\Throwable> $exception
      */
     private function exercise(
         bool $remove,
@@ -90,7 +192,11 @@ final class UserRoleActionsTest extends TestCase
         UserId $actor,
         UserId $target,
         Role $role,
-        bool $allowed
+        bool $allowed,
+        string $invalid = '',
+        string $exception = StateConflict::class,
+        ?bool $elevationPermission = null,
+        bool $elevationConfirmation = true
     ): void {
         $now = new DateTimeImmutable();
         $user = new UserView($target, EmailAddress::fromString('target@example.test'), $state, [], $now, $now);
@@ -107,18 +213,36 @@ final class UserRoleActionsTest extends TestCase
         }
         $route = $this->createStub(RouteInterface::class);
         $route->method('getArgument')->willReturnCallback(static fn(string $name) =>
-            $name === 'userId' ? $target->toString() : $role->getId()->toString());
+            $name === $invalid ? 'invalid' : ($name === 'userId' ? $target->toString() : $role->getId()->toString()));
         $request = (new ServerRequestFactory())->createServerRequest('PUT', '/')
             ->withAttribute(RouteContext::ROUTE, $route)
             ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(\Slim\Interfaces\RouteParserInterface::class))
             ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(\Slim\Routing\RoutingResults::class))
-            ->withAttribute(JsonBody::class, ['confirm' => true])
+            ->withAttribute(JsonBody::class, [
+                'confirm' => $invalid !== 'confirmation',
+                'actor_id' => UserId::generate()->toString(),
+                'permissions' => ['ASSIGN_SUPER_ADMIN'],
+                'confirm_super_admin' => $elevationConfirmation
+            ])
             ->withAttribute(
                 AuthenticationContext::class,
                 new AuthenticationContext($actor, RefreshSessionId::generate(), 1)
             );
+        if ($elevationPermission !== null) {
+            $authority = $this->createStub(
+                \Fight\AccessControl\Domain\AccessControl\Authorization\AuthenticatedAuthority::class
+            );
+            $authority->method('hasPermission')->willReturn($elevationPermission);
+            $request = $request->withAttribute(
+                \Fight\AccessControl\Application\AccessControl\Authorization\Service\SecurityContext::class,
+                new \Fight\AccessControl\Application\AccessControl\Authorization\Service\SecurityContext($authority)
+            );
+        }
+        if ($invalid === 'anonymous') {
+            $request = $request->withoutAttribute(AuthenticationContext::class);
+        }
         if (!$allowed) {
-            $this->expectException(StateConflict::class);
+            $this->expectException($exception);
         }
         $response = $action->handle($request);
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
