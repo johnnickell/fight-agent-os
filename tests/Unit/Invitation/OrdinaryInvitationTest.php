@@ -228,7 +228,7 @@ final class OrdinaryInvitationTest extends TestCase
     {
         $policy = new InstallationAssignmentPolicy(
             $this->createStub(QueryBus::class),
-            new \App\Adapter\Authorization\JsonManagedPolicy()
+            new \Tests\Support\InstallationCatalogFixture()
         );
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::never())->method('execute');
@@ -587,7 +587,7 @@ final class OrdinaryInvitationTest extends TestCase
         $audit->method('add')->willReturnCallback(function (OperatorMembershipEvidence $evidence): void {
             $this->evidence[] = $evidence;
         });
-        $policy = new InstallationAssignmentPolicy($queries, new \App\Adapter\Authorization\JsonManagedPolicy());
+        $policy = new InstallationAssignmentPolicy($queries, new \Tests\Support\InstallationCatalogFixture());
         $router = $this->createStub(SynchronousCommandBus::class);
         $bus = new CommandPipeline($router);
         $inspection ??= $this->inspection();
@@ -748,7 +748,7 @@ final class OrdinaryInvitationTest extends TestCase
      */
     private function plan(): ManagedPolicyPlan
     {
-        $policy = (new \App\Adapter\Authorization\JsonManagedPolicy())->load();
+        $policy = (new \Tests\Support\InstallationCatalogFixture())->load();
 
         return new ManagedPolicyPlan(
             array_map(

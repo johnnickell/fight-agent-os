@@ -68,14 +68,28 @@ $fileExclusions = [
     'src/Adapter/Persistence/Guard/DatabaseTargetGuard.php' => 'Destructive test-tool safety, verified directly',
     'src/Adapter/Validation/PublicForms.php'                => 'Publication composition registry'
 ];
-$runtimeMethods = [
-    'Adapter/Http/Documentation/PrivateOpenApi' => ['readArtifact', 'Native private OpenAPI filesystem admission'],
-    'Adapter/Validation/Catalog'                => ['readArtifact', 'Native validation catalog filesystem admission']
-];
+$openApiIo = 'Native private OpenAPI filesystem admission';
+$catalogIo = 'Native public form catalog filesystem admission';
+$installationIo = 'Native installation catalog filesystem admission';
 $runtimeLines = [
     'src/Adapter/Authorization/JsonManagedPolicy.php'     => [
-        49 => ["throw new LogicException('Required installation catalog could not be read.');",
-            'Native read failed after the installed catalog passed the file and readability checks']
+        45 => ['if (!is_file($path) || !is_readable($path)) {', $installationIo],
+        46 => ['return null;', $installationIo],
+        49 => ['return file_get_contents($path);', $installationIo]
+    ],
+    'src/Adapter/Http/Documentation/PrivateOpenApi.php'   => [
+        68 => ['if (realpath($path) !== $path || !is_file($path)) {', $openApiIo],
+        69 => ['return false;', $openApiIo],
+        71 => ['$size = filesize($path);', $openApiIo],
+        72 => ['if ($size === false || $size < 2 || $size > 2097152) {', $openApiIo],
+        73 => ['return false;', $openApiIo],
+        76 => ['return file_get_contents($path);', $openApiIo]
+    ],
+    'src/Adapter/Validation/Catalog.php'                  => [
+        140 => ['is_link($path) || realpath(dirname($path)) !== dirname($path)', $catalogIo],
+        141 => ['|| !is_file($path) || filesize($path) > 262144', $catalogIo],
+        143 => ['return false;', $catalogIo],
+        146 => ['return file_get_contents($path);', $catalogIo]
     ],
     'src/Adapter/Security/Password/Argon2idPasswords.php' => [
         30 => ['throw new RuntimeException();', 'Installed PHP lacks native Argon2id support'],
@@ -123,14 +137,6 @@ foreach ($excludedMethods as $class => $name) {
     $methodExclusions[$path] = [$method->getStartLine(), $method->getEndLine(), $reason];
 }
 
-foreach ($runtimeMethods as $class => [$name, $reason]) {
-    $path = 'src/'.$class.'.php';
-    $method = new ReflectionMethod('App\\'.str_replace('/', '\\', $class), $name);
-    if ($method->getFileName() !== $root.'/'.$path || !$method->isPrivate()) {
-        throw new RuntimeException('Invalid coverage exclusion: '.$path.'::'.$name);
-    }
-    $methodExclusions[$path] = [$method->getStartLine(), $method->getEndLine(), $reason];
-}
 foreach ($runtimeLines as $path => $entries) {
     $contents = file($root.'/'.$path);
     foreach ($entries as $line => [$statement, $reason]) {

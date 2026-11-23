@@ -56,7 +56,8 @@ retain their existing failure criteria with no coverage quotas. There is no comb
 The ignored `.runs/build/reports/backend/` directory holds one JUnit log per suite and `unit-coverage.json`,
 which records counts, gaps by file and line, and exact excluded lines with reasons. `unit-coverage.php` is
 trusted local output from the Unit invocation; never load an externally supplied PHP artifact. The phase
-removes its current outputs before running, under the phase lock. A failed phase is not a success receipt
+removes its current outputs and the retired `coverage.php`, `clover.xml`, and `junit.xml` under the phase lock
+before running. A failed phase is not a success receipt
 regardless of which reports exist. Line coverage does not establish branch completeness or assertion quality.
 
 The existing coverage exclusions identify:
@@ -67,11 +68,11 @@ The existing coverage exclusions identify:
   not use-case behavior.
 - The named empty private constructors listed there: prevent instantiating static persistence helpers without
   excluding any of their behavior.
-- `PrivateOpenApi::readArtifact` and `Catalog::readArtifact`: only the native file-path, size and read checks.
-  `SwaggerApiTest` and `ValidationCatalogTest` exercise real files; document and catalog parsing still count.
-- The late read-failure throw in `JsonManagedPolicy::read`: depends on the installed file becoming unreadable
-  after its file and readability checks. The ordinary installed read is exercised by `ManagedPolicyTest`;
-  this late I/O failure is not simulated, and decoding and list validation still count.
+- Exact native filesystem statements in `PrivateOpenApi::readArtifact`, `Catalog::readArtifact`, and
+  `JsonManagedPolicy::readArtifact`: file path, accessibility, size and read operations. The checker rejects
+  drift at the listed lines; new statements are not automatically exempt. `SwaggerApiTest`,
+  `ValidationCatalogTest`, and the Integration authorization catalog tests exercise real files. Unit tests
+  still cover decoding, validation, and what happens when either installation catalog cannot be read.
 - The missing Argon2id branch and the two native error handlers in `Argon2idPasswords`: depend on missing
   platform support or native hashing failure with fixed options. `PasswordSettingTest` exercises the real
   supported runtime; it does not simulate an unavailable or failing native implementation. The remaining

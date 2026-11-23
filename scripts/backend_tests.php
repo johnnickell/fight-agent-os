@@ -22,7 +22,8 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
 }
 // Never accept a report left behind by a failed or interrupted execution.
 $suites = ['Unit', 'Integration', 'Functional', 'Postgres'];
-$reportFiles = ['unit-coverage.php', 'unit-coverage.json'];
+// Retire the known combined outputs from checkouts that previously ran the old phase.
+$reportFiles = ['coverage.php', 'clover.xml', 'junit.xml', 'unit-coverage.php', 'unit-coverage.json'];
 foreach ($suites as $suite) {
     $reportFiles[] = 'junit-'.strtolower($suite).'.xml';
 }

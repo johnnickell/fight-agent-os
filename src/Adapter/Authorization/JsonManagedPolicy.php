@@ -6,6 +6,7 @@ namespace App\Adapter\Authorization;
 
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Authorization\ManagedPolicyCatalog;
+use Closure;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy;
 use LogicException;
 
@@ -18,8 +19,10 @@ final readonly class JsonManagedPolicy implements ManagedPolicyCatalog
 {
     /**
      * Constructs JsonManagedPolicy
+     *
+     * @param string|Closure(string): (string|null|false) $source Directory or reader keyed by catalog filename
      */
-    public function __construct(private string $directory = __DIR__.'/../../../database/seeds')
+    public function __construct(private string|Closure $source = __DIR__.'/../../../database/seeds')
     {
     }
 
@@ -29,9 +32,21 @@ final readonly class JsonManagedPolicy implements ManagedPolicyCatalog
     public function load(): ManagedPolicy
     {
         return InstallationManagedPolicy::create(
-            self::read($this->directory.'/permissions.json'),
-            self::read($this->directory.'/roles.json')
+            $this->read('permissions.json'),
+            $this->read('roles.json')
         );
+    }
+
+    /**
+     * Reads a required catalog from the installed directory
+     */
+    private static function readArtifact(string $path): string|null|false
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+
+        return file_get_contents($path);
     }
 
     /**
@@ -39,12 +54,13 @@ final readonly class JsonManagedPolicy implements ManagedPolicyCatalog
      *
      * @return list<mixed>
      */
-    private static function read(string $path): array
+    private function read(string $filename): array
     {
-        if (!is_file($path) || !is_readable($path)) {
+        $source = $this->source;
+        $contents = $source instanceof Closure ? $source($filename) : self::readArtifact($source.'/'.$filename);
+        if ($contents === null) {
             throw new LogicException('Required installation catalog is unavailable.');
         }
-        $contents = file_get_contents($path);
         if ($contents === false) {
             throw new LogicException('Required installation catalog could not be read.');
         }
