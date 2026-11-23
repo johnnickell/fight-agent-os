@@ -62,7 +62,10 @@ unmount and page changes abort/fence pending work and remove private rows. `401`
 restoration owner; `403` revalidates current authority. Neither automatically replays the refused operation;
 recovery needs explicit Retry. The shared table owns interactions. UsersPage writes canonical `page`,
 `per_page`, `sort`, and `order` to the URL and restores from reload and Back/Forward. Unsupported search and
-filter options are dropped and never forwarded. History stores no user rows, identities, or credentials.
+filter options are dropped and never forwarded. Clicking the current Users link keeps the URL and page unchanged.
+A copied link opened while signed out retains only these four normalized options in the one-shot in-memory
+intent. It drops host parameters and the fragment across sign-in, then restores the options only after fresh
+`READ_USERS` admission. History stores no user rows, identities, or credentials.
 
 The single production route manifest independently guards every destination, and shared `evaluateAccess`
 controls presentation and link activation:
@@ -76,6 +79,23 @@ controls presentation and link activation:
 
 TASK-00060 implements the target status route using a classified UUID path, never email, form input or credentials in URLs/history. READ_USERS-only viewers have read-only status; page changes additionally require MANAGE_USER_INVITATIONS, which grants no read authority (explicit human correction, 2026-11-02). Ordinary/elevated invitation forms remain unavailable under TASK-00061/00062. Recovery invalidates local directory/detail generations: mounted lists refetch, mounted detail retracts its data and requires deliberate Reload, and returning pages read fresh. Pending invitation reads now use this safe detail API plus the separately protected delivery GET; mutation acknowledgements contain no data. No invitation API is duplicated and no link sends mail.
 Forbidden controls are absent, not hidden focus targets. Client presentation never replaces server enforcement.
+
+### Table read and restoration flow
+
+![Users table read and restoration flow](shared-react/users-table-flow.png)
+
+Existing implementation at `334699418e3dd5774660bad9f43a578471fa4abb`.
+[Editable Python](shared-react/users-table-flow.py). Dotted arrows show runtime messages or reads, not static dependencies.
+
+| Flow | Source trace |
+|---|---|
+| Commit one change; restore without another callback | [`DataTable`](../../packages/react/src/components/DataTable.tsx) emits `onChange` from `commit`; it takes external state from `restore.revision`. [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) wires the two directions. |
+| Seed/restore from the address; write a change or replace a correction | [`useTableLocation`](../../packages/react/src/components/useTableLocation.ts) reads the initial URL and `popstate`, pushes table gestures, and replaces a corrected page from `restoreQuery`. [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) checks the total before requesting a correction. |
+| Request the current authorized page and publish only while current | [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) fences by query, abort signal and live scope. [`UserDirectoryService.load`](../../packages/react/src/features/users/UserDirectoryService.ts) uses the same-origin API client. [`ListUsersAction.handle`](../../src/Adapter/Http/Action/Api/V1/Users/ListUsersAction.php) declares `READ_USERS` and returns a safe page. |
+| Count, sort and page before returning rows | The Action dispatches through the query bus to the [registered directory handler](../../config/application/user_directory.php), which [calls package user and role reads](../../src/Application/AccessControl/User/QueryHandler/ListDirectoryUsersHandler.php). [`PostgresUserRepository`](../../src/Adapter/Persistence/AccessControl/User/PostgresUserRepository.php) counts and applies `CatalogOrdering` before offset and limit. |
+
+This source view compresses bus and mapping steps. It omits sign-in, detail, Role/Permission endpoints,
+and the example consumer's search. It does not certify runtime behavior, accessibility, or independent acceptance.
 
 ## Safe user detail (TASK-00118 implementation)
 
