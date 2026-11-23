@@ -39,7 +39,6 @@ jobs:
           printf '%s\n%s\n' "$tools" "$tools/nginx/usr/sbin" >> "$GITHUB_PATH"
           printf 'FIGHT_BROWSER_SMOKE_MIME_TYPES=%s\n' "$tools/nginx/etc/nginx/mime.types" >> "$GITHUB_ENV"
       - uses: ./.github/actions/native-php
-        id: native-php
       - uses: ./.github/actions/native-client
       - name: Run the sole canonical gate with native browser suppliers
         run: |
@@ -48,16 +47,27 @@ jobs:
           test -z "$containers"
           php scripts/browser_smoke_setup.php native php scripts/build.php
       - name: Check browser teardown and drop the job-owned test database and role
-        if: ${{ always() && steps.native-php.outcome == 'success' }}
+        if: always()
         run: |
           status=0
-          test ! -e var/browser-smoke || status=1
-          listeners=$(ss -H -ltn '( sport = :1025 or sport = :8025 or sport = :18081 or sport = :18443 or sport = :19087 )')
-          test -z "$listeners" || status=1
-          containers=$(docker ps --quiet) || status=1
-          test -z "$containers" || status=1
-          sudo -u postgres dropdb agent_os_test || status=1
-          sudo -u postgres dropuser agent_os_test || status=1
+          if [[ -e var/browser-smoke || -L var/browser-smoke ]]; then
+            echo 'Browser fixture files remain.' >&2
+            status=1
+          fi
+          if ! listeners=$(ss -H -ltn '( sport = :1025 or sport = :8025 or sport = :18081 or sport = :18443 or sport = :19087 )') || [[ -n "$listeners" ]]; then
+            echo 'Browser fixture listener absence could not be verified.' >&2
+            status=1
+          fi
+          if ! containers=$(docker ps --quiet) || [[ -n "$containers" ]]; then
+            echo 'Running container absence could not be verified.' >&2
+            status=1
+          fi
+          if [[ "${FIGHT_CI_TEST_DB_CREATED:-}" == 1 ]]; then
+            sudo -u postgres dropdb agent_os_test || status=1
+          fi
+          if [[ "${FIGHT_CI_TEST_ROLE_CREATED:-}" == 1 ]]; then
+            sudo -u postgres dropuser agent_os_test || status=1
+          fi
           exit "$status"
       - name: Retain gate receipts
         if: always()

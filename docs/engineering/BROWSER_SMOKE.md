@@ -29,8 +29,9 @@ mbstring and XML packages together before `setup-php` configures extensions/cove
 does not make `php8.5-fpm` available to apt. CI verifies the SHA-256 digests of the native Nginx and Mailpit
 downloads and extracts them without installing or starting system services. The PHP setup command starts only
 its own loopback Nginx and Mailpit processes, with a disposable localhost TLS leaf/CA and catcher database.
-The same guarded PostgreSQL role/database is used, and the job drops both after the gate. No containers may
-be running. This is not a claim about workstation shared ingress or default trust.
+The job records each guarded PostgreSQL resource after creating it. It drops only the resources it created,
+even after partial setup or a failed listener check. No containers may be running. This is not a claim
+about workstation shared ingress or default trust.
 
 On that prepared runner, use `php scripts/browser_smoke_setup.php native php scripts/browser_smoke.php all`
 for a focused run against existing checked assets. `php scripts/browser_smoke_setup.php native php scripts/build.php`
@@ -68,9 +69,11 @@ verification, e.g. `FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openss
 
 The reserved `<compose-project>-browser-https` container carries native project/service labels and exact mounts.
 An existing container is refused rather than replaced; `setup --remove-direct` checks ownership before stopping
-and removing only that fixture and its prepared direct metadata/configuration/public CA. Main `bin/down` also
-removes the project-labeled orphan, without deleting persistent data. After interrupted preparation, inspect
-that exact container and use the same scoped removal before preparing again; do not overwrite unknown state.
+and removing only that fixture and its verified direct configuration, metadata, and public CA. Removal uses
+an already-built CLI image in a disposable container; it does not need the `web` service running or Composer
+installed. Unrecognized files and containers are preserved. Main `bin/down` also removes the project-labeled
+orphan without deleting persistent data. After interrupted preparation, inspect that exact container and use
+the same scoped removal before preparing again; do not overwrite unknown state.
 Do not run teardown or startup beneath a gate. A stale removed/recreated gateway requires fresh explicit setup.
 
 For safe direct-topology qualification inside an already selected worktree, `setup --direct --ca PUBLIC_CA

@@ -1,11 +1,13 @@
 <?php
 
+/**
+ * Prepares and verifies browser smoke fixtures
+ */
+
 declare(strict_types=1);
 
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
-
-require dirname(__DIR__).'/vendor/autoload.php';
 
 /**
  * Retargets the checked-in gateway without changing its asset allowlist or FastCGI authority
@@ -57,6 +59,7 @@ $smokeEnvelope = static function (
     if ($ca === false || str_contains($ca, 'PRIVATE KEY') || !str_contains($ca, 'BEGIN CERTIFICATE')) {
         throw new RuntimeException('A public CA is required.');
     }
+    require_once dirname(__DIR__).'/vendor/autoload.php';
     (new Filesystem())->dumpFile($state.'/envelope.json', json_encode([
         'origin'         => $origin,
         'address'        => $address,
@@ -76,6 +79,7 @@ $runNativeSmoke = static function (string $root, array $command) use ($smokeGate
     if ($command === []) {
         throw new InvalidArgumentException('A verification command is required.');
     }
+    require_once $root.'/vendor/autoload.php';
     $state = $root.'/var/browser-smoke';
     $filesystem = new Filesystem();
     $filesystem->mkdir($root.'/var');
@@ -183,6 +187,45 @@ $runNativeSmoke = static function (string $root, array $command) use ($smokeGate
     return $result;
 };
 
+/**
+ * Identifies exact direct fixture files without loading application dependencies
+ */
+$directState = static function (string $root) use ($smokeGateway): string {
+    $state = $root.'/var/browser-smoke';
+    $direct = $state.'/direct.conf';
+    $envelope = $state.'/envelope.json';
+    $ca = $state.'/rootCA.pem';
+    if (is_link($state) || is_link($direct)) {
+        return 'unknown';
+    }
+    if (!file_exists($direct)) {
+        return 'absent';
+    }
+    $template = file_get_contents($root.'/etc/docker/https/default.conf');
+    if (
+        $template === false || !is_file($direct)
+        || file_get_contents($direct) !== rtrim($smokeGateway($template, 'direct', $root), "\n")."\n"
+        || is_link($envelope) || is_link($ca)
+    ) {
+        return 'unknown';
+    }
+    if (!file_exists($envelope) && !file_exists($ca)) {
+        return 'config-only';
+    }
+    if (!is_file($envelope) || !is_file($ca)) {
+        return 'unknown';
+    }
+    $json = file_get_contents($envelope);
+    $metadata = json_decode($json === false ? '' : $json, true);
+    $gatewayHash = hash_file('sha256', $direct);
+    $caHash = hash_file('sha256', $ca);
+
+    return ($metadata['topology'] ?? null) === 'private-direct-nginx'
+        && ($metadata['origin'] ?? null) === 'https://localhost:18443'
+        && $gatewayHash !== false && ($metadata['gateway_sha256'] ?? null) === $gatewayHash
+        && $caHash !== false && ($metadata['ca_sha256'] ?? null) === $caHash ? 'owned' : 'unknown';
+};
+
 try {
     $root = dirname(__DIR__);
     $arguments = $argv ?? [];
@@ -190,7 +233,7 @@ try {
     if ($operation === 'native') {
         exit($runNativeSmoke($root, array_slice($arguments, 2)));
     }
-    if ($operation === 'plan' && count($arguments) === 2) {
+    if (in_array($operation, ['plan', 'plan-removal'], true) && count($arguments) === 2) {
         $input = stream_get_contents(STDIN);
         $config = json_decode($input === false ? '' : $input, true, flags: JSON_THROW_ON_ERROR);
         $services = $config['services'];
@@ -213,6 +256,9 @@ try {
                 throw new RuntimeException('Unsupported Compose field.');
             }
             fwrite(STDOUT, $field."\n");
+        }
+        if ($operation === 'plan-removal') {
+            fwrite(STDOUT, $directState($root)."\n");
         }
         exit(0);
     }

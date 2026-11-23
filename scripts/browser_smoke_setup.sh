@@ -18,9 +18,15 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
-# The Docker client stays on the host; the PHP renderer runs in the selected web container.
 config=$(runtime compose --profile https config --format json 2>/dev/null) || fail 'Cannot resolve selected Compose project.'
-plan=$(printf '%s\n' "$config" | setup_php plan) || fail 'Cannot read selected browser setup model.'
+if [ "$mode" = remove ]; then
+    [ -z "$ca$certs" ] || exit 2
+    # Use the already-built CLI image, not the application service or its dependencies.
+    plan=$(printf '%s\n' "$config" | runtime compose --profile https run --rm --no-deps --pull never -T \
+        --entrypoint php web scripts/browser_smoke_setup.php plan-removal) || fail 'Cannot verify direct gateway files.'
+else
+    plan=$(printf '%s\n' "$config" | setup_php plan) || fail 'Cannot read selected browser setup model.'
+fi
 # Command substitution strips trailing newlines, including the absent shared host in direct mode.
 {
     IFS= read -r project
@@ -30,6 +36,7 @@ plan=$(printf '%s\n' "$config" | setup_php plan) || fail 'Cannot read selected b
     IFS= read -r default_certs
     IFS= read -r shared_gateway || :
     IFS= read -r host || :
+    IFS= read -r metadata || :
 } <<EOF
 $plan
 EOF
@@ -39,7 +46,6 @@ name=$project-browser-https
 [ ! -L "$state" ] || fail 'Preserve a linked browser setup directory.'
 
 if [ "$mode" = remove ]; then
-    [ -z "$ca$certs" ] || exit 2
     id=$(runtime ps -aq --filter "name=^/$name\$")
     if [ -n "$id" ]; then
         owner=$(runtime inspect --format '{{index .Config.Labels "com.docker.compose.project"}}/{{index .Config.Labels "com.docker.compose.service"}}{{range .Mounts}}{{if eq .Destination "/etc/nginx/conf.d/default.conf"}}/{{.Source}}{{end}}{{end}}' "$id")
@@ -47,15 +53,12 @@ if [ "$mode" = remove ]; then
         runtime stop --time 10 "$id"
         runtime rm "$id"
     fi
-    if [ -f "$state/direct.conf" ]; then
-        expected=$(setup_php render direct < etc/docker/https/default.conf)
-        [ ! -L "$state/direct.conf" ] && [ "$(cat "$state/direct.conf"; printf .)" = "$(printf '%s\n.' "$expected")" ] ||
-            fail 'Preserve an unrecognized direct gateway file.'
-        if [ -f "$state/envelope.json" ] && grep -q '"topology": "private-direct-nginx"' "$state/envelope.json"; then
-            rm -f "$state/envelope.json" "$state/rootCA.pem"
-        fi
-        rm -f "$state/direct.conf"
-    fi
+    case "$metadata" in
+        absent) ;;
+        config-only) rm -f "$state/direct.conf" ;;
+        owned) rm -f "$state/envelope.json" "$state/rootCA.pem" "$state/direct.conf" ;;
+        *) fail 'Preserve unrecognized direct gateway files.' ;;
+    esac
     printf 'Private direct gateway removed; ordinary HTTPS and databases preserved.\n'
     exit 0
 fi
