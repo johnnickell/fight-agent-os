@@ -56,9 +56,9 @@ retain their existing failure criteria with no coverage quotas. There is no comb
 The ignored `.runs/build/reports/backend/` directory holds one JUnit log per suite and `unit-coverage.json`,
 which records counts, gaps by file and line, and exact excluded lines with reasons. `unit-coverage.php` is
 trusted local output from the Unit invocation; never load an externally supplied PHP artifact. The phase
-removes its current outputs and the retired `coverage.php`, `clover.xml`, and `junit.xml` under the phase lock
-before running. A failed phase is not a success receipt
-regardless of which reports exist. Line coverage does not establish branch completeness or assertion quality.
+removes its current outputs and all six retired combined reports under the phase lock before running:
+`coverage.php`, `clover.xml`, `junit.xml`, `summary.json`, `domain-application.json`, and `adapter.json`.
+It leaves unrelated files untouched. A failed phase is not a success receipt regardless of which reports exist. Line coverage does not establish branch completeness or assertion quality.
 
 The existing coverage exclusions identify:
 
