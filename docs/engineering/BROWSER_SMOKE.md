@@ -73,7 +73,9 @@ and removing only that fixture and its verified direct configuration, metadata, 
 an already-built CLI image in a disposable container; it does not need the `web` service running or Composer
 installed. Unrecognized files and containers are preserved. Main `bin/down` also removes the project-labeled
 orphan without deleting persistent data. After interrupted preparation, inspect that exact container and use
-the same scoped removal before preparing again; do not overwrite unknown state.
+the same scoped removal before preparing again; do not overwrite unknown state. Direct setup publishes the
+public CA and its digests together in one file. If publication fails, the exact configuration and any owned
+container can be removed without a CA file or a working `web` service.
 Do not run teardown or startup beneath a gate. A stale removed/recreated gateway requires fresh explicit setup.
 
 For safe direct-topology qualification inside an already selected worktree, `setup --direct --ca PUBLIC_CA

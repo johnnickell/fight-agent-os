@@ -56,6 +56,7 @@ if [ "$mode" = remove ]; then
     case "$metadata" in
         absent) ;;
         config-only) rm -f "$state/direct.conf" ;;
+        bundled) rm -f "$state/envelope.json" "$state/direct.conf" ;;
         owned) rm -f "$state/envelope.json" "$state/rootCA.pem" "$state/direct.conf" ;;
         *) fail 'Preserve unrecognized direct gateway files.' ;;
     esac
@@ -74,9 +75,11 @@ if [ "$mode" = direct ] || [ -z "$host" ]; then
     certs=$(cd "$certs" && pwd -P)
     "$openssl" verify -CAfile "$ca" -verify_hostname localhost "$certs/localhost.pem" >/dev/null 2>&1 ||
         fail 'The existing localhost leaf did not verify against the supplied CA.'
-    [ -z "$(runtime ps -aq --filter "name=^/$name\$")" ] && [ ! -e "$state/direct.conf" ] && [ ! -L "$state/direct.conf" ] ||
+    existing=$(runtime ps -aq --filter "name=^/$name\$") || fail 'Cannot check the reserved gateway name.'
+    [ -z "$existing" ] && [ ! -e "$state/direct.conf" ] && [ ! -L "$state/direct.conf" ] ||
         fail 'Remove the existing private gateway explicitly before preparing it again.'
-    [ ! -e "$state/envelope.json" ] || fail 'Direct setup refuses an existing browser envelope.'
+    [ ! -e "$state/envelope.json" ] && [ ! -e "$state/rootCA.pem" ] ||
+        fail 'Direct setup refuses existing browser trust files.'
     rendered=$(setup_php render direct < etc/docker/https/default.conf)
     (set -C; printf '%s\n' "$rendered" > "$state/direct.conf")
     mkdir -p "$output/client/check"
@@ -92,7 +95,8 @@ if [ "$mode" = direct ] || [ -z "$host" ]; then
     runtime exec "$id" nginx -t
     address=$(runtime inspect --format "{{if .State.Running}}{{(index .NetworkSettings.Networks \"$network\").IPAddress}}{{end}}" "$id")
     [ -n "$address" ] || fail 'Private gateway not ready; remove the exact owned fixture before preparing again.'
-    topology=private-direct-nginx origin=https://localhost:18443 gateway=$state/direct.conf
+    topology=private-direct-nginx origin=https://localhost:18443
+    setup_php direct-envelope "$address" < "$ca"
 else
     [ -z "$certs" ] || fail 'Certificate directory is direct-only.'
     [ ! -e "$state/direct.conf" ] || fail 'Remove the private direct gateway before preparing shared smoke.'
@@ -116,7 +120,7 @@ else
         fi
         fail 'Selected task gateway setup incomplete.'
     fi
+    cp "$ca" "$state/rootCA.pem"
+    setup_php envelope "$topology" "$origin" "$address" < "$gateway"
 fi
-cp "$ca" "$state/rootCA.pem"
-setup_php envelope "$topology" "$origin" "$address" < "$gateway"
 printf 'Browser gateway prepared: %s (%s). No development FPM fallback.\n' "$origin" "$topology"

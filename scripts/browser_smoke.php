@@ -135,6 +135,18 @@ $mailbox = static function (bool $delete = false): int {
     return $total;
 };
 try {
+    $caPath = $root.'/var/browser-smoke/rootCA.pem';
+    if (array_key_exists('public_ca', $envelope)) {
+        $publicCa = $envelope['public_ca'];
+        $caPath = $run.'/rootCA.pem';
+        if (
+            $envelope['topology'] !== 'private-direct-nginx' || !is_string($publicCa)
+            || str_contains($publicCa, 'PRIVATE KEY') || hash('sha256', $publicCa) !== $envelope['ca_sha256']
+            || file_put_contents($caPath, $publicCa) !== strlen($publicCa)
+        ) {
+            throw new RuntimeException('Invalid bundled browser trust.');
+        }
+    }
     if ($mailbox() !== 0) {
         throw new RuntimeException('Disposable catcher is not empty; preserve unknown mail.');
     }
@@ -174,7 +186,7 @@ try {
             'BROWSER_SMOKE_FIXTURE'      => $fixtureId,
             'BROWSER_SMOKE_ORIGIN'       => $origin,
             'BROWSER_SMOKE_ADDRESS'      => $envelope['address'],
-            'BROWSER_SMOKE_CA'           => $root.'/var/browser-smoke/rootCA.pem',
+            'BROWSER_SMOKE_CA'           => $caPath,
             'TZ'                         => 'UTC',
             'npm_config_offline'         => 'true',
             'npm_config_update_notifier' => 'false',

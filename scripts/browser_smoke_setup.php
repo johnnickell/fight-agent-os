@@ -53,21 +53,31 @@ $smokeEnvelope = static function (
     string $origin,
     string $address,
     string $fpm,
-    string $gateway
+    string $gateway,
+    ?string $directCa = null
 ): void {
-    $ca = file_get_contents($state.'/rootCA.pem');
+    $ca = $directCa ?? file_get_contents($state.'/rootCA.pem');
     if ($ca === false || str_contains($ca, 'PRIVATE KEY') || !str_contains($ca, 'BEGIN CERTIFICATE')) {
         throw new RuntimeException('A public CA is required.');
     }
     require_once dirname(__DIR__).'/vendor/autoload.php';
-    (new Filesystem())->dumpFile($state.'/envelope.json', json_encode([
+    $metadata = [
         'origin'         => $origin,
         'address'        => $address,
         'fpm'            => $fpm,
         'gateway_sha256' => hash('sha256', $gateway),
         'ca_sha256'      => hash('sha256', $ca),
         'topology'       => $topology
-    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n");
+    ];
+    if ($directCa !== null) {
+        if (@openssl_x509_read($directCa) === false) {
+            throw new RuntimeException('Invalid direct public CA.');
+        }
+        // Publish direct trust atomically so a failed setup leaves no standalone CA.
+        $metadata['public_ca'] = $directCa;
+    }
+    $json = json_encode($metadata, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+    (new Filesystem())->dumpFile($state.'/envelope.json', $json."\n");
 };
 
 /**
@@ -212,18 +222,31 @@ $directState = static function (string $root) use ($smokeGateway): string {
     if (!file_exists($envelope) && !file_exists($ca)) {
         return 'config-only';
     }
-    if (!is_file($envelope) || !is_file($ca)) {
+    if (!is_file($envelope)) {
         return 'unknown';
     }
     $json = file_get_contents($envelope);
     $metadata = json_decode($json === false ? '' : $json, true);
     $gatewayHash = hash_file('sha256', $direct);
-    $caHash = hash_file('sha256', $ca);
+    if (
+        ($metadata['topology'] ?? null) !== 'private-direct-nginx'
+        || ($metadata['origin'] ?? null) !== 'https://localhost:18443'
+        || $gatewayHash === false || ($metadata['gateway_sha256'] ?? null) !== $gatewayHash
+    ) {
+        return 'unknown';
+    }
+    if (array_key_exists('public_ca', $metadata)) {
+        $publicCa = $metadata['public_ca'];
 
-    return ($metadata['topology'] ?? null) === 'private-direct-nginx'
-        && ($metadata['origin'] ?? null) === 'https://localhost:18443'
-        && $gatewayHash !== false && ($metadata['gateway_sha256'] ?? null) === $gatewayHash
-        && $caHash !== false && ($metadata['ca_sha256'] ?? null) === $caHash ? 'owned' : 'unknown';
+        return !file_exists($ca) && is_string($publicCa) && !str_contains($publicCa, 'PRIVATE KEY')
+            && ($metadata['fpm'] ?? null) === '/usr/local/sbin/php-fpm'
+            && filter_var($metadata['address'] ?? null, FILTER_VALIDATE_IP) !== false
+            && @openssl_x509_read($publicCa) !== false
+            && ($metadata['ca_sha256'] ?? null) === hash('sha256', $publicCa) ? 'bundled' : 'unknown';
+    }
+    $caHash = is_file($ca) ? hash_file('sha256', $ca) : false;
+
+    return $caHash !== false && ($metadata['ca_sha256'] ?? null) === $caHash ? 'owned' : 'unknown';
 };
 
 try {
@@ -279,6 +302,30 @@ try {
             throw new RuntimeException('Missing gateway input.');
         }
         fwrite(STDOUT, $smokeGateway($input, $mode, $root));
+        exit(0);
+    }
+    if ($operation === 'direct-envelope' && count($arguments) === 3) {
+        $state = $root.'/var/browser-smoke';
+        $ca = stream_get_contents(STDIN);
+        if (
+            $ca === false || filter_var($arguments[2], FILTER_VALIDATE_IP) === false
+            || $directState($root) !== 'config-only'
+        ) {
+            throw new RuntimeException('Direct trust needs an exact gateway, valid IP, and no existing trust files.');
+        }
+        $gateway = file_get_contents($state.'/direct.conf');
+        if ($gateway === false) {
+            throw new RuntimeException('Missing direct gateway input.');
+        }
+        $smokeEnvelope(
+            $state,
+            'private-direct-nginx',
+            'https://localhost:18443',
+            $arguments[2],
+            '/usr/local/sbin/php-fpm',
+            $gateway,
+            $ca
+        );
         exit(0);
     }
     if ($operation === 'envelope' && count($arguments) === 5) {
