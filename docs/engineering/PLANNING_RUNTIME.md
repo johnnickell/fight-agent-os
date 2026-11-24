@@ -77,6 +77,14 @@ running traffic cannot use a changing schema. Startup does not terminate an exis
 preflight. A healthy container alone is not application readiness: startup must also verify canonical HTTPS
 root and CSRF through the existing front door. Key/bootstrap failures remain closed by the application.
 
+## Approved project roots
+
+Project-root settings are opt-in and read-only by default. Follow [approved-root operations](APPROVED_ROOTS.md)
+to preview, apply and inspect settings. Startup revalidates canonical paths and directory identities before
+Compose and checks the reported binds before making them available. Docker cannot verify the bound directory
+object, so untrusted users must not be able to modify parent directories. This does not register Projects
+or authorize Agent execution.
+
 ## Status, stop and restart
 
 Run inside the selected checkout; wrappers select its existing deterministic project. From main, prefix

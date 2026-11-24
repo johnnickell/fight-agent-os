@@ -28,6 +28,16 @@ def main():
             entry.add_argument('--shared-ingress', action='store_true', help='explicitly connect main to shared HTTPS; never the ordinary default')
     docker = sub.add_parser('docker')
     docker.add_argument('argv', nargs=argparse.REMAINDER)
+    roots = sub.add_parser('roots', help='preview, apply or inspect exact approved project roots')
+    operations = roots.add_subparsers(dest='operation', required=True)
+    operations.add_parser('status')
+    for name in ('add', 'change', 'remove'):
+        operation = operations.add_parser(name)
+        operation.add_argument('name')
+        if name != 'remove':
+            operation.add_argument('path')
+            operation.add_argument('--access', choices=('ro', 'rw'), default='ro')
+        operation.add_argument('--apply', metavar='PREVIEW_DIGEST')
     paths = sub.add_parser('paths')
     paths.add_argument('paths', nargs='+')
     storage = sub.add_parser('storage-admit')
@@ -55,7 +65,10 @@ def main():
             require(args.argv, 'Missing Docker command')
             return command(root, args.argv, args.worktree)
         safe, checkout, project, entry, isolated = selected(root, args.worktree)
-        if args.action == 'inspect':
+        if args.action == 'roots':
+            from .approved_roots import operate
+            operate(safe, checkout, project, isolated, args)
+        elif args.action == 'inspect':
             print(json.dumps({'checkout': str(checkout), 'project': project,
                 'resources': {kind: native_ids(safe, kind, project) for kind in ('containers', 'volumes', 'networks')}}))
         elif args.action == 'storage-admit':

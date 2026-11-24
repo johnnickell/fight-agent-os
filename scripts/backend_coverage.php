@@ -71,13 +71,24 @@ $fileExclusions = [
 $openApiIo = 'Native private OpenAPI filesystem admission';
 $catalogIo = 'Native public form catalog filesystem admission';
 $installationIo = 'Native installation catalog filesystem admission';
+$rootIo = 'Native approved-root filesystem and process permission probes, verified directly';
 $runtimeLines = [
-    'src/Adapter/Authorization/JsonManagedPolicy.php'     => [
+    'src/Adapter/Installation/NativeApprovedRootFilesystem.php' => [
+        19 => ['clearstatcache(true);', $rootIo],
+        21 => ['return is_dir($directory);', $rootIo],
+        29 => ['return @file_get_contents($path, length: $length);', $rootIo],
+        37 => ['$searchable = is_dir($directory) && is_executable($directory);', $rootIo],
+        39 => ['return [', $rootIo],
+        40 => ["'readable' => \$searchable && is_readable(\$directory),", $rootIo],
+        41 => ["'writable' => \$searchable && \$writeGranted && is_writable(\$directory)", $rootIo],
+        42 => ['];', $rootIo]
+    ],
+    'src/Adapter/Authorization/JsonManagedPolicy.php'           => [
         45 => ['if (!is_file($path) || !is_readable($path)) {', $installationIo],
         46 => ['return null;', $installationIo],
         49 => ['return file_get_contents($path);', $installationIo]
     ],
-    'src/Adapter/Http/Documentation/PrivateOpenApi.php'   => [
+    'src/Adapter/Http/Documentation/PrivateOpenApi.php'         => [
         68 => ['if (realpath($path) !== $path || !is_file($path)) {', $openApiIo],
         69 => ['return false;', $openApiIo],
         71 => ['$size = filesize($path);', $openApiIo],
@@ -85,13 +96,13 @@ $runtimeLines = [
         73 => ['return false;', $openApiIo],
         76 => ['return file_get_contents($path);', $openApiIo]
     ],
-    'src/Adapter/Validation/Catalog.php'                  => [
+    'src/Adapter/Validation/Catalog.php'                        => [
         140 => ['is_link($path) || realpath(dirname($path)) !== dirname($path)', $catalogIo],
         141 => ['|| !is_file($path) || filesize($path) > 262144', $catalogIo],
         143 => ['return false;', $catalogIo],
         146 => ['return file_get_contents($path);', $catalogIo]
     ],
-    'src/Adapter/Security/Password/Argon2idPasswords.php' => [
+    'src/Adapter/Security/Password/Argon2idPasswords.php'       => [
         30 => ['throw new RuntimeException();', 'Installed PHP lacks native Argon2id support'],
         38 => ['} catch (Throwable) {', 'Catch an installed-runtime failure during the Argon2id startup probe'],
         39 => ["throw new RuntimeException('Argon2id password support is unavailable.');",
