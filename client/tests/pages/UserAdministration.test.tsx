@@ -197,6 +197,81 @@ describe('browser user administration', () => {
     expect(refresh).toHaveBeenCalledWith(target.user_id, 'committed');
   });
 
+  it('tells a read-only operator when the authorized admin session list is empty', async () => {
+    const target = directoryUser({ state: 'active' });
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(directoryResponse(url.includes('/sessions?') ? directoryPage([]) : target))
+    );
+    const { api, cache, service } = directoryDependencies(fetch, ['READ_USERS', 'READ_SESSIONS']);
+    cleanups.push(() => cache.dispose());
+    await cache.load();
+    render(
+      <UsersPage
+        service={service}
+        cache={cache}
+        detailId={target.user_id}
+        administration={new UserAdministrationService(api, cache, vi.fn())}
+        onOutcome={vi.fn()}
+      />
+    );
+    const sessions = await screen.findByRole('region', { name: 'Admin sessions' });
+    expect(await within(sessions).findByText('No active sessions for this user.')).toBeVisible();
+    expect(within(sessions).queryByRole('button', { name: /revoke/i })).not.toBeInTheDocument();
+    await userEvent.click(within(sessions).getByRole('button', { name: 'Reload admin sessions' }));
+    expect(await within(sessions).findByText('No active sessions for this user.')).toBeVisible();
+    expect(fetch.mock.calls.filter(([url]) => url.includes('/sessions?'))).toHaveLength(2);
+  });
+
+  it('drops the old catalog page and returns to the first page when the results shrink', async () => {
+    const target = directoryUser({ state: 'active' });
+    const first = role('ROLE_FIRST', false);
+    const second = role('ROLE_SECOND', false);
+    let shrunk = false;
+    const fetch = vi.fn((url: string) => {
+      if (!url.startsWith('/api/v1/roles?')) return Promise.resolve(directoryResponse(target));
+      const page = url.includes('page=2&') ? 2 : 1;
+      return Promise.resolve(
+        directoryResponse(
+          directoryPage([], {
+            page,
+            total_pages: shrunk ? 1 : 2,
+            total_records: shrunk ? 1 : 26,
+            records: page === 1 ? [first] : shrunk ? [] : [second]
+          })
+        )
+      );
+    });
+    const { api, cache, service } = directoryDependencies(fetch, permissions);
+    cleanups.push(() => cache.dispose());
+    await cache.load();
+    render(
+      <UsersPage
+        service={service}
+        cache={cache}
+        detailId={target.user_id}
+        administration={new UserAdministrationService(api, cache, vi.fn())}
+        onOutcome={vi.fn()}
+      />
+    );
+    const operator = userEvent.setup();
+    const next = await screen.findByRole('button', { name: 'Next role catalog page' });
+    expect(screen.getByRole('button', { name: 'Previous role catalog page' })).toBeDisabled();
+    await operator.click(next);
+    await screen.findByRole('button', { name: 'Assign ROLE_SECOND' });
+    await operator.click(screen.getByRole('button', { name: 'Previous role catalog page' }));
+    await screen.findByRole('button', { name: 'Assign ROLE_FIRST' });
+    await operator.click(screen.getByRole('button', { name: 'Next role catalog page' }));
+    await screen.findByRole('button', { name: 'Assign ROLE_SECOND' });
+
+    shrunk = true;
+    await operator.click(screen.getByRole('button', { name: 'Reload role catalog' }));
+    await screen.findByRole('button', { name: 'Assign ROLE_FIRST' });
+    expect(screen.queryByRole('button', { name: 'Assign ROLE_SECOND' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Next role catalog page' })
+    ).not.toBeInTheDocument();
+  });
+
   it('clears obsolete detail on a conflict and rechecks the principal and target without replay', async () => {
     const target = directoryUser({ state: 'active' });
     const updated = { ...target, state: 'disabled' };
