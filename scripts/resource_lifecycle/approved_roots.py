@@ -1,4 +1,5 @@
 """Own exact, explicitly approved project-root binds for the selected installation."""
+from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
@@ -152,22 +153,28 @@ def config_file(safe, project, isolated):
     return path
 
 
-def model(config, roots):
+def model(config, roots, manifest_dir=None):
     entries = {name: {**root, 'target': target(name, root)} for name, root in roots.items()}
     document = {KEY: {'version': 1, 'roots': entries}, 'services': {SERVICE: {'volumes': [
-        bind(config.parent, MANIFEST, True),
+        bind(manifest_dir if manifest_dir is not None else config.parent, MANIFEST, True),
         *(bind(root['path'], root['target'], root['access'] == 'ro') for root in entries.values())]}}}
     return json.dumps(document, indent=2) + '\n'
 
 
 def load(config):
-    if not config.exists():
-        return {}
     try:
-        require(config.is_file() and config.stat().st_uid == os.getuid() and
-                stat.S_IMODE(config.stat().st_mode) == 0o600 and config.stat().st_size <= 65536,
-                'Approved-root settings must be a private regular file of bounded size')
-        source = config.read_text()
+        try:
+            fd = os.open(config, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        except FileNotFoundError:
+            return {}
+        with os.fdopen(fd, 'rb') as stream:
+            metadata = os.fstat(stream.fileno())
+            require(stat.S_ISREG(metadata.st_mode) and metadata.st_uid == os.getuid() and
+                    stat.S_IMODE(metadata.st_mode) == 0o600 and metadata.st_size <= 65536,
+                    'Approved-root settings must be a private regular file of bounded size')
+            raw = stream.read(65537)
+            require(len(raw) <= 65536, 'Approved-root settings exceed the size limit')
+        source = raw.decode()
         data = json.loads(source)
         roots = data[KEY]['roots']
         require(isinstance(roots, dict) and len(roots) <= LIMIT, 'Invalid approved-root configuration')
@@ -215,14 +222,64 @@ def local_docker(checkout):
             'A local Unix Docker context is required for approved roots')
 
 
-def admit_bind(roots):
-    # Docker resolves literal source paths itself. Neither Compose nor its Engine bind
-    # API can require the directory identity that the host previously qualified.
-    require(not roots, 'Cannot verify approved root identity at bind time; no root binds were applied')
+@contextmanager
+def locked_settings(config):
+    directory = config.parent
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    require(directory.resolve() == directory, 'Approved-root configuration directory alias refused')
+    fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(fd)
 
 
-def admit_reconfiguration(safe, project, isolated):
-    admit_bind(load(config_file(safe, project, isolated)))
+def observation_directory(config):
+    directory = config.parent / 'observed'
+    require(directory.resolve() == directory, 'Approved-root observation directory alias refused')
+    return directory
+
+
+@contextmanager
+def admit_reconfiguration(config, checkout, roots, protected):
+    with locked_settings(config):
+        require(model(config, load(config)) == model(config, roots),
+                'Approved-root configuration changed; run startup again after reviewing status')
+        directory = observation_directory(config)
+        if roots:
+            local_docker(checkout)
+            directory.mkdir(mode=0o700, exist_ok=True)
+        # Revoke previous observations before any recreation. Only a successful
+        # post-start inspection can publish a manifest for the new container.
+        (directory / config.name).unlink(missing_ok=True)
+        admitted = model(config, roots, directory) if roots else None
+        qualify(roots, protected)
+        yield admitted
+
+
+def exact_bind(mounts, source, destination, writable):
+    at_destination = [mount for mount in mounts if mount.get('Destination') == destination]
+    return len(at_destination) == 1 and any(
+        mount.get('Type') == 'bind' and mount.get('Source') == source and mount.get('RW') is writable
+        for mount in at_destination)
+
+
+def publish_observation(config, checkout, project, roots, admitted):
+    directory = observation_directory(config)
+    if not roots and not directory.exists():
+        return
+    container, mounts = running_mounts(checkout, project)
+    destinations = {target(name, root) for name, root in roots.items()}
+    require(container and {mount['Destination'] for mount in mounts
+                           if mount['Destination'].startswith(PREFIX + '/')} == destinations and
+            all(exact_bind(mounts, root['path'], target(name, root), root['access'] == 'rw')
+                for name, root in roots.items()) and
+            (exact_bind(mounts, str(directory), MANIFEST, False) if roots else
+             not any(mount['Destination'] == MANIFEST for mount in mounts)),
+            'Docker did not report the exact approved-root mounts; stop the selected FPM service and review status')
+    if roots:
+        write_private(directory / config.name, admitted)
 
 
 def running_mounts(checkout, project):
@@ -231,7 +288,12 @@ def running_mounts(checkout, project):
                 '--filter', 'label=com.docker.compose.service=' + SERVICE,
                 '--filter', 'label=com.docker.compose.oneoff=False'], checkout).splitlines()
     require(len(ids) <= 1, 'Cannot identify a unique running application service')
-    return (ids[0], query(['docker', 'inspect', '--format', '{{json .Mounts}}', ids[0]], checkout)) if ids else (None, [])
+    if not ids:
+        return None, []
+    mounts = query(['docker', 'inspect', '--format', '{{json .Mounts}}', ids[0]], checkout)
+    require(isinstance(mounts, list) and all(isinstance(mount, dict) and isinstance(mount.get('Destination'), str)
+                                           for mount in mounts), 'Cannot verify the Docker mount report')
+    return ids[0], mounts
 
 
 def mount_facts(exact, observation, probe_reason, write_granted):
@@ -256,8 +318,7 @@ def status(checkout, project, roots, protected):
     pending = {mount['Destination'] for mount in mounts if mount['Destination'].startswith(PREFIX + '/')}
     for name, root in roots.items():
         destination = target(name, root)
-        exact = any(m['Destination'] == destination and m['Type'] == 'bind' and m['Source'] == root['path']
-                    and m['RW'] == (root['access'] == 'rw') for m in mounts)
+        exact = exact_bind(mounts, root['path'], destination, root['access'] == 'rw')
         if exact:
             pending.discard(destination)
         observation = next((fact for fact in facts.get('roots', []) if fact['locator'] == 'root:' + name), {})
@@ -269,7 +330,7 @@ def status(checkout, project, roots, protected):
             current = False
         results.append({'locator': 'root:' + name, 'canonical_path': root['path'], 'configured': True,
                         'write_granted': write_granted, 'mounted': mounted,
-                        'readable': readable, 'writable': writable,
+                        'readable': current and readable, 'writable': current and writable,
                         'reason': reason if current else 'host_root_unqualified'})
     print(json.dumps({'roots': results, 'stale_mounts': len(pending)}, indent=2))
 
@@ -298,21 +359,17 @@ def operate(safe, checkout, project, isolated, args):
                       'before': before['path'] if before else None, 'before_access': before['access'] if before else None,
                       'after': after['path'] if after else None, 'access': after['access'] if after else None,
                       'reconfigure': restart,
-                      'expected': 'Only settings change; runtime reconfiguration refuses nonempty approvals without bind-time identity',
+                      'expected': 'Only settings change; explicit startup revalidates roots and checks Docker mounts',
+                      'required': 'Approve only paths whose parent directories untrusted users cannot modify',
                       'recovery': 'Preview and apply the inverse change; stop FPM to end existing exposure; no source is removed',
                       'apply_digest': digest}, indent=2))
     if args.apply is None:
         return
     require(args.apply == digest, 'Preview no longer matches; review a new preview before applying')
-    config.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    require(config.parent.resolve() == config.parent, 'Approved-root configuration directory alias refused')
-    fd = os.open(config.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+    with locked_settings(config):
         require(load(config) == roots, 'Configuration changed since preview; review a new preview')
         if after is not None:
             qualify(proposed, protected_paths(safe, checkout))
+        (observation_directory(config) / config.name).unlink(missing_ok=True)
         write_private(config, model(config, proposed))
-    finally:
-        os.close(fd)
     print('Configuration saved. Runtime exposure is unchanged until explicit reconfiguration.')

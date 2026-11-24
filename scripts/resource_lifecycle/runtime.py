@@ -91,9 +91,11 @@ def command(root, argv, selector=None):
 def up(root, selector=None, build_only=False, shared=False, task=None, unregistered=False):
     safe, checkout, project, entry = resolve(root, selector)
     isolated = selector is not None
-    from .approved_roots import admit_reconfiguration
+    from .approved_roots import admit_reconfiguration, config_file, load, protected_paths, publish_observation
     if not build_only:
-        admit_reconfiguration(safe, project, isolated)
+        config = config_file(safe, project, isolated)
+        roots = load(config)
+        protected = protected_paths(safe, checkout)
     registered = registration(safe, checkout, project, selector, unregistered, task)
     shared = shared or (not isolated and registered is not None)
     storage_admit(checkout)
@@ -124,9 +126,18 @@ def up(root, selector=None, build_only=False, shared=False, task=None, unregiste
          'web', 'postgres', 'postgres_test', 'seaweedfs'], checkout, env=environment(isolated))
     run([*args, 'exec', '-T', 'web', 'php', 'vendor/bin/doctrine-migrations', 'up-to-date',
          '--no-interaction'], checkout, env=environment(isolated))
-    # No later read of saved root settings can add binds to this admitted empty model.
-    run([*args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--no-build',
-         '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated))
+    # The final admission checks the host paths, then streams the exact approved
+    # model. Compose never reopens the mutable settings file for mount declarations.
+    with admit_reconfiguration(config, checkout, roots, protected) as admitted:
+        root_args = ['--file', '-'] if admitted is not None else []
+        try:
+            run([*args, *root_args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--no-build',
+                 '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated), input=admitted)
+            publish_observation(config, checkout, project, roots, admitted)
+        except (Hold, OSError, ValueError, subprocess.SubprocessError):
+            if admitted is not None:
+                run([*args, '--profile', 'https', 'stop', 'https_php'], checkout, env=environment(isolated))
+            raise
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-s', 'reload'], checkout, env=environment(isolated))
     if isolated or shared:

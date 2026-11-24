@@ -5,15 +5,20 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from resource_lifecycle.approved_roots import admit_bind, canonical, mount_facts, qualify
+from resource_lifecycle import approved_roots as approvals
+from resource_lifecycle.approved_roots import canonical, mount_facts, qualify
 from resource_lifecycle.resources import Hold
 
 
 class ApprovedRootDecisionTest(unittest.TestCase):
-    def test_unknown_bind_identity_refuses_nonempty_model(self):
-        admit_bind({})
-        with self.assertRaisesRegex(Hold, 'bind time'):
-            admit_bind({'example': {'identity': [1, 2, 3]}})
+    def test_mount_requires_unique_matching_source_destination_and_mode(self):
+        exact = {'Type': 'bind', 'Source': '/fixture/project', 'Destination': '/run/example', 'RW': False}
+        self.assertTrue(approvals.exact_bind([exact], '/fixture/project', '/run/example', False))
+        for mounts in ([], [exact, exact], *([
+                {**exact, key: value}] for key, value in (
+                    ('Type', 'volume'), ('Source', '/fixture/other'), ('Destination', '/run/other'), ('RW', True)))):
+            with self.subTest(mounts=mounts):
+                self.assertFalse(approvals.exact_bind(mounts, '/fixture/project', '/run/example', False))
 
     def test_mount_and_access_are_independent(self):
         observed = {'mounted': True, 'readable': True, 'writable': True, 'reason': None}
@@ -71,6 +76,43 @@ class ApprovedRootPolicyTest(unittest.TestCase):
         self.root.mkdir()
         with self.assertRaisesRegex(Hold, 'identity changed'):
             qualify({'project': previous}, ())
+
+    def test_startup_admission_rejects_changed_settings_and_unverified_identity(self):
+        config = self.base / 'roots.json'
+        roots = {'project': self.entry(self.root)}
+        approvals.write_private(config, approvals.model(config, roots))
+        with patch.object(approvals, 'local_docker'):
+            with approvals.admit_reconfiguration(config, self.base, roots, ()) as admitted:
+                self.assertEqual(admitted, approvals.model(config, roots, config.parent / 'observed'))
+            approvals.write_private(config, approvals.model(config, {'other': self.entry(self.other)}))
+            with self.assertRaisesRegex(Hold, 'configuration changed'):
+                with approvals.admit_reconfiguration(config, self.base, roots, ()):
+                    self.fail('Changed model was admitted')
+            approvals.write_private(config, approvals.model(config, roots))
+            with patch.object(approvals, 'canonical', side_effect=Hold('Cannot qualify directory identity')):
+                with self.assertRaisesRegex(Hold, 'Cannot qualify directory identity'):
+                    with approvals.admit_reconfiguration(config, self.base, roots, ()):
+                        self.fail('Unverified root was admitted')
+
+    def test_unconfirmed_mount_does_not_publish_application_snapshot(self):
+        config = self.base / 'roots.json'
+        directory = approvals.observation_directory(config)
+        directory.mkdir()
+        roots = {'project': self.entry(self.root)}
+        admitted = approvals.model(config, roots, directory)
+        intended = [
+            {'Type': 'bind', 'Source': str(directory), 'Destination': approvals.MANIFEST, 'RW': False},
+            {'Type': 'bind', 'Source': str(self.root), 'Destination': approvals.target('project', roots['project']),
+             'RW': False},
+        ]
+        snapshot = directory / config.name
+        with patch.object(approvals, 'running_mounts', return_value=('fpm', intended[:1])):
+            with self.assertRaisesRegex(Hold, 'did not report the exact'):
+                approvals.publish_observation(config, self.base, 'fixture', roots, admitted)
+            self.assertFalse(snapshot.exists())
+        with patch.object(approvals, 'running_mounts', return_value=('fpm', intended)):
+            approvals.publish_observation(config, self.base, 'fixture', roots, admitted)
+        self.assertEqual(admitted, snapshot.read_text())
 
     def test_duplicate_and_nested_roots_fail_in_either_order(self):
         nested = self.root / 'nested'

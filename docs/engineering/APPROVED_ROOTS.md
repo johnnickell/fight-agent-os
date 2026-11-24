@@ -1,9 +1,10 @@
 # Approve a local project root
 
-No host project roots are exposed by default. **New root exposure is blocked:** the supported Docker
-Engine/Compose bind interface accepts a source pathname, not a directory handle or an expected host
-directory identity. It cannot guarantee that the object bound is the one approved. Startup with any
-saved roots therefore stops before runtime changes; it never sends the saved settings to Compose. Select the installation first: run these commands inside the
+No host project roots are exposed by default. **Approve only paths whose parent directories untrusted
+users cannot modify, including through group permissions or access-control lists.** Startup validates
+the canonical path and directory identity just before Compose. Docker reports the mounted path, not
+whether it refers to the same directory object checked before startup.
+Select the installation first: run these commands inside the
 main checkout or the specific registered worktree. The operation affects only that installation. Do not
 select an entire home, a shared parent, a directory containing private installation data, or any tree that
 contains data the application should not see. Approval covers the whole selected tree, not just tracked Git
@@ -22,16 +23,19 @@ No operation here writes to a project, grants Project or Agent authority, or pro
 Use the digest from the immediately preceding preview. `change NAME PATH [--access ro|rw]` replaces that
 approval; repeat `--access rw` to retain an existing write grant. `remove NAME` withdraws exposure; it never
 removes source. Both commands use the same preview-then-apply sequence. A stale preview or changed root is
-refused. Approval stores configuration only. A bind-time identity guarantee is required before this
-workflow can make a newly approved root available. Do not manually pass the settings to Compose or
-restart a previously mounted FPM container to work around the hold.
+refused. Approval stores configuration only. Apply the new binds with `./bin/up --worktree /absolute/registered/checkout`
+for a linked checkout or `./bin/up` with the existing main ingress mode. Startup refuses detected drift or
+unverified identity, streams the exact admitted root declarations to Compose, and checks the source,
+destination and access mode Docker reports. If Docker cannot confirm the expected mounts, startup
+withholds the snapshot and attempts to stop the affected FPM service. Check `status` and stop that
+service if exposure remains. A regular container restart is not reconfiguration.
 
 A running service created by an earlier version keeps its old mounts until it stops or is recreated.
 A removed or replaced root may still be physically exposed if `status` reports a nonzero `stale_mounts`
 count. To end existing exposure without recreating the runtime, run
 `./bin/runtime docker compose stop https_php` in the selected checkout. Task `down` also stops FPM but disposes
 its database and storage as documented in the [resource procedure](RESOURCE_LIFECYCLE.md).
-To restore normal startup without root exposure, preview and apply removal of all saved roots, then use
+To recreate the runtime without root exposure, preview and apply removal of all saved roots, then use
 `./bin/up --worktree /absolute/registered/checkout` for a linked checkout or `./bin/up` with the existing
 main ingress mode. Inspect status again. Reversing a settings change does not restore a bind. Restore
 only a known private backup of corrupt settings while the installation is stopped. Never use `chmod` or `sudo`
@@ -40,7 +44,10 @@ to make a selected directory pass. If the service runs as a different owner, OS 
 ## Boundaries and observations
 
 - Settings are versioned, owner-only and ignored: `var/runtime/approved-roots/roots.json` for main;
-  `var/worktrees/<project>/approved-roots/roots.json` in the canonical checkout for a worktree. The saved model records intended FPM-only binds; the runtime does not supply it to Compose.
+  `var/worktrees/<project>/approved-roots/roots.json` in the canonical checkout for a worktree. Startup does
+  not give Compose the mutable settings file. It sends an in-memory override, then publishes a separate
+  runtime snapshot only after checking Docker's reported mounts. Settings changes clear that snapshot
+  until startup checks the mounts again; existing physical binds may still be present.
   No approved-root binds go to the gateway, database, storage, mail, tooling or Runner. Do not mount the installation's
   private state or copy this file to tickets; it contains host paths, not credentials.
 - Only the selected local Unix Docker context is supported. Host policy admits fixed internal APFS on macOS
@@ -67,5 +74,6 @@ not later browser permissions, descendant access, or Runner isolation.
 | Step | Source |
 |---|---|
 | 1. Preview and apply | [`operate`](../../scripts/resource_lifecycle/approved_roots.py) validates an explicit approval and saves settings |
-| 2. Refuse root reconfiguration | [`admit_reconfiguration`](../../scripts/resource_lifecycle/approved_roots.py) stops startup before applying nonempty settings |
-| 3. Observe existing exposure | [`ApprovedRootAccess::observe`](../../src/Adapter/Installation/ApprovedRootAccess.php) reports safe facts from configuration and mount metadata |
+| 2–3. Validate and apply | [`admit_reconfiguration`](../../scripts/resource_lifecycle/approved_roots.py) rechecks identity; [`up`](../../scripts/resource_lifecycle/runtime.py) streams the admitted override |
+| 4. Check Docker binds | [`publish_observation`](../../scripts/resource_lifecycle/approved_roots.py) publishes the snapshot only after matching the reported mounts |
+| 5. Observe access | [`ApprovedRootAccess::observe`](../../src/Adapter/Installation/ApprovedRootAccess.php) reports safe facts from the snapshot and runtime mount metadata |

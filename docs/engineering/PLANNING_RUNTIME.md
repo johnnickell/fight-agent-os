@@ -80,9 +80,10 @@ root and CSRF through the existing front door. Key/bootstrap failures remain clo
 ## Approved project roots
 
 Project-root settings are opt-in and read-only by default. Follow [approved-root operations](APPROVED_ROOTS.md)
-to preview, apply and inspect settings. Startup refuses to apply new binds because the runtime cannot prove
-the source directory's identity at bind time. The capability can report existing exposure, but does not
-register Projects or authorize Agent execution.
+to preview, apply and inspect settings. Startup revalidates canonical paths and directory identities before
+Compose and checks the reported binds before making them available. Docker cannot verify the bound directory
+object, so untrusted users must not be able to modify parent directories. This does not register Projects
+or authorize Agent execution.
 
 ## Status, stop and restart
 

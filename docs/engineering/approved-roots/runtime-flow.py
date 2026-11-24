@@ -4,7 +4,7 @@ from pathlib import Path
 from diagrams import Diagram, Edge, Node
 
 with Diagram(
-    'Approved project roots | existing runtime flow\nDotted arrows: runtime actions or data',
+    'Approved project roots | runtime flow\nDotted arrows: runtime actions or data',
     filename=str(Path(__file__).with_suffix('')),
     show=False,
     direction='LR',
@@ -15,9 +15,12 @@ with Diagram(
 ):
     operator = Node('Host operator', nodeid='operator')
     settings = Node('Private versioned\nroot settings', nodeid='settings')
-    blocked = Node('No new root binds\nBind identity unavailable', nodeid='blocked')
-    fpm = Node('Existing PHP-FPM\nApprovedRootAccess', nodeid='fpm')
+    startup = Node('Explicit startup\nRevalidate path and identity', nodeid='startup')
+    docker = Node('Compose / Docker\nFPM-only root binds', nodeid='docker')
+    fpm = Node('PHP-FPM\nApprovedRootAccess', nodeid='fpm')
     view = Node('Safe root locator\nand access facts', nodeid='view')
     operator >> Edge(label='1. Preview and apply') >> settings
-    settings >> Edge(label='2. Refuse nonempty settings at startup') >> blocked
-    fpm >> Edge(label='3. Observe existing mounts and permissions') >> view
+    settings >> Edge(label='2. Read settings') >> startup
+    startup >> Edge(label='3. Stream admitted model') >> docker
+    docker >> Edge(label='4. Publish snapshot after mount check') >> fpm
+    fpm >> Edge(label='5. Observe permissions') >> view
