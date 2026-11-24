@@ -32,7 +32,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
-| 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | — | — |
@@ -57,7 +56,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
+| 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00123](00123-TASK.md) | — |
 | 14 | [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00128](00128-TASK.md) | — |
 | 16 | [TASK-00600](00600-TASK.md) | Adopt the shared React frontend in the Slim skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
 | 17 | [TASK-00601](00601-TASK.md) | Adopt the shared React frontend in the Laravel skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
@@ -526,6 +525,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | done | — | [PR #236](https://github.com/johnnickell/fight-agent-os/pull/236) |
 | 12 | [TASK-00012](00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #17](https://github.com/johnnickell/fight-agent-os/pull/17) |
 | 12 | [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | — (standalone chore) | done | — | [PR #16](https://github.com/johnnickell/fight-agent-os/pull/16) |
+| 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | — |
 | 12 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | done | — | [PR #243](https://github.com/johnnickell/fight-agent-os/pull/243) |
 | 13 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #20](https://github.com/johnnickell/fight-agent-os/pull/20) |
 | 14 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #23](https://github.com/johnnickell/fight-agent-os/pull/23) |
