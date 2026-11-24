@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const destination = mkdtempSync(join(tmpdir(), 'pi-harness-pack.'));
@@ -24,7 +24,8 @@ try {
     ...Object.values(manifest.bin), ...manifest.pi.extensions,
     ...engineManifest.pi.extensions.map((path) => `${engine}/${path.replace(/^\.\//, '')}`),
     'README.md', 'SUBAGENTS.md', 'WORKFLOW.md', 'WORKFLOW_RULE.md', 'WORKSPACE.md',
-    'COMPACTION.md', 'TOOL_POLICY.md', `${engine}/README.md`, `${engine}/docs/packages.md`,
+    'COMPACTION.md', 'TOOL_POLICY.md', 'src/observation/session-file-birth.php',
+    `${engine}/README.md`, `${engine}/docs/packages.md`,
   ]) assert.ok(files.includes(path.replace(/^\.\//, '')), `Missing packaged file: ${path}`);
   for (const directory of [...manifest.pi.subagents.agents, 'profiles']) {
     assert.ok(files.some((path) => path.startsWith(`${directory.replace(/^\.\//, '')}/`)),
@@ -39,6 +40,19 @@ try {
   assert.equal(engineManifest.author, 'tintinweb');
   assert.equal(engineManifest.license, 'MIT');
   console.log(`${filename}: ${files.length} files; runtime entries, docs and tintinweb MIT attribution verified.`);
+
+  if (['linux', 'darwin'].includes(process.platform)) {
+    execFileSync('tar', ['-xf', archive, '-C', destination]);
+    const { sessionFileIdentity, sameSessionFile } = await import(pathToFileURL(join(destination, 'package/src/observation/custody.mjs')));
+    const fixture = join(destination, 'session.jsonl');
+    writeFileSync(fixture, 'package lifetime fixture');
+    const first = sessionFileIdentity(fixture);
+    appendFileSync(fixture, '\nappend');
+    assert.ok(sameSessionFile(first, sessionFileIdentity(fixture)));
+    assert.throws(() => sessionFileIdentity(destination), /Persistent parent session unavailable/);
+    if (process.platform === 'linux') assert.throws(() => sessionFileIdentity('/proc/self/status'));
+    console.log(`Packaged session-file observation and refusal verified on ${process.platform}.`);
+  }
 } finally {
   rmSync(destination, { recursive: true, force: true });
 }
