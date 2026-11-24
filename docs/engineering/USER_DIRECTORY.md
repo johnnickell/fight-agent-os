@@ -119,12 +119,12 @@ a target disappearing after the gate returns 404. Each new request resolves auth
 there is no second Action recheck or atomic authorization-and-read guarantee.
 
 Each directory row has a permission-rechecked **View details** button. Selection clears the list and fetches
-fresh detail; it does not reuse the row as current target state. Detail remains within `/admin/users`, with
-no new parameterized browser route, user ID/email in history, intended-route payload or persisted cache. Back
-refetches the same bounded page; Retry/Reload are explicit. Authority retirement clears selection and data,
-aborts/fences outstanding work and does not replay the directory. The sole service's 401/403 refusal fence and
-existing session/principal owners still control recovery. Read-only detail has accessible loading, missing,
-forbidden, system and cleared states; lifecycle/role/session operations remain later TASKs.
+fresh detail; it does not reuse the row as current target state. TASK-00123 adds a protected host route at
+`/admin/users/{user_id}` so detail can read again after authority changes. The route carries a classified UUID and
+bounded table options, never email, a session ID, a reason or credentials. Back refetches the same bounded page.
+Authority retirement clears private data and fences outstanding work. The existing 401/403 refusal fence and
+session/principal owners still control detail recovery. The shared component also supports hosts that keep
+selection in memory. Lifecycle, role and cross-user session actions use existing, separately protected APIs.
 
 Qualified installed Fight Access Control **v0.8.0**, source/Composer lock reference
 `319738255e682d587642b67856039f882b9588d6`: `GetUserById(UserId)` dispatches through the configured bus,

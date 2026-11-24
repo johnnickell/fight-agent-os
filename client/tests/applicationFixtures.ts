@@ -6,6 +6,7 @@ import { AuthorityCache } from '@fight/react/account';
 import { InvitationIssuanceService } from '@fight/react/account';
 import { InvitationService } from '@fight/react/account';
 import { OwnedSessionsService } from '@fight/react/account';
+import { UserAdministrationService } from '@fight/react/account';
 import { UserDirectoryService } from '@fight/react/account';
 import { PublicSchemaService } from '@fight/react/account';
 import { ApiClient } from '@fixtures/transport';
@@ -104,6 +105,11 @@ export function applicationSession(
         schemaVersion: 2,
         apiBasePath: '/api/v1'
       })
+    ),
+    userAdministration: new UserAdministrationService(
+      new ApiClient({ schemaVersion: 2, apiBasePath: '/api/v1' }),
+      authority,
+      () => {}
     ),
     sessions: new OwnedSessionsService(
       new ApiClient({

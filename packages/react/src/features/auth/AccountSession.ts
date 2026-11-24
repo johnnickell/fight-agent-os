@@ -7,6 +7,7 @@ import { CurrentPrincipalService } from '../authority/CurrentPrincipalService.js
 import { InvitationIssuanceService } from '../invitations/InvitationIssuanceService.js';
 import { InvitationService } from '../invitations/InvitationService.js';
 import { OwnedSessionsService } from '../sessions/OwnedSessionsService.js';
+import { UserAdministrationService } from '../users/UserAdministrationService.js';
 import { UserDirectoryService } from '../users/UserDirectoryService.js';
 import { PublicSchemaService } from '../validation/PublicSchemaService.js';
 import { CsrfProofService } from './CsrfProofService.js';
@@ -96,6 +97,13 @@ export function createAccountSession<T extends { clear(): void; dispose(): void 
       getProtectedJson: api.getProtectedJson.bind(api)
     },
     users,
+    userAdministration: new UserAdministrationService(api, authority, (userId, outcome) => {
+      users.invalidate();
+      invitations.invalidate(userId);
+      if (outcome === 'access-rejected') void coordinator.restore();
+      else if (outcome === 'committed') coordinator.authorityChanged();
+      else void authority.signal('authority-changed');
+    }),
     invitations,
     invitationIssuance: new InvitationIssuanceService(api, authority, {
       invalidated: (userId) => {

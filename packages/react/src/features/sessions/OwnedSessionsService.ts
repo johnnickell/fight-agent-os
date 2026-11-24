@@ -88,6 +88,49 @@ const decodeSession: ResponseDecoder<OwnedSession> = (value) => {
   });
 };
 
+export function decodeSessionsPage(
+  page: number,
+  perPage: number,
+  owner: 'self' | 'other'
+): ResponseDecoder<OwnedSessionsPage> {
+  return (value) => {
+    if (
+      !hasExactKeys(value, ['page', 'per_page', 'total_pages', 'total_records', 'records']) ||
+      !integer(value.page, 1, 1000) ||
+      value.page !== page ||
+      !integer(value.per_page, 1, 100) ||
+      value.per_page !== perPage ||
+      !integer(value.total_pages, 1) ||
+      !integer(value.total_records, 0) ||
+      value.total_pages !== Math.max(1, Math.ceil(value.total_records / perPage)) ||
+      !Array.isArray(value.records) ||
+      value.records.length !==
+        Math.min(perPage, Math.max(0, value.total_records - (page - 1) * perPage))
+    )
+      return null;
+    const records: OwnedSession[] = [];
+    const ids = new Set<string>();
+    let currentCount = 0;
+    for (const item of value.records) {
+      const session = decodeSession(item);
+      if (!session || ids.has(session.sessionId)) return null;
+      const previous = records.at(-1);
+      // Server ordering uses precise persisted creation time; public timestamps have second precision.
+      if (previous && previous.createdAt > session.createdAt) return null;
+      ids.add(session.sessionId);
+      if (session.current && (owner === 'other' || ++currentCount > 1)) return null;
+      records.push(session);
+    }
+    return Object.freeze({
+      page,
+      perPage,
+      totalPages: value.total_pages,
+      totalRecords: value.total_records,
+      records: Object.freeze(records)
+    });
+  };
+}
+
 /** Reads a fixed protected endpoint; retains no rows, credentials or authority. */
 export class OwnedSessionsService {
   readonly #api: ApiClient;
@@ -157,42 +200,7 @@ export class OwnedSessionsService {
     if (this.#blocked) return apiFailure(this.#blocked);
     const result = await this.#api.get<OwnedSessionsPage>(
       '/me/sessions',
-      (value) => {
-        if (
-          !hasExactKeys(value, ['page', 'per_page', 'total_pages', 'total_records', 'records']) ||
-          !integer(value.page, 1, 1000) ||
-          value.page !== page ||
-          !integer(value.per_page, 1, 100) ||
-          value.per_page !== perPage ||
-          !integer(value.total_pages, 1) ||
-          !integer(value.total_records, 0) ||
-          value.total_pages !== Math.max(1, Math.ceil(value.total_records / perPage)) ||
-          !Array.isArray(value.records) ||
-          value.records.length !==
-            Math.min(perPage, Math.max(0, value.total_records - (page - 1) * perPage))
-        )
-          return null;
-        const records: OwnedSession[] = [];
-        const ids = new Set<string>();
-        let currentCount = 0;
-        for (const item of value.records) {
-          const session = decodeSession(item);
-          if (!session || ids.has(session.sessionId)) return null;
-          const previous = records.at(-1);
-          // Server ordering uses precise persisted creation time; public timestamps have second precision.
-          if (previous && previous.createdAt > session.createdAt) return null;
-          ids.add(session.sessionId);
-          if (session.current && ++currentCount > 1) return null;
-          records.push(session);
-        }
-        return Object.freeze({
-          page,
-          perPage,
-          totalPages: value.total_pages,
-          totalRecords: value.total_records,
-          records: Object.freeze(records)
-        });
-      },
+      decodeSessionsPage(page, perPage, 'self'),
       { access: 'required', pagination: { page, perPage }, ...(signal ? { signal } : {}) }
     );
     if (signal?.aborted || (scope && !scope.isCurrent())) return apiFailure('cancelled');

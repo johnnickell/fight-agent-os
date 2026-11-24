@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { UserDetail } from '@fight/react/account';
+import { UserAdministrationService, UserDetail } from '@fight/react/account';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
@@ -13,11 +13,12 @@ import {
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-type Scenario = 'ready' | 'empty-roles' | 'loading' | 'forbidden' | 'missing' | 'error';
+type Scenario = 'ready' | 'empty-roles' | 'loading' | 'forbidden' | 'missing' | 'error' | 'admin';
 function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
   const [d] = useState(() => {
     const user = directoryUser({
       email: `${'équipe'.repeat(20)}@example.test`,
+      state: scenario === 'admin' ? 'active' : 'pending_activation',
       roles:
         scenario === 'empty-roles'
           ? []
@@ -26,23 +27,25 @@ function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
               { name: 'ROLE_USER', managed: true }
             ]
     });
+    const dependencies = directoryDependencies(() => {
+      if (scenario === 'loading') return new Promise<Response>(() => {});
+      if (scenario === 'forbidden') return Promise.resolve(directoryResponse(null, 403));
+      if (scenario === 'missing')
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ status: 'fail', data: { message: 'Resource not found.' } }),
+            {
+              status: 404,
+              headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+            }
+          )
+        );
+      if (scenario === 'error') return Promise.resolve(new Response('', { status: 503 }));
+      return Promise.resolve(directoryResponse(user));
+    }, ['READ_USERS', 'DISABLE_USERS']);
     return {
-      ...directoryDependencies(() => {
-        if (scenario === 'loading') return new Promise<Response>(() => {});
-        if (scenario === 'forbidden') return Promise.resolve(directoryResponse(null, 403));
-        if (scenario === 'missing')
-          return Promise.resolve(
-            new Response(
-              JSON.stringify({ status: 'fail', data: { message: 'Resource not found.' } }),
-              {
-                status: 404,
-                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-              }
-            )
-          );
-        if (scenario === 'error') return Promise.resolve(new Response('', { status: 503 }));
-        return Promise.resolve(directoryResponse(user));
-      }),
+      ...dependencies,
+      administration: new UserAdministrationService(dependencies.api, dependencies.cache, () => {}),
       user
     };
   });
@@ -64,6 +67,8 @@ function Example({ scenario = 'ready' }: { scenario?: Scenario }) {
         userId={d.user.user_id}
         cache={d.cache}
         service={d.service}
+        administration={scenario === 'admin' ? d.administration : undefined}
+        onOutcome={() => {}}
         onBack={() => {
           /* The containing directory owns navigation. */
         }}
@@ -88,6 +93,27 @@ export const SafeDetail: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Reload user detail' }));
     await canvas.findByText('ROLE_CUSTOM (Custom)');
   }
+};
+export const ConfirmDisable: Story = {
+  args: { scenario: 'admin' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = await canvas.findByRole('button', { name: 'Disable user' });
+    await userEvent.click(button);
+    const dialog = within(canvasElement.ownerDocument.body).getByRole('dialog', {
+      name: 'Disable user?'
+    });
+    await expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await expect(dialog).not.toBeInTheDocument();
+    await expect(button).toHaveFocus();
+    await userEvent.click(button);
+  }
+};
+export const ConfirmDisableDark: Story = {
+  ...ConfirmDisable,
+  parameters: { mode: 'dark' },
+  globals: { viewport: { value: 'narrow', isRotated: false } }
 };
 export const Dark: Story = { parameters: { mode: 'dark' } };
 export const NoRoles: Story = { args: { scenario: 'empty-roles' } };

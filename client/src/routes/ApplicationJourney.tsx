@@ -1,4 +1,12 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore
+} from 'react';
 
 import { evaluateAccess } from '@fight/react/account';
 import { useAuthority, useAuthorityPresentation } from '@fight/react/account';
@@ -22,6 +30,7 @@ import { GuardedRoute } from '@/routes/GuardedRoute';
 import type { ApplicationSession } from '@/features/auth/useApplicationSession';
 import type { ApplicationNavigation } from '@/routes/useApplicationNavigation';
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
+import type { AdministrationNotice } from '@fight/react/account';
 import type { ThemePreferenceStore } from '@fight/react/controls';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
@@ -99,6 +108,21 @@ export function ApplicationView({
     session.coordinator.getSnapshot
   );
   const route = matchApplicationRoute(pathname);
+  const [adminOutcome, setAdminOutcome] = useState<{
+    pathname: string;
+    actorId: string;
+    notice: AdministrationNotice;
+  }>();
+  useEffect(() => {
+    if (
+      !adminOutcome ||
+      (adminOutcome.pathname === pathname && credential.status === 'authenticated')
+    )
+      return;
+    queueMicrotask(() => {
+      setAdminOutcome((saved) => (saved === adminOutcome ? undefined : saved));
+    });
+  }, [adminOutcome, pathname, credential.status]);
   const passwordChanged = credential.passwordChanged === true || session.passwordChange.completed();
   useEffect(() => {
     if (credential.status === 'authenticated') session.passwordChange.clearCompletion();
@@ -306,6 +330,19 @@ export function ApplicationView({
                 service={session.users}
                 cache={session.authority}
                 locationRestoration={tableRestoration}
+                administration={session.userAdministration}
+                detailId={route.targetUserId}
+                onOpenDetail={(id) => navigate(`/admin/users/${id}${window.location.search}`)}
+                onCloseDetail={() => navigate(`/admin/users${window.location.search}`)}
+                notice={
+                  adminOutcome?.pathname === pathname &&
+                  adminOutcome.actorId === authority.principal.userId
+                    ? adminOutcome.notice
+                    : undefined
+                }
+                onOutcome={(notice) =>
+                  setAdminOutcome({ pathname, actorId: authority.principal.userId, notice })
+                }
               />
             ) : route.destination === 'invite-user' ? (
               <InviteUserPage service={session.invitationIssuance} cache={session.authority} />
