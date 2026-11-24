@@ -215,15 +215,14 @@ def local_docker(checkout):
             'A local Unix Docker context is required for approved roots')
 
 
-def compose_file(safe, checkout, project, isolated):
-    config = config_file(safe, project, isolated)
-    if not config.exists():
-        return []
-    roots = load(config)
-    if roots:
-        local_docker(checkout)
-        qualify(roots, protected_paths(safe, checkout))
-    return ['--file', str(config)]
+def admit_bind(roots):
+    # Docker resolves literal source paths itself. Neither Compose nor its Engine bind
+    # API can require the directory identity that the host previously qualified.
+    require(not roots, 'Cannot verify approved root identity at bind time; no root binds were applied')
+
+
+def admit_reconfiguration(safe, project, isolated):
+    admit_bind(load(config_file(safe, project, isolated)))
 
 
 def running_mounts(checkout, project):
@@ -235,12 +234,19 @@ def running_mounts(checkout, project):
     return (ids[0], query(['docker', 'inspect', '--format', '{{json .Mounts}}', ids[0]], checkout)) if ids else (None, [])
 
 
+def mount_facts(exact, observation, probe_reason, write_granted):
+    if not exact:
+        return False, False, False, 'exact_mount_not_observed'
+    if not observation.get('mounted'):
+        return True, False, False, probe_reason or observation.get('reason') or 'application_observation_unavailable'
+    return True, observation.get('readable', False), write_granted and observation.get('writable', False), observation.get('reason')
+
+
 def status(checkout, project, roots, protected):
     container, mounts = running_mounts(checkout, project)
     facts = {}
     if container:
-        code = ('require "/app/src/Adapter/Installation/ApprovedRootAccess.php";'
-                'require "/app/src/Adapter/Installation/ApprovedRootView.php";'
+        code = ('require "/app/vendor/autoload.php";'
                 'echo json_encode((new App\\Adapter\\Installation\\ApprovedRootAccess())->observe());')
         try:
             facts = query(['docker', 'exec', container, 'php', '-r', code], checkout)
@@ -255,16 +261,15 @@ def status(checkout, project, roots, protected):
         if exact:
             pending.discard(destination)
         observation = next((fact for fact in facts.get('roots', []) if fact['locator'] == 'root:' + name), {})
-        mounted = exact and observation.get('mounted', False)
+        write_granted = root['access'] == 'rw'
+        mounted, readable, writable, reason = mount_facts(exact, observation, facts.get('reason'), write_granted)
         try:
             current = canonical(root['path'], root['access'], protected) == root['identity']
         except Hold:
             current = False
-        reason = (observation.get('reason') if mounted else facts.get('reason') or 'exact_mount_not_observed')
         results.append({'locator': 'root:' + name, 'canonical_path': root['path'], 'configured': True,
-                        'write_granted': root['access'] == 'rw', 'mounted': mounted,
-                        'readable': mounted and observation.get('readable', False),
-                        'writable': mounted and observation.get('writable', False),
+                        'write_granted': write_granted, 'mounted': mounted,
+                        'readable': readable, 'writable': writable,
                         'reason': reason if current else 'host_root_unqualified'})
     print(json.dumps({'roots': results, 'stale_mounts': len(pending)}, indent=2))
 
@@ -293,8 +298,8 @@ def operate(safe, checkout, project, isolated, args):
                       'before': before['path'] if before else None, 'before_access': before['access'] if before else None,
                       'after': after['path'] if after else None, 'access': after['access'] if after else None,
                       'reconfigure': restart,
-                      'expected': 'Only the selected FPM service changes root exposure after recreation',
-                      'recovery': 'Preview and apply the inverse change, then reconfigure; no source is removed',
+                      'expected': 'Only settings change; runtime reconfiguration refuses nonempty approvals without bind-time identity',
+                      'recovery': 'Preview and apply the inverse change; stop FPM to end existing exposure; no source is removed',
                       'apply_digest': digest}, indent=2))
     if args.apply is None:
         return

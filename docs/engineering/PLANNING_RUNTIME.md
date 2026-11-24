@@ -79,9 +79,10 @@ root and CSRF through the existing front door. Key/bootstrap failures remain clo
 
 ## Approved project roots
 
-Project roots are opt-in, read-only by default and mounted only into application FPM. Follow
-[approved-root operations](APPROVED_ROOTS.md) to preview, apply, reconfigure and verify exact mounts.
-The capability reports access but does not register Projects or authorize Agent execution.
+Project-root settings are opt-in and read-only by default. Follow [approved-root operations](APPROVED_ROOTS.md)
+to preview, apply and inspect settings. Startup refuses to apply new binds because the runtime cannot prove
+the source directory's identity at bind time. The capability can report existing exposure, but does not
+register Projects or authorize Agent execution.
 
 ## Status, stop and restart
 

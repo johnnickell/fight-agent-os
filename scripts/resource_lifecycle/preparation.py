@@ -66,7 +66,7 @@ def environment(isolated=False):
     return env
 
 
-def compose(safe, checkout, project, isolated=False, shared=False, approved_roots=False):
+def compose(safe, checkout, project, isolated=False, shared=False):
     args = ['docker', 'compose', '--project-directory', str(checkout), '--project-name', project,
             '--file', str(checkout / 'compose.yaml')]
     if isolated:
@@ -78,9 +78,6 @@ def compose(safe, checkout, project, isolated=False, shared=False, approved_root
         args += ['--env-file', str(checkout / '.env') if (checkout / '.env').exists() else '/dev/null']
         if shared:
             args += ['--file', str(safe / 'var/local-ingress/main/ingress.yaml')]
-    if approved_roots:
-        from .approved_roots import compose_file
-        args += compose_file(safe, checkout, project, isolated)
     return args
 
 

@@ -15,10 +15,9 @@ with Diagram(
 ):
     operator = Node('Host operator', nodeid='operator')
     settings = Node('Private versioned\nroot settings', nodeid='settings')
-    directory = Node('Exact host\nproject directory', nodeid='directory')
-    fpm = Node('Application PHP-FPM\nApprovedRootAccess', nodeid='fpm')
+    blocked = Node('No new root binds\nBind identity unavailable', nodeid='blocked')
+    fpm = Node('Existing PHP-FPM\nApprovedRootAccess', nodeid='fpm')
     view = Node('Safe root locator\nand access facts', nodeid='view')
     operator >> Edge(label='1. Preview and apply') >> settings
-    settings >> Edge(label='2. Explicit Compose reconfiguration') >> fpm
-    directory >> Edge(label='3. Exact RO or explicit RW bind') >> fpm
-    fpm >> Edge(label='4. Observe mount and permissions') >> view
+    settings >> Edge(label='2. Refuse nonempty settings at startup') >> blocked
+    fpm >> Edge(label='3. Observe existing mounts and permissions') >> view

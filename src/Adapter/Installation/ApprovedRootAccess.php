@@ -15,6 +15,7 @@ final readonly class ApprovedRootAccess
      * Constructs ApprovedRootAccess
      */
     public function __construct(
+        private ApprovedRootFilesystem $filesystem = new NativeApprovedRootFilesystem(),
         private string $configuration = '/run/fight-root-configuration/roots.json',
         private string $rootDirectory = '/run/fight-approved-roots',
         private string $mountTable = '/proc/self/mountinfo'
@@ -28,12 +29,11 @@ final readonly class ApprovedRootAccess
      */
     public function observe(): array
     {
-        clearstatcache(true);
-        if (!is_dir(dirname($this->configuration))) {
+        if (!$this->filesystem->hasConfigurationDirectory(dirname($this->configuration))) {
             return ['roots' => [], 'reason' => 'no_configuration_mount'];
         }
 
-        $configuration = @file_get_contents($this->configuration, length: 65537);
+        $configuration = $this->filesystem->read($this->configuration, 65537);
         $model = null;
         if ($configuration !== false && strlen($configuration) <= 65536) {
             $model = json_decode($configuration, true);
@@ -76,7 +76,7 @@ final readonly class ApprovedRootAccess
      */
     private function mounts(): ?array
     {
-        $table = @file_get_contents($this->mountTable, length: 262145);
+        $table = $this->filesystem->read($this->mountTable, 262145);
         if ($table === false || $table === '' || strlen($table) > 262144 || !str_ends_with($table, "\n")) {
             return null;
         }
@@ -118,9 +118,9 @@ final readonly class ApprovedRootAccess
         } elseif ($observed !== [$access] || $this->hasNestedMount($target, $mounts)) {
             $reason = 'unexpected_mount';
         } else {
-            $directory = is_dir($target);
-            $readable = $directory && is_readable($target) && is_executable($target);
-            $writable = $directory && $writeGranted && is_writable($target) && is_executable($target);
+            $permissions = $this->filesystem->permissions($target, $writeGranted);
+            $readable = $permissions['readable'];
+            $writable = $writeGranted && $permissions['writable'];
             if (!$readable || ($writeGranted && !$writable)) {
                 $reason = 'access_unavailable';
             }

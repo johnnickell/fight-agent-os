@@ -5,8 +5,27 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from resource_lifecycle.approved_roots import canonical, qualify
+from resource_lifecycle.approved_roots import admit_bind, canonical, mount_facts, qualify
 from resource_lifecycle.resources import Hold
+
+
+class ApprovedRootDecisionTest(unittest.TestCase):
+    def test_unknown_bind_identity_refuses_nonempty_model(self):
+        admit_bind({})
+        with self.assertRaisesRegex(Hold, 'bind time'):
+            admit_bind({'example': {'identity': [1, 2, 3]}})
+
+    def test_mount_and_access_are_independent(self):
+        observed = {'mounted': True, 'readable': True, 'writable': True, 'reason': None}
+        for exact, probe, reason, expected in (
+            (True, observed, None, (True, True, True, None)),
+            (True, {}, 'configuration_unavailable', (True, False, False, 'configuration_unavailable')),
+            (True, {'mounted': False}, 'mount_table_unavailable', (True, False, False, 'mount_table_unavailable')),
+            (False, observed, None, (False, False, False, 'exact_mount_not_observed')),
+        ):
+            with self.subTest(exact=exact, probe=probe):
+                self.assertEqual(mount_facts(exact, probe, reason, True), expected)
+        self.assertEqual(mount_facts(True, observed, None, False), (True, True, False, None))
 
 
 class ApprovedRootPolicyTest(unittest.TestCase):
