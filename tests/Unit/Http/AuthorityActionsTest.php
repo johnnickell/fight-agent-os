@@ -290,19 +290,37 @@ final class AuthorityActionsTest extends TestCase
     public function testPermissionDelegation(bool $grant, bool $confirmed): void
     {
         $commands = $this->createMock(CommandBus::class);
-        $command = $grant ? new \Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole($this->actor->getId(), $this->roleId, PermissionId::fromString($this->roleId->toString())) : new \Fight\AccessControl\Domain\AccessControl\Role\Command\RevokePermissionFromCustomRole($this->actor->getId(), $this->roleId, PermissionId::fromString($this->roleId->toString()));
+        $commandClass = \Fight\AccessControl\Domain\AccessControl\Role\Command\RevokePermissionFromCustomRole::class;
+        if ($grant) {
+            $commandClass = \Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole::class;
+        }
+        $command = new $commandClass(
+            $this->actor->getId(),
+            $this->roleId,
+            PermissionId::fromString($this->roleId->toString())
+        );
         if ($confirmed) {
             $commands->expects(self::once())->method('execute')->with($command);
         } else {
             $commands->expects(self::never())->method('execute');
             $this->expectException(ValidationException::class);
         }
-        $class = $grant ? \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class : \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class;
-        $action = new $class($commands, $this->admission('MANAGE_ROLE_PERMISSIONS'), new RoleMutationResponder($this->responses));
+        $class = \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class;
+        if ($grant) {
+            $class = \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class;
+        }
+        $action = new $class(
+            $commands,
+            $this->admission('MANAGE_ROLE_PERMISSIONS'),
+            new RoleMutationResponder($this->responses)
+        );
         $response = $action->handle($this->request($this->roleId->toString(), $confirmed));
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
-        self::assertSame(['status' => 'success', 'data' => null], json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR));
+        self::assertSame(
+            ['status' => 'success', 'data' => null],
+            json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR)
+        );
     }
 
     /**
@@ -313,8 +331,15 @@ final class AuthorityActionsTest extends TestCase
     {
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::never())->method('execute');
-        $class = $grant ? \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class : \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class;
-        $action = new $class($commands, $this->admission($failure === 'authority' ? 'READ_ROLES' : 'MANAGE_ROLE_PERMISSIONS'), new RoleMutationResponder($this->responses));
+        $class = \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class;
+        if ($grant) {
+            $class = \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class;
+        }
+        $action = new $class(
+            $commands,
+            $this->admission($failure === 'authority' ? 'READ_ROLES' : 'MANAGE_ROLE_PERMISSIONS'),
+            new RoleMutationResponder($this->responses)
+        );
         $request = $this->request($this->roleId->toString());
         if ($failure === 'authentication') {
             $request = $request->withoutAttribute(AuthenticationContext::class);

@@ -47,8 +47,18 @@ final readonly class RevokeRolePermissionAction
         summary: 'Revoke a custom role permission',
         security: [['AccessBearer' => []]],
         parameters: [
-            new OA\Parameter(name: 'roleId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid')),
-            new OA\Parameter(name: 'permissionId', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))
+            new OA\Parameter(
+                name: 'roleId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+            new OA\Parameter(
+                name: 'permissionId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            )
         ],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
             required: ['confirm'],
@@ -57,7 +67,11 @@ final readonly class RevokeRolePermissionAction
             additionalProperties: false
         )),
         responses: [
-            new OA\Response(response: 200, description: 'Intent completed; refresh authorized catalogs', content: new OA\JsonContent(ref: '#/components/schemas/RoleRemovalSuccess')),
+            new OA\Response(
+                response: 200,
+                description: 'Intent completed; refresh authorized catalogs',
+                content: new OA\JsonContent(ref: '#/components/schemas/RoleRemovalSuccess')
+            ),
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
@@ -71,7 +85,10 @@ final readonly class RevokeRolePermissionAction
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $actorId = CatalogInput::authentication($request)->getUserId();
-        $this->installationAuthority->assertInstallationPermission($actorId, PermissionName::fromString('MANAGE_ROLE_PERMISSIONS'));
+        $this->installationAuthority->assertInstallationPermission(
+            $actorId,
+            PermissionName::fromString('MANAGE_ROLE_PERMISSIONS')
+        );
         /** @var array{confirm: bool} $input */
         $input = $request->getAttribute(JsonBody::class);
         if (!$input['confirm']) {
@@ -79,7 +96,9 @@ final readonly class RevokeRolePermissionAction
         }
         $roleId = RoleMutationInput::id($request);
         try {
-            $permissionId = PermissionId::fromString((string) RouteContext::fromRequest($request)->getRoute()?->getArgument('permissionId'));
+            $permissionId = PermissionId::fromString(
+                (string) RouteContext::fromRequest($request)->getRoute()?->getArgument('permissionId')
+            );
         } catch (Throwable) {
             throw new ValidationException(['permission_id' => ['Invalid value.']]);
         }

@@ -61,7 +61,11 @@ return static function (Container $container): void {
     }
     $container->set(RoleMutationResponder::class, static fn(Container $container) =>
         new RoleMutationResponder($container->get(JSendResponseFactory::class)));
-    foreach ([CreateRoleAction::class, RemoveRoleAction::class, GrantRolePermissionAction::class, RevokeRolePermissionAction::class] as $action) {
+    $actions = [
+        CreateRoleAction::class, RemoveRoleAction::class,
+        GrantRolePermissionAction::class, RevokeRolePermissionAction::class
+    ];
+    foreach ($actions as $action) {
         $container->set($action, static fn(Container $container) => new $action(
             $container->get(CommandBus::class),
             $container->get(InstallationPermissionAdmission::class),
