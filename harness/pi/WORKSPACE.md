@@ -581,15 +581,18 @@ transcripts; sanitize explicitly authorized evidence.
 
 <a id="existing-worktree-test-bindings-partial-task-00502-implementation"></a>
 
-## Automatic session following and worktree test bindings (TASK-00502 candidate)
+## Automatic session following and worktree test bindings (TASK-00502 history)
 
-Automatic following is the default when no legacy socket flags are supplied. **Keep launching the ordinary
-provider `.pi/skills/build/scripts/run-stage.php` launcher through Pi's independently selected executor.**
-[Build](../../.pi/skills/build/SKILL.md) owns dispatch authority, stage identity and model pins. The unshipped
-`fight-stage JSON` bash replacement and human `/fight-stage` command were rejected and removed. Fully restart
-Pi to unload the old runtime; resume the same actual session and ledger, not another attempt. `native-launch.mjs`
-was replaced by the observation-only `native-observation.mjs`; it has no execution API. Historical receipts still
-name the rejected integration and remain history, not current instructions.
+Automatic following is the default when no legacy socket flags are supplied. For current process-stage
+instructions, follow the [explicit Sync protocol](../../.pi/skills/sync/SKILL.md#delegate-integration-then-delivery).
+Sync uses the provider process launcher after admitting an accepted TASK with an existing open PR. Fresh
+[Build](../../.pi/skills/build/SKILL.md) uses only `fight_build_stage` through the SDK; the PHP process launcher
+is not a Build route or fallback. See the [current Sync process flow](../../docs/engineering/sync/README.md#current-php-process-flow).
+
+During TASK-00502, Build still used a process launcher. The unshipped `fight-stage JSON` bash replacement and
+human `/fight-stage` command were rejected and removed. `native-launch.mjs` was replaced by the observation-only
+`native-observation.mjs`, which has no execution API. Historical receipts still name the rejected integration;
+they are not current dispatch or restart instructions.
 
 The passive extension registers no tools/commands, BashOperations, user_bash handlers, shell hooks or activation
 changes. It reads supported actual session lifecycle/notification context without modifying events. Pi's selected

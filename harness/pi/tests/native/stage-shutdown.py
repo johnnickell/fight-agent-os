@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import socket
 import stat
 import subprocess
@@ -112,4 +113,49 @@ if mode in ('success', 'socket'):
         else:
             raise AssertionError('Owned Pi fixture did not exit')
         assert stat.S_IMODE((attempt / 'events.jsonl').stat().st_mode) == 0o600
-print('Monitor: six owned process cases passed (plus socket collision refusal); no provider or stage authority.')
+    # Instrument a scratch copy, not the package: hold the PHP bootstrap before setsid
+    # and release it only after the monitor has handled cancellation in its main loop.
+    instrumented = root / 'instrumented'
+    observation = instrumented / 'src/observation'
+    observation.mkdir(parents=True)
+    for path in ('src/stage-roles.json', 'src/observation/stage-observation.php', 'src/observation/stage-discovery.php'):
+        shutil.copyfile(package / path, instrumented / path)
+    php = monitor.read_text()
+    before_setsid = 'if (posix_setsid() < 0'
+    after_cancel = '            if ($terminationAt !== null && $now - $terminationAt >= 5) {'
+    assert php.count(before_setsid) == php.count(after_cancel) == 1
+    php = php.replace(before_setsid,
+        'touch("bootstrap-held"); $end = hrtime(true) + 10_000_000_000; '
+        'while (!file_exists("bootstrap-release")) { if (hrtime(true) >= $end) { exit(98); } usleep(20_000); } '
+        + before_setsid)
+    php = php.replace(after_cancel,
+        '            if ($forced && !file_exists("cancel-handled")) { touch("cancel-handled"); }\n' + after_cancel)
+    controlled = observation / monitor.name
+    controlled.write_text(php)
+    attempt = root / 'startup cancellation'
+    attempt.mkdir()
+    (attempt / 'request.md').write_text('Finite test only; no provider or actual assignment.\n')
+    command = ['php', str(controlled), '--attempt', str(attempt), '--task', 'TASK-00585', '--role', 'land',
+               '--provider', 'fixture', '--model', 'controlled', '--thinking', 'off', '--timeout', '20',
+               '--harness-package', str(instrumented), '--observe-socket', str(endpoint)]
+    # Isolate even the inherited group to this fixture; do not put the test runner in it.
+    with subprocess.Popen(command, cwd=root, env=dict(env, FIXTURE='success'), start_new_session=True,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+        try:
+            until((root / 'bootstrap-held').exists, process)
+            receipt = attempt / 'process.json'
+            until(lambda: receipt.exists() and receipt.read_text().endswith('\n'), process)
+            pid = json.loads(receipt.read_text())['pi_pid']
+            assert os.getpgid(pid) == process.pid != pid
+            process.send_signal(signal.SIGTERM)
+            until((root / 'cancel-handled').exists, process)
+        finally:
+            (root / 'bootstrap-release').touch()
+            if not (root / 'cancel-handled').exists() and process.poll() is None:
+                process.terminate()
+            out, err = process.communicate(timeout=24)
+    assert process.returncode == 143 and (attempt / 'exit-code').read_text() == '143\n', (out, err)
+    assert not (attempt / 'binding').exists(), 'Pi executed after cancellation before setsid'
+    assert (attempt / 'pi-exit-code').read_text() == '1\n' and not endpoint.exists()
+
+print('Monitor: seven owned process cases passed (plus socket collision refusal); no provider or stage authority.')

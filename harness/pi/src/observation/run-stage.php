@@ -196,17 +196,21 @@ final class StageChild
     public array $pipes;
     public readonly int $pid;
     private mixed $process;
+    private mixed $startup;
     private ?int $exitCode = null;
 
     public function __construct(array $command, array $env)
     {
-        // Create the owned session before exec, without shell argv interpolation.
-        $bootstrap = 'if (posix_setsid() < 0) { exit(1); } pcntl_exec("/usr/bin/env", array_slice($argv, 1)); exit(127);';
+        // Wait for the monitor to verify the new group before exec. Pi itself sees EOF on stdin.
+        $bootstrap = 'if (posix_setsid() < 0 || fread(STDIN, 1) !== "1") { exit(1); } '
+            . 'pcntl_exec("/usr/bin/env", array_slice($argv, 1)); exit(127);';
         $this->process = @proc_open([PHP_BINARY, '-r', $bootstrap, '--', ...$command],
-            [['file', '/dev/null', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, null, $env);
+            [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, null, $env);
         if (!is_resource($this->process)) {
             throw new RuntimeException('Pi process unavailable');
         }
+        $this->startup = $pipes[0];
+        unset($pipes[0]);
         $this->pipes = $pipes;
         $status = proc_get_status($this->process);
         $this->pid = $status['pid'];
@@ -231,8 +235,32 @@ final class StageChild
         return $this->exitCode;
     }
 
+    public function allowExec(): void
+    {
+        if ($this->startup !== null && $this->result() === null && posix_getpgid($this->pid) === $this->pid) {
+            $written = @fwrite($this->startup, '1');
+            $this->closeStartup();
+            if ($written !== 1) {
+                throw new RuntimeException('Cannot release Pi bootstrap');
+            }
+        }
+    }
+
+    private function closeStartup(): void
+    {
+        if ($this->startup !== null) {
+            fclose($this->startup);
+            $this->startup = null;
+        }
+    }
+
     public function stop(int $signal, StageProgress $progress, mixed $errors): void
     {
+        if ($this->startup !== null && $signal === SIGTERM) {
+            // EOF prevents exec even if the bootstrap still belongs to the inherited group.
+            $this->closeStartup();
+            return;
+        }
         if ($this->result() !== null) {
             $this->diagnostic($progress, $errors, 'killpg', 'leader-exited', $signal);
         } elseif (posix_getpgid($this->pid) !== $this->pid) {
@@ -267,6 +295,7 @@ final class StageChild
 
     public function close(): void
     {
+        $this->closeStartup();
         foreach ($this->pipes as $pipe) {
             fclose($pipe);
         }
@@ -385,6 +414,9 @@ function runStage(array $args, int $observationStarted): int
                 $progress->emit($cancelled ? 'Cancellation requested' : 'Stage timed out');
                 $terminationAt = $now;
                 $child->stop(SIGTERM, $progress, $errors);
+            }
+            if (!$forced && !$cancelled) {
+                $child->allowExec();
             }
             if ($terminationAt !== null && $now - $terminationAt >= 5) {
                 break; // An escaped descendant may still hold a pipe.
