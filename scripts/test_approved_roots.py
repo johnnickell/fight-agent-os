@@ -1,11 +1,15 @@
 """Exercise the owned host policy without invoking Compose or the operator wrapper."""
+from contextlib import redirect_stdout
+from io import StringIO
+import json
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from resource_lifecycle import approved_roots as approvals
+from resource_lifecycle import approved_roots as approvals, runtime
 from resource_lifecycle.approved_roots import canonical, mount_facts, qualify
 from resource_lifecycle.resources import Hold
 
@@ -113,6 +117,52 @@ class ApprovedRootPolicyTest(unittest.TestCase):
         with patch.object(approvals, 'running_mounts', return_value=('fpm', intended)):
             approvals.publish_observation(config, self.base, 'fixture', roots, admitted)
         self.assertEqual(admitted, snapshot.read_text())
+
+    def test_status_keeps_saved_approvals_when_docker_report_is_unavailable(self):
+        roots = {'project': self.entry(self.root, 'rw')}
+        for report, reason, mounted, stale in (
+            (Hold('internal Docker detail'), 'docker_mount_report_unavailable', None, None),
+            (ValueError('internal Docker detail'), 'docker_mount_report_unavailable', None, None),
+            ((None, []), 'exact_mount_not_observed', False, 0),
+        ):
+            with self.subTest(report=report), patch.object(approvals, 'running_mounts') as read_mounts:
+                if isinstance(report, Exception):
+                    read_mounts.side_effect = report
+                else:
+                    read_mounts.return_value = report
+                output = StringIO()
+                with redirect_stdout(output):
+                    approvals.status(self.base, 'fixture', roots, ())
+                self.assertNotIn('internal Docker detail', output.getvalue())
+                status = json.loads(output.getvalue())
+                self.assertEqual(stale, status['stale_mounts'])
+                self.assertEqual(reason if stale is None else None, status.get('reason'))
+                self.assertEqual([{'locator': 'root:project', 'canonical_path': str(self.root),
+                                   'configured': True, 'write_granted': True, 'mounted': mounted,
+                                   'readable': mounted, 'writable': mounted, 'reason': reason}], status['roots'])
+
+    def test_unconfirmed_empty_model_attempts_bounded_stop_and_preserves_failure(self):
+        config = self.base / 'roots.json'
+        approvals.observation_directory(config).mkdir()
+        mounts = [{'Destination': approvals.MANIFEST}]
+        args = ['compose-fixture']
+        for stop_error, stop_reason in (
+            (None, None),
+            (Hold('stop command refused'), 'stop command refused'),
+            (subprocess.TimeoutExpired(args, 30), 'timed out after 30 seconds'),
+        ):
+            with self.subTest(stop_error=stop_error), \
+                    patch.object(approvals, 'running_mounts', return_value=('fpm', mounts)), \
+                    patch.object(runtime, 'run', side_effect=[None, stop_error]) as command:
+                message = 'Docker did not report the exact approved-root mounts'
+                if stop_reason:
+                    message += '.*' + stop_reason
+                with self.assertRaisesRegex(Hold, message):
+                    runtime.start_with_approved_roots(args, self.base, 'fixture', config, {}, (), {})
+                self.assertEqual(2, command.call_count)
+                stop = command.call_args
+                self.assertEqual([*args, '--profile', 'https', 'stop', 'https_php'], stop.args[0])
+                self.assertEqual(30, stop.kwargs['timeout'])
 
     def test_duplicate_and_nested_roots_fail_in_either_order(self):
         nested = self.root / 'nested'

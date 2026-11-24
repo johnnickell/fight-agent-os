@@ -27,8 +27,9 @@ refused. Approval stores configuration only. Apply the new binds with `./bin/up 
 for a linked checkout or `./bin/up` with the existing main ingress mode. Startup refuses detected drift or
 unverified identity, streams the exact admitted root declarations to Compose, and checks the source,
 destination and access mode Docker reports. If Docker cannot confirm the expected mounts, startup
-withholds the snapshot and attempts to stop the affected FPM service. Check `status` and stop that
-service if exposure remains. A regular container restart is not reconfiguration.
+withholds the snapshot and attempts to stop the affected FPM service, including after removal of the
+last root. Startup reports the mount check failure and any stop failure. Check `status` and stop the
+service if exposure remains or cannot be verified. A regular container restart is not reconfiguration.
 
 A running service created by an earlier version keeps its old mounts until it stops or is recreated.
 A removed or replaced root may still be physically exposed if `status` reports a nonzero `stale_mounts`
@@ -58,6 +59,9 @@ to make a selected directory pass. If the service runs as a different owner, OS 
 - Host status compares the desired roots with the selected FPM container's actual bind declarations and the
   application's mount and permission observations. A Docker-confirmed bind remains reported as mounted
   even if PHP cannot observe it; unavailable observation never grants readable or writable status.
+  If Docker's mount report is unavailable, status still shows saved approvals, with `null` for the observed
+  mount, read and write facts and stale-mount count. A successful check with no running FPM service instead
+  reports no observed mounts and a zero stale-mount count.
   The read-only application capability exposes only an
   operator-chosen `root:NAME`, configured/mounted/readable, write grant/writability and safe reasons. It does
   not enumerate a directory or prove arbitrary descendants are usable. A later checkout operation must still

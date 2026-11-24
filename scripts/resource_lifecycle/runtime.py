@@ -88,10 +88,39 @@ def command(root, argv, selector=None):
     return subprocess.run(['docker', *argv], cwd=checkout, env=environment(isolated)).returncode
 
 
+def start_with_approved_roots(args, checkout, project, config, roots, protected, env):
+    from .approved_roots import admit_reconfiguration, publish_observation
+    # The final admission checks the host paths, then streams the exact approved
+    # model. Compose never reopens the mutable settings file for mount declarations.
+    with admit_reconfiguration(config, checkout, roots, protected) as admitted:
+        root_args = ['--file', '-'] if admitted is not None else []
+        started = False
+        try:
+            run([*args, *root_args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--no-build',
+                 '--wait', '--wait-timeout', '120'], checkout, env=env, input=admitted)
+            started = True
+            publish_observation(config, checkout, project, roots, admitted)
+        except (Hold, OSError, ValueError, subprocess.SubprocessError) as error:
+            # A failed post-start check can mean stale binds even with no saved roots.
+            if started or admitted is not None:
+                try:
+                    run([*args, '--profile', 'https', 'stop', 'https_php'], checkout,
+                        env=env, timeout=30, capture=True)
+                except (Hold, OSError, ValueError, subprocess.SubprocessError) as stop_error:
+                    if isinstance(stop_error, Hold):
+                        detail = str(stop_error)
+                    elif isinstance(stop_error, subprocess.TimeoutExpired):
+                        detail = 'timed out after 30 seconds'
+                    else:
+                        detail = type(stop_error).__name__
+                    raise Hold(f'{error}; FPM stop failed ({detail}); exposure may remain') from error
+            raise
+
+
 def up(root, selector=None, build_only=False, shared=False, task=None, unregistered=False):
     safe, checkout, project, entry = resolve(root, selector)
     isolated = selector is not None
-    from .approved_roots import admit_reconfiguration, config_file, load, protected_paths, publish_observation
+    from .approved_roots import config_file, load, protected_paths
     if not build_only:
         config = config_file(safe, project, isolated)
         roots = load(config)
@@ -126,18 +155,7 @@ def up(root, selector=None, build_only=False, shared=False, task=None, unregiste
          'web', 'postgres', 'postgres_test', 'seaweedfs'], checkout, env=environment(isolated))
     run([*args, 'exec', '-T', 'web', 'php', 'vendor/bin/doctrine-migrations', 'up-to-date',
          '--no-interaction'], checkout, env=environment(isolated))
-    # The final admission checks the host paths, then streams the exact approved
-    # model. Compose never reopens the mutable settings file for mount declarations.
-    with admit_reconfiguration(config, checkout, roots, protected) as admitted:
-        root_args = ['--file', '-'] if admitted is not None else []
-        try:
-            run([*args, *root_args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--no-build',
-                 '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated), input=admitted)
-            publish_observation(config, checkout, project, roots, admitted)
-        except (Hold, OSError, ValueError, subprocess.SubprocessError):
-            if admitted is not None:
-                run([*args, '--profile', 'https', 'stop', 'https_php'], checkout, env=environment(isolated))
-            raise
+    start_with_approved_roots(args, checkout, project, config, roots, protected, environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-s', 'reload'], checkout, env=environment(isolated))
     if isolated or shared:

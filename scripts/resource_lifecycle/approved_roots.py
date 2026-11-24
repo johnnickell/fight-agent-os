@@ -9,6 +9,7 @@ import plistlib
 import pwd
 import re
 import stat
+import subprocess
 import sys
 
 from .resources import Hold, query, require, run, text, write_private
@@ -305,7 +306,15 @@ def mount_facts(exact, observation, probe_reason, write_granted):
 
 
 def status(checkout, project, roots, protected):
-    container, mounts = running_mounts(checkout, project)
+    try:
+        container, mounts = running_mounts(checkout, project)
+    except (Hold, OSError, ValueError, subprocess.SubprocessError):
+        reason = 'docker_mount_report_unavailable'
+        results = [{'locator': 'root:' + name, 'canonical_path': root['path'], 'configured': True,
+                    'write_granted': root['access'] == 'rw', 'mounted': None,
+                    'readable': None, 'writable': None, 'reason': reason} for name, root in roots.items()]
+        print(json.dumps({'roots': results, 'stale_mounts': None, 'reason': reason}, indent=2))
+        return
     facts = {}
     if container:
         code = ('require "/app/vendor/autoload.php";'
