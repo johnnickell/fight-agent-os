@@ -759,7 +759,9 @@ SQL);
         $this->assertSecretObservability($response, $this->connection, $this->journeyLogs, [$this->token]);
         self::assertSame($status, $response->getStatusCode(), (string) $response->getBody());
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
-        $operationPath = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/{roleId}';
+        $operationPath = str_contains($path, '/permissions/') ? '/api/v1/roles/{roleId}/permissions/{permissionId}' : (
+            $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/{roleId}'
+        );
         (new ValidatorBuilder())->fromJson(Document::generate())->getResponseValidator()->validate(
             new OperationAddress($operationPath, strtolower($method)),
             $response
@@ -769,7 +771,40 @@ SQL);
     }
 
     /**
-     * Counts only committed definition audit records
+     * Verifies supported membership changes and required audit rollback through real HTTP
+     */
+    public function testDelegationJourneyAndAuditRollback(): void
+    {
+        $now = $this->container->get(Clock::class)->now();
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_DELEGATED'), [], $now);
+        $permission = Permission::define(PermissionId::generate(), PermissionName::fromString('DELEGATED_READ'), $now);
+        $roles = $this->container->get(RoleRepository::class);
+        $this->container->get(Connection::class)->transactional(function () use ($role, $permission, $roles): void {
+            $roles->add($role);
+            $this->container->get(PermissionRepository::class)->add($permission);
+        });
+        $path = '/api/v1/roles/'.$role->getId()->toString().'/permissions/'.$permission->getId()->toString();
+        $before = $this->roleAuditCount();
+        $this->mutation('PUT', $path, ['confirm' => true], 200);
+        self::assertTrue($roles->getById($role->getId())->hasPermission($permission->getId()));
+        self::assertSame($before + 1, $this->roleAuditCount());
+        $this->mutation('PUT', $path, ['confirm' => true], 200);
+        $this->connection->executeStatement("ALTER TABLE audit_evidence ADD CONSTRAINT delegation_audit_abort CHECK (subject_type <> 'role') NOT VALID");
+        try {
+            $this->mutation('DELETE', $path, ['confirm' => true], 500);
+            self::assertTrue($roles->getById($role->getId())->hasPermission($permission->getId()));
+            self::assertSame($before + 1, $this->roleAuditCount());
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT delegation_audit_abort');
+        }
+        $this->mutation('DELETE', $path, ['confirm' => true], 200);
+        self::assertFalse($roles->getById($role->getId())->hasPermission($permission->getId()));
+        self::assertSame($before + 2, $this->roleAuditCount());
+        $this->mutation('PUT', '/api/v1/roles/'.InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID.'/permissions/'.$permission->getId()->toString(), ['confirm' => true], 409);
+    }
+
+    /**
+     * Counts persisted required Role audit
      */
     private function roleAuditCount(): int
     {

@@ -284,6 +284,69 @@ final class AuthorityActionsTest extends TestCase
     }
 
     /**
+     * Dispatches only confirmed path membership with the authenticated actor
+     */
+    #[DataProvider('details')]
+    public function testPermissionDelegation(bool $grant, bool $confirmed): void
+    {
+        $commands = $this->createMock(CommandBus::class);
+        $command = $grant ? new \Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole($this->actor->getId(), $this->roleId, PermissionId::fromString($this->roleId->toString())) : new \Fight\AccessControl\Domain\AccessControl\Role\Command\RevokePermissionFromCustomRole($this->actor->getId(), $this->roleId, PermissionId::fromString($this->roleId->toString()));
+        if ($confirmed) {
+            $commands->expects(self::once())->method('execute')->with($command);
+        } else {
+            $commands->expects(self::never())->method('execute');
+            $this->expectException(ValidationException::class);
+        }
+        $class = $grant ? \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class : \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class;
+        $action = new $class($commands, $this->admission('MANAGE_ROLE_PERMISSIONS'), new RoleMutationResponder($this->responses));
+        $response = $action->handle($this->request($this->roleId->toString(), $confirmed));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame(['status' => 'success', 'data' => null], json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * Rejects unauthenticated, unprivileged and malformed permission intents before dispatch
+     */
+    #[DataProvider('delegationFailures')]
+    public function testDelegationFailure(bool $grant, string $failure): void
+    {
+        $commands = $this->createMock(CommandBus::class);
+        $commands->expects(self::never())->method('execute');
+        $class = $grant ? \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class : \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class;
+        $action = new $class($commands, $this->admission($failure === 'authority' ? 'READ_ROLES' : 'MANAGE_ROLE_PERMISSIONS'), new RoleMutationResponder($this->responses));
+        $request = $this->request($this->roleId->toString());
+        if ($failure === 'authentication') {
+            $request = $request->withoutAttribute(AuthenticationContext::class);
+            $this->expectException(AuthenticationRequired::class);
+        } elseif ($failure === 'authority') {
+            $this->expectException(\Fight\Common\Application\Error\Exception\PermissionDenied::class);
+        } else {
+            $route = $this->createStub(RouteInterface::class);
+            $route->method('getArgument')->willReturnMap([
+                ['roleId', null, $this->roleId->toString()], ['permissionId', null, 'invalid']
+            ]);
+            $request = $request->withAttribute(RouteContext::ROUTE, $route);
+            $this->expectException(ValidationException::class);
+        }
+        $action->handle($request);
+    }
+
+    /**
+     * Supplies independent entry failure conditions
+     *
+     * @return iterable<array{bool, string}>
+     */
+    public static function delegationFailures(): iterable
+    {
+        foreach ([true, false] as $grant) {
+            foreach (['authentication', 'authority', 'permission'] as $failure) {
+                yield [$grant, $failure];
+            }
+        }
+    }
+
+    /**
      * Supplies both options
      *
      * @return iterable<array{bool}>
