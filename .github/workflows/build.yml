@@ -12,13 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Provision matching native PHP CLI and FPM packages
+        shell: bash
         run: |
-          # setup-php's cached CLI build does not enroll an apt repository for FPM.
-          sudo add-apt-repository --yes ppa:ondrej/php
-          sudo apt-get update
+          # Ubuntu Noble setup: https://packages.sury.org/php/README.txt
+          keyring="$RUNNER_TEMP/debsuryorg-archive-keyring.deb"
+          curl --fail --silent --show-error --location --proto '=https' \
+            --output "$keyring" https://packages.sury.org/debsuryorg-archive-keyring.deb
+          sudo dpkg -i "$keyring"
+          echo 'deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ noble main' \
+            | sudo tee /etc/apt/sources.list.d/sury-php.list
+          sudo apt-get update --error-on=any
+          # Provide php-config and Xdebug so setup-php configures the installed PHP instead of fetching it.
           sudo apt-get install --no-install-recommends --yes \
             php8.5-cli php8.5-fpm php8.5-pgsql php8.5-mbstring php8.5-xml \
-            libnss3-tools openssl
+            php8.5-dev php8.5-xdebug libnss3-tools openssl
+          sudo update-alternatives --set php /usr/bin/php8.5
+          sudo update-alternatives --set php-config /usr/bin/php-config8.5
+          apt-cache policy php8.5-cli php8.5-fpm
       - name: Provision pinned native Nginx and Mailpit binaries
         run: |
           tools="$RUNNER_TEMP/fight-browser-tools"
@@ -35,14 +45,37 @@ jobs:
           dpkg-deb --extract nginx.deb nginx
           tar -xzf mailpit.tar.gz mailpit
           "$tools/nginx/usr/sbin/nginx" -v
-          "$tools/mailpit" version
+          "$tools/mailpit" version --no-release-check
           printf '%s\n%s\n' "$tools" "$tools/nginx/usr/sbin" >> "$GITHUB_PATH"
           printf 'FIGHT_BROWSER_SMOKE_MIME_TYPES=%s\n' "$tools/nginx/etc/nginx/mime.types" >> "$GITHUB_ENV"
       - uses: ./.github/actions/native-php
+        env:
+          update: 'false'
       - uses: ./.github/actions/native-client
+      - name: Verify the native PHP packages used by the gate
+        shell: bash
+        run: |
+          cli_package=$(dpkg-query -W -f='${Version}' php8.5-cli)
+          fpm_package=$(dpkg-query -W -f='${Version}' php8.5-fpm)
+          printf 'PHP package versions: CLI %s; FPM %s\n' "$cli_package" "$fpm_package"
+          test "$cli_package" = "$fpm_package"
+          test "$(readlink -f "$(command -v php)")" = /usr/bin/php8.5
+          cli_version=$(php -r 'echo PHP_VERSION;')
+          fpm_version=$(php-fpm8.5 --version | awk 'NR == 1 {print $2}')
+          printf 'PHP binary versions: CLI %s; FPM %s\n' "$cli_version" "$fpm_version"
+          if [[ "$cli_version" != 8.5.* || "$cli_version" != "$fpm_version" ]]; then
+            printf 'Expected matching PHP 8.5 CLI and FPM binaries.\n' >&2
+            exit 1
+          fi
+          cli_extensions=$(php -m) || { printf 'Could not list PHP CLI modules.\n' >&2; exit 1; }
+          fpm_extensions=$(php-fpm8.5 -m) || { printf 'Could not list PHP FPM modules.\n' >&2; exit 1; }
+          for extensions in "$cli_extensions" "$fpm_extensions"; do
+            for extension in pdo_pgsql pgsql mbstring dom xml xmlwriter SimpleXML; do
+              grep --fixed-strings --line-regexp "$extension" <<< "$extensions"
+            done
+          done
       - name: Run the sole canonical gate with native browser suppliers
         run: |
-          php-fpm8.5 --version
           containers=$(docker ps --quiet)
           test -z "$containers"
           php scripts/browser_smoke_setup.php native php scripts/build.php

@@ -80,7 +80,8 @@ def readonly_docker_handles(output, safe):
 
 def runtime_mount_acl(checkout, safe, path, acl):
     """Qualify only the owner's delete rule on empty reserved runtime mount targets"""
-    require(path in (checkout / '.runs', checkout / 'var') and not path.is_symlink(),
+    require(path in (checkout / '.runs', checkout / 'var', checkout / 'packages/react/dist') and
+            not path.is_symlink(),
             'Source ACL protection outside reserved runtime mount targets: ' + str(path))
     info = path.lstat()
     require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not getattr(info, 'st_flags', 0),
