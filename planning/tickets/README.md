@@ -150,7 +150,7 @@
 | [TICKET-00145](00145-TICKET.md) | Validate Planning without the application stack | done | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00146](00146-TICKET.md) | Verify PHP independently and enforce Unit-only coverage | done | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00147](00147-TICKET.md) | Verify the client and cross-stack browser journeys | done | [EPIC-00028](../epics/00028-EPIC.md) |
-| [TICKET-00148](00148-TICKET.md) | Verify the Pi Harness independently | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |
+| [TICKET-00148](00148-TICKET.md) | Verify the Pi Harness independently | done | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00149](00149-TICKET.md) | Select, reuse, and require the four verification passes | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |
 | [TICKET-00150](00150-TICKET.md) | Remove the remaining repository-owned Python tooling | ready-for-agent | [EPIC-00028](../epics/00028-EPIC.md) |
 <!-- /planning:records -->
