@@ -1,7 +1,8 @@
 # Custom Role definitions and Access Control adoption
 
-TASK-00125 implements definition-only mutations, pending independent Review/QA. No Role UI, Permission delegation,
-registration, managed-policy editing or User assignment endpoint is enabled by this change.
+Custom Role definition mutations and permission delegation use package-owned commands. TASK-00127 adds
+confirmed delegation entries; its qualification is still in progress. No Role UI, registration or managed-policy
+editing is added by that change.
 
 ## API and Application authority
 
@@ -48,6 +49,22 @@ of retrying creation. The service is not mounted as new UI.
 
 See the [Role mutation ownership diagram](custom-roles/README.md) for the protected entry, configured bus
 and handler-owned transaction.
+
+## Permission delegation
+
+`PUT` and `DELETE /api/v1/roles/{roleId}/permissions/{permissionId}` require a Bearer credential,
+exact protected installation `MANAGE_ROLE_PERMISSIONS`, and closed JSON `{"confirm":true}`. Actor identity
+comes only from current authentication; both IDs come from the matched path. Success returns no-store JSend
+with null data, not a membership snapshot. Refresh authorized catalog/current-principal state after attempted
+changes; uncertain failures do not authorize blind replay. These commands have no displayed-revision argument.
+
+The registered Access Control v0.11.0 handlers own custom-role, permission-reference and grant ADMIN_SAFE
+checks, complete-state persistence and required Role permission audit in the shared generic transaction.
+Consumer Actions do not copy those intrinsic rules or introduce a second Application authorization gate.
+Repeated current intent can be a no-op without a second audit record. Missing targets return safe 404;
+ineligible or concurrently changed targets return safe 409. There is no Console or Agent delegation entry;
+future entries must authenticate and admit their own caller/operation/installation scope before bus dispatch.
+The raw bus remains trusted internal composition, not an exposed authenticated API.
 
 ## v0.11.0 source cutover
 

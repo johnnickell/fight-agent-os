@@ -32,7 +32,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
-| 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | — | — |
@@ -45,7 +44,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00609](00609-TASK.md) | Use one pane-width calculation in the Pi workflow dialog | — (standalone chore) | ready-for-agent | — | — |
-| — | [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | [TICKET-00148 — Verify the Pi Harness independently](../tickets/00148-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00617](00617-TASK.md) | Port the Build stage launcher and monitor to PHP | [TICKET-00148 — Verify the Pi Harness independently](../tickets/00148-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00618](00618-TASK.md) | Report which verification passes a change affects | [TICKET-00149 — Select, reuse, and require the four verification passes](../tickets/00149-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00622](00622-TASK.md) | Move local runtime and resource lifecycle to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
@@ -57,7 +55,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
+| 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00123](00123-TASK.md) | — |
 | 14 | [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00128](00128-TASK.md) | — |
 | 16 | [TASK-00600](00600-TASK.md) | Adopt the shared React frontend in the Slim skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
 | 17 | [TASK-00601](00601-TASK.md) | Adopt the shared React frontend in the Laravel skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
@@ -318,7 +316,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00621](00621-TASK.md) | Require the four checks and retire the old hosted gate | [TICKET-00149 — Select, reuse, and require the four verification passes](../tickets/00149-TICKET.md) | ready-for-agent | [TASK-00619](00619-TASK.md), [TASK-00620](00620-TASK.md) | — |
 | — | [TASK-00623](00623-TASK.md) | Move local domains DNS ingress and HTTPS to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | [TASK-00622](00622-TASK.md) | — |
 | — | [TASK-00624](00624-TASK.md) | Move human QA setup and cleanup to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | [TASK-00622](00622-TASK.md) | — |
-| — | [TASK-00628](00628-TASK.md) | Retire the remaining Python prerequisites outside diagram authoring | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | [TASK-00616](00616-TASK.md), [TASK-00617](00617-TASK.md), [TASK-00622](00622-TASK.md), [TASK-00623](00623-TASK.md), [TASK-00624](00624-TASK.md), [TASK-00625](00625-TASK.md), [TASK-00626](00626-TASK.md), [TASK-00627](00627-TASK.md) | — |
+| — | [TASK-00628](00628-TASK.md) | Retire the remaining Python prerequisites outside diagram authoring | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | [TASK-00617](00617-TASK.md), [TASK-00622](00622-TASK.md), [TASK-00623](00623-TASK.md), [TASK-00624](00624-TASK.md), [TASK-00625](00625-TASK.md), [TASK-00626](00626-TASK.md), [TASK-00627](00627-TASK.md) | — |
 
 ## Owner decision needed
 
@@ -526,6 +524,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | done | — | [PR #236](https://github.com/johnnickell/fight-agent-os/pull/236) |
 | 12 | [TASK-00012](00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #17](https://github.com/johnnickell/fight-agent-os/pull/17) |
 | 12 | [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | — (standalone chore) | done | — | [PR #16](https://github.com/johnnickell/fight-agent-os/pull/16) |
+| 12 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #318](https://github.com/johnnickell/fight-agent-os/pull/318) |
 | 12 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | done | — | [PR #243](https://github.com/johnnickell/fight-agent-os/pull/243) |
 | 13 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #20](https://github.com/johnnickell/fight-agent-os/pull/20) |
 | 14 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #23](https://github.com/johnnickell/fight-agent-os/pull/23) |
@@ -695,5 +694,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | [TICKET-00147 — Verify the client and cross-stack browser journeys](../tickets/00147-TICKET.md) | done | — | [PR #309](https://github.com/johnnickell/fight-agent-os/pull/309) |
 | — | [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | [TICKET-00147 — Verify the client and cross-stack browser journeys](../tickets/00147-TICKET.md) | done | — | [PR #310](https://github.com/johnnickell/fight-agent-os/pull/310) |
 | — | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | [TICKET-00148 — Verify the Pi Harness independently](../tickets/00148-TICKET.md) | done | — | [PR #313](https://github.com/johnnickell/fight-agent-os/pull/313) |
+| — | [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | [TICKET-00148 — Verify the Pi Harness independently](../tickets/00148-TICKET.md) | done | — | [PR #317](https://github.com/johnnickell/fight-agent-os/pull/317) |
 | — | [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | — (standalone bug) | done | — | [PR #314](https://github.com/johnnickell/fight-agent-os/pull/314) |
 <!-- /planning:board -->

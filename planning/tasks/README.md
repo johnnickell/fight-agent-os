@@ -129,7 +129,7 @@
 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done | [TICKET-00031](../tickets/00031-TICKET.md) |
-| [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | done | — |
@@ -618,7 +618,7 @@
 | [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | done | [TICKET-00147](../tickets/00147-TICKET.md) |
 | [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | done | [TICKET-00147](../tickets/00147-TICKET.md) |
 | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | done | [TICKET-00148](../tickets/00148-TICKET.md) |
-| [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
+| [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | done | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00617](00617-TASK.md) | Port the Build stage launcher and monitor to PHP | ready-for-agent | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00618](00618-TASK.md) | Report which verification passes a change affects | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
 | [TASK-00619](00619-TASK.md) | Run and reuse selected verification passes locally | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |

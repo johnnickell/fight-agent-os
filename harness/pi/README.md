@@ -179,15 +179,16 @@ Run the standalone pass from the checkout you want to verify:
 
 This does not need `./bin/runtime setup`, `./bin/up`, an application image, or any application service.
 The check mounts the Harness and its dependencies read-only in a temporary network-none container. Its
-private scratch holds test fixtures, Git state, npm cache, and a disposable package archive. Git and Python
-are still needed for custody and Build/Sync process checks. The Docker check and dependency commands share
+private scratch holds test fixtures, Git state, npm cache, and a disposable package archive. Linux session-file
+custody needs a 64-bit PHP CLI with FFI and libc `statx`; Git and Python are still needed for other custody
+and Build/Sync process checks. The Docker check and dependency commands share
 one container name per checkout, so a concurrent command in that checkout is rejected until the container
 is removed. Other checkouts can run independently. Dependency setup reuses valid installations; finish
 one-off tooling and stop this checkout's web service before replacing stale dependencies. The existing
 `./bin/runtime setup` also prepares these dependencies if you already use the application runtime.
 
-The separate GitHub Harness qualification job uses Node 24, npm, Git, Python 3 and tar on the runner, with
-no Docker commands. For the same direct invocation, use a checkout prepared for the OS where checks execute.
+The separate GitHub Harness qualification job uses Node 24, npm, Git, PHP CLI with FFI, Python 3 and tar
+on the runner, with no Docker commands. For the same direct invocation, use a checkout prepared for the OS where checks execute.
 Do not share host-installed `node_modules` with a Docker run; the native optional modules differ by platform.
 
 ```sh

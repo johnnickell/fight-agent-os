@@ -103,6 +103,14 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
         ->setName('api.v1.projects.list');
     $api->post('/workspaces/{workspace_id}/references', GenerateExceptionalReferenceAction::class.':handle')
         ->setName('api.v1.references.generate');
+    $api->put(
+        '/roles/{roleId}/permissions/{permissionId}',
+        \App\Adapter\Http\Action\Api\V1\Authority\GrantRolePermissionAction::class.':handle'
+    )->setName('api.v1.roles.permissions.grant');
+    $api->delete(
+        '/roles/{roleId}/permissions/{permissionId}',
+        \App\Adapter\Http\Action\Api\V1\Authority\RevokeRolePermissionAction::class.':handle'
+    )->setName('api.v1.roles.permissions.revoke');
     $api->post('/roles', CreateRoleAction::class.':handle')->setName('api.v1.roles.create');
     $api->patch('/roles/{roleId}', RenameRoleAction::class.':handle')->setName('api.v1.roles.rename');
     $api->delete('/roles/{roleId}', RemoveRoleAction::class.':handle')->setName('api.v1.roles.remove');

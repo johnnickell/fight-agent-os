@@ -20,11 +20,11 @@ RUN apt-get update \
         NO_RUST=YesPlease NO_GETTEXT=YesPlease NO_TCLTK=YesPlease USE_LIBPCRE2=YesPlease \
         DESTDIR=/opt/git install
 
-# Standalone Harness verification needs Node, Git and Python, not the application image.
+# Standalone Harness verification needs Node, Git, PHP CLI with FFI and Python, not the application image.
 FROM node AS pi-harness
 COPY --from=git-build /opt/git/usr/local/ /usr/local/
 RUN apt-get update \
-    && apt-get install --no-install-recommends --yes libcurl4 libexpat1 libpcre2-8-0 perl python3 \
+    && apt-get install --no-install-recommends --yes libcurl4 libexpat1 libpcre2-8-0 perl php-cli python3 \
     && rm -rf /var/lib/apt/lists/*
 
 FROM php:8.5.12-cli-bookworm@sha256:d4f6e10eb393de7e3a7a88e8b88e139072dd3ae297f6a5dada8257e6fe32c585

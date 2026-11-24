@@ -12,6 +12,9 @@ node --version
 npm --version
 git --version
 python3 --version
+if [ "$(uname -s)" = Linux ]; then
+  php --version
+fi
 node scripts/dependencies.mjs check
 npm test
 npm --prefix vendor/pi-subagents run check
