@@ -98,6 +98,46 @@ class ApprovedRootPolicyTest(unittest.TestCase):
                     with approvals.admit_reconfiguration(config, self.base, roots, ()):
                         self.fail('Unverified root was admitted')
 
+    def test_host_probe_failure_preserves_other_status_facts_and_blocks_startup(self):
+        config = self.base / 'roots.json'
+        directory = config.parent / 'observed'
+        roots = {'project': self.entry(self.root, 'rw'), 'other': self.entry(self.other)}
+        approvals.write_private(config, approvals.model(config, roots))
+        mounts = [
+            {'Type': 'bind', 'Source': str(directory), 'Destination': approvals.MANIFEST, 'RW': False},
+            {'Destination': approvals.PREFIX + '/stale'},
+            *({'Type': 'bind', 'Source': root['path'], 'Destination': approvals.target(name, root),
+               'RW': root['access'] == 'rw'} for name, root in roots.items()),
+        ]
+        facts = {'root:' + name: {'mounted': True, 'readable': True, 'writable': name == 'project'}
+                 for name in roots}
+        for failure in (subprocess.TimeoutExpired(['private host detail'], 1),
+                        OSError('private host detail')):
+            def qualify_storage(path):
+                if path == self.root:
+                    raise failure
+
+            with self.subTest(failure=type(failure)), \
+                    patch.object(approvals, 'filesystem', side_effect=qualify_storage), \
+                    patch.object(approvals, 'running_mounts', return_value=('fpm', mounts)), \
+                    patch.object(approvals, 'application_facts', return_value=(facts, None)), \
+                    patch.object(approvals, 'local_docker'):
+                output = StringIO()
+                with redirect_stdout(output):
+                    approvals.status(config, self.base, 'fixture', roots, ())
+                self.assertNotIn('private host detail', output.getvalue())
+                self.assertEqual({'roots': [
+                    {'locator': 'root:project', 'canonical_path': str(self.root), 'configured': True,
+                     'write_granted': True, 'mounted': True, 'readable': False, 'writable': False,
+                     'reason': 'host_root_unqualified'},
+                    {'locator': 'root:other', 'canonical_path': str(self.other), 'configured': True,
+                     'write_granted': False, 'mounted': True, 'readable': True, 'writable': False,
+                     'reason': None},
+                ], 'stale_mounts': 1}, json.loads(output.getvalue()))
+                with self.assertRaisesRegex(Hold, 'cannot be qualified'):
+                    with approvals.admit_reconfiguration(config, self.base, roots, ()):
+                        self.fail('Root with unavailable host qualification was admitted')
+
     def test_unconfirmed_mount_does_not_publish_application_snapshot(self):
         config = self.base / 'roots.json'
         directory = approvals.observation_directory(config)
@@ -124,6 +164,8 @@ class ApprovedRootPolicyTest(unittest.TestCase):
         for report, reason, mounted, stale in (
             (Hold('internal Docker detail'), 'docker_mount_report_unavailable', None, None),
             (ValueError('internal Docker detail'), 'docker_mount_report_unavailable', None, None),
+            (OSError('internal Docker detail'), 'docker_mount_report_unavailable', None, None),
+            (subprocess.TimeoutExpired(['internal Docker detail'], 1), 'docker_mount_report_unavailable', None, None),
             ((None, []), 'exact_mount_not_observed', False, 0),
         ):
             with self.subTest(report=report), patch.object(approvals, 'running_mounts') as read_mounts:
@@ -141,6 +183,27 @@ class ApprovedRootPolicyTest(unittest.TestCase):
                 self.assertEqual([{'locator': 'root:project', 'canonical_path': str(self.root),
                                    'configured': True, 'write_granted': True, 'mounted': mounted,
                                    'readable': mounted, 'writable': mounted, 'reason': reason}], status['roots'])
+
+    def test_unreadable_docker_json_preserves_status_and_blocks_snapshot_publication(self):
+        config = self.base / 'roots.json'
+        directory = approvals.observation_directory(config)
+        directory.mkdir()
+        roots = {'project': self.entry(self.root)}
+        with patch.object(approvals, 'local_docker'), \
+                patch.object(approvals, 'text', return_value='fpm'), \
+                patch.object(approvals, 'query', side_effect=RecursionError('private Docker detail')):
+            output = StringIO()
+            with redirect_stdout(output):
+                approvals.status(config, self.base, 'fixture', roots, ())
+            self.assertNotIn('private Docker detail', output.getvalue())
+            status = json.loads(output.getvalue())
+            self.assertIsNone(status['stale_mounts'])
+            self.assertIsNone(status['roots'][0]['mounted'])
+            self.assertTrue(status['roots'][0]['configured'])
+            self.assertEqual('docker_mount_report_unavailable', status['roots'][0]['reason'])
+            with self.assertRaisesRegex(Hold, 'Cannot verify the Docker mount report'):
+                approvals.publish_observation(config, self.base, 'fixture', roots, 'unused')
+            self.assertFalse((directory / config.name).exists())
 
     def test_status_reports_snapshot_binds_that_startup_rejects(self):
         config = self.base / 'roots.json'
@@ -183,6 +246,7 @@ class ApprovedRootPolicyTest(unittest.TestCase):
         ]
         for report in (Hold('private probe detail'), OSError('private probe detail'),
                        subprocess.TimeoutExpired(['private probe detail'], 1), ValueError('private probe detail'),
+                       RecursionError('private probe detail'),
                        None, {'roots': None}, {'roots': [None]},
                        {'roots': [{'locator': 'root:project', 'mounted': True, 'readable': 'yes'}]}):
             with self.subTest(report=report), \

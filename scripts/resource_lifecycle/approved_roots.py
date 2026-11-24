@@ -11,6 +11,7 @@ import re
 import stat
 import subprocess
 import sys
+from xml.parsers.expat import ExpatError
 
 from .resources import Hold, query, require, run, text, write_private
 
@@ -53,6 +54,7 @@ def filesystem(path):
                             key=lambda entry: len(entry[0].parts))
         require(source.startswith('/dev/disk'), 'Root is not on supported fixed local storage')
         info = plistlib.loads(text(['/usr/sbin/diskutil', 'info', '-plist', source], path).encode())
+        require(isinstance(info, dict), 'Cannot qualify the host storage report')
         require(info.get('Internal') is True and info.get('RemovableMedia') is False and
                 info.get('BusProtocol') in ('Apple Fabric', 'PCI', 'PCI-Express', 'SATA', 'NVMe') and
                 info.get('FilesystemType') == 'apfs' and info.get('MountPoint') == str(point),
@@ -62,8 +64,10 @@ def filesystem(path):
         for line in Path('/proc/self/mountinfo').read_text().splitlines():
             before, after = line.split(' - ', 1)
             fields = before.split()
+            details = after.split()
+            require(len(fields) >= 6 and len(details) >= 3, 'Cannot qualify the host mount table')
             decoded = re.sub(r'\\([0-7]{3})', lambda m: chr(int(m[1], 8)), fields[4])
-            mounts.append((Path(decoded), fields[3], fields[2], after.split()[0]))
+            mounts.append((Path(decoded), fields[3], fields[2], details[0]))
         require(not any(path in point.parents for point, *_ in mounts), 'Root contains another filesystem mount')
         matches = [entry for entry in mounts if beneath(path, entry[0])]
         depth = max(len(entry[0].parts) for entry in matches)
@@ -130,7 +134,7 @@ def canonical(raw, access, protected):
             return [metadata.st_dev, metadata.st_ino, birth]
         finally:
             os.close(fd)
-    except (OSError, RuntimeError, ValueError, KeyError):
+    except (OSError, RuntimeError, ValueError, KeyError, ExpatError, subprocess.SubprocessError):
         raise Hold('Root or host filesystem is missing, inaccessible or cannot be qualified') from None
 
 
@@ -297,7 +301,10 @@ def running_mounts(checkout, project):
     require(len(ids) <= 1, 'Cannot identify a unique running application service')
     if not ids:
         return None, []
-    mounts = query(['docker', 'inspect', '--format', '{{json .Mounts}}', ids[0]], checkout)
+    try:
+        mounts = query(['docker', 'inspect', '--format', '{{json .Mounts}}', ids[0]], checkout)
+    except RecursionError:
+        raise Hold('Cannot verify the Docker mount report') from None
     require(isinstance(mounts, list) and all(isinstance(mount, dict) and isinstance(mount.get('Destination'), str)
                                            for mount in mounts), 'Cannot verify the Docker mount report')
     return ids[0], mounts
@@ -328,7 +335,7 @@ def application_facts(checkout, container):
                     'Invalid application root observation')
             by_locator[fact['locator']] = fact
         return by_locator, facts.get('reason')
-    except (Hold, OSError, ValueError, subprocess.SubprocessError):
+    except (Hold, OSError, ValueError, RecursionError, subprocess.SubprocessError):
         return {}, 'application_observation_unavailable'
 
 

@@ -59,7 +59,11 @@ to make a selected directory pass. If the service runs as a different owner, OS 
 - Host status compares the desired roots with the selected FPM container's actual bind declarations and the
   application's mount and permission observations. A Docker-confirmed bind remains reported as mounted
   even if the PHP probe fails or returns an invalid report. Without a confirmed snapshot bind or a usable
-  PHP observation, status does not claim read or write access.
+  PHP observation, status does not claim read or write access. If host qualification fails or times out,
+  status reports `host_root_unqualified` and withholds read and write claims for that root only. Saved
+  approvals, confirmed mount and stale-mount facts, and the other roots' results remain visible. Check that
+  the affected directory is still accessible on supported local storage, then run status again. Startup
+  still refuses to proceed without a verified directory identity.
   If Docker's mount report is unavailable, status still shows saved approvals, with `null` for the observed
   mount, read and write facts and stale-mount count. A successful check with no running FPM service instead
   reports no observed mounts and a zero stale-mount count.
