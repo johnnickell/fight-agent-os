@@ -373,10 +373,13 @@ remain pending. See [owned-session contracts and retention](../docs/engineering/
 `features/users/UserDirectoryService` and `pages/UsersPage` replace the Users landing with the
 [permission-controlled directory](../docs/engineering/USER_DIRECTORY.md), using the same sole session/principal
 owners. Exact-key safe codecs, volatile authority-scoped rows, server pagination, reflowing table/cards and
-explicit denial recovery introduce no persistence, filtering or mutation. TASK-00118 adds a permission-rechecked
-row detail entry within that same route: a fresh safe GET, volatile scope-fenced detail, explicit recovery and
-same-page authoritative return, without target IDs in browser history or a broader administration UI.
-Pending-user links reach TASK-00060's `/admin/invitations/{user_id}` using only a classified UUID.
+explicit denial recovery introduce no authority persistence or filtering. TASK-00123 extends the same directory to
+`/admin/users/{user_id}` with a protected, fresh detail read and same-page return. URLs carry only the target UUID
+and bounded table options, not email, reasons, session identifiers or credentials. The host owns navigation; the
+shared Users page owns rendering and reads. Lifecycle, role and other-user session actions check their exact
+permissions and target eligibility independently and open cancel-first confirmations. The API remains authoritative.
+Outcomes clear affected views and refetch current authority; uncertain changes are never replayed. Self-session
+management stays separate. Pending-user links still reach `/admin/invitations/{user_id}`.
 `InvitationService` combines deliberate safe user-detail and nullable delivery GETs under READ_USERS.
 Page management needs READ_USERS plus MANAGE_USER_INVITATIONS; the mutation transport needs only management
 and returns an empty acknowledgement, never user/status data. Outcomes trigger authoritative reads and retire

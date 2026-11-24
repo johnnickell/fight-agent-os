@@ -189,6 +189,21 @@ export const resolveAccountLink: ResolveAccountLink = (destination, userId) => {
 };
 
 export function matchApplicationRoute(pathname: string): ApplicationRoute | undefined {
+  const detail =
+    /^\/admin\/users\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/.exec(
+      pathname
+    )?.[1];
+  if (detail)
+    return {
+      pathname,
+      title: 'User detail',
+      access: 'protected',
+      requirements: permission('READ_USERS'),
+      destination: 'users',
+      targetUserId: detail,
+      normalizeSearch: (search) => normalizeUsersSearch(search, new URLSearchParams()),
+      intendedRoute: (search) => normalizeUsersSearch(search, new URLSearchParams())
+    };
   const target =
     /^\/admin\/invitations\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/.exec(
       pathname

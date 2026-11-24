@@ -2,11 +2,15 @@
 import json
 import os
 from pathlib import Path, PurePosixPath
+import plistlib
+import pwd
 import stat
 import subprocess
 import sys
+from uuid import UUID
+from xml.parsers.expat import ExpatError
 
-from .resources import query, require, run, text
+from .resources import Hold, query, require, run, text
 
 
 def parent_mount_unused(container, mount, checkout, source, safe):
@@ -78,6 +82,32 @@ def readonly_docker_handles(output, safe):
             qualified.add(pid)
 
 
+def runtime_mount_owner(safe):
+    """Resolve the invoking account without membership lookup's synthetic UUID fallback"""
+    message = ('Native macOS account lookup unavailable or unverifiable; retain source and rerun '
+               'the same guarded bin/runtime finish from the canonical checkout with native macOS '
+               'account access. Do not strip ACLs manually or substitute a guessed owner UUID.')
+    try:
+        account = pwd.getpwuid(os.getuid()).pw_name
+        result = subprocess.run(['dscl', '-plist', '/Search', '-read', '/Users/' + account,
+                                 'GeneratedUID', 'UniqueID'], cwd=safe, capture_output=True, timeout=30)
+    except (KeyError, OSError, subprocess.TimeoutExpired):
+        raise Hold(message) from None
+    require(result.returncode == 0, message)
+    try:
+        record = plistlib.loads(result.stdout)
+    except (plistlib.InvalidFileException, ExpatError, ValueError, TypeError):
+        raise Hold(message) from None
+    require(isinstance(record, dict), message)
+    owner = record.get('dsAttrTypeStandard:GeneratedUID')
+    require(record.get('dsAttrTypeStandard:UniqueID') == [str(os.getuid())] and
+            isinstance(owner, list) and len(owner) == 1 and isinstance(owner[0], str), message)
+    try:
+        return str(UUID(owner[0])).upper()
+    except ValueError:
+        raise Hold(message) from None
+
+
 def runtime_mount_acl(checkout, safe, path, acl):
     """Qualify only the owner's delete rule on empty reserved runtime mount targets"""
     require(path in (checkout / '.runs', checkout / 'var', checkout / 'packages/react/dist') and
@@ -98,7 +128,7 @@ def runtime_mount_acl(checkout, safe, path, acl):
                     'Runtime mount descendant ACL protection: ' + str(child))
             directories.append(child)
     run(['git', 'check-ignore', '--quiet', '--', str(path)], checkout)
-    owner = text(['dsmemberutil', 'getuuid', '-u', str(os.getuid())], safe)
+    owner = runtime_mount_owner(safe)
     require(acl == ['0: ' + owner + ' deny delete'],
             'Source ACL protection is not the sole owner delete rule: ' + str(path))
     return info.st_dev, info.st_ino

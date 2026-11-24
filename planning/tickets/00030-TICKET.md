@@ -2,7 +2,7 @@
 id: TICKET-00030
 epic: EPIC-00004
 title: Administer installation users and cross-user sessions
-status: ready-for-agent
+status: done
 ---
 
 # Administer installation users and cross-user sessions
@@ -70,7 +70,7 @@ The operator accepted confirmation as “delete this user in their current state
 | [TASK-00120](../tasks/00120-TASK.md) | Guard user soft deletion and restoration | done |
 | [TASK-00121](../tasks/00121-TASK.md) | Authorize user role assignments and removals | done |
 | [TASK-00122](../tasks/00122-TASK.md) | Authorize cross-user session inspection and revocation | done |
-| [TASK-00123](../tasks/00123-TASK.md) | Operate full user administration in the browser | ready-for-agent |
+| [TASK-00123](../tasks/00123-TASK.md) | Operate full user administration in the browser | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
