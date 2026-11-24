@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installStagePresentation, stageInvocation } from '../src/observation/stage-presentation.mjs';
 
-const command = "python3 -u -B '/provider/.pi/skills/build/scripts/run-stage.py' --task TASK-00585 --role reviewer --attempt '/private/run/02-reviewer' --provider configured --model configured --thinking high";
+const command = "php '/provider/.pi/skills/build/scripts/run-stage.php' --task TASK-00585 --role reviewer --attempt '/private/run/02-reviewer' --provider configured --model configured --thinking high";
 const theme = { fg: (_color, text) => text };
 function fixture() {
   let resolver;
@@ -14,7 +14,7 @@ test('recognition accepts simple provider/fixed-monitor argv, aliases and quoted
   assert.equal(stageInvocation(command).role, 'reviewer');
   assert.equal(stageInvocation("cd '/selected checkout' && " + command.replace('reviewer', 'review')).role, 'reviewer');
   assert.equal(stageInvocation(command.replace('/provider/.pi/skills/build/scripts', '/package/src/observation')).task, 'TASK-00585');
-  for (const value of ['echo ' + command, command + '; echo unrelated', command + ' && echo unrelated', command.replace('python3', 'python'), command.replace('--role reviewer', '--role unknown'), command.replace('TASK-00585', 'unknown'), command + ' --role qa', 'python3 - <<\'PY\'\n' + command + '\nPY']) assert.equal(stageInvocation(value), null);
+  for (const value of ['echo ' + command, command + '; echo unrelated', command + ' && echo unrelated', command.replace('php ', 'python3 '), command.replace('--role reviewer', '--role unknown'), command.replace('TASK-00585', 'unknown'), command + ' --role qa', 'python3 - <<\'PY\'\n' + command + '\nPY']) assert.equal(stageInvocation(value), null);
 });
 test('unrelated tools and ordinary bash retain the exact native slots and shell; no executor is replaced', () => {
   const { renderer, resolver, original } = fixture();
@@ -33,7 +33,7 @@ test('each active process has a bounded distinguishable dot/Agent row without co
     assert.match(lines.join('\n'), new RegExp('● Agent.*reviewer TASK-00585.*' + attempt));
     const result = renderer.renderResult({ content: [{ type: 'text', text: 'PRIVATE_TOOL_CHATTER' }] }, { isPartial: true }, theme, { args });
     assert.equal(result.render(200).length, 1); assert.match(result.render(200)[0], /Working.*observation separate/);
-    assert.doesNotMatch([...lines, ...result.render(200)].join('\n'), /python|PRIVATE_TOOL_CHATTER/);
+    assert.doesNotMatch([...lines, ...result.render(200)].join('\n'), /php|PRIVATE_TOOL_CHATTER/);
     assert.ok(renderer.renderCall(args, theme, {}).render(20).every(line => line.length <= 20));
   }
 });

@@ -62,6 +62,12 @@ export default function(pi) {
   });
 }
 ''' % json.dumps((package / 'src/build/authority.mjs').as_uri()))
+# No real provider or private model settings are needed for native input handling.
+(agent / 'models.json').write_text(json.dumps({'providers': {'fixture': {
+    'baseUrl': 'http://127.0.0.1:1/v1', 'api': 'openai-completions', 'apiKey': 'unused-fixture',
+    'models': [{'id': 'controlled'}],
+}}}))
+model = ['--provider', 'fixture', '--model', 'controlled', '--thinking', 'off']
 (agent / 'settings.json').write_text(json.dumps(dict(packages=[str(package)], extensions=[str(diag)])))
 shutil.copyfile(package / 'profiles/subagents.json', agent / 'subagents.json')
 env = {key: os.environ[key] for key in ('PATH', 'TMPDIR', 'LANG', 'LC_ALL', 'LC_CTYPE') if key in os.environ}
@@ -74,14 +80,14 @@ if args.consumer:
     head = subprocess.check_output(['git', '-C', str(consumer), 'rev-parse', 'HEAD']).decode().strip()
     output = run / 'consumer-startup.json'
     result = subprocess.run([pi, '--offline', '--no-approve', '--mode', 'json', '--session-dir', str(run / 'consumer-sessions'),
-        '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--', 'Read-only startup qualification; input is handled without execution.'],
+        *model, '--', 'Read-only startup qualification; input is handled without execution.'],
         cwd=consumer, env=dict(env, FIGHT_PROBE_OUTPUT=str(output)), capture_output=True, timeout=20)
     (run / 'consumer-cli.log').write_bytes(result.stdout + result.stderr)
     assert result.returncode == 0, 'Known consumer native startup failed'
     status = json.loads(output.read_text())
     assert status['cwd'] == str(consumer) and status['workflow']['taskId'] is None and status['consumerInstructions']
     assert status['providerRequests'] == 0
-    inventory = subprocess.run(['python3', '-B', str(provider / '.pi/skills/build/scripts/run-stage.py'), '--help'],
+    inventory = subprocess.run(['php', str(provider / '.pi/skills/build/scripts/run-stage.php'), '--help'],
         cwd=consumer, env=env, capture_output=True, timeout=40)
     (run / 'consumer-provider-help.log').write_bytes(inventory.stdout + inventory.stderr)
     assert inventory.returncode == 0, 'Provider resource resolution from consumer failed'
@@ -93,8 +99,7 @@ master, slave = pty.openpty()
 fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 156, 0, 0))
 def setup():
     os.setsid(); fcntl.ioctl(0, termios.TIOCSCTTY, 0)
-p = subprocess.Popen([pi, '--offline', '--approve', '--session-dir', str(run / 'parent-sessions'), '--provider', 'openai-codex',
-    '--model', 'gpt-6.1-sol', '--thinking', 'high'], cwd=root, env=env, stdin=slave, stdout=slave, stderr=slave, preexec_fn=setup)
+p = subprocess.Popen([pi, '--offline', '--approve', '--session-dir', str(run / 'parent-sessions'), *model], cwd=root, env=env, stdin=slave, stdout=slave, stderr=slave, preexec_fn=setup)
 def pump():
     if select.select([master], [], [], .05)[0]:
         try: raw.extend(os.read(master, 65536))
@@ -137,9 +142,8 @@ try:
         attempt = run / f'attempt-{index}'; attempt.mkdir()
         (attempt / 'request.md').write_text('Private startup fixture only. No actual TASK-00560 target Work, verdict or provider request.\n')
         status_file = attempt / 'native-status.json'
-        invocation = ['python3', '-u', '-B', str(provider / '.pi/skills/build/scripts/run-stage.py'), '--harness-package', str(package),
-            '--attempt', str(attempt), '--task', 'TASK-00560', '--role', role, '--provider', 'openai-codex', '--model', 'gpt-6.1-sol',
-            '--thinking', 'high', '--heartbeat', '1', '--timeout', '20']
+        invocation = ['php', str(provider / '.pi/skills/build/scripts/run-stage.php'), '--harness-package', str(package),
+            '--attempt', str(attempt), '--task', 'TASK-00560', '--role', role, *model, '--heartbeat', '1', '--timeout', '20']
         shell = f'cd {shlex.quote(str(target))} && FIGHT_PROBE_OUTPUT={shlex.quote(str(status_file))} ' + shlex.join(invocation)
         os.write(master, ('!!' + shell + '\r').encode())
         until(lambda: status_file.exists(), 'actual native role startup')
@@ -150,7 +154,7 @@ try:
         assert status['workflow']['launcher'] == canonical and status['workflow']['taskId'] == 'TASK-00560'
         assert status['workflow']['checkout'] == str(target) and status['cwd'] == str(target)
         assert status['fixtureInstructions'] and status['providerRequests'] == 0
-        assert (status['provider'], status['model'], status['thinking']) == ('openai-codex', 'gpt-6.1-sol', 'high')
+        assert (status['provider'], status['model'], status['thinking']) == ('fixture', 'controlled', 'off')
         assert observed['identity']['role'] == canonical and observed['identity']['worktree'] == str(target)
         assert (attempt / 'pi-exit-code').read_text().strip() == '0'
         assert (attempt / 'exit-code').read_text().strip() == '1', 'No agent response must not become success'
@@ -160,8 +164,8 @@ try:
     # Unknown stage inputs refuse before even claiming an attempt or starting Pi.
     for index, role in enumerate(['build', 'team-lead', 'unknown']):
         attempt = run / f'refused-{index}'; attempt.mkdir(); (attempt / 'request.md').write_text('Never execute.\n')
-        result = subprocess.run(['python3', '-B', str(package / 'src/observation/run-stage.py'), '--attempt', str(attempt),
-            '--task', 'TASK-00560', '--role', role, '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high'],
+        result = subprocess.run(['php', str(package / 'src/observation/run-stage.php'), '--attempt', str(attempt),
+            '--task', 'TASK-00560', '--role', role, *model],
             cwd=root, env=env, capture_output=True, timeout=5)
         assert result.returncode != 0 and not (attempt / 'dispatch.lock').exists() and not (attempt / 'process.json').exists()
         results.append(dict(case='unknown/coordinator role refused before launch', input=role))
@@ -170,8 +174,8 @@ try:
     subprocess.run(['git', '-C', str(foreign), 'init', '-b', 'other/default'], check=True, capture_output=True)
     (foreign / 'CLAUDE.md').write_text('FOREIGN_PORTABLE_TARGET: diagnostic only.\n')
     attempt = run / 'wrong-target'; attempt.mkdir(); (attempt / 'request.md').write_text('Foreign startup fixture, no actual Work.\n')
-    invocation = ['python3', '-B', str(provider / '.pi/skills/build/scripts/run-stage.py'), '--attempt', str(attempt),
-        '--task', 'TASK-00560', '--role', 'reviewer', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--timeout', '20']
+    invocation = ['php', str(provider / '.pi/skills/build/scripts/run-stage.php'), '--attempt', str(attempt),
+        '--task', 'TASK-00560', '--role', 'reviewer', *model, '--timeout', '20']
     os.write(master, ('!!cd ' + shlex.quote(str(foreign)) + ' && FIGHT_PROBE_OUTPUT=' + shlex.quote(str(attempt / 'native-status.json')) + ' ' + shlex.join(invocation) + ' 2>' + shlex.quote(str(attempt / 'monitor.stderr')) + '\r').encode())
     until(lambda: (attempt / 'exit-code').exists(), 'wrong-target monitor exit')
     status = json.loads((attempt / 'native-status.json').read_text())
@@ -184,8 +188,8 @@ try:
     while time.monotonic() < until_time: pump()
     # A real monitor outside native ancestry cannot borrow this parent's custody.
     attempt = run / 'unrelated'; attempt.mkdir(); (attempt / 'request.md').write_text('Unrelated startup fixture.\n')
-    result = subprocess.run(['python3', '-B', str(provider / '.pi/skills/build/scripts/run-stage.py'), '--attempt', str(attempt),
-        '--task', 'TASK-00560', '--role', 'review', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--timeout', '20'],
+    result = subprocess.run(['php', str(provider / '.pi/skills/build/scripts/run-stage.php'), '--attempt', str(attempt),
+        '--task', 'TASK-00560', '--role', 'review', *model, '--timeout', '20'],
         cwd=root, env=dict(env, FIGHT_PROBE_OUTPUT=str(attempt / 'native-status.json')), capture_output=True, timeout=40)
     (run / 'unrelated.log').write_bytes(result.stdout + result.stderr)
     assert result.returncode == 1 and b'no-current-native-route' in result.stderr

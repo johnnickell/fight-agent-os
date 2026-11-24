@@ -10,9 +10,8 @@ export function stageInvocation(command) {
   if (!words || words.join('').replace(/\s/g, '') !== command.replace(/\s/g, '')) return null;
   const argv = words.map(word => /^['"]/.test(word) ? word.slice(1, -1) : word);
   if (argv[0] === 'cd' && argv[2] === '&&') argv.splice(0, 3);
-  if (!/^(?:\/[^\s]+\/)?python3$/.test(argv.shift() ?? '')) return null;
-  while (['-u', '-B'].includes(argv[0])) argv.shift();
-  if (!/^\/[^\n]+\/(?:\.pi\/skills\/build\/scripts|src\/observation)\/run-stage\.py$/.test(argv.shift() ?? '')) return null;
+  if (!/^(?:\/[^\n]+\/)?php$/.test(argv.shift() ?? '')) return null;
+  if (!/^\/[^\n]+\/(?:\.pi\/skills\/build\/scripts|src\/observation)\/run-stage\.php$/.test(argv.shift() ?? '')) return null;
   const fields = {};
   while (argv.length) {
     const key = argv.shift();

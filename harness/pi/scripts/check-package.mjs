@@ -25,6 +25,7 @@ try {
     ...engineManifest.pi.extensions.map((path) => `${engine}/${path.replace(/^\.\//, '')}`),
     'README.md', 'SUBAGENTS.md', 'WORKFLOW.md', 'WORKFLOW_RULE.md', 'WORKSPACE.md',
     'COMPACTION.md', 'TOOL_POLICY.md', 'src/observation/session-file-birth.php',
+    'src/observation/run-stage.php', 'src/observation/stage-observation.php', 'src/observation/stage-discovery.php',
     `${engine}/README.md`, `${engine}/docs/packages.md`,
   ]) assert.ok(files.includes(path.replace(/^\.\//, '')), `Missing packaged file: ${path}`);
   for (const directory of [...manifest.pi.subagents.agents, 'profiles']) {
@@ -33,6 +34,9 @@ try {
   }
   assert.ok(!files.some((path) => /(^|\/)(node_modules|tests?|scripts)\//.test(path)),
     'Packaged development files');
+  for (const path of ['run-stage.py', 'observation.py', 'automatic_observation.py']) {
+    assert.ok(!files.includes(`src/observation/${path}`), `Packaged superseded process tool: ${path}`);
+  }
   for (const path of ['LICENSE', `${engine}/LICENSE`]) {
     assert.deepEqual(extract(path), readFileSync(join(root, path)), `Changed packaged license: ${path}`);
   }
@@ -52,6 +56,8 @@ try {
     assert.throws(() => sessionFileIdentity(destination), /Persistent parent session unavailable/);
     if (process.platform === 'linux') assert.throws(() => sessionFileIdentity('/proc/self/status'));
     console.log(`Packaged session-file observation and refusal verified on ${process.platform}.`);
+    const monitor = join(destination, 'package/src/observation/run-stage.php');
+    assert.match(execFileSync('php', [monitor, '--help'], { encoding: 'utf8' }), /Run one Pi role/);
   }
 } finally {
   rmSync(destination, { recursive: true, force: true });
