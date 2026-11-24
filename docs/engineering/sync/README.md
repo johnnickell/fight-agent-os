@@ -1,6 +1,28 @@
 # Local Sync role flow
 
-**Existing instruction/admission flow** at reconciled source
+## Current PHP process flow
+
+**Existing implementation** at `909d9e7bb56663a3555d11f47ee594a3fe76b6d7`. This view covers Sync's process stage
+only. Fresh Build dispatches through the SDK's `fight_build_stage` and does not use this launcher.
+
+![Sync PHP monitor, child and discovery flow](php-stage-flow.png)
+
+[Editable Python](php-stage-flow.py). Render with `./bin/diagrams render docs/engineering/sync/php-stage-flow.py`.
+Use `git show 909d9e7bb56663a3555d11f47ee594a3fe76b6d7:PATH` for the traced source:
+
+| Flow | Source and meaning |
+|---|---|
+| 1. Select package | [Provider launcher](../../../.pi/skills/build/scripts/run-stage.php) uses native inventory and registration, then execs the single selected monitor. A selection or admission failure does not choose a fallback. |
+| 2–3. Start or cancel | [`StageChild` and `runStage`](../../../harness/pi/src/observation/run-stage.php) start a bootstrap that makes its own session and waits on a pipe. The monitor releases it only after checking group ownership; cancellation before release closes the pipe without authorizing Pi exec. Later group signals require a live leader and a matching group. |
+| 4. Collect evidence | [`runStage`](../../../harness/pi/src/observation/run-stage.php) reads child events and stderr into private files, and records separate child and monitor exits. |
+| Observe only | [`PassiveStageObservation`](../../../harness/pi/src/observation/stage-observation.php) forwards bounded progress to the [discovery helper](../../../harness/pi/src/observation/stage-discovery.php). The [native custodian](../../../harness/pi/src/observation/native-observation.mjs) owns admission; visibility loss does not control stage execution. |
+
+The optional legacy observation socket and detailed custody checks are omitted. This is a source trace, not
+proof that a live stage ran or that the candidate was accepted.
+
+## Historical instruction and admission flow
+
+**Existing instruction/admission flow at the historical revision** at reconciled source
 `bc257339c132f1b5ee9735048eb82fe44dffe244`. This view traces the native workflow owner and reuse of existing
 process dispatch. The following diagram/documentation changes do not alter those represented sources.
 
