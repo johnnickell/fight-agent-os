@@ -105,7 +105,7 @@ export class ApiClient {
 
   /** Sends one Bearer-authorized definition mutation without retry or cookie-derived authority. */
   mutate<T>(
-    method: 'POST' | 'PATCH' | 'DELETE',
+    method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     path: string,
     body: Readonly<Record<string, unknown>> | null,
     decode: ResponseDecoder<T>,
@@ -124,7 +124,7 @@ export class ApiClient {
     decode: ResponseDecoder<T>,
     options: GetOptions,
     mutation?: Readonly<{
-      method: 'POST' | 'PATCH' | 'DELETE';
+      method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
       body: Readonly<Record<string, unknown>> | null;
       csrfProof?: string;
       successStatus?: 200 | 201;

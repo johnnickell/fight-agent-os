@@ -189,6 +189,14 @@ publication/ancestry, clean-source/private-data, live-consumer and effective-hoo
 identities, contents and ACLs are rechecked before the first permission change, then again before each change.
 The remover clears only ACL entry zero and verifies its removal; it never uses recursive or blanket ACL removal.
 
+The owner UUID comes from the native macOS account record, whose numeric user ID must match the invoking user.
+Membership lookup can return a synthetic UUID when account access is restricted; it is not ownership proof.
+Unavailable, failed or malformed account lookup holds source removal with an account-access message, separately
+from a genuine ACL mismatch. Rerun the same guarded `bin/runtime finish` from the canonical checkout through
+the host's normal permission mechanism with native macOS account access. This requires neither root nor a
+manual permission repair. Do not guess an owner UUID or bypass the existing publication, consumer, hook,
+data and source guards. Ordinary `bin/down` still runs before any source hold.
+
 Any additional/inherited ACL, another identity or permission, another path (including frontend cache targets),
 nonempty data, symlink, foreign owner or filesystem flag still holds source removal. Runtime-free fixtures do
 not get this exception. A later native removal failure remains incomplete and is reported; this policy does

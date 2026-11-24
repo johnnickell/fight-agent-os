@@ -19,6 +19,8 @@ import UserDetail from './UserDetail.js';
 import type { CatalogOrdering } from '../api/ApiClient.js';
 import type { TableColumn, TableData } from '../components/DataTable.js';
 import type { AuthorityCache, AuthorityScope } from '../features/authority/AuthorityCache.js';
+import type { AdministrationNotice } from '../features/users/UserAdministration.js';
+import type { UserAdministrationService } from '../features/users/UserAdministrationService.js';
 import type {
   DirectoryUser,
   UserDirectoryService
@@ -31,12 +33,24 @@ const loading: TableData<DirectoryUser> = { kind: 'loading' };
 export default function UsersPage({
   service,
   cache,
-  locationRestoration
+  locationRestoration,
+  administration,
+  detailId,
+  onOpenDetail,
+  onCloseDetail,
+  notice,
+  onOutcome
 }: {
   service: Pick<UserDirectoryService, 'load' | 'detail' | 'retry'> &
     Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
   locationRestoration?: Readonly<{ invalid: boolean }> | undefined;
+  administration?: UserAdministrationService | undefined;
+  detailId?: string | undefined;
+  onOpenDetail?: ((userId: string) => void) | undefined;
+  onCloseDetail?: (() => void) | undefined;
+  notice?: AdministrationNotice | undefined;
+  onOutcome?: ((notice: AdministrationNotice) => void) | undefined;
 }) {
   const authority = useAuthority(cache);
   const allowed = evaluateAccess(authority, readUsers) === 'allowed';
@@ -48,8 +62,9 @@ export default function UsersPage({
     scope: AuthorityScope;
     query: typeof query;
   } | null>(null);
-  const activeDetail =
-    allowed && selected?.scope === scope && selected.query === query ? selected.id : null;
+  const activeDetail = !allowed
+    ? null
+    : (detailId ?? (selected?.scope === scope && selected.query === query ? selected.id : null));
   const [attempt, setAttempt] = useState(0);
   const [retained, setRetained] = useState<{
     query: typeof query;
@@ -167,8 +182,15 @@ export default function UsersPage({
         userId={activeDetail}
         service={service}
         cache={cache}
+        administration={administration}
+        notice={notice}
+        onOutcome={onOutcome}
         onBack={() => {
           if (!admitted()) return;
+          if (detailId && onCloseDetail) {
+            onCloseDetail();
+            return;
+          }
           focusAfterRead.current = true;
           select(null);
         }}
@@ -187,7 +209,8 @@ export default function UsersPage({
             onClick={() => {
               if (!admitted()) return;
               setRetained(undefined);
-              select({ id: user.userId, scope, query });
+              if (onOpenDetail) onOpenDetail(user.userId);
+              else select({ id: user.userId, scope, query });
             }}
           >
             View details

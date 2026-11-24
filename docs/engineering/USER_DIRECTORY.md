@@ -119,12 +119,12 @@ a target disappearing after the gate returns 404. Each new request resolves auth
 there is no second Action recheck or atomic authorization-and-read guarantee.
 
 Each directory row has a permission-rechecked **View details** button. Selection clears the list and fetches
-fresh detail; it does not reuse the row as current target state. Detail remains within `/admin/users`, with
-no new parameterized browser route, user ID/email in history, intended-route payload or persisted cache. Back
-refetches the same bounded page; Retry/Reload are explicit. Authority retirement clears selection and data,
-aborts/fences outstanding work and does not replay the directory. The sole service's 401/403 refusal fence and
-existing session/principal owners still control recovery. Read-only detail has accessible loading, missing,
-forbidden, system and cleared states; lifecycle/role/session operations remain later TASKs.
+fresh detail; it does not reuse the row as current target state. TASK-00123 adds a protected host route at
+`/admin/users/{user_id}` so detail can read again after authority changes. The route carries a classified UUID and
+bounded table options, never email, a session ID, a reason or credentials. Back refetches the same bounded page.
+Authority retirement clears private data and fences outstanding work. The existing 401/403 refusal fence and
+session/principal owners still control detail recovery. The shared component also supports hosts that keep
+selection in memory. Lifecycle, role and cross-user session actions use existing, separately protected APIs.
 
 Qualified installed Fight Access Control **v0.8.0**, source/Composer lock reference
 `319738255e682d587642b67856039f882b9588d6`: `GetUserById(UserId)` dispatches through the configured bus,
@@ -135,6 +135,27 @@ membership or revision in the wire output. The package does not promise a combin
 missing references fail the whole endpoint. No dependency upgrade or parallel handler graph is introduced.
 The removed `ReadUserDetail`, `ReadUserDirectory` and repository-backed `UserRolePresentation` have no surviving
 callers. Independent acceptance and browser QA remain separate from Work's local checks.
+
+## Confirmed user administration flow
+
+![Confirmed change from protected detail through server admission and authority refetch](shared-react/user-administration-flow.png)
+
+Existing implementation at `ea9dd583a874b50341f5906919449b913513aab1`.
+[Editable Python](shared-react/user-administration-flow.py). Arrows show runtime interactions, not static dependencies.
+
+| Flow | Source trace |
+|---|---|
+| A. Match and guard detail | [`matchApplicationRoute`](../../client/src/routes/applicationRoutes.ts) classifies the target; [`ApplicationView`](../../client/src/routes/ApplicationJourney.tsx) mounts the shared Users page inside [`GuardedRoute`](../../client/src/routes/GuardedRoute.tsx). [`UserDetail`](../../packages/react/src/pages/UserDetail.tsx) reads fresh detail rather than using list data. |
+| B–C. Confirm and send | [`UserAdministration`](../../packages/react/src/features/users/UserAdministration.tsx) offers only applicable actions and asks for confirmation. [`UserAdministrationService.change`](../../packages/react/src/features/users/UserAdministrationService.ts) checks current client scope and owns the outstanding write through [`ApiClient.mutate`](../../packages/react/src/api/ApiClient.ts). |
+| D. Respond after existing server admission | [`DisableUserAction`](../../src/Adapter/Http/Action/Api/V1/Users/DisableUserAction.php) is the example entry. It declares its permissions and dispatches only after server admission; the browser interprets the acknowledgement without applying an optimistic state. |
+| E–F. Retire and reread | [`createAccountSession`](../../packages/react/src/features/auth/AccountSession.ts) retires affected views and uses the existing session/principal owners. A submitted change stays pending until transport settles, even across detail remounts. A retired scope does not receive the old notice. The current route reads again only under verified access. |
+
+A role catalog or admin session read rejected with 401 or 403 also retires old authority. The browser
+restores the session on 401 or rechecks the principal on 403. It does not replay the rejected read on
+remount; when access remains, the section's Reload button requests it explicitly. The diagram omits that
+read-recovery path, endpoint inventory, bus/transaction internals and invitation/owned-session flows.
+A transport failure is not proof that the server rejected the write. The browser does not automatically
+retry it. This diagram is a source trace, not live or accessibility evidence.
 
 ## Responsive and verification boundaries
 
