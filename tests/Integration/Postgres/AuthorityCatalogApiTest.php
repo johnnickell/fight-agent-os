@@ -838,6 +838,37 @@ SQL);
     }
 
     /**
+     * Rechecks actor authority on the next delegation request with the same access token
+     */
+    public function testDelegationObservesNextRequestAuthorityLoss(): void
+    {
+        $now = $this->container->get(Clock::class)->now();
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_NEXT_REQUEST'), [], $now);
+        $permission = Permission::define(PermissionId::generate(), PermissionName::fromString('NEXT_READ'), $now);
+        $roles = $this->container->get(RoleRepository::class);
+        $connection = $this->container->get(Connection::class);
+        $connection->transactional(function () use ($role, $permission, $roles): void {
+            $roles->add($role);
+            $this->container->get(PermissionRepository::class)->add($permission);
+        });
+        $path = '/api/v1/roles/'.$role->getId()->toString().'/permissions/'.$permission->getId()->toString();
+        $this->mutation('PUT', $path, ['confirm' => true], 200);
+        self::assertTrue($roles->getById($role->getId())->hasPermission($permission->getId()));
+        $before = $this->roleAuditCount();
+        $users = $this->container->get(UserRepository::class);
+        $expected = $users->getById($this->actor->getId());
+        self::assertInstanceOf(User::class, $expected);
+        $revoked = clone $expected;
+        $revoked->removeRole(RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID), $now);
+        self::assertTrue($connection->transactional(fn() => $users->replaceRoleAssignments($expected, $revoked)));
+        foreach (['DELETE', 'PUT'] as $method) {
+            $this->mutation($method, $path, ['confirm' => true], 403);
+            self::assertTrue($roles->getById($role->getId())->hasPermission($permission->getId()));
+            self::assertSame($before, $this->roleAuditCount());
+        }
+    }
+
+    /**
      * Counts persisted required Role audit
      */
     private function roleAuditCount(): int
