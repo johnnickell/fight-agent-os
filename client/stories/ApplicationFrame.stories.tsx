@@ -37,7 +37,7 @@ function FrameExample({
   longEmail?: boolean;
   preference?: ThemePreference;
 }) {
-  const { pathname, navigate } = useApplicationNavigation(initial);
+  const navigation = useApplicationNavigation(initial);
   const [session] = useState(() => {
     const tokens = new MemoryAccessToken();
     const identity = crypto.randomUUID();
@@ -186,7 +186,7 @@ function FrameExample({
   }, [session, outcome]);
   return (
     <div className="catalog-preview catalog-frame-preview" data-bs-theme={appearance.effective}>
-      <ApplicationView session={session} pathname={pathname} navigate={navigate} theme={theme} />
+      <ApplicationView session={session} {...navigation} theme={theme} />
     </div>
   );
 }

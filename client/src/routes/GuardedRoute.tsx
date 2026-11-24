@@ -16,9 +16,11 @@ export type RegisteredRoute = Readonly<{
    */
   requirements: readonly AccessRequirement[];
   /**
-   * Opts in static paths only; each query key enumerates its non-sensitive values
+   * Opts in static paths only. Enumerate safe values or canonicalize bounded, non-sensitive options.
    */
-  intendedRoute?: Readonly<Record<string, readonly string[]>>;
+  intendedRoute?:
+    | Readonly<Record<string, readonly string[]>>
+    | ((search: string) => Readonly<{ search: string; invalid: boolean }>);
 }>;
 
 /**

@@ -16,8 +16,12 @@ final readonly class ListDirectoryUsers implements Query
 {
     /**
      * Constructs ListDirectoryUsers
+     *
+     * @param integer $page
+     * @param integer $perPage
+     * @param array<string, string> $orderings
      */
-    public function __construct(public int $page, public int $perPage)
+    public function __construct(public int $page, public int $perPage, public array $orderings = [])
     {
         if ($page < 1 || $page > 1000 || $perPage < 1 || $perPage > 100) {
             throw new InvalidArgumentException('Invalid directory pagination.');
@@ -29,7 +33,7 @@ final readonly class ListDirectoryUsers implements Query
      */
     public static function fromArray(array $data): static
     {
-        return new self($data['page'], $data['per_page']);
+        return new self($data['page'], $data['per_page'], $data['orderings'] ?? []);
     }
 
     /**
@@ -37,6 +41,11 @@ final readonly class ListDirectoryUsers implements Query
      */
     public function toArray(): array
     {
-        return ['page' => $this->page, 'per_page' => $this->perPage];
+        $data = ['page' => $this->page, 'per_page' => $this->perPage];
+        if ($this->orderings !== []) {
+            $data['orderings'] = $this->orderings;
+        }
+
+        return $data;
     }
 }

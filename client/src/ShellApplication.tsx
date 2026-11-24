@@ -40,7 +40,8 @@ export function ShellApplication({
 }) {
   const runtime = decodeRuntimeConfiguration(configuration);
   const validRuntime = runtime !== null;
-  const { pathname, navigate } = useApplicationNavigation(initialPathname);
+  const navigation = useApplicationNavigation(initialPathname);
+  const { pathname } = navigation;
   const route = matchApplicationRoute(pathname);
   const inertPublic =
     route?.destination === 'activation' ||
@@ -92,8 +93,7 @@ export function ShellApplication({
           ) : (
             <ApplicationJourney
               runtime={runtime}
-              pathname={pathname}
-              navigate={navigate}
+              {...navigation}
               theme={theme}
               onAuthenticated={onAuthenticated}
             />

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\AccessControl\Role;
 
+use App\Adapter\Persistence\AccessControl\CatalogOrdering;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\PostgresUniqueConstraintRace;
@@ -118,11 +119,10 @@ SQL,
      */
     public function getAll(Pagination $pagination): ResultSet
     {
-        $rows = $this->connection->createQueryBuilder()
-            ->select('*')
-            ->from('roles')
-            ->orderBy('created_at')
-            ->addOrderBy('id')
+        $rows = CatalogOrdering::apply(
+            $this->connection->createQueryBuilder()->select('*')->from('roles'),
+            $pagination
+        )
             ->setMaxResults($pagination->limit())
             ->setFirstResult($pagination->offset())
             ->fetchAllAssociative();

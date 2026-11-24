@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
+import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 
 import { deferred } from '../apiFixtures';
 import { applicationSession } from '../applicationFixtures';
@@ -50,7 +51,116 @@ function Mounted({
   );
 }
 
+function Navigable({
+  owner,
+  destination,
+  invalidDestination
+}: {
+  owner: ReturnType<typeof applicationSession>;
+  destination?: string;
+  invalidDestination?: string;
+}) {
+  const navigation = useApplicationNavigation(window.location.pathname);
+  return (
+    <>
+      {destination && (
+        <button type="button" onClick={() => navigation.navigate(destination)}>
+          Open saved view
+        </button>
+      )}
+      {invalidDestination && (
+        <button type="button" onClick={() => navigation.navigate(invalidDestination)}>
+          Open invalid saved view
+        </button>
+      )}
+      <ApplicationView session={owner} {...navigation} />
+    </>
+  );
+}
+
+function directoryFetch(owner: ReturnType<typeof applicationSession>) {
+  const fetch = vi.fn((path: string) =>
+    Promise.resolve(
+      new Response(
+        JSON.stringify({
+          status: 'success',
+          data: {
+            page: Number(new URL(path, window.location.origin).searchParams.get('page')),
+            per_page: 1,
+            total_pages: 2,
+            total_records: 2,
+            records: []
+          }
+        }),
+        { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
+      )
+    )
+  );
+  owner.users = new UserDirectoryService(
+    new ApiClient(
+      { schemaVersion: 2, apiBasePath: '/api/v1' },
+      { fetch, accessTokens: { getAccessToken: () => 'synthetic.memory.only' } }
+    )
+  );
+  return fetch;
+}
+
+const usersOptions = 'page=2&per_page=1&sort=ID&order=desc';
+const resetOptions = 'page=1&per_page=1&sort=ID&order=desc';
+const invalidOptions = `${usersOptions}&page=private-marker&search=ignored`;
+const resetNotice = /directory options in the URL were invalid or unsupported and were reset/;
+
 describe('authoritative frame transitions', () => {
+  it.each([
+    [true, false],
+    [true, true],
+    [false, true]
+  ])(
+    'restores a signed-out Users link for a reader (%s) and notifies on invalid options (%s)',
+    async (allowed, invalid) => {
+      window.history.replaceState(
+        null,
+        '',
+        `/admin/users?${invalid ? invalidOptions : usersOptions}&host=private-marker#ignored`
+      );
+      const entries = window.history.length;
+      const owner = session(allowed ? ['READ_USERS'] : ['VIEW_DASHBOARD'], undefined, true);
+      const fetch = directoryFetch(owner);
+      owner.refresh.mockResolvedValueOnce(apiFailure('authentication'));
+      render(<Navigable owner={owner} />);
+      await act(() => owner.coordinator.restore());
+      expect(await screen.findByLabelText('Password (required)')).toBeVisible();
+      expect(window.location.pathname + window.location.search + window.location.hash).toBe(
+        '/login'
+      );
+      expect(fetch).not.toHaveBeenCalled();
+      fireEvent.change(screen.getByLabelText('Email (required)'), {
+        target: { value: 'reader@example.test' }
+      });
+      fireEvent.change(screen.getByLabelText('Password (required)'), {
+        target: { value: 'synthetic-password' }
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+      if (allowed) {
+        const options = invalid ? resetOptions : usersOptions;
+        expect(await screen.findByRole('table')).toBeVisible();
+        if (invalid) expect(screen.getByText(resetNotice)).toBeVisible();
+        else expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
+        expect(window.location.pathname + window.location.search).toBe(`/admin/users?${options}`);
+        expect(window.history.state).toBeNull();
+        expect(fetch).toHaveBeenCalledExactlyOnceWith(
+          `/api/v1/users?${options}`,
+          expect.anything()
+        );
+      } else {
+        expect(await screen.findByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
+        expect(window.location.pathname + window.location.search).toBe('/');
+        expect(fetch).not.toHaveBeenCalled();
+        expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
+      }
+      expect(window.history.length).toBe(entries);
+    }
+  );
   it('redirects an anonymous root entry to canonical login without exposing Dashboard content', async () => {
     const owner = session(undefined, undefined, true);
     owner.refresh.mockResolvedValueOnce(apiFailure('authentication'));
@@ -89,6 +199,77 @@ describe('authoritative frame transitions', () => {
     expect(owner.load).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('list', { name: 'Owned active sessions' })).not.toBeInTheDocument();
   });
+  it('preserves Users query options through application session restoration', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/admin/users?page=2&per_page=1&sort=ID&order=desc&host=kept#ignored'
+    );
+    const owner = session(['READ_USERS']);
+    const fetch = directoryFetch(owner);
+    const saved = 'page=2&per_page=1&sort=ID&order=asc';
+    render(<Navigable owner={owner} destination={`/admin/users?host=saved&${saved}&host=kept`} />);
+    expect(window.location.search).toContain('page=2');
+    await act(() => owner.coordinator.restore());
+    expect(await screen.findByText('Page 2 of 2. 2 results.')).toBeVisible();
+    expect(fetch).toHaveBeenCalledExactlyOnceWith(
+      '/api/v1/users?page=2&per_page=1&sort=ID&order=desc',
+      expect.anything()
+    );
+    expect(window.location.search).toContain('host=kept');
+    expect(window.location.hash).toBe('');
+    const address = window.location.href;
+    const entries = window.history.length;
+    fireEvent.click(screen.getByRole('link', { name: 'Users' }));
+    expect(window.location.href).toBe(address);
+    expect(window.history.length).toBe(entries);
+    expect(screen.getByText('Page 2 of 2. 2 results.')).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open saved view' }));
+    expect(await screen.findByText('Page 2 of 2. 2 results.')).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenLastCalledWith(`/api/v1/users?${saved}`, expect.anything());
+    const savedAddress = `?host=saved&host=kept&${saved}`;
+    expect(window.location.search).toBe(savedAddress);
+    expect(window.history.length).toBe(entries + 1);
+    fireEvent.click(screen.getByRole('button', { name: 'Open saved view' }));
+    expect(window.location.search).toBe(savedAddress);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(window.history.length).toBe(entries + 1);
+  });
+
+  it.each([usersOptions, resetOptions])(
+    'shows a notice for an invalid explicit Users destination from %s',
+    async (initial) => {
+      window.history.replaceState(null, '', `/admin/users?host=kept&${initial}`);
+      const owner = session(['READ_USERS']);
+      const fetch = directoryFetch(owner);
+      render(
+        <Navigable owner={owner} invalidDestination={`/admin/users?${invalidOptions}&host=kept`} />
+      );
+      await act(() => owner.coordinator.restore());
+      expect(await screen.findByRole('table')).toBeVisible();
+      expect(screen.queryByText(resetNotice)).not.toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const entries = window.history.length;
+      const replace = vi.spyOn(window.history, 'replaceState');
+      try {
+        fireEvent.click(screen.getByRole('button', { name: 'Open invalid saved view' }));
+        expect(await screen.findByText(resetNotice)).toBeVisible();
+        const changesQuery = initial !== resetOptions;
+        expect(window.location.search).toBe(`?host=kept&${resetOptions}`);
+        expect(window.history.length).toBe(entries + Number(changesQuery));
+        expect(replace).not.toHaveBeenCalled();
+        expect(window.history.state).toBeNull();
+        expect(fetch).toHaveBeenCalledTimes(1 + Number(changesQuery));
+        expect(fetch).toHaveBeenLastCalledWith(`/api/v1/users?${resetOptions}`, expect.anything());
+      } finally {
+        replace.mockRestore();
+      }
+    }
+  );
+
   it('does not replay a denied directory when current-authority revalidation remounts its guard', async () => {
     const owner = session(['READ_USERS']);
     const fetch = vi.fn(() =>

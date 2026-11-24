@@ -2,114 +2,261 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '../components/Button.js';
 import { ContentState } from '../components/ContentState.js';
+import {
+  DataTable,
+  TablePageSize,
+  TablePageSummary,
+  TablePagination
+} from '../components/DataTable.js';
+import { tableQueryKey } from '../components/tableQuery.js';
+import { useTableLocation } from '../components/useTableLocation.js';
 import { readUsers, useAccountLinks } from '../features/auth/AccountLinks.js';
 import { evaluateAccess } from '../features/authority/evaluateAccess.js';
 import { useAuthority } from '../features/authority/useAuthority.js';
+import { usersTablePolicy as policy } from '../features/users/usersTablePolicy.js';
 import UserDetail from './UserDetail.js';
 
-import type { AuthorityCache } from '../features/authority/AuthorityCache.js';
-import type { DirectoryPage } from '../features/users/UserDirectoryService.js';
-import type { DirectoryUser } from '../features/users/UserDirectoryService.js';
-import type { UserDirectoryService } from '../features/users/UserDirectoryService.js';
+import type { CatalogOrdering } from '../api/ApiClient.js';
+import type { TableColumn, TableData } from '../components/DataTable.js';
+import type { AuthorityCache, AuthorityScope } from '../features/authority/AuthorityCache.js';
+import type {
+  DirectoryUser,
+  UserDirectoryService
+} from '../features/users/UserDirectoryService.js';
 
-type State =
-  | { kind: 'loading' }
-  | { kind: 'retired' }
-  | { kind: 'error'; forbidden: boolean }
-  | { kind: 'ready'; data: DirectoryPage };
+type Sort = CatalogOrdering['sort'];
+const loading: TableData<DirectoryUser> = { kind: 'loading' };
 
-/** Owns one volatile page under the sole principal's scope, never browser persistence. */
+/** Owns directory navigation and reads under the current verified principal. */
 export default function UsersPage({
   service,
-  cache
+  cache,
+  locationRestoration
 }: {
   service: Pick<UserDirectoryService, 'load' | 'detail' | 'retry'> &
     Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
+  locationRestoration?: Readonly<{ invalid: boolean }> | undefined;
 }) {
   const authority = useAuthority(cache);
   const allowed = evaluateAccess(authority, readUsers) === 'allowed';
-  const [page, setPage] = useState(1);
-  const [selected, select] = useState<string | null>(null);
+  const scope = cache.captureScope();
+  const location = useTableLocation(policy, locationRestoration);
+  const { query, current, restoreQuery } = location;
+  const [selected, select] = useState<{
+    id: string;
+    scope: AuthorityScope;
+    query: typeof query;
+  } | null>(null);
+  const activeDetail =
+    allowed && selected?.scope === scope && selected.query === query ? selected.id : null;
   const [attempt, setAttempt] = useState(0);
-  const [retained, setState] = useState<State>({ kind: 'loading' });
-  const state: State = allowed ? retained : { kind: 'retired' };
+  const [retained, setRetained] = useState<{
+    query: typeof query;
+    scope: AuthorityScope;
+    attempt: number;
+    data: TableData<DirectoryUser>;
+  }>();
+  const data =
+    allowed && retained?.scope === scope && retained.query === query && retained.attempt === attempt
+      ? retained.data
+      : loading;
+  const correction = useRef<{ key: string; scope: AuthorityScope; attempt: number } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const focusAfterRead = useRef(false);
-  const retired = useRef(false);
+  const inFlight = useRef<AbortController | null>(null);
   useEffect(() => {
-    const scope = cache.captureScope();
+    if (!allowed || !scope.isCurrent() || activeDetail !== null) return;
+    const key = tableQueryKey(query);
     const controller = new AbortController();
-    let active = true;
-    const retire = () => {
-      controller.abort();
-      retired.current = true;
-      if (active) {
-        setState({ kind: 'retired' });
-        select(null);
+    inFlight.current = controller;
+    const retire = () => controller.abort();
+    scope.signal.addEventListener('abort', retire, { once: true });
+    const publish = (next: TableData<DirectoryUser>) => {
+      setRetained({ query, scope, attempt, data: next });
+      if (focusAfterRead.current) {
+        focusAfterRead.current = false;
+        heading.current?.focus({ preventScroll: true });
       }
     };
-    if (
-      retired.current ||
-      !scope.isCurrent() ||
-      evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed'
-    )
-      return;
-    scope.signal.addEventListener('abort', retire, { once: true });
-    if (selected === null)
-      void service.load(page, 25, controller.signal).then((result) => {
-        if (!active || controller.signal.aborted || !scope.isCurrent()) return;
-        if (result.ok) setState({ kind: 'ready', data: result.value });
-        else if (result.error.kind !== 'cancelled')
-          setState({ kind: 'error', forbidden: result.error.kind === 'authorization' });
-        if (focusAfterRead.current) {
-          focusAfterRead.current = false;
-          heading.current?.focus({ preventScroll: true });
+    const isCurrent = () =>
+      !controller.signal.aborted && scope.isCurrent() && current.current === query;
+    const read = async () => {
+      try {
+        const result = await service.load(query.page, query.perPage, controller.signal, {
+          sort: query.sort,
+          order: query.order
+        });
+        if (!isCurrent()) return;
+        if (!result.ok) {
+          if (result.error.kind !== 'cancelled')
+            publish({
+              kind: 'error',
+              title:
+                result.error.kind === 'authorization' ? 'Access forbidden' : 'Users unavailable',
+              message: 'No user rows are retained. Retry after current access is verified.'
+            });
+          return;
         }
-      });
+        const lastPage = Math.max(1, Math.ceil(result.value.totalRecords / query.perPage));
+        if (query.page > lastPage) {
+          const previous = correction.current;
+          if (previous?.key === key && previous.scope === scope && previous.attempt === attempt) {
+            publish({
+              kind: 'error',
+              title: 'The user directory changed again',
+              message: 'Reload users to check the current page.'
+            });
+          } else {
+            const corrected = { ...query, page: lastPage };
+            correction.current = { key: tableQueryKey(corrected), scope, attempt };
+            restoreQuery(corrected);
+          }
+          return;
+        }
+        correction.current = null;
+        publish({ kind: 'ready', rows: result.value.records, total: result.value.totalRecords });
+      } catch {
+        if (isCurrent())
+          publish({
+            kind: 'error',
+            title: 'Users unavailable',
+            message: 'Reload users to try again.'
+          });
+      }
+    };
+    void read();
     return () => {
-      active = false;
       scope.signal.removeEventListener('abort', retire);
       controller.abort();
     };
-  }, [service, cache, page, attempt, selected]);
+  }, [service, scope, allowed, query, current, restoreQuery, attempt, activeDetail]);
+  useEffect(() => {
+    if (!allowed || !scope.isCurrent()) return;
+    const retire = () =>
+      queueMicrotask(() => {
+        setRetained((saved) => (saved?.scope === scope ? undefined : saved));
+        select((saved) => (saved?.scope === scope ? null : saved));
+      });
+    scope.signal.addEventListener('abort', retire, { once: true });
+    return () => scope.signal.removeEventListener('abort', retire);
+  }, [allowed, scope]);
   useEffect(
     () =>
       service.subscribe?.(() => {
-        setState({ kind: 'loading' });
+        inFlight.current?.abort();
+        setRetained(undefined);
         setAttempt((value) => value + 1);
       }),
     [service]
   );
+
+  const admitted = () =>
+    scope.isCurrent() && evaluateAccess(cache.getSnapshot(), readUsers) === 'allowed';
   const reload = () => {
-    if (evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed') return;
+    if (!admitted()) return;
+    inFlight.current?.abort();
     service.retry();
-    retired.current = false;
     focusAfterRead.current = true;
-    setState({ kind: 'loading' });
     setAttempt((value) => value + 1);
   };
-  const move = (next: number) => {
-    if (evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed') return;
-    focusAfterRead.current = true;
-    setState({ kind: 'loading' });
-    setPage(next);
-  };
-  if (selected !== null && allowed)
+  if (activeDetail !== null)
     return (
       <UserDetail
-        key={selected}
-        userId={selected}
+        key={activeDetail}
+        userId={activeDetail}
         service={service}
         cache={cache}
         onBack={() => {
-          if (evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed') return;
+          if (!admitted()) return;
           focusAfterRead.current = true;
-          setState({ kind: 'loading' });
           select(null);
         }}
       />
     );
+  const columns: TableColumn<DirectoryUser, Sort>[] = [
+    {
+      key: 'email',
+      label: 'Email',
+      rowHeader: (user) => user.email,
+      cell: (user) => (
+        <>
+          <span className="users-email">{user.email}</span>{' '}
+          <Button
+            aria-label={`View details for ${user.email}`}
+            onClick={() => {
+              if (!admitted()) return;
+              setRetained(undefined);
+              select({ id: user.userId, scope, query });
+            }}
+          >
+            View details
+          </Button>
+        </>
+      )
+    },
+    { key: 'identity', label: 'ID', sort: 'ID', cell: (user) => user.userId },
+    {
+      key: 'state',
+      label: 'Lifecycle',
+      cell: (user) => (
+        <span className={`user-state user-state--${user.state}`}>
+          {
+            {
+              pending_activation: 'Pending activation',
+              active: 'Active',
+              disabled: 'Disabled',
+              deleted: 'Deleted'
+            }[user.state]
+          }
+        </span>
+      )
+    },
+    {
+      key: 'roles',
+      label: 'Roles',
+      cell: (user) =>
+        user.roles.length === 0 ? (
+          'No roles assigned'
+        ) : (
+          <ul className="user-roles">
+            {user.roles.map((role) => (
+              <li key={role.name}>
+                {role.name} <span>({role.managed ? 'Managed' : 'Custom'})</span>
+              </li>
+            ))}
+          </ul>
+        )
+    },
+    {
+      key: 'created',
+      label: 'Created (UTC)',
+      sort: 'Created',
+      cell: (user) => <DateValue value={user.createdAt} />
+    },
+    {
+      key: 'updated',
+      label: 'Updated (UTC)',
+      cell: (user) => <DateValue value={user.updatedAt} />
+    },
+    {
+      key: 'invitation',
+      label: 'Invitation',
+      cell: (user) =>
+        user.state === 'pending_activation' ? (
+          <Destination
+            cache={cache}
+            destination="invitation"
+            userId={user.userId}
+            label={`Invitation status for ${user.email}`}
+          >
+            Invitation status
+          </Destination>
+        ) : (
+          'Not pending'
+        )
+    }
+  ];
   return (
     <section className="users-page" aria-labelledby="users-heading">
       <header className="users-header">
@@ -129,98 +276,56 @@ export default function UsersPage({
         </nav>
       </header>
       <p>
-        Includes pending, active, disabled and deleted users, oldest created first with a stable ID
-        tie-break. Search, filtering, sorting and lifecycle or role changes are not available. All
-        times are UTC.
+        Includes pending, active, disabled and deleted users. Search and filtering are not
+        available.
       </p>
       <p>
-        Invitation status opens current canonical user and delivery state. No invitation is sent by
-        this list.
+        Invitation status shows current user and delivery state. This read does not send an
+        invitation.
       </p>
-      {state.kind === 'loading' ? (
-        <ContentState
-          kind="loading"
-          title="Loading users"
-          message="Reading one authorized page of the directory."
-        />
-      ) : state.kind === 'error' || state.kind === 'retired' ? (
+      {location.notice && (
+        <p role="alert">
+          Some directory options in the URL were invalid or unsupported and were reset.
+        </p>
+      )}
+      {allowed ? (
+        <DataTable
+          policy={policy}
+          initial={query}
+          restore={location.restore}
+          columns={columns}
+          rowKey={(user) => user.userId}
+          className="users-table"
+          caption="Installation users — current page"
+          data={data}
+          onChange={(next, reason) => {
+            if (!admitted()) return;
+            inFlight.current?.abort();
+            correction.current = null;
+            focusAfterRead.current = reason === 'page';
+            location.change(next, reason);
+          }}
+        >
+          <TablePageSize />
+          <TablePagination label="User pages" />
+          <TablePageSummary />
+        </DataTable>
+      ) : (
         <ContentState
           kind="error"
-          title={
-            state.kind === 'retired'
-              ? 'User view cleared'
-              : state.forbidden
-                ? 'Access forbidden'
-                : 'Users unavailable'
-          }
-          message="No user rows are retained. Retry explicitly after current access is verified."
+          title="User view cleared"
+          message="No rows are retained without verified access."
         />
-      ) : (
-        <>
-          <p role="status" aria-atomic="true">
-            Page {state.data.page} of {state.data.totalPages}. {state.data.totalRecords}{' '}
-            {state.data.totalRecords === 1 ? 'user' : 'users'}.
-          </p>
-          {state.data.records.length === 0 ? (
-            <ContentState
-              kind="empty"
-              title="No users on this page"
-              message="The directory may have changed. Return to the first page or reload to check again."
-            />
-          ) : (
-            <table className="users-table" role="table">
-              <caption>Installation users — current page</caption>
-              <thead>
-                <tr role="row">
-                  <th scope="col">Email</th>
-                  <th scope="col">Lifecycle</th>
-                  <th scope="col">Roles</th>
-                  <th scope="col">Dates (UTC)</th>
-                  <th scope="col">Invitation</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.data.records.map((user) => (
-                  <UserRow
-                    key={user.userId}
-                    user={user}
-                    cache={cache}
-                    onDetail={() => {
-                      if (evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed') return;
-                      setState({ kind: 'loading' });
-                      select(user.userId);
-                    }}
-                  />
-                ))}
-              </tbody>
-            </table>
-          )}
-          <nav aria-label="User pages" className="users-pagination">
-            <Button disabled={!allowed || page === 1} onClick={() => move(page - 1)}>
-              Previous page
-            </Button>
-            <Button
-              disabled={!allowed || page >= Math.min(state.data.totalPages, 1000)}
-              onClick={() => move(page + 1)}
-            >
-              Next page
-            </Button>
-            {page !== 1 && (
-              <Button disabled={!allowed} onClick={() => move(1)}>
-                First page
-              </Button>
-            )}
-          </nav>
-          {state.data.totalPages > 1000 && (
-            <p>Only the first 1,000 pages are available through this bounded directory.</p>
-          )}
-        </>
       )}
-      <Button disabled={!allowed || state.kind === 'loading'} onClick={reload}>
-        {state.kind === 'error' || state.kind === 'retired' ? 'Retry user list' : 'Reload users'}
+      <Button disabled={!allowed || data.kind === 'loading'} onClick={reload}>
+        {data.kind === 'error' || !allowed ? 'Retry user list' : 'Reload users'}
       </Button>
     </section>
   );
+}
+
+function DateValue({ value }: { value: string }) {
+  return <time dateTime={value}>{value.replace('T', ' ').replace('+00:00', ' UTC')}</time>;
 }
 
 function Destination({
@@ -250,79 +355,5 @@ function Destination({
     >
       {children}
     </a>
-  );
-}
-
-function UserRow({
-  user,
-  cache,
-  onDetail
-}: {
-  user: DirectoryUser;
-  cache: AuthorityCache;
-  onDetail: () => void;
-}) {
-  const lifecycle = {
-    pending_activation: 'Pending activation',
-    active: 'Active',
-    disabled: 'Disabled',
-    deleted: 'Deleted'
-  }[user.state];
-  return (
-    <tr role="row">
-      <th scope="row" role="rowheader" aria-label={user.email}>
-        <span className="users-email">{user.email}</span>
-        <Button onClick={onDetail} aria-label={`View details for ${user.email}`}>
-          View details
-        </Button>
-      </th>
-      <td data-label="Lifecycle">
-        <span className={`user-state user-state--${user.state}`}>{lifecycle}</span>
-      </td>
-      <td data-label="Roles">
-        {user.roles.length === 0 ? (
-          'No roles assigned'
-        ) : (
-          <ul className="user-roles">
-            {user.roles.map((role) => (
-              <li key={role.name}>
-                {role.name} <span>({role.managed ? 'Managed' : 'Custom'})</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </td>
-      <td data-label="Dates (UTC)">
-        <dl className="user-dates">
-          {(
-            [
-              ['Created', user.createdAt],
-              ['Updated', user.updatedAt]
-            ] as const
-          ).map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>
-                <time dateTime={value}>{value.replace('T', ' ').replace('+00:00', ' UTC')}</time>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </td>
-      <td data-label="Invitation">
-        {user.state === 'pending_activation' ? (
-          <Destination
-            cache={cache}
-            destination="invitation"
-            userId={user.userId}
-            label={`Invitation status for ${user.email}`}
-          >
-            Invitation status
-          </Destination>
-        ) : (
-          'Not pending'
-        )}
-      </td>
-    </tr>
   );
 }

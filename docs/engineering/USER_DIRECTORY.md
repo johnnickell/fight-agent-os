@@ -14,7 +14,8 @@ non-active authority fails closed. A displayed `ROLE_SUPER_ADMIN`, JWT/HTML clai
 route never grants a read. No new identity, principal, session or authorization store is introduced.
 
 Fight Access Control owns identity pagination and safe `UserView` production. The existing PostgreSQL user
-repository fixes ordering to `created_at ASC, id ASC`; callers supply no ordering expression. The Action
+repository defaults to `created_at ASC, id ASC`. It applies allowlisted ordering to the full dataset before
+paging. Creation time uses ascending ID for ties. The Action
 uses the registered `ListDirectoryUsers` query. Its handler fetches the canonical `ListUsers` page and
 calls `GetRoleById` for each unique assigned Role. It returns a typed page of joined User and Role Views;
 the Responder maps those Views into HTTP data without a lookup. Missing,
@@ -24,7 +25,9 @@ are sorted by exact role name. An empty assignment remains empty; it does not im
 
 ## HTTP contract
 
-- Optional source-only `QueryString`/Validation fields: `page` **1–1000**, `per_page` **1–100**; defaults **1/25**.
+- Optional validated query fields: `page` **1–1000**, `per_page` **1–100**, `sort` **ID or Created**, and
+  `order` **asc or desc**. Defaults are **1**, **25**, **Created**, and **asc**. The same controls apply to the
+  Role and Permission list APIs, with their own READ admission.
   Checked decimal-digit strings are explicitly converted to package pagination integers. Leading zeroes and
   valid percent-encoded names/values are accepted; empty, signed, fractional, ambiguous, duplicate decoded,
   nested, unknown or malformed fields are rejected before the Action/query. A GET body is rejected, not merged.
@@ -32,8 +35,8 @@ are sorted by exact role name. An empty assignment remains empty; it does not im
   select actor, authority, workspace, role, relations, hidden fields or visibility. There is no search, filter,
   free-form ordering or mutation. The client does not filter one partial page as though it were the installation.
 - Offset pages are deterministic for a committed state, **not** a transactionally consistent cross-request
-  snapshot. Concurrent writes can shift rows/counts; explicitly reload or return to page one. The browser never
-  extrapolates unseen identities. Page 1000 is the last navigable page even if the count implies more.
+  snapshot. Concurrent writes can shift rows and counts. The browser replaces an out-of-range page once and
+  offers a reload if counts continue shrinking. It never extrapolates unseen identities. Page 1000 is the last navigable page even if the count implies more.
 - Success is JSend `{status: "success", data: {page, per_page, total_pages, total_records, records}}`.
   Empty results have at least one total page; out-of-range pages can have no records.
 - Every record has exactly `user_id`, canonical `email`, `state`, `roles`, `created_at`, `updated_at`.
@@ -57,7 +60,12 @@ coercible values are protocol failures. Its only retained state is a safe refusa
 remount from replaying a denied read. `UsersPage` owns one volatile page and an AuthorityCache scope: authority retirement, context replacement,
 unmount and page changes abort/fence pending work and remove private rows. `401` uses the sole bounded session
 restoration owner; `403` revalidates current authority. Neither automatically replays the refused operation;
-recovery needs explicit Retry. Nothing is stored in browser persistence or history.
+recovery needs explicit Retry. The shared table owns interactions. UsersPage writes canonical `page`,
+`per_page`, `sort`, and `order` to the URL and restores from reload and Back/Forward. Unsupported search and
+filter options are dropped and never forwarded. Clicking the current Users link keeps the URL and page unchanged.
+A copied link opened while signed out retains only these four normalized options in the one-shot in-memory
+intent. It drops host parameters and the fragment across sign-in, then restores the options only after fresh
+`READ_USERS` admission. History stores no user rows, identities, or credentials.
 
 The single production route manifest independently guards every destination, and shared `evaluateAccess`
 controls presentation and link activation:
@@ -71,6 +79,28 @@ controls presentation and link activation:
 
 TASK-00060 implements the target status route using a classified UUID path, never email, form input or credentials in URLs/history. READ_USERS-only viewers have read-only status; page changes additionally require MANAGE_USER_INVITATIONS, which grants no read authority (explicit human correction, 2026-11-02). Ordinary/elevated invitation forms remain unavailable under TASK-00061/00062. Recovery invalidates local directory/detail generations: mounted lists refetch, mounted detail retracts its data and requires deliberate Reload, and returning pages read fresh. Pending invitation reads now use this safe detail API plus the separately protected delivery GET; mutation acknowledgements contain no data. No invitation API is duplicated and no link sends mail.
 Forbidden controls are absent, not hidden focus targets. Client presentation never replaces server enforcement.
+
+### Table read and restoration flow
+
+![Users table read and restoration flow](shared-react/users-table-flow.png)
+
+Existing implementation at `b7d458ec98e76b26d9710d8d54552635704a23bd`.
+[Editable Python](shared-react/users-table-flow.py). Dotted arrows show runtime messages or reads, not static dependencies.
+
+| Flow | Source trace |
+|---|---|
+| Commit one change; restore without another callback | [`DataTable`](../../packages/react/src/components/DataTable.tsx) emits `onChange` from `commit`; it takes external state from `restore.revision`. [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) wires the two directions. |
+| Seed/restore from the address; write a change or replace a correction | [`useTableLocation`](../../packages/react/src/components/useTableLocation.ts) reads the initial URL and `popstate`, pushes table gestures, and replaces a corrected page from `restoreQuery`. [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) checks the total before requesting a correction. |
+| Request the current authorized page and publish only while current | [`UsersPage`](../../packages/react/src/pages/UsersPage.tsx) fences by query, abort signal and live scope. [`UserDirectoryService.load`](../../packages/react/src/features/users/UserDirectoryService.ts) uses the same-origin API client. [`ListUsersAction.handle`](../../src/Adapter/Http/Action/Api/V1/Users/ListUsersAction.php) declares `READ_USERS` and returns a safe page. |
+| Fetch the ordered page, then read its total separately | The Action dispatches through the query bus to the [registered directory handler](../../config/application/user_directory.php), which [calls package user and role reads](../../src/Application/AccessControl/User/QueryHandler/ListDirectoryUsersHandler.php). [`PostgresUserRepository::getAll`](../../src/Adapter/Persistence/AccessControl/User/PostgresUserRepository.php) applies `CatalogOrdering` before offset and limit, fetches the page, then runs the separate `COUNT(*)` query. |
+
+The host also restores explicit Users destinations through `useTableLocation`. It normalizes the Users options
+and preserves unrelated destination parameters in the address, not in list requests. The sign-in intent instead
+keeps only the canonical Users options and a yes/no reset flag. A malformed destination that resolves to the
+current address shows the notice without adding a history entry or making another list request.
+
+This source view compresses bus and mapping steps. It omits programmatic navigation, sign-in, detail,
+Role/Permission endpoints, and the example consumer's search. It does not certify runtime behavior, accessibility, or independent acceptance.
 
 ## Safe user detail (TASK-00118 implementation)
 
@@ -108,8 +138,9 @@ callers. Independent acceptance and browser QA remain separate from Work's local
 
 ## Responsive and verification boundaries
 
-The same captioned table, scoped headers and rows reflow as cards below 1100px; no duplicate hidden data tree
-or second mobile loader exists. Long canonical email and role labels wrap. Text lifecycle labels and managed/
+One captioned table has scoped headers and keyboard-accessible horizontal scrolling when it is wider than
+its container. Controls wrap independently; there is no second data tree or mobile loader. Long email and role
+labels wrap. Text lifecycle labels and managed/
 custom markers do not depend on color. Native links/buttons, at least 44px controls, explicit loading/empty/
 forbidden/system states, polite page-count announcements and post-pagination/retry heading focus use the
 existing frame, themes, fonts, focus and reduced-motion rules. Pagination clears previous-page rows while

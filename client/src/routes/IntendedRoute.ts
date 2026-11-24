@@ -12,7 +12,7 @@ export class IntendedRoute {
   readonly #origin: string;
   readonly #now: () => number;
   readonly #unsubscribe: () => void;
-  #intent: Readonly<{ target: string; capturedAt: number }> | null = null;
+  #intent: Readonly<{ target: string; invalid: boolean; capturedAt: number }> | null = null;
   #lastClock: number;
 
   constructor(
@@ -33,19 +33,23 @@ export class IntendedRoute {
     this.#unsubscribe = cache.subscribeLogout(() => this.clear());
   }
 
-  capture(target: string): boolean {
+  capture(target: string, invalid = false): boolean {
     if (!this.#validClock()) return false;
     if (this.#intent) return false; // Repeated redirects neither replace nor renew intent
     const resolved = this.#resolve(target);
     if (!resolved) return false;
-    this.#intent = Object.freeze({ target: resolved.target, capturedAt: this.#lastClock });
+    this.#intent = Object.freeze({
+      target: resolved.target,
+      invalid: typeof resolved.route.intendedRoute === 'function' && invalid,
+      capturedAt: this.#lastClock
+    });
     return true;
   }
 
   /**
    * Waits for fresh authority, then consumes once and resolves current route requirements again
    */
-  consume(): string | null {
+  consume(): Readonly<{ target: string; invalid: boolean }> | null {
     if (!this.#validClock() || !this.#intent) return null;
     if (this.#cache.getSnapshot().status !== 'authenticated') return null;
     const intent = this.#intent;
@@ -53,7 +57,7 @@ export class IntendedRoute {
     const resolved = this.#resolve(intent.target);
     return resolved &&
       evaluateAccess(this.#cache.getSnapshot(), resolved.route.requirements) === 'allowed'
-      ? resolved.target
+      ? { target: resolved.target, invalid: intent.invalid }
       : null;
   }
 
@@ -106,6 +110,10 @@ export class IntendedRoute {
         )
       )
         return null;
+      if (typeof route.intendedRoute === 'function') {
+        const { search } = route.intendedRoute(url.search);
+        return { target: `${path}?${search}`, route };
+      }
       const query = new URLSearchParams();
       for (const [key, value] of url.searchParams) {
         if (

@@ -28,7 +28,7 @@ describe('bounded volatile intended navigation', () => {
     expect(intent.capture('/reports?sort=recent&page=2#discard-me')).toBe(true);
     expect(intent.consume()).toBeNull();
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/reports?page=2&sort=recent');
+    expect(intent.consume()).toEqual({ target: '/reports?page=2&sort=recent', invalid: false });
     expect(intent.consume()).toBeNull();
   });
 
@@ -36,7 +36,7 @@ describe('bounded volatile intended navigation', () => {
     const intent = intentWith(() => [{ ...reportRoute, pathname: '/' }]);
     expect(intent.capture('/#discard-me')).toBe(true);
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/');
+    expect(intent.consume()?.target).toBe('/');
     expect(intent.consume()).toBeNull();
   });
 
@@ -102,7 +102,7 @@ describe('bounded volatile intended navigation', () => {
     now = 599_999;
     expect(intent.capture('/reports?page=2')).toBe(false);
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/reports?page=1');
+    expect(intent.consume()?.target).toBe('/reports?page=1');
   });
 
   it.each([600_000, 600_001, -1, Number.NaN])(
@@ -129,7 +129,7 @@ describe('bounded volatile intended navigation', () => {
       await cache.beginAuthentication().acceptCredentials();
       expect(intent.consume()).toBeNull();
       expect(intent.capture('/reports?page=2')).toBe(true);
-      expect(intent.consume()).toBe('/reports?page=2');
+      expect(intent.consume()?.target).toBe('/reports?page=2');
     }
   );
 
@@ -162,7 +162,7 @@ describe('bounded volatile intended navigation', () => {
     intent.capture('/reports');
     await cache.signal('terminal');
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/reports');
+    expect(intent.consume()?.target).toBe('/reports');
     intent.capture('/reports');
     await cache.signal('logout');
     await cache.beginAuthentication().acceptCredentials();
@@ -206,7 +206,7 @@ describe('bounded volatile intended navigation', () => {
         expect(intent.capture('/reports?page=2')).toBe(true);
         await cache.signal('terminal');
         await cache.beginAuthentication().acceptCredentials();
-        expect(intent.consume()).toBe('/reports?page=2');
+        expect(intent.consume()?.target).toBe('/reports?page=2');
       } finally {
         unsubscribe();
       }

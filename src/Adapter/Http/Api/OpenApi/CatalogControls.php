@@ -21,6 +21,18 @@ use OpenApi\Attributes as OA;
     in: 'query',
     schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 25)
 )]
+#[OA\Parameter(
+    parameter: 'CatalogSort',
+    name: 'sort',
+    in: 'query',
+    schema: new OA\Schema(type: 'string', enum: ['ID', 'Created'], default: 'Created')
+)]
+#[OA\Parameter(
+    parameter: 'CatalogOrder',
+    name: 'order',
+    in: 'query',
+    schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'], default: 'asc')
+)]
 final class CatalogControls
 {
 }

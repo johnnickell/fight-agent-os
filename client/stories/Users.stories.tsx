@@ -128,15 +128,13 @@ export const Narrow: Story = {
   globals: { viewport: { value: 'narrow', isRotated: false } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const table = await canvas.findByRole('table');
-    const caption = canvas.getByText('Installation users — current page');
-    await expect(canvas.getAllByRole('columnheader')).toHaveLength(5);
-    // Browser geometry protects readable card reflow, not CSS source spelling.
-    await expect(caption.getBoundingClientRect().width).toBeGreaterThan(200);
-    await expect(caption.getBoundingClientRect().height).toBeLessThan(100);
-    await expect(table.getBoundingClientRect().width).toBeLessThanOrEqual(
+    const region = await canvas.findByRole('region', { name: 'Installation users — current page' });
+    await expect(canvas.getAllByRole('columnheader')).toHaveLength(7);
+    await expect(region.clientWidth).toBeLessThanOrEqual(
       canvasElement.ownerDocument.defaultView?.innerWidth ?? 0
     );
+    await expect(region.scrollWidth).toBeGreaterThan(region.clientWidth);
+    await expect(region).toHaveAttribute('tabindex', '0');
   }
 };
 export const LongEmail: Story = { args: { scenario: 'long' } };
@@ -151,7 +149,8 @@ export const Pagination: Story = {
   args: { scenario: 'pagination' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'Next page' }));
+    await canvas.findByText('person0@example.test');
+    await userEvent.click(canvas.getByRole('button', { name: 'Next page' }));
     await expect(canvas.findByText('last@example.test')).resolves.toBeVisible();
     await expect(canvas.getByRole('heading', { name: 'Users', level: 1 })).toHaveFocus();
     await expect(canvas.getByRole('button', { name: 'Next page' })).toBeDisabled();

@@ -1,3 +1,6 @@
+import { usersTablePolicy } from '@fight/react/account';
+import { readTableQuery, writeTableQuery } from '@fight/react/controls';
+
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
 import type { ResolveAccountLink } from '@fight/react/account';
 import type { PresentationIconName } from '@fight/react/controls';
@@ -24,12 +27,18 @@ export type ApplicationRoute = RegisteredRoute &
     icon?: PresentationIconName;
     availability?: string;
     targetUserId?: string;
+    normalizeSearch?: (search: string) => { search: string; invalid: boolean };
   }>;
 
 const authenticated = [{ kind: 'authenticated' }] as const;
 const permission = (...all: string[]) =>
   [{ kind: 'authenticated' }, { kind: 'permissions', all }] as const;
 const publicAccess = [{ kind: 'public' }] as const;
+
+function normalizeUsersSearch(search: string, hostParams: URLSearchParams) {
+  const { query, invalid } = readTableQuery(search, usersTablePolicy);
+  return { search: writeTableQuery(hostParams, query).toString(), invalid };
+}
 
 /** Complete route metadata is shared by outlets, navigation and one-shot intent evaluation */
 export const applicationRoutes: readonly ApplicationRoute[] = [
@@ -122,7 +131,9 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: permission('READ_USERS'),
     destination: 'users',
     group: 'Administration',
-    intendedRoute: {},
+    normalizeSearch: (search) => normalizeUsersSearch(search, new URLSearchParams(search)),
+    // Only table options and the notice may survive sign-in.
+    intendedRoute: (search) => normalizeUsersSearch(search, new URLSearchParams()),
     availability: 'Read the installation-wide user directory and current role assignments.'
   },
   {

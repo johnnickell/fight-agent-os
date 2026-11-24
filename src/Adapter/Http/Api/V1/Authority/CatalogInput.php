@@ -14,6 +14,20 @@ use Psr\Http\Message\ServerRequestInterface;
 final class CatalogInput
 {
     /**
+     * Maps validated public sort names to package ordering keys
+     *
+     * @return array<string, string>
+     */
+    public static function orderings(?string $sort, ?string $order): array
+    {
+        if ($sort === null && $order === null) {
+            return [];
+        }
+
+        return [($sort === 'ID' ? 'id' : 'created_at') => $order ?? 'asc'];
+    }
+
+    /**
      * Reads the verified request authentication established by the HTTP gate
      */
     public static function authentication(ServerRequestInterface $request): AuthenticationContext

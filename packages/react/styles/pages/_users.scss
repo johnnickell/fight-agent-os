@@ -4,8 +4,7 @@
 }
 
 .users-header,
-.users-actions,
-.users-pagination {
+.users-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -31,6 +30,7 @@
 
 .users-table {
   width: 100%;
+  min-width: 56rem;
   table-layout: fixed;
   margin-block: 1rem;
   border-collapse: collapse;
@@ -57,13 +57,8 @@
       width: 25%;
     }
 
-    th:nth-child(2) {
-      width: 15%;
-    }
-
-    th:nth-child(3),
-    th:nth-child(4) {
-      width: 22%;
+    th:nth-child(3) {
+      width: 12%;
     }
   }
 }
@@ -86,64 +81,6 @@
   font-weight: 600;
 }
 
-.user-dates {
-  margin: 0;
+.users-table time {
   font-size: 0.875rem;
-
-  dd {
-    margin: 0 0 0.5rem;
-  }
-}
-
-.users-pagination {
-  margin-block: 1rem;
-}
-
-@media (max-width: 1100px) {
-  .users-table {
-    display: block;
-
-    caption {
-      display: block;
-      width: 100%;
-      text-align: left;
-    }
-
-    // Retain column headers for assistive technology while reflowing the same rows as cards.
-    thead {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-    }
-
-    tbody {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
-      gap: 1rem;
-    }
-
-    tr {
-      display: block;
-      min-width: 0;
-      border: 1px solid var(--ui-border);
-      border-radius: 0.5rem;
-      background: var(--ui-surface);
-    }
-
-    th,
-    td {
-      display: block;
-      padding: 0.75rem;
-      border: 0;
-    }
-
-    td::before {
-      content: attr(data-label);
-      display: block;
-      margin-bottom: 0.25rem;
-      font-weight: 600;
-    }
-  }
 }

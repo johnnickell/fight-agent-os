@@ -233,7 +233,7 @@ describe('schema-backed production login', () => {
     expect(onAuthenticated).toHaveBeenCalledExactlyOnceWith();
     expect(intent.consume()).toBeNull();
     await cache.beginAuthentication().acceptCredentials();
-    expect(intent.consume()).toBe('/reports?page=2');
+    expect(intent.consume()).toEqual({ target: '/reports?page=2', invalid: false });
     expect(intent.consume()).toBeNull();
     intent.dispose();
     cache.dispose();
