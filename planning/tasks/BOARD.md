@@ -52,7 +52,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00625](00625-TASK.md) | Move Land target binding to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00626](00626-TASK.md) | Move Planning archive maintenance to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -696,4 +695,5 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00613](00613-TASK.md) | Run the existing client checks as a standalone pass | [TICKET-00147 — Verify the client and cross-stack browser journeys](../tickets/00147-TICKET.md) | done | — | [PR #309](https://github.com/johnnickell/fight-agent-os/pull/309) |
 | — | [TASK-00614](00614-TASK.md) | Run real HTTPS browser smoke on native GitHub runners and retire its Python setup | [TICKET-00147 — Verify the client and cross-stack browser journeys](../tickets/00147-TICKET.md) | done | — | [PR #310](https://github.com/johnnickell/fight-agent-os/pull/310) |
 | — | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | [TICKET-00148 — Verify the Pi Harness independently](../tickets/00148-TICKET.md) | done | — | [PR #313](https://github.com/johnnickell/fight-agent-os/pull/313) |
+| — | [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | — (standalone bug) | done | — | [PR #314](https://github.com/johnnickell/fight-agent-os/pull/314) |
 <!-- /planning:board -->

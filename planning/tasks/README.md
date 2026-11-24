@@ -631,5 +631,5 @@
 | [TASK-00626](00626-TASK.md) | Move Planning archive maintenance to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00628](00628-TASK.md) | Retire the remaining Python prerequisites outside diagram authoring | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
-| [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | ready-for-agent | — |
+| [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | done | — |
 <!-- /planning:records -->
