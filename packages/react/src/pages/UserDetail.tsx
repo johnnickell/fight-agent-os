@@ -5,15 +5,18 @@ import { ContentState } from '../components/ContentState.js';
 import { readUsers } from '../features/auth/AccountLinks.js';
 import { evaluateAccess } from '../features/authority/evaluateAccess.js';
 import { useAuthority } from '../features/authority/useAuthority.js';
+import { UserAdministration } from '../features/users/UserAdministration.js';
 
-import type { AuthorityCache } from '../features/authority/AuthorityCache.js';
+import type { AuthorityCache, AuthorityScope } from '../features/authority/AuthorityCache.js';
+import type { AdministrationNotice } from '../features/users/UserAdministration.js';
+import type { UserAdministrationService } from '../features/users/UserAdministrationService.js';
 import type { DirectoryUser } from '../features/users/UserDirectoryService.js';
 import type { UserDirectoryService } from '../features/users/UserDirectoryService.js';
 
 type State =
   | { kind: 'loading' }
   | { kind: 'retired' }
-  | { kind: 'ready'; user: DirectoryUser }
+  | { kind: 'ready'; user: DirectoryUser; scope: AuthorityScope }
   | { kind: 'error'; reason: 'forbidden' | 'missing' | 'unavailable' };
 
 /** Owns one freshly read detail, fenced by the sole authority scope and never navigation history. */
@@ -21,35 +24,52 @@ export default function UserDetail({
   userId,
   service,
   cache,
-  onBack
+  onBack,
+  administration,
+  notice,
+  onOutcome
 }: {
   userId: string;
   service: Pick<UserDirectoryService, 'detail' | 'retry'> &
     Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
   onBack: () => void;
+  administration?: UserAdministrationService | undefined;
+  notice?: AdministrationNotice | undefined;
+  onOutcome?: ((notice: AdministrationNotice) => void) | undefined;
 }) {
   const authority = useAuthority(cache);
   const allowed = evaluateAccess(authority, readUsers) === 'allowed';
   const [retained, setState] = useState<State>({ kind: 'loading' });
   const [attempt, setAttempt] = useState(0);
-  const state: State = allowed ? retained : { kind: 'retired' };
+  const scope = cache.captureScope();
+  const state: State = !allowed
+    ? { kind: 'retired' }
+    : retained.kind === 'ready' && retained.scope !== scope
+      ? { kind: 'loading' }
+      : retained;
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-    const scope = cache.captureScope();
+  }, [attempt, userId]);
+  useEffect(() => {
     const controller = new AbortController();
     let active = true;
     const retire = () => {
       controller.abort();
       if (active) setState({ kind: 'retired' });
     };
-    if (!scope.isCurrent() || evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed') return;
+    if (
+      !allowed ||
+      !scope.isCurrent() ||
+      evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed'
+    )
+      return;
     scope.signal.addEventListener('abort', retire, { once: true });
     const unsubscribe = service.subscribe?.(retire);
     void service.detail(userId, controller.signal).then((result) => {
       if (!active || controller.signal.aborted || !scope.isCurrent()) return;
-      if (result.ok) setState({ kind: 'ready', user: result.value });
+      if (result.ok) setState({ kind: 'ready', user: result.value, scope });
       else if (result.error.kind !== 'cancelled')
         setState({
           kind: 'error',
@@ -67,7 +87,7 @@ export default function UserDetail({
       scope.signal.removeEventListener('abort', retire);
       controller.abort();
     };
-  }, [cache, service, userId, attempt]);
+  }, [cache, service, userId, attempt, allowed, scope]);
   const retry = () => {
     if (evaluateAccess(cache.getSnapshot(), readUsers) !== 'allowed') return;
     service.retry();
@@ -79,9 +99,8 @@ export default function UserDetail({
       <h1 id="user-detail-heading" ref={heading} tabIndex={-1}>
         User detail
       </h1>
-      <p>
-        Current installation user state. Read only; lifecycle and role changes are not available.
-      </p>
+      <p>Current installation user state and permitted administrative actions.</p>
+      {notice && <p role={notice.error ? 'alert' : 'status'}>{notice.message}</p>}
       <Button disabled={!allowed} onClick={onBack}>
         Back to user list
       </Button>
@@ -149,6 +168,14 @@ export default function UserDetail({
             </div>
           ))}
         </dl>
+      )}
+      {state.kind === 'ready' && administration && onOutcome && (
+        <UserAdministration
+          user={state.user}
+          service={administration}
+          cache={cache}
+          onOutcome={onOutcome}
+        />
       )}
       <Button disabled={!allowed || state.kind === 'loading'} onClick={retry}>
         {state.kind === 'ready' ? 'Reload user detail' : 'Retry user detail'}

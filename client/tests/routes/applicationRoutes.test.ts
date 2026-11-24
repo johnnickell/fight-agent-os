@@ -1,9 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveAccountLink } from '@/routes/applicationRoutes';
+import { matchApplicationRoute, resolveAccountLink } from '@/routes/applicationRoutes';
 
 const authenticated = { kind: 'authenticated' };
 const requires = (...all: string[]) => [authenticated, { kind: 'permissions', all }];
+
+describe('matchApplicationRoute user detail', () => {
+  it('classifies a target under directory read access and preserves only table state', () => {
+    const targetUserId = crypto.randomUUID();
+    const pathname = `/admin/users/${targetUserId}`;
+    const route = matchApplicationRoute(pathname);
+    expect(route).toMatchObject({
+      pathname,
+      targetUserId,
+      access: 'protected',
+      requirements: requires('READ_USERS'),
+      destination: 'users'
+    });
+    const search = '?page=2&unrelated=discarded';
+    const canonical = { search: 'page=2&per_page=25&sort=Created&order=asc', invalid: false };
+    expect(route?.normalizeSearch?.(search)).toEqual(canonical);
+    if (typeof route?.intendedRoute !== 'function') throw new Error('Expected detail intent');
+    expect(route.intendedRoute(search)).toEqual(canonical);
+  });
+
+  it('does not classify malformed targets or nested paths as user detail', () => {
+    expect(matchApplicationRoute('/admin/users/not-a-user')).toBeUndefined();
+    expect(matchApplicationRoute(`/admin/users/${crypto.randomUUID()}/detail`)).toBeUndefined();
+  });
+});
 
 describe('resolveAccountLink', () => {
   it.each([
