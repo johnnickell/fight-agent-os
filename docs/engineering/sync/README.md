@@ -36,14 +36,13 @@ are separate fresh contexts. Sync retains coordination and never supplies indepe
 ## Source and arrow trace
 
 All source rows refer to the full implementation revision above; retrieve with `git show REVISION:PATH`.
-The current launcher and monitor links point to the PHP replacements from TASK-00617; the historical image
-keeps the original filename.
+For the PHP replacements from TASK-00617, use the [current process trace](#current-php-process-flow).
 
 | Arrow | Source at that revision | Meaning and evidence limit |
 |---|---|---|
 | 1 | [`WorkflowAccess.input`](../../../harness/pi/src/workflow/access.mjs) and [native extension](../../../harness/pi/src/workflow-extension.ts) | Explicit interactive `sync` selects one TASK, coordination/QA phase and checkout; RPC/extension text cannot select it. Native status is `fight_workflow_status` / `/fight-workflow`, not a file-tool permission gate. Direct SDK checks use simulated input, not operator authority. |
 | 2 | [Sync intake](../../../.pi/skills/sync/SKILL.md#admit-one-accepted-subject) | Coordinator checks actual acceptance applicability and exact existing OPEN PR; missing/contradictory evidence holds effects. |
-| 3 | [Sync delegation](../../../.pi/skills/sync/SKILL.md#delegate-integration-then-delivery), [provider dispatcher](../../../.pi/skills/build/scripts/run-stage.php) and [owning process monitor](../../../harness/pi/src/observation/run-stage.php) | Fresh Engineer uses existing native package/trust/role/custody machinery with `FIGHT_WORKFLOW_PHASE/TASK/CHECKOUT`. No evaluator preflight, parallel launcher or Build-only SDK substitution. |
+| 3 | [Sync delegation](../../../.pi/skills/sync/SKILL.md#delegate-integration-then-delivery), provider dispatcher `.pi/skills/build/scripts/run-stage.py` and process monitor `harness/pi/src/observation/run-stage.py` | Fresh Engineer uses existing native package/trust/role/custody machinery with `FIGHT_WORKFLOW_PHASE/TASK/CHECKOUT`. No evaluator preflight, parallel launcher or Build-only SDK substitution. |
 | 4 | [Work assignment](../../../.pi/skills/sync/references/integration.md) | Preserve both intents and original reports; commit integration and run normal gate. Concrete incompatible intent, defects, new behavior or failed verification stop advancement. |
 | 5 | [Sync progression](../../../.pi/skills/sync/SKILL.md#delegate-integration-then-delivery), [Land](../../../.pi/skills/land/SKILL.md) | Verified integration automatically delegates fresh Land through the SAME dispatcher; no routine Review/QA. This does not remove independent acceptance of Sync's new implementation. |
 | 6 | [Advancing-base policy](../LANDING.md#reconcile-an-advancing-base), [delivery verification](../LANDING.md#verify-and-publish) and [resources](../RESOURCE_LIFECYCLE.md) | Land checks scope/evidence, updates only the same PR, verifies exact published head and required evidence, and retires eligible resources. Publication, cleanup holds and human merge remain distinct. |

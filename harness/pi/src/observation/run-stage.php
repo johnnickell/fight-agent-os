@@ -199,12 +199,30 @@ final class StageChild
     private mixed $startup;
     private ?int $exitCode = null;
 
-    public function __construct(array $command, array $env)
+    public function __construct(array $command, array $env, string $receipt)
     {
         // Wait for the monitor to verify the new group before exec. Pi itself sees EOF on stdin.
-        $bootstrap = 'if (posix_setsid() < 0 || fread(STDIN, 1) !== "1") { exit(1); } '
-            . 'pcntl_exec("/usr/bin/env", array_slice($argv, 1)); exit(127);';
-        $this->process = @proc_open([PHP_BINARY, '-r', $bootstrap, '--', ...$command],
+        $bootstrap = <<<'PHP'
+            if (posix_setsid() < 0 || fread(STDIN, 1) !== "1") { exit(1); }
+            // The lock survives failed exec attempts but a successful exec closes this descriptor.
+            $receipt = @fopen($argv[1], 'r+e');
+            if (!$receipt || !flock($receipt, LOCK_EX)) { exit(1); }
+            $fail = static function () use ($receipt): never {
+                rewind($receipt);
+                fwrite($receipt, 'fail');
+                fflush($receipt);
+                exit(1);
+            };
+            pcntl_async_signals(true);
+            pcntl_signal(SIGTERM, $fail);
+            if (fwrite($receipt, 'exec') !== 4 || !fflush($receipt)) { $fail(); }
+            $path = getenv('PATH');
+            foreach (explode(PATH_SEPARATOR, $path === false ? '/bin:/usr/bin' : $path) as $directory) {
+                @pcntl_exec(($directory === '' ? '.' : $directory) . '/' . $argv[2], array_slice($argv, 3));
+            }
+            $fail();
+            PHP;
+        $this->process = @proc_open([PHP_BINARY, '-r', $bootstrap, '--', $receipt, ...$command],
             [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, null, $env);
         if (!is_resource($this->process)) {
             throw new RuntimeException('Pi process unavailable');
@@ -311,6 +329,19 @@ function createEvidence(string $path): mixed
     return @fopen($path, 'xb') ?: throw new RuntimeException('Cannot create private evidence');
 }
 
+function confirmedExec(mixed $receipt): bool
+{
+    if (!flock($receipt, LOCK_SH | LOCK_NB)) {
+        return false;
+    }
+    try {
+        rewind($receipt);
+        return fread($receipt, 4) === 'exec';
+    } finally {
+        flock($receipt, LOCK_UN);
+    }
+}
+
 function writeEvidence(string $path, string $contents): void
 {
     $file = createEvidence($path);
@@ -390,12 +421,20 @@ function runStage(array $args, int $observationStarted): int
         $progress->observation = new SocketStageObservation($args['observe-socket'], $identity, $heartbeat);
     }
     $progress->emit("Starting $task — $provider/$model, thinking=$thinking");
-    $child = null;
+    $child = $receipt = null;
+    $receiptPath = $attempt . '/dispatch.lock/exec';
+    $executed = false;
     $forced = 0;
     $code = 1;
+    $recordExec = static function () use (&$executed, &$receipt, &$child, $attempt): void {
+        if (!$executed && confirmedExec($receipt)) {
+            $executed = true;
+            writeEvidence($attempt . '/process.json', stageRecord(['monitor_pid' => getmypid(), 'pi_pid' => $child->pid]));
+        }
+    };
     try {
-        $child = new StageChild($command, $env);
-        writeEvidence($attempt . '/process.json', stageRecord(['monitor_pid' => getmypid(), 'pi_pid' => $child->pid]));
+        $receipt = @fopen($receiptPath, 'x+be') ?: throw new RuntimeException('Cannot create Pi startup receipt');
+        $child = new StageChild($command, $env, $receiptPath);
         if ($progress->observation === null) {
             try {
                 $progress->observation = new PassiveStageObservation($identity, $heartbeat, $observationStarted);
@@ -418,6 +457,7 @@ function runStage(array $args, int $observationStarted): int
             if (!$forced && !$cancelled) {
                 $child->allowExec();
             }
+            $recordExec();
             if ($terminationAt !== null && $now - $terminationAt >= 5) {
                 break; // An escaped descendant may still hold a pipe.
             }
@@ -456,7 +496,12 @@ function runStage(array $args, int $observationStarted): int
         if ($piCode === null) {
             throw new RuntimeException('Pi did not exit');
         }
-        $code = $forced ?: ($piCode >= 0 ? $piCode : 128 - $piCode);
+        $recordExec();
+        if (!$executed && !$forced) {
+            $progress->emit('Cannot start Pi; check the executable and its interpreter');
+            fwrite($errors, "Cannot start Pi: executable unavailable or startup failed before exec\n");
+        }
+        $code = $forced ?: ($executed ? ($piCode >= 0 ? $piCode : 128 - $piCode) : 1);
         if ($code === 0 && ($buffer !== '' || $progress->tools !== [] || !$progress->settled || $progress->aborted || $progress->stopReason !== 'stop')) {
             $code = 1;
             $progress->emit('Incomplete or failed Pi response; inspect private events and session');
@@ -469,7 +514,8 @@ function runStage(array $args, int $observationStarted): int
     } finally {
         try {
             if ($child !== null) {
-                if ($code) {
+                $recordExec();
+                if ($code && ($executed || $child->result() === null)) {
                     $child->stop(SIGTERM, $progress, $errors);
                     if ($child->wait(5) === null) {
                         $child->stop(SIGKILL, $progress, $errors);
@@ -480,7 +526,9 @@ function runStage(array $args, int $observationStarted): int
                 }
                 $piCode = $child->result();
                 $child->close();
-                writeEvidence($attempt . '/pi-exit-code', ($piCode ?? 'unknown') . "\n");
+                if ($executed) {
+                    writeEvidence($attempt . '/pi-exit-code', ($piCode ?? 'unknown') . "\n");
+                }
             }
             writeEvidence($attempt . '/final.txt', $progress->final);
             writeEvidence($attempt . '/exit-code', "$code\n");
@@ -488,6 +536,10 @@ function runStage(array $args, int $observationStarted): int
             $progress->exitCode = $code;
             $progress->emit("Process complete (exit $code); evidence still requires coordinator review");
         } finally {
+            if (is_resource($receipt)) {
+                fclose($receipt);
+                unlink($receiptPath);
+            }
             $progress->observation?->close();
             fclose($raw);
             fclose($errors);

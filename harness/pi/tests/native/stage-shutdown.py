@@ -34,6 +34,8 @@ attempt = pathlib.Path(sys.argv[sys.argv.index('--session-dir') + 1]).parent
 with (attempt / 'binding').open('x') as f:
     json.dump([os.getpid(), os.getpgrp(), os.getsid(0), os.getcwd(), os.environ['FIGHT_WORKFLOW_PHASE'],
         os.environ['FIGHT_WORKFLOW_TASK'], os.environ['FIGHT_WORKFLOW_CHECKOUT'], sys.argv[1:]], f)
+if mode == 'exit127':
+    sys.exit(127)
 if mode == 'malformed':
     print('PRIVATE_INVALID_EVENT', flush=True)
     sys.exit(0)
@@ -54,7 +56,27 @@ if mode in ('success', 'socket'):
     (root / 'var').mkdir(mode=0o700)
     endpoint = root / 'var/o.sock'
     env = dict(os.environ, PATH=str(root) + os.pathsep + os.environ['PATH'])
-    for mode, expected in [('success', 0), ('unsettled', 1), ('malformed', 1), ('cancel', 143), ('timeout', 124), ('socket', 0)]:
+    php_cli = shutil.which('php')
+    for mode, contents in [('missing', None), ('bad-interpreter', '#!/nonexistent/fight-fixture-interpreter\n')]:
+        path = root / mode
+        path.mkdir()
+        if contents is not None:
+            (path / 'pi').write_text(contents)
+            (path / 'pi').chmod(0o700)
+        attempt = path / 'attempt'
+        attempt.mkdir()
+        (attempt / 'request.md').write_text('Never launch.\n')
+        result = subprocess.run([php_cli, str(monitor), '--attempt', str(attempt), '--task', 'TASK-00585',
+            '--role', 'land', '--provider', 'fixture', '--model', 'controlled', '--thinking', 'off',
+            '--timeout', '4', '--observe-socket', str(endpoint)], cwd=root, env=dict(env, PATH=str(path)),
+            capture_output=True, timeout=12)
+        assert result.returncode == 1, (mode, result.returncode, result.stdout, result.stderr)
+        assert (attempt / 'exit-code').read_text() == '1\n'
+        assert b'Cannot start Pi' in result.stdout + result.stderr
+        assert b'Process-group shutdown unverified' not in result.stdout + result.stderr
+        assert not (attempt / 'process.json').exists() and not (attempt / 'pi-exit-code').exists()
+        assert not (attempt / 'dispatch.lock/exec').exists() and not endpoint.exists()
+    for mode, expected in [('success', 0), ('unsettled', 1), ('malformed', 1), ('exit127', 127), ('cancel', 143), ('timeout', 124), ('socket', 0)]:
         attempt = root / f'{mode} attempt'
         attempt.mkdir()
         (attempt / 'request.md').write_text('Finite test only; no provider or actual assignment.\n')
@@ -101,8 +123,10 @@ if mode in ('success', 'socket'):
         assert evidence == {'monitor_pid': process.pid, 'pi_pid': pid}
         assert pid == group == session and role == 'land' and task == 'TASK-00585' and cwd == checkout == str(root)
         assert argv[0:2] == ['-e', str(package)] and 'fixture;literal' in argv and argv[-1] == '@' + str(attempt / 'request.md')
-        assert not endpoint.exists()
+        assert not (attempt / 'dispatch.lock/exec').exists() and not endpoint.exists()
         pi_code = (attempt / 'pi-exit-code').read_text()
+        if mode == 'exit127':
+            assert pi_code == '127\n' and b'Cannot start Pi' not in out + err
         if mode in ('timeout', 'cancel'):
             assert pi_code == ('-9\n' if mode == 'timeout' else '-15\n'), (mode, pi_code, out)
             assert b'leader-exited' in out  # Do not signal a reaped leader/group again.
@@ -125,7 +149,7 @@ if mode in ('success', 'socket'):
     after_cancel = '            if ($terminationAt !== null && $now - $terminationAt >= 5) {'
     assert php.count(before_setsid) == php.count(after_cancel) == 1
     php = php.replace(before_setsid,
-        'touch("bootstrap-held"); $end = hrtime(true) + 10_000_000_000; '
+        'file_put_contents("bootstrap-held", getmypid() . "\\n"); $end = hrtime(true) + 10_000_000_000; '
         'while (!file_exists("bootstrap-release")) { if (hrtime(true) >= $end) { exit(98); } usleep(20_000); } '
         + before_setsid)
     php = php.replace(after_cancel,
@@ -142,10 +166,9 @@ if mode in ('success', 'socket'):
     with subprocess.Popen(command, cwd=root, env=dict(env, FIXTURE='success'), start_new_session=True,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
         try:
-            until((root / 'bootstrap-held').exists, process)
-            receipt = attempt / 'process.json'
-            until(lambda: receipt.exists() and receipt.read_text().endswith('\n'), process)
-            pid = json.loads(receipt.read_text())['pi_pid']
+            held = root / 'bootstrap-held'
+            until(lambda: held.exists() and held.read_text().endswith('\n'), process)
+            pid = int(held.read_text())
             assert os.getpgid(pid) == process.pid != pid
             process.send_signal(signal.SIGTERM)
             until((root / 'cancel-handled').exists, process)
@@ -156,6 +179,7 @@ if mode in ('success', 'socket'):
             out, err = process.communicate(timeout=24)
     assert process.returncode == 143 and (attempt / 'exit-code').read_text() == '143\n', (out, err)
     assert not (attempt / 'binding').exists(), 'Pi executed after cancellation before setsid'
-    assert (attempt / 'pi-exit-code').read_text() == '1\n' and not endpoint.exists()
+    assert not (attempt / 'process.json').exists() and not (attempt / 'pi-exit-code').exists()
+    assert not endpoint.exists()
 
-print('Monitor: seven owned process cases passed (plus socket collision refusal); no provider or stage authority.')
+print('Monitor: ten owned process cases passed (plus socket collision refusal); no provider or stage authority.')
