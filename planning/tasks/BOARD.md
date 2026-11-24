@@ -31,7 +31,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
+| 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | — | — |
@@ -55,7 +55,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 13 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00123](00123-TASK.md) | — |
 | 14 | [TASK-00598](00598-TASK.md) | Integrate the shared frontend candidate into the Symfony skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00128](00128-TASK.md) | — |
 | 16 | [TASK-00600](00600-TASK.md) | Adopt the shared React frontend in the Slim skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
 | 17 | [TASK-00601](00601-TASK.md) | Adopt the shared React frontend in the Laravel skeleton | [TICKET-00144 — Release the shared frontend and adopt it in independent framework skeletons](../tickets/00144-TICKET.md) | ready-for-agent | [TASK-00599](00599-TASK.md) | — |
@@ -175,7 +174,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00279](00279-TASK.md) | Inspect current pending changes safely | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00278](00278-TASK.md) | — |
 | — | [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00279](00279-TASK.md), [TASK-00274](00274-TASK.md), [TASK-00277](00277-TASK.md), [TASK-00287](00287-TASK.md) | — |
 | — | [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00279](00279-TASK.md) | — |
-| — | [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00280](00280-TASK.md), [TASK-00281](00281-TASK.md), [TASK-00123](00123-TASK.md) | — |
+| — | [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00280](00280-TASK.md), [TASK-00281](00281-TASK.md) | — |
 | — | [TASK-00285](00285-TASK.md) | Deliver one exact new-mailbox confirmation link | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | [TASK-00283](00283-TASK.md) | — |
 | — | [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md) | — |
 | — | [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | [TICKET-00069 — Confirm email change explicitly and return to login](../tickets/00069-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md) | — |
@@ -521,6 +520,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | 10 | [TASK-00010](00010-TASK.md) | Prove and enforce application ownership boundaries | [TICKET-00008 — Establish application ownership and orchestration boundaries](../tickets/00008-TICKET.md) | done | — | [PR #14](https://github.com/johnnickell/fight-agent-os/pull/14) |
 | 10 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | done | — | [PR #315](https://github.com/johnnickell/fight-agent-os/pull/315) |
 | 11 | [TASK-00011](00011-TASK.md) | Accept the PostgreSQL consistency and durable-effects ADR | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #15](https://github.com/johnnickell/fight-agent-os/pull/15) |
+| 11 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | done | — | — |
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | done | — | [PR #236](https://github.com/johnnickell/fight-agent-os/pull/236) |
 | 12 | [TASK-00012](00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #17](https://github.com/johnnickell/fight-agent-os/pull/17) |
 | 12 | [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | — (standalone chore) | done | — | [PR #16](https://github.com/johnnickell/fight-agent-os/pull/16) |

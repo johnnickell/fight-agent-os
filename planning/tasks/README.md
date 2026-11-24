@@ -125,7 +125,7 @@
 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | done | [TICKET-00030](../tickets/00030-TICKET.md) |
-| [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done | [TICKET-00031](../tickets/00031-TICKET.md) |
