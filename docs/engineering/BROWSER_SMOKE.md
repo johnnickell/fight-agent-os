@@ -25,9 +25,10 @@ metadata or a different browser fails closed; neither mode accepts a patch range
 No additional runner dependency or product-test download is introduced. The runner also checks the existing
 Node **24.22.1** / npm **11.19.1** install receipt. Local execution remains containerized in the selected CLI
 image; native CI retains its existing explicit locked browser provisioning.
-On Ubuntu 24.04, CI explicitly enables `ppa:ondrej/php` and installs PHP 8.5 CLI/FPM plus the PostgreSQL,
-mbstring and XML packages together before `setup-php` configures extensions/coverage. A cached CLI install alone
-does not make `php8.5-fpm` available to apt. CI verifies the SHA-256 digests of the native Nginx and Mailpit
+On Ubuntu 24.04, CI uses Sury's maintained, signed Noble APT repository to install PHP 8.5 CLI and FPM plus
+PostgreSQL, mbstring and XML support before `setup-php` configures extensions and coverage. Before running the
+gate, CI verifies that the CLI and FPM package versions match, both binaries report the same PHP 8.5 version,
+and both load the required extensions. CI verifies the SHA-256 digests of the native Nginx and Mailpit
 downloads and extracts them without installing or starting system services. The PHP setup command starts only
 its own loopback Nginx and Mailpit processes, with a disposable localhost TLS leaf/CA and catcher database.
 The job records each guarded PostgreSQL resource after creating it. It drops only the resources it created,
