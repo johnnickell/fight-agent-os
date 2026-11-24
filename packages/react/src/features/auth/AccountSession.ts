@@ -99,9 +99,10 @@ export function createAccountSession<T extends { clear(): void; dispose(): void 
     users,
     userAdministration: new UserAdministrationService(api, authority, (userId, outcome) => {
       users.invalidate();
-      invitations.invalidate(userId);
+      if (userId) invitations.invalidate(userId);
       if (outcome === 'access-rejected') void coordinator.restore();
-      else if (outcome === 'committed') coordinator.authorityChanged();
+      else if (outcome === 'committed' || outcome === 'authority-rejected')
+        coordinator.authorityChanged();
       else void authority.signal('authority-changed');
     }),
     invitations,

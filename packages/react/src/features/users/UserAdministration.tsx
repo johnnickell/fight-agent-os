@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import BootstrapButton from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
@@ -18,6 +18,7 @@ export type AdministrationNotice = Readonly<{ message: string; error: boolean }>
 function AdminRecords<T>({
   title,
   load,
+  retry,
   children
 }: {
   title: string;
@@ -25,6 +26,7 @@ function AdminRecords<T>({
     page: number,
     signal: AbortSignal
   ) => Promise<ApiResult<{ rows: readonly T[]; totalPages: number }>>;
+  retry: () => void;
   children: (rows: readonly T[]) => React.ReactNode;
 }) {
   const id = useId();
@@ -85,7 +87,13 @@ function AdminRecords<T>({
             : 'This view is unavailable.'}
         </p>
       )}
-      <Button disabled={!result} onClick={() => setRequest({ page: request.page })}>
+      <Button
+        disabled={!result}
+        onClick={() => {
+          retry();
+          setRequest({ page: request.page });
+        }}
+      >
         Reload {title.toLowerCase()}
       </Button>
     </section>
@@ -106,6 +114,7 @@ export function UserAdministration({
   const authority = useAuthority(cache);
   const scope = cache.captureScope();
   const [selected, select] = useState<Selection | null>(null);
+  const pending = useSyncExternalStore(service.subscribe, () => service.isPending(user.userId));
   const roles = useCallback(
     (page: number, signal: AbortSignal) => service.roles(page, signal),
     [service]
@@ -125,10 +134,15 @@ export function UserAdministration({
     }
   ];
   const offer = (selection: Selection) =>
+    !pending &&
     actionAllowed(authority, user, selection.action) && (
       <Button
         onClick={() => {
-          if (scope.isCurrent() && actionAllowed(cache.getSnapshot(), user, selection.action))
+          if (
+            !service.isPending(user.userId) &&
+            scope.isCurrent() &&
+            actionAllowed(cache.getSnapshot(), user, selection.action)
+          )
             select(selection);
         }}
       >
@@ -139,7 +153,8 @@ export function UserAdministration({
     return <p>To review your own sign-ins, open Active Sessions in Account &amp; Security.</p>;
   return (
     <>
-      {lifecycle.some(({ action }) => actionAllowed(authority, user, action)) && (
+      {pending && !selected && <p role="status">Waiting for the server to finish the change.</p>}
+      {!pending && lifecycle.some(({ action }) => actionAllowed(authority, user, action)) && (
         <div className="d-flex flex-wrap gap-2" aria-label="Lifecycle actions" role="group">
           {lifecycle.map((item) => (
             <span key={item.label}>{offer(item)}</span>
@@ -147,7 +162,7 @@ export function UserAdministration({
         </div>
       )}
       {user.state === 'active' && adminAccess(authority, 'READ_ROLES', 'MANAGE_USER_ROLES') && (
-        <AdminRecords title="Role catalog" load={roles}>
+        <AdminRecords title="Role catalog" load={roles} retry={() => service.retryRead()}>
           {(rows) =>
             rows.length === 0 ? (
               <p>No roles in this catalog.</p>
@@ -168,7 +183,11 @@ export function UserAdministration({
         </AdminRecords>
       )}
       {adminAccess(authority, 'READ_SESSIONS') && (
-        <AdminRecords title="Admin sessions" load={sessions}>
+        <AdminRecords
+          title="Admin sessions"
+          load={sessions}
+          retry={() => service.retryRead(user.userId)}
+        >
           {(rows) =>
             rows.length === 0 ? (
               <p>No active sessions for this user.</p>
@@ -202,24 +221,23 @@ export function UserAdministration({
           user={user}
           onClose={() => select(null)}
           onConfirm={async (reason) => {
-            const result = await service.change(user, selected.action, reason);
-            if (!scope.isCurrent() || (!result.ok && result.error.kind === 'cancelled')) return;
-            select(null);
-            onOutcome(
-              result.ok
-                ? { message: 'The server confirmed the change.', error: false }
-                : {
-                    message:
-                      result.error.kind === 'conflict'
-                        ? 'The change conflicts with current server state. Review the refreshed view before confirming again.'
-                        : result.error.kind === 'authorization' ||
-                            result.error.kind === 'authentication'
-                          ? 'The server denied the change.'
-                          : 'The change could not be confirmed. Review current server state before trying again.',
-                    error: true
-                  }
-            );
-            service.reconcile(user.userId, result);
+            await service.change(user, selected.action, reason, (result) => {
+              select(null);
+              onOutcome(
+                result.ok
+                  ? { message: 'The server confirmed the change.', error: false }
+                  : {
+                      message:
+                        result.error.kind === 'conflict'
+                          ? 'The change conflicts with current server state. Review the refreshed view before confirming again.'
+                          : result.error.kind === 'authorization' ||
+                              result.error.kind === 'authentication'
+                            ? 'The server denied the change.'
+                            : 'The change could not be confirmed. Review current server state before trying again.',
+                      error: true
+                    }
+              );
+            });
           }}
         />
       )}

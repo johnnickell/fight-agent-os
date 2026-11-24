@@ -11,6 +11,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { matchApplicationRoute } from '@/routes/applicationRoutes';
 
+import { deferred } from '../apiFixtures';
+
 const permissions = ['READ_USERS', 'READ_ROLES', 'MANAGE_USER_ROLES'];
 const cleanups: (() => void)[] = [];
 beforeEach(() => window.history.replaceState(null, '', '/admin/users'));
@@ -234,6 +236,87 @@ describe('browser user administration', () => {
     expect(refresh).toHaveBeenCalledWith(target.user_id, 'unconfirmed');
     expect(fetch.mock.calls.filter(([, options]) => options.method === 'POST')).toHaveLength(1);
     expect(fetch.mock.calls.filter(([url]) => url === detailUrl)).toHaveLength(2);
+  });
+
+  it('waits for the actual write settlement rather than reconciling an unresolved change', async () => {
+    const target = directoryUser({ state: 'active' });
+    const write = deferred<Response>();
+    const { api, cache, service } = directoryDependencies(
+      (_url, options) =>
+        options.method === 'POST' ? write.promise : Promise.resolve(directoryResponse(target)),
+      ['READ_USERS', 'DISABLE_USERS']
+    );
+    cleanups.push(() => cache.dispose());
+    await cache.load();
+    const detail = await service.detail(target.user_id);
+    if (!detail.ok) throw new Error('Expected fixture detail');
+    const refresh = vi.fn();
+    const admin = new UserAdministrationService(api, cache, refresh);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const settled = vi.fn();
+      const notice = vi.fn();
+      const change = admin.change(detail.value, { kind: 'disable' }, '', notice).then(settled);
+      await vi.advanceTimersByTimeAsync(8_000);
+      expect(settled).not.toHaveBeenCalled();
+      expect(refresh).not.toHaveBeenCalled();
+      await cache.signal('authority-changed');
+      expect(admin.isPending(target.user_id)).toBe(true);
+      expect(await admin.change(detail.value, { kind: 'disable' }, '')).toMatchObject({
+        ok: false,
+        error: { kind: 'conflict' }
+      });
+      write.resolve(directoryResponse(null));
+      await change;
+      expect(notice).not.toHaveBeenCalled();
+      expect(refresh).toHaveBeenCalledExactlyOnceWith(target.user_id, 'committed');
+      expect(admin.isPending(target.user_id)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([401, 403])(
+    'retires stale authority after an ordinary %i admin session read without replay',
+    async (status) => {
+      const target = directoryUser();
+      const fetch = vi.fn(() => Promise.resolve(directoryResponse(null, status)));
+      const { api, cache } = directoryDependencies(fetch, ['READ_USERS', 'READ_SESSIONS']);
+      cleanups.push(() => cache.dispose());
+      await cache.load();
+      const refresh = vi.fn(() => {
+        void cache.signal('authority-changed');
+      });
+      const admin = new UserAdministrationService(api, cache, refresh);
+      const signal = new AbortController().signal;
+      await admin.sessions(target.user_id, 1, signal);
+      expect(refresh).toHaveBeenCalledExactlyOnceWith(
+        target.user_id,
+        status === 401 ? 'access-rejected' : 'authority-rejected'
+      );
+      await cache.load();
+      await admin.sessions(target.user_id, 1, signal);
+      expect(fetch).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('discards an obsolete denied read after a newer authority scope has read successfully', async () => {
+    const oldRead = deferred<Response>();
+    const fetch = vi.fn(() => Promise.resolve(directoryResponse(directoryPage([]))));
+    fetch.mockReturnValueOnce(oldRead.promise);
+    const { api, cache } = directoryDependencies(fetch, ['READ_USERS', 'READ_SESSIONS']);
+    cleanups.push(() => cache.dispose());
+    await cache.load();
+    const refresh = vi.fn();
+    const admin = new UserAdministrationService(api, cache, refresh);
+    const target = directoryUser();
+    const signal = new AbortController().signal;
+    const first = admin.sessions(target.user_id, 1, signal);
+    await cache.signal('authority-changed');
+    expect((await admin.sessions(target.user_id, 1, signal)).ok).toBe(true);
+    oldRead.resolve(directoryResponse(null, 403));
+    expect(await first).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it('registers a complete protected detail route without carrying extra query fields', () => {

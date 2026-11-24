@@ -68,24 +68,57 @@ export function safeAdminReason(reason: string): boolean {
 /** Calls bounded installation endpoints; neither reads nor writes retain authority or credentials. */
 export class UserAdministrationService {
   private readonly catalog: CatalogService;
+  private readonly deniedReads = new Set<string | undefined>();
+  private readonly pending = new Set<string>();
+  private readonly listeners = new Set<() => void>();
 
   constructor(
     private readonly api: ApiClient,
     private readonly cache: AuthorityCache,
     private readonly refresh: (
-      userId: string,
-      outcome: 'committed' | 'access-rejected' | 'unconfirmed'
+      userId: string | undefined,
+      outcome: 'committed' | 'access-rejected' | 'authority-rejected' | 'unconfirmed'
     ) => void
   ) {
     this.catalog = new CatalogService(api);
   }
 
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  isPending(userId: string): boolean {
+    return this.pending.has(userId);
+  }
+
+  retryRead(userId?: string): void {
+    this.deniedReads.delete(userId);
+  }
+
+  private readRejected(userId: string | undefined, result: ApiResult<unknown>): void {
+    if (result.ok || this.deniedReads.has(userId)) return;
+    if (result.error.kind !== 'authentication' && result.error.kind !== 'authorization') return;
+    this.deniedReads.add(userId);
+    this.refresh(
+      userId,
+      result.error.kind === 'authentication' ? 'access-rejected' : 'authority-rejected'
+    );
+  }
+
   async roles(page: number, signal: AbortSignal) {
     const scope = this.cache.captureScope();
-    if (!scope.isCurrent() || !adminAccess(this.cache.getSnapshot(), 'READ_ROLES'))
+    if (
+      !scope.isCurrent() ||
+      !adminAccess(this.cache.getSnapshot(), 'READ_ROLES') ||
+      this.deniedReads.has(undefined)
+    )
       return apiFailure('authorization');
     const result = await this.catalog.roles({ page, perPage: pageSize }, signal);
-    if (!scope.isCurrent()) return apiFailure('cancelled');
+    if (signal.aborted || !scope.isCurrent()) return apiFailure('cancelled');
+    this.readRejected(undefined, result);
     if (!result.ok) return result;
     return {
       ...result,
@@ -107,7 +140,8 @@ export class UserAdministrationService {
       !scope.isCurrent() ||
       authority.status !== 'authenticated' ||
       authority.principal.userId === userId ||
-      !adminAccess(authority, 'READ_SESSIONS')
+      !adminAccess(authority, 'READ_SESSIONS') ||
+      this.deniedReads.has(userId)
     )
       return apiFailure('authorization');
     if (!idPattern.test(userId)) return apiFailure('protocol');
@@ -120,7 +154,8 @@ export class UserAdministrationService {
         signal
       }
     );
-    if (!scope.isCurrent()) return apiFailure('cancelled');
+    if (signal.aborted || !scope.isCurrent()) return apiFailure('cancelled');
+    this.readRejected(userId, result);
     if (!result.ok) return result;
     return {
       ...result,
@@ -131,11 +166,17 @@ export class UserAdministrationService {
     };
   }
 
-  async change(user: DirectoryUser, action: AdminAction, reason: string): Promise<ApiResult<true>> {
+  async change(
+    user: DirectoryUser,
+    action: AdminAction,
+    reason: string,
+    onSettled?: (result: ApiResult<true>) => void
+  ): Promise<ApiResult<true>> {
     const scope = this.cache.captureScope();
     if (!scope.isCurrent() || !actionAllowed(this.cache.getSnapshot(), user, action))
       return apiFailure('authorization');
     if (!idPattern.test(user.userId)) return apiFailure('protocol');
+    if (this.isPending(user.userId)) return apiFailure('conflict');
     let path = `/users/${user.userId}`;
     let method: 'POST' | 'PUT' | 'DELETE' = 'POST';
     let body: Readonly<Record<string, unknown>> = { confirm: true };
@@ -161,25 +202,32 @@ export class UserAdministrationService {
       default:
         path += `/${action.kind}`;
     }
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const result = await Promise.race([
-      this.api.mutate(method, path, body, (value) => (value === null ? (true as const) : null)),
-      new Promise<ApiResult<true>>((resolve) => {
-        timer = setTimeout(() => resolve(apiFailure('network')), 8_000);
-      })
-    ]);
-    clearTimeout(timer);
-    return scope.isCurrent() ? result : apiFailure('cancelled');
-  }
-
-  reconcile(userId: string, result: ApiResult<true>) {
-    this.refresh(
-      userId,
-      result.ok
-        ? 'committed'
-        : result.error.kind === 'authentication'
-          ? 'access-rejected'
-          : 'unconfirmed'
-    );
+    const sameAuthentication = this.cache.captureAuthenticationContext();
+    this.pending.add(user.userId);
+    this.listeners.forEach((notify) => notify());
+    try {
+      const result = await this.api.mutate(method, path, body, (value) =>
+        value === null ? (true as const) : null
+      );
+      const visible = scope.isCurrent();
+      try {
+        if (visible) onSettled?.(result);
+      } finally {
+        // A dispatched write can settle after navigation or principal refresh. Do not
+        // adopt its response into another scope; retire affected views instead.
+        this.refresh(
+          user.userId,
+          result.ok && sameAuthentication()
+            ? 'committed'
+            : !result.ok && result.error.kind === 'authentication' && sameAuthentication()
+              ? 'access-rejected'
+              : 'unconfirmed'
+        );
+      }
+      return visible ? result : apiFailure('cancelled');
+    } finally {
+      this.pending.delete(user.userId);
+      this.listeners.forEach((notify) => notify());
+    }
   }
 }
