@@ -119,6 +119,7 @@ class ApprovedRootPolicyTest(unittest.TestCase):
         self.assertEqual(admitted, snapshot.read_text())
 
     def test_status_keeps_saved_approvals_when_docker_report_is_unavailable(self):
+        config = self.base / 'roots.json'
         roots = {'project': self.entry(self.root, 'rw')}
         for report, reason, mounted, stale in (
             (Hold('internal Docker detail'), 'docker_mount_report_unavailable', None, None),
@@ -132,7 +133,7 @@ class ApprovedRootPolicyTest(unittest.TestCase):
                     read_mounts.return_value = report
                 output = StringIO()
                 with redirect_stdout(output):
-                    approvals.status(self.base, 'fixture', roots, ())
+                    approvals.status(config, self.base, 'fixture', roots, ())
                 self.assertNotIn('internal Docker detail', output.getvalue())
                 status = json.loads(output.getvalue())
                 self.assertEqual(stale, status['stale_mounts'])
@@ -140,6 +141,67 @@ class ApprovedRootPolicyTest(unittest.TestCase):
                 self.assertEqual([{'locator': 'root:project', 'canonical_path': str(self.root),
                                    'configured': True, 'write_granted': True, 'mounted': mounted,
                                    'readable': mounted, 'writable': mounted, 'reason': reason}], status['roots'])
+
+    def test_status_reports_snapshot_binds_that_startup_rejects(self):
+        config = self.base / 'roots.json'
+        directory = approvals.observation_directory(config)
+        directory.mkdir()
+        roots = {'project': self.entry(self.root)}
+        snapshot = {'Type': 'bind', 'Source': str(directory), 'Destination': approvals.MANIFEST, 'RW': False}
+        root = {'Type': 'bind', 'Source': str(self.root), 'Destination': approvals.target('project', roots['project']),
+                'RW': False}
+        for saved, mounts, stale in (
+            ({}, [snapshot], 1),
+            (roots, [root, {**snapshot, 'Source': str(self.other)}], 1),
+            (roots, [root, {**snapshot, 'RW': True}], 1),
+            (roots, [root, snapshot, snapshot], 1),
+            (roots, [root], 0),
+        ):
+            with self.subTest(mounts=mounts), \
+                    patch.object(approvals, 'running_mounts', return_value=('fpm', mounts)), \
+                    patch.object(approvals, 'query') as probe:
+                with self.assertRaisesRegex(Hold, 'did not report the exact'):
+                    approvals.publish_observation(config, self.base, 'fixture', saved, 'unused')
+                output = StringIO()
+                with redirect_stdout(output):
+                    approvals.status(config, self.base, 'fixture', saved, ())
+                result = json.loads(output.getvalue())
+                self.assertEqual(stale, result['stale_mounts'])
+                if saved:
+                    self.assertTrue(result['roots'][0]['mounted'])
+                    self.assertFalse(result['roots'][0]['readable'])
+                    self.assertEqual('application_observation_unavailable', result['roots'][0]['reason'])
+                probe.assert_not_called()
+
+    def test_status_keeps_mount_facts_when_application_observation_fails(self):
+        config = self.base / 'roots.json'
+        roots = {'project': self.entry(self.root, 'rw')}
+        mounts = [
+            {'Type': 'bind', 'Source': str(self.base / 'observed'), 'Destination': approvals.MANIFEST, 'RW': False},
+            {'Type': 'bind', 'Source': str(self.root), 'Destination': approvals.target('project', roots['project']),
+             'RW': True},
+        ]
+        for report in (Hold('private probe detail'), OSError('private probe detail'),
+                       subprocess.TimeoutExpired(['private probe detail'], 1), ValueError('private probe detail'),
+                       None, {'roots': None}, {'roots': [None]},
+                       {'roots': [{'locator': 'root:project', 'mounted': True, 'readable': 'yes'}]}):
+            with self.subTest(report=report), \
+                    patch.object(approvals, 'running_mounts', return_value=('fpm', mounts)), \
+                    patch.object(approvals, 'query') as probe:
+                if isinstance(report, Exception):
+                    probe.side_effect = report
+                else:
+                    probe.return_value = report
+                output = StringIO()
+                with redirect_stdout(output):
+                    approvals.status(config, self.base, 'fixture', roots, ())
+                self.assertNotIn('private probe detail', output.getvalue())
+                result = json.loads(output.getvalue())
+                self.assertEqual(0, result['stale_mounts'])
+                self.assertEqual([{'locator': 'root:project', 'canonical_path': str(self.root),
+                                   'configured': True, 'write_granted': True, 'mounted': True,
+                                   'readable': False, 'writable': False,
+                                   'reason': 'application_observation_unavailable'}], result['roots'])
 
     def test_unconfirmed_empty_model_attempts_bounded_stop_and_preserves_failure(self):
         config = self.base / 'roots.json'

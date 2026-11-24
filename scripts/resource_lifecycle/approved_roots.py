@@ -266,18 +266,24 @@ def exact_bind(mounts, source, destination, writable):
         for mount in at_destination)
 
 
+def compare_mounts(directory, roots, mounts):
+    expected = {target(name, root): (root['path'], root['access'] == 'rw') for name, root in roots.items()}
+    if roots:
+        expected[MANIFEST] = (str(directory), False)
+    matched = {destination for destination, (source, writable) in expected.items()
+               if exact_bind(mounts, source, destination, writable)}
+    observed = {mount['Destination'] for mount in mounts
+                if mount['Destination'] == MANIFEST or mount['Destination'].startswith(PREFIX + '/')}
+    return matched, expected.keys() - matched, observed - matched
+
+
 def publish_observation(config, checkout, project, roots, admitted):
     directory = observation_directory(config)
     if not roots and not directory.exists():
         return
     container, mounts = running_mounts(checkout, project)
-    destinations = {target(name, root) for name, root in roots.items()}
-    require(container and {mount['Destination'] for mount in mounts
-                           if mount['Destination'].startswith(PREFIX + '/')} == destinations and
-            all(exact_bind(mounts, root['path'], target(name, root), root['access'] == 'rw')
-                for name, root in roots.items()) and
-            (exact_bind(mounts, str(directory), MANIFEST, False) if roots else
-             not any(mount['Destination'] == MANIFEST for mount in mounts)),
+    _, missing, stale = compare_mounts(directory, roots, mounts)
+    require(container and not missing and not stale,
             'Docker did not report the exact approved-root mounts; stop the selected FPM service and review status')
     if roots:
         write_private(directory / config.name, admitted)
@@ -305,7 +311,28 @@ def mount_facts(exact, observation, probe_reason, write_granted):
     return True, observation.get('readable', False), write_granted and observation.get('writable', False), observation.get('reason')
 
 
-def status(checkout, project, roots, protected):
+def application_facts(checkout, container):
+    code = ('require "/app/vendor/autoload.php";'
+            'echo json_encode((new App\\Adapter\\Installation\\ApprovedRootAccess())->observe());')
+    try:
+        facts = query(['docker', 'exec', container, 'php', '-r', code], checkout)
+        require(isinstance(facts, dict) and isinstance(facts.get('roots'), list) and
+                (facts.get('reason') is None or isinstance(facts['reason'], str)),
+                'Invalid application observation')
+        by_locator = {}
+        for fact in facts['roots']:
+            require(isinstance(fact, dict) and isinstance(fact.get('locator'), str) and
+                    fact['locator'] not in by_locator and
+                    all(type(fact.get(key)) is bool for key in ('mounted', 'readable', 'writable')) and
+                    (fact.get('reason') is None or isinstance(fact['reason'], str)),
+                    'Invalid application root observation')
+            by_locator[fact['locator']] = fact
+        return by_locator, facts.get('reason')
+    except (Hold, OSError, ValueError, subprocess.SubprocessError):
+        return {}, 'application_observation_unavailable'
+
+
+def status(config, checkout, project, roots, protected):
     try:
         container, mounts = running_mounts(checkout, project)
     except (Hold, OSError, ValueError, subprocess.SubprocessError):
@@ -315,33 +342,23 @@ def status(checkout, project, roots, protected):
                     'readable': None, 'writable': None, 'reason': reason} for name, root in roots.items()]
         print(json.dumps({'roots': results, 'stale_mounts': None, 'reason': reason}, indent=2))
         return
-    facts = {}
-    if container:
-        code = ('require "/app/vendor/autoload.php";'
-                'echo json_encode((new App\\Adapter\\Installation\\ApprovedRootAccess())->observe());')
-        try:
-            facts = query(['docker', 'exec', container, 'php', '-r', code], checkout)
-        except (Hold, ValueError):
-            facts = {'reason': 'application_observation_unavailable'}
+    matched, _, stale = compare_mounts(config.parent / 'observed', roots, mounts)
+    facts, probe_reason = application_facts(checkout, container) if container and MANIFEST in matched else ({}, None)
     results = []
-    pending = {mount['Destination'] for mount in mounts if mount['Destination'].startswith(PREFIX + '/')}
     for name, root in roots.items():
-        destination = target(name, root)
-        exact = exact_bind(mounts, root['path'], destination, root['access'] == 'rw')
-        if exact:
-            pending.discard(destination)
-        observation = next((fact for fact in facts.get('roots', []) if fact['locator'] == 'root:' + name), {})
+        locator = 'root:' + name
+        exact = target(name, root) in matched
         write_granted = root['access'] == 'rw'
-        mounted, readable, writable, reason = mount_facts(exact, observation, facts.get('reason'), write_granted)
+        mounted, readable, writable, reason = mount_facts(exact, facts.get(locator, {}), probe_reason, write_granted)
         try:
             current = canonical(root['path'], root['access'], protected) == root['identity']
         except Hold:
             current = False
-        results.append({'locator': 'root:' + name, 'canonical_path': root['path'], 'configured': True,
+        results.append({'locator': locator, 'canonical_path': root['path'], 'configured': True,
                         'write_granted': write_granted, 'mounted': mounted,
                         'readable': current and readable, 'writable': current and writable,
                         'reason': reason if current else 'host_root_unqualified'})
-    print(json.dumps({'roots': results, 'stale_mounts': len(pending)}, indent=2))
+    print(json.dumps({'roots': results, 'stale_mounts': len(stale)}, indent=2))
 
 
 def operate(safe, checkout, project, isolated, args):
@@ -349,7 +366,7 @@ def operate(safe, checkout, project, isolated, args):
     roots = load(config)
     protected = protected_paths(safe, checkout)
     if args.operation == 'status':
-        status(checkout, project, roots, protected)
+        status(config, checkout, project, roots, protected)
         return
     name = args.name
     require(NAME.fullmatch(name), 'Use a short lowercase root name (letters, digits and hyphens)')

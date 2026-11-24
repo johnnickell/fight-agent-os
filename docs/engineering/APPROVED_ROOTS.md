@@ -32,8 +32,8 @@ last root. Startup reports the mount check failure and any stop failure. Check `
 service if exposure remains or cannot be verified. A regular container restart is not reconfiguration.
 
 A running service created by an earlier version keeps its old mounts until it stops or is recreated.
-A removed or replaced root may still be physically exposed if `status` reports a nonzero `stale_mounts`
-count. To end existing exposure without recreating the runtime, run
+A nonzero `stale_mounts` count means that an unexpected or mismatched root or snapshot mount is still
+present. To end existing exposure without recreating the runtime, run
 `./bin/runtime docker compose stop https_php` in the selected checkout. Task `down` also stops FPM but disposes
 its database and storage as documented in the [resource procedure](RESOURCE_LIFECYCLE.md).
 To recreate the runtime without root exposure, preview and apply removal of all saved roots, then use
@@ -58,7 +58,8 @@ to make a selected directory pass. If the service runs as a different owner, OS 
   inaccessible directories, filesystem boundaries under a selected root and overlapping approvals are refused.
 - Host status compares the desired roots with the selected FPM container's actual bind declarations and the
   application's mount and permission observations. A Docker-confirmed bind remains reported as mounted
-  even if PHP cannot observe it; unavailable observation never grants readable or writable status.
+  even if the PHP probe fails or returns an invalid report. Without a confirmed snapshot bind or a usable
+  PHP observation, status does not claim read or write access.
   If Docker's mount report is unavailable, status still shows saved approvals, with `null` for the observed
   mount, read and write facts and stale-mount count. A successful check with no running FPM service instead
   reports no observed mounts and a zero stale-mount count.
