@@ -23,6 +23,11 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
+      - name: Prepare native Linux PHP CLI with FFI
+        run: |
+          sudo apt-get update --error-on=any
+          sudo apt-get install --no-install-recommends --yes php8.3-cli
+          sudo update-alternatives --set php /usr/bin/php8.3
       - name: Prepare locked Harness and engine dependencies
         run: node harness/pi/scripts/dependencies.mjs setup
       - name: Run Harness, engine and package checks directly

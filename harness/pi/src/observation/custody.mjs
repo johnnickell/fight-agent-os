@@ -27,7 +27,7 @@ export function privateFile(path, socket = false) {
   if (!(socket ? info.isSocket() : info.isFile()) || info.uid !== process.getuid() || info.mode & 0o077 || (!socket && info.size > 8192)) throw new Error('Invalid custody candidate');
   return info;
 }
-const birthScript = fileURLToPath(new URL('./session-file-birth.py', import.meta.url));
+const birthScript = fileURLToPath(new URL('./session-file-birth.php', import.meta.url));
 const decimal = value => typeof value === 'string' && /^(0|[1-9][0-9]{0,29})$/.test(value);
 export function validSessionFile(value) {
   return value !== null && typeof value === 'object' && Object.keys(value).length === 5 && value.version === 2 &&
@@ -49,7 +49,7 @@ export function sessionFileIdentity(path) {
     if (!info.isFile()) throw new Error('Persistent parent session unavailable');
     // Linux's stat fallback may substitute mutable ctime. Require explicit native STATX_BTIME support instead.
     const birthtimeNs = process.platform === 'linux'
-      ? JSON.parse(execFileSync('python3', ['-I', '-B', birthScript], { stdio: ['ignore', 'pipe', 'ignore', fd], encoding: 'utf8', timeout: 500, maxBuffer: 4096 })).birthtimeNs
+      ? JSON.parse(execFileSync('php', ['-d', 'register_argc_argv=1', '-r', 'exit((require $argv[1])());', '--', birthScript], { stdio: ['ignore', 'pipe', 'ignore', fd], encoding: 'utf8', timeout: 500, maxBuffer: 4096 })).birthtimeNs
       : info.birthtimeNs?.toString();
     const witness = { version: 2, path: canonical, dev: info.dev.toString(), ino: info.ino.toString(), birthtimeNs };
     if (!validSessionFile(witness)) throw new Error('Native session file lifetime unavailable/ambiguous');

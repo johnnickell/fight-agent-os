@@ -608,8 +608,10 @@ replacement cannot silently rebind a generation. RPC resume starts no native boo
 The version-2 session-file witness is canonical path, lossless decimal device/inode and native creation time in
 nanoseconds. Same-file append, metadata updates and later same-file resume retain it; mutable transcript contents,
 mtime and ctime are not identity. macOS uses the open file's native `st_birthtimespec` through Node bigint stats.
-Linux requires Python 3 and libc `statx` with an explicit returned `STATX_BTIME` mask on that same inherited open
-file descriptor. There is no Linux ctime fallback: Node/libuv can substitute ctime when native birthtime is
+Linux source and installed callers require a 64-bit `php` CLI on `PATH`, with FFI allowed for CLI and a libc that
+exports `statx`. The helper requires the returned `STATX_INO` and `STATX_BTIME` bits on the inherited open file
+descriptor and checks its device and inode against `fstat`. macOS does not invoke the PHP helper. There is no
+Linux ctime fallback: Node/libuv can substitute ctime when native birthtime is
 unavailable. Missing capability, malformed/zero/whole-second creation time, nonregular files, changed paths or
 unavailable metadata refuse observation/admission. Other platforms are unsupported for this witness. Pending
 not-yet-persisted files may promote once, but cannot admit children without a valid lifetime witness.

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { appendFileSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { appendFileSync, closeSync, mkdtempSync, openSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,39 +76,29 @@ test('bigint native device and inode identities do not lose precision in IPC', t
   assert.equal(sameSessionFile(value, JSON.parse(JSON.stringify(value))), true);
 });
 
-test('Linux creation-time capability requires the native statx mask, never ctime fallback', () => {
-  const helper = fileURLToPath(new URL('../src/observation/session-file-birth.py', import.meta.url));
-  // Exercise the owning ABI reader with controlled kernel evidence; not a Linux platform observation.
-  const probe = `
-import ctypes, runpy, types
-from unittest.mock import patch
-m = runpy.run_path(${JSON.stringify(helper)})
-g = m['birth'].__globals__
-g['sys'] = types.SimpleNamespace(platform='linux')
-class Call:
-    mask = 0x900
-    nanos = 123456789
-    ino = 42
-    result = 0
-    def __call__(self, fd, path, flags, mask, pointer):
-        assert fd == 3 and path == b'' and flags == 0x1000 and mask == 0x900
-        value = pointer._obj
-        value.mask, value.ino, value.btime.seconds, value.btime.nanoseconds = self.mask, self.ino, 1700000000, self.nanos
-        return self.result
-call = Call()
-with patch.object(ctypes, 'CDLL', return_value=types.SimpleNamespace(statx=call)), patch.object(g['os'], 'fstat', return_value=types.SimpleNamespace(st_ino=42, st_dev=0)):
-    assert m['birth'](3) == {'birthtimeNs': '1700000000123456789'}
-    for field, bad in [('mask', 0x100), ('mask', 0), ('mask', 0x800), ('nanos', 1000000000), ('ino', 43), ('result', -1)]:
-        old = getattr(call, field)
-        setattr(call, field, bad)
-        try:
-            m['birth'](3)
-        except ValueError:
-            pass
-        else:
-            raise AssertionError(field)
-        setattr(call, field, old)
-print('native mask, timestamp, identity and syscall failures: passed')
-`;
-  assert.match(execFileSync('python3', ['-c', probe], { encoding: 'utf8', timeout: 2000, maxBuffer: 4096 }), /passed/);
+test('Linux helper reads the inherited file and refuses missing native creation time', { skip: process.platform !== 'linux' }, t => {
+  const { path } = fixture(t), witness = sessionFileIdentity(path);
+  const helper = fileURLToPath(new URL('../src/observation/session-file-birth.php', import.meta.url));
+  const probe = (fd, flags = []) => spawnSync('php', ['-d', 'register_argc_argv=1', ...flags, '-r', 'exit((require $argv[1])());', '--', helper],
+    { stdio: ['ignore', 'pipe', 'pipe', fd], encoding: 'utf8', timeout: 2000, maxBuffer: 4096 });
+  const refused = result => {
+    assert.ifError(result.error);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, '');
+  };
+  const file = openSync(path, 'r'), withoutBirth = openSync('/proc/self/status', 'r');
+  try {
+    const result = probe(file);
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), { birthtimeNs: witness.birthtimeNs });
+    refused(probe(withoutBirth));
+    refused(probe('ignore'));
+    refused(probe(file, ['-d', 'ffi.enable=false']));
+    assert.throws(() => sessionFileIdentity('/proc/self/status'));
+  } finally {
+    closeSync(withoutBirth);
+    closeSync(file);
+  }
 });
