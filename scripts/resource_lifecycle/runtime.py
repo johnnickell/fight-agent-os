@@ -73,8 +73,10 @@ def command(root, argv, selector=None):
         if isolated and (not (safe / 'var/worktrees' / project / 'override.yaml').exists() or
                          not (safe / 'var/worktrees' / project / 'output').exists()):
             prepare(safe, checkout, project, entry)
-        return subprocess.run([*compose(safe, checkout, project, isolated), *argv[1:]], cwd=checkout,
-                              env=environment(isolated)).returncode
+        # Withdrawal must stay possible even if an approved source moved or disappeared.
+        roots = argv[1:2] != ['stop']
+        args = compose(safe, checkout, project, isolated, approved_roots=roots)
+        return subprocess.run([*args, *argv[1:]], cwd=checkout, env=environment(isolated)).returncode
     # Ad hoc tool containers use native --rm and task labels, not a shadow ledger.
     if isolated and argv[0] == 'run':
         options = list(argv[1:])
@@ -99,6 +101,8 @@ def up(root, selector=None, build_only=False, shared=False, task=None, unregiste
     if build_only:
         return subprocess.run([*args, '--profile', 'https', 'build'], cwd=checkout,
                               env=environment(isolated)).returncode
+    from .approved_roots import compose_file
+    compose_file(safe, checkout, project, isolated)  # Fail before preparing traffic on an invalid approval.
     if isolated or shared:
         # Participation is explicit for main and mandatory for worktrees. No fallback.
         _, url = ingress(safe, checkout, project, isolated)
@@ -120,6 +124,8 @@ def up(root, selector=None, build_only=False, shared=False, task=None, unregiste
          'web', 'postgres', 'postgres_test', 'seaweedfs'], checkout, env=environment(isolated))
     run([*args, 'exec', '-T', 'web', 'php', 'vendor/bin/doctrine-migrations', 'up-to-date',
          '--no-interaction'], checkout, env=environment(isolated))
+    # Builds and the schema preflight can take time. Recheck exact host identities immediately before Compose binds.
+    args += compose_file(safe, checkout, project, isolated)
     run([*args, '--profile', 'https', '--profile', 'mail', 'up', '--detach', '--no-build',
          '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))

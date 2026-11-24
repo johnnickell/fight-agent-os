@@ -77,6 +77,12 @@ running traffic cannot use a changing schema. Startup does not terminate an exis
 preflight. A healthy container alone is not application readiness: startup must also verify canonical HTTPS
 root and CSRF through the existing front door. Key/bootstrap failures remain closed by the application.
 
+## Approved project roots
+
+Project roots are opt-in, read-only by default and mounted only into application FPM. Follow
+[approved-root operations](APPROVED_ROOTS.md) to preview, apply, reconfigure and verify exact mounts.
+The capability reports access but does not register Projects or authorize Agent execution.
+
 ## Status, stop and restart
 
 Run inside the selected checkout; wrappers select its existing deterministic project. From main, prefix
