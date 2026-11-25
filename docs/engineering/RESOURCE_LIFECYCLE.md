@@ -178,8 +178,10 @@ policy. This is never invoked by task down/Land. Do not run machine-wide prune/r
 
 After the Docker sweep, task down removes reserved disposable output only when no remaining bind consumes it.
 A bind at or below the removal path holds deletion. For a parent bind, the runtime checks the container's
-configuration and live process references to the directory or its descendants. Observed use or unavailable
-visibility holds deletion; parent visibility and references to a sibling that only shares the name prefix do not.
+configuration and live process references to the directory or its descendants. It resolves observable paths
+inside the container, including relative paths from the relevant working directory and paths through symlinks.
+Observed use or unavailable visibility holds deletion; parent visibility and references to an unrelated sibling
+that only shares the name prefix do not. This check does not execute shell text to infer paths built at runtime.
 The same check protects configuration retirement. Keep active
 role evidence only while consumed, then retire
 its exact `.runs/compose/<project>/` evidence/cache after outcomes reach the existing TASK/PR. The small

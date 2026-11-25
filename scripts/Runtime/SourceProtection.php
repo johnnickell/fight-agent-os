@@ -116,32 +116,83 @@ final class SourceProtection
             $container['State']['Running'] === true,
             'Parent mount requires live consumer qualification'
         );
-        // Match a complete path or a descendant, including paths embedded in shell text or options.
-        $reference = addcslashes($target, '\\.^$|()[]*+?{}')."($|/|[[:space:]\"'`:;|&<>()])";
-        $pattern = '~'.str_replace('~', '\\~', $reference).'~';
+        $configuration = [];
         foreach (['WorkingDir', 'Entrypoint', 'Cmd'] as $key) {
             foreach ((array) ($container['Config'][$key] ?? null) as $value) {
-                Native::require(
-                    is_string($value) && preg_match($pattern, $value) === 0,
-                    'Container configuration consumes candidate directory or cannot be qualified'
-                );
+                Native::require(is_string($value), 'Container configuration cannot be qualified');
+                $configuration[] = $value;
             }
         }
         $script = <<<'SH'
             export LC_ALL=C
+            target=$(realpath "$1") || exit 2
+            within_target() {
+                case "$1" in "$target"|"$target"/*) exit 3 ;; esac
+            }
+            check_path() {
+                case "$1" in
+                    /*) path=$1 ;;
+                    */*|.|..) path=$2/$1 ;;
+                    *) [ -e "$2/$1" ] || [ -L "$2/$1" ] || return; path=$2/$1 ;;
+                esac
+                # Some realpath implementations preserve a leading double slash.
+                while [ "${path#//}" != "$path" ]; do path=${path#/}; done
+                # For a not-yet-created descendant, check its nearest existing parent.
+                # Resolve inside the container, where bind paths and symlinks have meaning.
+                while [ ! -e "$path" ]; do
+                    [ ! -L "$path" ] || exit 2
+                    path=${path%/*}
+                    [ -n "$path" ] || path=/
+                done
+                resolved=$(realpath "$path") || exit 2
+                if [ -d "$resolved" ]; then [ -x "$resolved" ] || exit 2; fi
+                within_target "$resolved"
+            }
+            backtick='`'
+            check_text() {
+                # Check whole arguments as well as path tokens in shell text and options.
+                while IFS= read -r line; do
+                    case "$line" in
+                        /*|./*|../*) check_path "$line" "$1" ;;
+                    esac
+                    tokens=$(printf '%s\n' "$line" | grep -oE "\"[^\"]*\"|'[^']*'|[^[:space:]\"'$backtick=:;|&<>()]+")
+                    case $? in 0) ;; 1) continue ;; *) exit 2 ;; esac
+                    while IFS= read -r token; do
+                        case "$token" in
+                            \"*\") token=${token#\"}; token=${token%\"} ;;
+                            \'*\') token=${token#\'}; token=${token%\'} ;;
+                        esac
+                        case "$token" in -?*=*) token=${token#*=} ;; esac
+                        [ -z "$token" ] || check_path "$token" "$1"
+                    done <<EOF
+            $tokens
+            EOF
+                done
+            }
+            working=$(pwd -P) || exit 2
+            check_text "$working"
             for process in /proc/[0-9]*; do
                 [ "$process" = "/proc/$$" ] && continue
                 [ -d "$process" ] || continue
                 [ -r "$process/cmdline" ] && [ -r "$process/maps" ] && [ -r "$process/fd" ] || exit 2
+                [ "$process/root" -ef "/proc/$$/root" ] && [ "$process/ns/mnt" -ef "/proc/$$/ns/mnt" ] || exit 2
+                working=$(readlink "$process/cwd") || exit 2
+                case "$working" in /*' (deleted)') exit 2 ;; /*) ;; *) exit 2 ;; esac
                 arguments=$(tr '\000' '\n' < "$process/cmdline") || exit 2
-                printf '%s\n' "$arguments" | grep -Eq -- "$2"
-                case $? in 0) exit 3 ;; 1) ;; *) exit 2 ;; esac
-                grep -Eq -- "$2" "$process/maps"
-                case $? in 0) exit 3 ;; 1) ;; *) exit 2 ;; esac
+                check_text "$working" <<EOF
+            $arguments
+            EOF
+                # The kernel already reports resolved paths for mappings and handles.
+                mappings=$(cat "$process/maps") || exit 2
+                while read -r range perms offset device inode mapped; do
+                    within_target "${mapped% (deleted)}"
+                done <<EOF
+            $mappings
+            EOF
                 for descriptor in "$process/cwd" "$process/exe" "$process"/fd/*; do
                     [ -L "$descriptor" ] || continue
                     value=$(readlink "$descriptor") || { [ ! -L "$descriptor" ] && continue; exit 2; }
-                    case "$value" in "$1"|"$1"/*) exit 3 ;; esac
+                    within_target "${value% (deleted)}"
                 done
             done
             exit 0
@@ -149,14 +200,14 @@ final class SourceProtection
         [$status] = Native::process([
             'docker',
             'exec',
+            '-i',
             $container['Id'],
             'sh',
             '-c',
             $script,
             'parent-bind-consumer-check',
-            $target,
-            $reference
-        ], $main, capture: true, timeout: 60);
+            $target
+        ], $main, capture: true, input: implode("\n", $configuration)."\n", timeout: 60);
         $id = substr($container['Id'], 0, 12);
         Native::require($status !== 3, 'Parent-mounted container consumes candidate directory: '.$id);
         Native::require(
