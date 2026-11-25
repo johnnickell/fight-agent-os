@@ -120,6 +120,7 @@ final class SourceProtection
         foreach (['WorkingDir', 'Entrypoint', 'Cmd'] as $key) {
             foreach ((array) ($container['Config'][$key] ?? null) as $value) {
                 Native::require(is_string($value), 'Container configuration cannot be qualified');
+                Native::require(!str_contains($value, "\0"), 'Container configuration cannot be qualified');
                 $configuration[] = $value;
             }
         }
@@ -158,12 +159,39 @@ final class SourceProtection
                 if [ -d "$resolved" ]; then [ -x "$resolved" ] || exit 2; fi
                 within_target "$resolved"
             }
+            arguments_as_lines() {
+                # Preserve each NUL-delimited field, encoding multiline fields separately.
+                xargs -0 sh -c '
+                    newline="
+            "
+                    for argument do
+                        case "$argument" in
+                            *"$newline"*)
+                                bytes=$(printf "%s" "$argument" | od -An -v -to1) || exit 2
+                                printf "O" || exit 2
+                                for byte in $bytes; do printf "\\\\0%s" "$byte" || exit 2; done
+                                printf "\n" || exit 2
+                                ;;
+                            *) printf "L%s\n" "$argument" || exit 2 ;;
+                        esac
+                    done
+                ' arguments-as-lines
+            }
             backtick='`'
             check_text() {
-                # Check whole arguments as well as path tokens in shell text and options.
-                while IFS= read -r line; do
+                # Qualify a literal argument before interpreting any shell text within it.
+                while IFS= read -r record; do
+                    case "$record" in
+                        L*) line=${record#L} ;;
+                        O*) line=$(printf '%b_' "${record#O}") || exit 2; line=${line%_} ;;
+                        *) exit 2 ;;
+                    esac
                     case "$line" in
                         /*|./*|../*) check_path "$line" "$1" ;;
+                        */*)
+                            first=$1/${line%%/*}
+                            if [ -e "$first" ] || [ -L "$first" ]; then check_path "$line" "$1"; fi
+                            ;;
                     esac
                     tokens=$(printf '%s\n' "$line" | grep -oE "\"[^\"]*\"|'[^']*'|[^[:space:]\"'$backtick=:;|&<>()]+")
                     case $? in 0) ;; 1) continue ;; *) exit 2 ;; esac
@@ -180,7 +208,10 @@ final class SourceProtection
                 done
             }
             working=$(pwd -P) || exit 2
-            check_text "$working"
+            arguments=$(arguments_as_lines) || exit 2
+            check_text "$working" <<EOF
+            $arguments
+            EOF
             for process in /proc/[0-9]*; do
                 [ "$process" = "/proc/$$" ] && continue
                 [ -d "$process" ] || continue
@@ -188,7 +219,7 @@ final class SourceProtection
                 [ "$process/root" -ef "/proc/$$/root" ] && [ "$process/ns/mnt" -ef "/proc/$$/ns/mnt" ] || exit 2
                 working=$(readlink "$process/cwd") || exit 2
                 case "$working" in /*' (deleted)') exit 2 ;; /*) ;; *) exit 2 ;; esac
-                arguments=$(tr '\000' '\n' < "$process/cmdline") || exit 2
+                arguments=$(arguments_as_lines < "$process/cmdline") || exit 2
                 check_text "$working" <<EOF
             $arguments
             EOF
@@ -217,7 +248,7 @@ final class SourceProtection
             $script,
             'parent-bind-consumer-check',
             $target
-        ], $main, capture: true, input: implode("\n", $configuration)."\n", timeout: 60);
+        ], $main, capture: true, input: implode("\0", $configuration)."\0", timeout: 60);
         $id = substr($container['Id'], 0, 12);
         Native::require($status !== 3, 'Parent-mounted container consumes candidate directory: '.$id);
         Native::require(
