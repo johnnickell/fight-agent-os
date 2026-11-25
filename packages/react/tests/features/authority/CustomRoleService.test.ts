@@ -147,6 +147,60 @@ describe('CustomRoleService', () => {
     expect(load).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    ['grant', 'PUT'],
+    ['revoke', 'DELETE']
+  ] as const)(
+    'sends a confirmed %s without guessing current membership',
+    async (action, method) => {
+      const permissionId = crypto.randomUUID();
+      const { service, fetch, load } = setup(200, null);
+      const permission = {
+        permissionId,
+        name: 'VIEW_DASHBOARD',
+        tier: 'ADMIN_SAFE',
+        managed: true
+      } as const;
+      expect(await service.changePermission(displayed, permission, action, true)).toMatchObject({
+        ok: true
+      });
+      expect(fetch).toHaveBeenCalledOnce();
+      const [url, init] = fetch.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`/api/v1/roles/${roleId}/permissions/${permissionId}`);
+      expect(init.method).toBe(method);
+      expect(JSON.parse(init.body as string)).toEqual({ confirm: true });
+      expect(load).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('does not dispatch unconfirmed, managed-target or ineligible permission changes', async () => {
+    const { service, fetch, load } = setup(200, null);
+    const permission = {
+      permissionId: crypto.randomUUID(),
+      name: 'VIEW_DASHBOARD',
+      tier: 'ADMIN_SAFE',
+      managed: true
+    } as const;
+    const managed = { ...displayed, managed: true };
+    for (const attempt of [
+      service.rename(managed, 'ROLE_OTHER'),
+      service.remove(managed, true),
+      service.changePermission(managed, permission, 'grant', true),
+      service.changePermission(displayed, permission, 'revoke', false),
+      service.changePermission(
+        displayed,
+        { ...permission, tier: 'SUPER_ADMIN_ONLY' },
+        'grant',
+        true
+      ),
+      service.changePermission(displayed, { ...permission, tier: 'UNKNOWN' }, 'grant', true),
+      service.changePermission(displayed, { ...permission, managed: false }, 'grant', true)
+    ])
+      expect(await attempt).toMatchObject({ ok: false, error: { kind: 'protocol' } });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(load).not.toHaveBeenCalled();
+  });
+
   it('rejects malformed target paths before transport', async () => {
     const { service, fetch } = setup(200, null);
     expect(

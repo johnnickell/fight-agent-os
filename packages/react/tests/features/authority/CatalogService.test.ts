@@ -139,9 +139,17 @@ describe('CatalogService', () => {
     expect(await service.role(roleId)).toMatchObject({ ok: false, error: { kind: 'protocol' } });
   });
 
+  it('projects future tier labels to an inert unknown tier without preserving raw data', async () => {
+    const { service } = setup({ ...permission, tier: 'FUTURE_POLICY' });
+    expect(await service.permission(permissionId)).toMatchObject({
+      ok: true,
+      value: { tier: 'UNKNOWN' }
+    });
+  });
+
   it.each([
     { ...permission, tier: null },
-    { ...permission, tier: 'UNKNOWN' },
+    { ...permission, tier: 'UNKNOWN\n' },
     { ...permission, grants: [] },
     { ...permission, permission_id: crypto.randomUUID() },
     { ...permission, name: 'read_roles' },

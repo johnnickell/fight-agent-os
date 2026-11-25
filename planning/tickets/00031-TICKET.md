@@ -2,7 +2,7 @@
 id: TICKET-00031
 epic: EPIC-00004
 title: Read authority catalogs and administer custom roles
-status: ready-for-agent
+status: done
 ---
 
 # Read authority catalogs and administer custom roles
@@ -50,7 +50,7 @@ Read Views must not expose member lists or internal tokens, grant/hash/audit/per
 | [TASK-00125](../tasks/00125-TASK.md) | Manage custom role definitions without changing managed roles | done |
 | [TASK-00126](../tasks/00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done |
 | [TASK-00127](../tasks/00127-TASK.md) | Guard custom-role permission delegation at every entry path | done |
-| [TASK-00128](../tasks/00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent |
+| [TASK-00128](../tasks/00128-TASK.md) | Operate custom roles and the read-only permission catalog | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

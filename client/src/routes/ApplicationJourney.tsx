@@ -3,6 +3,7 @@ import {
   Suspense,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore
@@ -44,6 +45,12 @@ const OwnedSessionsPage = lazy(() =>
 );
 const UsersPage = lazy(() =>
   import('@fight/react/account').then((module) => ({ default: module.UsersPage }))
+);
+const RolesPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.RolesPage }))
+);
+const PermissionsPage = lazy(() =>
+  import('@fight/react/account').then((module) => ({ default: module.PermissionsPage }))
 );
 const InvitationPage = lazy(() =>
   import('@fight/react/account').then((module) => ({ default: module.InvitationPage }))
@@ -108,10 +115,23 @@ export function ApplicationView({
     session.coordinator.getSnapshot
   );
   const route = matchApplicationRoute(pathname);
+  // A visit outlives authority refreshes, but not navigation away from Roles.
+  const roleVisit = useMemo(
+    () => (route?.destination === 'roles' ? { pathname, session } : null),
+    [pathname, route?.destination, session]
+  );
+  const currentRoleVisit = useRef<typeof roleVisit>(null);
+  useLayoutEffect(() => {
+    currentRoleVisit.current = roleVisit;
+    return () => {
+      currentRoleVisit.current = null;
+    };
+  }, [roleVisit]);
   const [adminOutcome, setAdminOutcome] = useState<{
     pathname: string;
     actorId: string;
     notice: AdministrationNotice;
+    roleVisit?: NonNullable<typeof roleVisit>;
   }>();
   useEffect(() => {
     if (
@@ -162,9 +182,9 @@ export function ApplicationView({
       } else session.intent.capture(pathname + search + (atPath ? window.location.hash : ''));
     }
     if (window.location.pathname !== pathname) return;
-    // Users owns its query string, including while a reload is restoring the session.
+    // Table routes own their query strings, including while a reload is restoring the session.
     if (
-      route?.destination === 'users' &&
+      route?.normalizeSearch &&
       !['anonymous', 'logout', 'terminal'].includes(credential.status)
     ) {
       if (window.location.hash)
@@ -343,6 +363,34 @@ export function ApplicationView({
                 onOutcome={(notice) =>
                   setAdminOutcome({ pathname, actorId: authority.principal.userId, notice })
                 }
+              />
+            ) : route.destination === 'roles' ? (
+              <RolesPage
+                catalog={session.authorityCatalog}
+                mutations={session.customRoles}
+                cache={session.authority}
+                locationRestoration={tableRestoration}
+                notice={
+                  adminOutcome?.roleVisit === roleVisit &&
+                  adminOutcome.actorId === authority.principal.userId
+                    ? adminOutcome.notice
+                    : undefined
+                }
+                onOutcome={(notice) => {
+                  if (roleVisit && currentRoleVisit.current === roleVisit)
+                    setAdminOutcome({
+                      pathname,
+                      actorId: authority.principal.userId,
+                      notice,
+                      roleVisit
+                    });
+                }}
+              />
+            ) : route.destination === 'permissions' ? (
+              <PermissionsPage
+                catalog={session.authorityCatalog}
+                cache={session.authority}
+                locationRestoration={tableRestoration}
               />
             ) : route.destination === 'invite-user' ? (
               <InviteUserPage service={session.invitationIssuance} cache={session.authority} />
