@@ -130,7 +130,7 @@
 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | done | [TICKET-00031](../tickets/00031-TICKET.md) |
-| [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | done | — |
 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | done | — |

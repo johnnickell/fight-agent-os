@@ -33,7 +33,7 @@
 | [TICKET-00028](00028-TICKET.md) | Migrate and cut over Markdown Planning authority | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00029](00029-TICKET.md) | Deliver the registered Planning Dashboard | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00030](00030-TICKET.md) | Administer installation users and cross-user sessions | done | [EPIC-00004](../epics/00004-EPIC.md) |
-| [TICKET-00031](00031-TICKET.md) | Read authority catalogs and administer custom roles | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
+| [TICKET-00031](00031-TICKET.md) | Read authority catalogs and administer custom roles | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00032](00032-TICKET.md) | Start and recover TASK execution in an isolated local workspace | ready-for-agent | [EPIC-00007](../epics/00007-EPIC.md) |
 | [TICKET-00033](00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | done | [EPIC-00008](../epics/00008-EPIC.md) |
 | [TICKET-00034](00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
