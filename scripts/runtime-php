@@ -11,7 +11,9 @@ case "$(uname -s):$(uname -m)" in
 esac
 # The Git common directory survives linked checkout retirement. Keep the tool
 # cache out of application data and out of each checkout's removal targets.
-common=$(git rev-parse --path-format=absolute --git-common-dir)
+# Resolve the repository that supplies this bootstrap, not the invoking checkout.
+# Ambient Git overrides must not redirect the executable cache.
+common=$(env -i PATH="$PATH" git -C "$(dirname "$0")" rev-parse --path-format=absolute --git-common-dir)
 cache="$common/fight-runtime-php"
 if [ -L "$cache" ]; then echo 'Aliased PHP bootstrap cache refused.' >&2; exit 1; fi
 mkdir -p "$cache"

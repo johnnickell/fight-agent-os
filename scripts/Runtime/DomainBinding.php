@@ -243,13 +243,20 @@ final class DomainBinding
                 $host = $binding['host'] ?? '';
                 Native::require(self::uuid($id) && $host === self::host($zone, $binding['task'], $id)
                     && !isset($hosts[$host]) && !isset($ids[$id])
-                    && preg_match('~^(?:\.|[A-Za-z0-9_. -]+(?:/[A-Za-z0-9_. -]+)*)$~D', $key) === 1
-                    && !in_array('..', explode('/', $key), true), 'Invalid or conflicting Checkout registration');
+                    && self::administrativeKey((string) $key), 'Invalid or conflicting Checkout registration');
                 $hosts[$host] = $ids[$id] = true;
             }
         }
 
         return $data;
+    }
+
+    /**
+     * Checks the canonical relative POSIX key contract of the shared registry reader
+     */
+    private static function administrativeKey(string $key): bool
+    {
+        return $key === '.' || array_intersect(['', '.', '..'], explode('/', $key)) === [];
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fight\Runtime;
 
+use JsonException;
 use RuntimeException;
 
 /**
@@ -31,21 +32,29 @@ final class Teardown
                 '--remove-orphans'
             ], $main, $env)[0];
         }
-        $state = $installation->state();
-        $locator = $state.'/locator.json';
-        $cleanup = $state.'/down.json';
+        $state = $locator = null;
         $model = self::EMPTY_MODEL;
-        if ($installation->registration !== null) {
-            if (!Native::exists($locator)) {
-                $installation->writeLocator();
-            }
-            if (!Native::exists($cleanup)) {
-                Native::writePrivate($cleanup, $model);
-            }
-            Native::require(!is_link($cleanup) && is_file($cleanup), 'Runtime teardown model alias refused');
-            $model = self::validatedModel($cleanup, $project);
-        }
         $failures = [];
+        try {
+            $state = $installation->state();
+            if ($installation->registration !== null) {
+                $locator = $state.'/locator.json';
+                $cleanup = $state.'/down.json';
+                if (!Native::exists($locator)) {
+                    $installation->writeLocator();
+                }
+                if (!Native::exists($cleanup)) {
+                    Native::writePrivate($cleanup, self::EMPTY_MODEL);
+                }
+                Native::require(!is_link($cleanup) && is_file($cleanup), 'Runtime teardown model alias refused');
+                $model = self::validatedModel($cleanup, $project);
+            }
+        } catch (JsonException) {
+            $failures[] = 'Invalid runtime teardown model JSON; saved model retained';
+        } catch (RuntimeException $error) {
+            $failures[] = $error->getMessage();
+        }
+        // Refused metadata holds output and source retirement, not the native project sweep.
         $removed = ['containers' => 0, 'volumes' => 0, 'networks' => 0, 'image_tags' => 0, 'builders' => 0];
         $effect = static function (array $argv, ?string $input = null) use ($main, $env, &$failures): bool {
             try {
@@ -114,8 +123,8 @@ final class Teardown
         if ($tags !== []) {
             $failures[] = 'Remaining task image tags: '.implode(', ', $tags);
         }
-        $output = $state.'/output';
-        if ($failures === [] && Native::exists($output)) {
+        $output = $state === null ? null : $state.'/output';
+        if ($failures === [] && $output !== null && Native::exists($output)) {
             if (self::hasBindConsumer($main, $output)) {
                 $failures[] = 'Task output still has a native bind consumer; output retained';
             } else {
@@ -133,7 +142,7 @@ final class Teardown
             'complete' => $failures === [],
             'removed'  => $removed,
             'failures' => $failures,
-            'locator'  => $installation->registration !== null ? $locator : null
+            'locator'  => $locator
         ])."\n";
 
         return $failures === [] ? 0 : 1;
