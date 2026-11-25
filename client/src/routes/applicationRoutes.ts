@@ -1,4 +1,4 @@
-import { usersTablePolicy } from '@fight/react/account';
+import { authorityCatalogTablePolicy, usersTablePolicy } from '@fight/react/account';
 import { readTableQuery, writeTableQuery } from '@fight/react/controls';
 
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
@@ -18,6 +18,8 @@ export type ApplicationRoute = RegisteredRoute &
       | 'password-change'
       | 'sessions'
       | 'users'
+      | 'roles'
+      | 'permissions'
       | 'invitation'
       | 'invite-user'
       | 'invite-super-admin'
@@ -37,6 +39,11 @@ const publicAccess = [{ kind: 'public' }] as const;
 
 function normalizeUsersSearch(search: string, hostParams: URLSearchParams) {
   const { query, invalid } = readTableQuery(search, usersTablePolicy);
+  return { search: writeTableQuery(hostParams, query).toString(), invalid };
+}
+
+function normalizeCatalogSearch(search: string, hostParams: URLSearchParams) {
+  const { query, invalid } = readTableQuery(search, authorityCatalogTablePolicy);
   return { search: writeTableQuery(hostParams, query).toString(), invalid };
 }
 
@@ -136,6 +143,16 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     intendedRoute: (search) => normalizeUsersSearch(search, new URLSearchParams()),
     availability: 'Read the installation-wide user directory and current role assignments.'
   },
+  ...(['roles', 'permissions'] as const).map((destination): ApplicationRoute => ({
+    pathname: `/admin/${destination}`,
+    title: destination === 'roles' ? 'Roles' : 'Permissions',
+    access: 'protected',
+    requirements: permission(destination === 'roles' ? 'READ_ROLES' : 'READ_PERMISSIONS'),
+    destination,
+    group: 'Administration',
+    normalizeSearch: (search) => normalizeCatalogSearch(search, new URLSearchParams(search)),
+    intendedRoute: (search) => normalizeCatalogSearch(search, new URLSearchParams())
+  })),
   {
     pathname: '/admin/invite',
     title: 'Invite User',

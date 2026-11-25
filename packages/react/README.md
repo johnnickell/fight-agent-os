@@ -39,6 +39,16 @@ An intent owner can clear a host's pending destination at session retirement. Su
 
 The server still authorizes requests and supplies the current principal. The library expects the Fight browser HTTP v1 transport at same-origin `/api/v1`, including public validation schemas, CSRF proofs, cookie-backed continuity and protected JSON. It neither installs endpoints nor grants any role or permission. The session factory uses the qualified browser transport, not a consumer-provided URL, headers, or fetch override. It owns memory-only credentials, a single authority cache, and terminal retirement. Do not persist credentials or the principal projection.
 
+## Role and permission catalogs
+
+Mount `RolesPage` with `cache={session.authority}`, `catalog={session.authorityCatalog}` and
+`mutations={session.customRoles}`. Mount `PermissionsPage` with the same cache and catalog only.
+Register separate `READ_ROLES` and `READ_PERMISSIONS` requirements in the host router and navigation.
+Use `authorityCatalogTablePolicy` with the shared URL helpers to preserve safe table options through host
+navigation. The pages read sorted server pages and do not support free-text search or filters. The host can
+retain role mutation feedback across an authority refresh with `notice` and `onOutcome`; keep it in memory,
+limited to the current authentication context and route.
+
 ## Brand and theme
 
 Supply plain `name` text and optionally `{ src, alt }` for a same-origin logo. Use a root-relative static SVG, PNG, WebP, or AVIF path with simple path segments. Remote, protocol-relative, encoded, query, and fragment locations are unsupported. Supply meaningful alt text. The host should serve reviewed logo bytes under its normal content security policy.
