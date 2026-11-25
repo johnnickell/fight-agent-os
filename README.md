@@ -49,7 +49,9 @@ chmod 600 .env
 ```
 
 The runtime wrappers automatically use your local user and group IDs. Set `FIGHT_AGENT_OS_USER`
-in the shell or `.env` only when the installation needs a different owner.
+in the shell or `.env` only when the installation needs a different owner. The
+[host PHP bootstrap](docs/engineering/RESOURCE_LIFECYCLE.md#host-php-bootstrap) downloads a pinned CLI
+on first use; these wrappers do not require system PHP, Python or a running application container.
 
 Before startup, configure independent secrets and the access-token keyring in `.env`; example values
 are not credentials. Follow [access-token configuration](docs/engineering/ACCESS_TOKENS.md),
@@ -190,9 +192,9 @@ for explicit startup and disposable-runtime cleanup.
 
 ## Comparison configuration
 
-[Comparison scope and host settings](docs/engineering/COMPARISON_SCOPE.md) defines the shared starter list,
-complete local replacement and explicit-selection syntax. The host-only `./bin/env PROJECT_BASE`
-returns one supported setting without Docker; configure it explicitly as described there.
+See [Comparison scope and host settings](docs/engineering/COMPARISON_SCOPE.md) for the starter list,
+local replacement, and explicit selection. `./bin/env PROJECT_BASE` reads the one supported setting
+using the pinned PHP CLI without Docker.
 Use the local [compare skill](.pi/skills/compare/SKILL.md) with `/skill:compare` or
 `/skill:compare --projects project-slim,project-yii` for bounded peer analysis and an offline HTML report.
 Request optional PDF export or Desktop copies separately. Reports and project-owned proposals are not approved

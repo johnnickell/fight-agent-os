@@ -56,6 +56,22 @@ nor changes DNS, trust or shared services. The existing supplier/front door must
 `.localhost` name; startup still requires verified HTTPS root/CSRF readiness. Prepare browser smoke normally
 with the existing public CA. Teardown uses the same scoped `bin/down --worktree` command.
 
+## Host PHP bootstrap
+
+`bin/runtime`, `bin/up`, `bin/down` and `bin/env PROJECT_BASE` use the pinned host PHP CLI. They do
+not need system PHP, Python, Composer dependencies or a running application container. `bin/env` reads
+only `PROJECT_BASE` from the invoking checkout or its environment; it does not start Docker. See the
+[host runtime diagram and source trace](resource-lifecycle/README.md) for the settings and lifecycle paths.
+The first invocation on macOS or Linux (arm64 or x86-64) uses Git, curl, tar and a SHA-256 tool
+(`sha256sum` or `shasum`) to download and verify the pinned StaticPHP CLI archive. It caches the executable
+under the repository's Git common directory (`fight-runtime-php/`), shared by its registered checkouts.
+Later invocations use the cached executable without downloading it. Docker, Git, Worktrunk and other native
+tools remain prerequisites of the operations that call them. The CLI runs on the host so it sees native
+Git registration, filesystem ownership, ACLs and active source consumers.
+
+The separate `bin/https`, `bin/local-domain`, `bin/local-dns`, `bin/ingress` and `bin/qa` tools still use
+Python. Their supplier and QA ports own retirement of their remaining Python imports.
+
 ## Configuration and readiness
 
 Runtime wrappers default the Compose service owner to the invoking user's UID:GID. A nonempty
@@ -150,13 +166,25 @@ The application command calls Compose
 image tags, plus a dedicated reserved project builder/backing volume if created. Native removal refuses foreign
 volume/network consumers. It never removes a shared immutable image ID to force task-tag cleanup. Real command
 failures and remaining resources produce nonzero/incomplete results; inventory failure is not absence.
+If the saved teardown model is invalid or aliased, task down does not pass it to Compose. It records the
+hold and uses an empty model and native project ownership to continue Docker cleanup. Output, configuration
+and source stay in place while the hold remains. After verifying and restoring trusted metadata, repeat the
+same exact task down.
 
 Ordinary builds use Docker's shared builder/cache; downloaded base images and shared build caches are NOT
 task-exclusive. Separate operator maintenance can inspect `docker system df -v` and `docker buildx du`, then use
 an explicitly selected builder's `docker buildx prune --builder NAME` after reviewing shared consumers and cache
 policy. This is never invoked by task down/Land. Do not run machine-wide prune/reset or prune foreign projects.
 
-Task down removes reserved disposable runtime output. Keep active role evidence only while consumed, then retire
+After the Docker sweep, task down removes reserved disposable output only when no remaining bind consumes it.
+A bind at or below the removal path holds deletion. For a parent bind, the runtime checks the container's
+configuration and live process references to the directory or its descendants. It resolves observable paths
+inside the container, including relative paths from the relevant working directory and paths through symlinks.
+A reference that walks into the removal path and back out via `..` still uses that directory.
+Observed use or unavailable visibility holds deletion; parent visibility and references to an unrelated sibling
+that only shares the name prefix do not. This check does not execute shell text to infer paths built at runtime.
+The same check protects configuration retirement. Keep active
+role evidence only while consumed, then retire
 its exact `.runs/compose/<project>/` evidence/cache after outcomes reach the existing TASK/PR. The small
 `locator.json` and secret-free `down.json` survive outside removable source while source remains registered or
 removal is incomplete. They locate Compose configuration, not resource inventories or admission receipts.
@@ -169,9 +197,9 @@ an active lifecycle or compatibility system.
 
 `.config/wt.toml` supplies a pre-remove hook that invokes this same command from the canonical main checkout,
 before source/config disappears. Routine owned cleanup includes unattended execution of this exact reviewed
-project hook; do not manufacture a human-approval hold. Land and qualification fixtures share
-`scripts/resource_lifecycle/worktrunk.py`'s guarded `remove` callable. It invokes public `bin/down` FIRST, then
-qualifies source/ref removal. Immediately before native removal it inventories complete effective pre/post-remove
+project hook; do not manufacture a human-approval hold. Land uses [`WorktreeRemoval::remove`](../../scripts/Runtime/WorktreeRemoval.php).
+It runs the same teardown used by `bin/down` before qualifying source/ref removal. The remaining Python QA
+and legacy lifecycle qualification tools still use their existing `resource_lifecycle.worktrunk.remove` callable. Immediately before native removal it inventories complete effective pre/post-remove
 hooks in canonical AND target contexts, including accumulated system/user/project sources. Only absent hooks or
 project `pre-remove.runtime` with the exact template
 `{{ primary_worktree_path }}/bin/down --worktree {{ worktree_path }}` are admitted. User hooks (even identical),
@@ -249,8 +277,8 @@ existing coordinator ledger/handoff carries remaining effects and native locator
 ## Runtime-free qualification fixtures
 
 A generated local Git fixture with no application runtime must not acquire a fake `bin/down` just to retire
-its linked checkout. Its owning caller may explicitly use the SAME guarded
-`scripts/resource_lifecycle/worktrunk.py` `remove` callable with `runtime_free_fixture=True`, its canonical
+its linked checkout. Its owning caller may explicitly use the same guarded remover with
+`runtimeFreeFixture: true` (Python callers use `runtime_free_fixture=True`), its canonical
 fixture primary, exact linked path and expected OID. This is not delivery or QA-purpose removal and is never
 selected automatically because a command is missing. Caller provenance/ownership remains required.
 
@@ -279,9 +307,9 @@ protection remain unchanged. Original task cleanup does not wait for future QA; 
 
 ## Direct qualification
 
-`python3 -B scripts/check_resource_lifecycle.py --evidence .runs/tasks/TASK-00543/runs/NEW_RUN` exercises real
-registered same-task fixture worktrees/branches, Compose, PostgreSQL, isolated output, repeated teardown and the
-SAME guarded native Worktrunk removal used by Land. Fixture tips start at integrated `develop` so native branch
-removal needs no force. It requires the existing declared main web image tag and preserves main/foreign services. It does NOT
-supply full-stack HTTPS/auth/route acceptance before TASK-00553. Record all limits, actual postconditions and
-cleanup failures. Validate infrastructure directly, not with product tests of wrappers, Docker or quality tools.
+Exercise the PHP lifecycle through `bin/runtime`, `bin/up` and `bin/down` on the exact disposable worktree.
+Verify its project, resources and locator before and after teardown; check that held source and foreign consumers
+stay in place. Record exact commands, postconditions and any incomplete effects. The older
+`python3 -B scripts/check_resource_lifecycle.py --evidence .runs/tasks/TASK-00543/runs/NEW_RUN` also covers legacy
+Python fixture preparation/removal still used by human QA; it is not proof of PHP `finish` or full-stack HTTPS.
+Validate infrastructure directly, not with product tests of wrappers, Docker or quality tools.
