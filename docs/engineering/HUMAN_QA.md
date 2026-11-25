@@ -57,8 +57,9 @@ retain held leaves without retaining disposable runtime/source merely for the pr
 ## Synthetic scenario and readiness
 
 Supported revisions must retain the operator checkout's qualified host-executed wrappers, runtime preparation,
-Compose and Docker templates plus documented bootstrap/catcher setup and lockfiles. Changed host setup or
-creation hooks are refused before allocation. The fixed setup commands also require unchanged Python import
+Compose and Docker templates plus documented bootstrap/catcher setup and lockfiles. This includes the
+pinned PHP bootstrap and all files under `scripts/Runtime/`. Changed host setup or creation hooks are refused
+before allocation. The fixed setup commands also require unchanged Python import
 namespaces at `scripts/` and `scripts/resource_lifecycle/`: new package initializers, module/package shadows,
 bytecode and extension-module names are refused before they can run on the host. Other existing scripts are
 not implicitly authorized for host execution. Effective Worktrunk startup hooks must be absent in both contexts;

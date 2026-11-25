@@ -82,7 +82,7 @@ not later browser permissions, descendant access, or Runner isolation.
 
 | Step | Source |
 |---|---|
-| 1. Preview and apply | [`operate`](../../scripts/resource_lifecycle/approved_roots.py) validates an explicit approval and saves settings |
-| 2–3. Validate and apply | [`admit_reconfiguration`](../../scripts/resource_lifecycle/approved_roots.py) rechecks identity; [`up`](../../scripts/resource_lifecycle/runtime.py) streams the admitted override |
-| 4. Check Docker binds | [`publish_observation`](../../scripts/resource_lifecycle/approved_roots.py) publishes the snapshot only after matching the reported mounts |
+| 1. Preview and apply | [`ApprovedRoots::operate`](../../scripts/Runtime/ApprovedRoots.php) validates an explicit approval and saves settings |
+| 2–3. Validate and apply | [`ApprovedRoots::reconfigure`](../../scripts/Runtime/ApprovedRoots.php) rechecks identity; [`Startup::up`](../../scripts/Runtime/Startup.php) streams the admitted override |
+| 4. Check Docker binds | [`ApprovedRoots::reconfigure`](../../scripts/Runtime/ApprovedRoots.php) publishes the snapshot only after matching the reported mounts |
 | 5. Observe access | [`ApprovedRootAccess::observe`](../../src/Adapter/Installation/ApprovedRootAccess.php) reports safe facts from the snapshot and runtime mount metadata |

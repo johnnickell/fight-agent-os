@@ -94,8 +94,8 @@ an OS security boundary, and its documentation mount is writable.
 
 ## Render locally
 
-Prerequisites: host POSIX shell/Python 3 for the repository runtime wrapper, Docker with Compose, and the
-repository's normal [storage admission](RESOURCE_LIFECYCLE.md#configuration-and-readiness). No host Diagrams,
+Prerequisites: the [host PHP bootstrap](RESOURCE_LIFECYCLE.md#host-php-bootstrap), Docker with Compose, and the
+repository's normal [storage admission](RESOURCE_LIFECYCLE.md#configuration-and-readiness). No host Python, Diagrams,
 Graphviz, pip installation, application dependencies, database, HTTPS setup or running application is required.
 From the selected checkout:
 

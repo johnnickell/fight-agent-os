@@ -48,7 +48,9 @@ chmod 600 .env
 ```
 
 The runtime wrappers automatically use your local user and group IDs. Set `FIGHT_AGENT_OS_USER`
-in the shell or `.env` only when the installation needs a different owner.
+in the shell or `.env` only when the installation needs a different owner. The
+[host PHP bootstrap](docs/engineering/RESOURCE_LIFECYCLE.md#host-php-bootstrap) downloads a pinned CLI
+on first use; these wrappers do not require system PHP, Python or a running application container.
 
 Before startup, configure independent secrets and the access-token keyring in `.env`; example values
 are not credentials. Follow [access-token configuration](docs/engineering/ACCESS_TOKENS.md),

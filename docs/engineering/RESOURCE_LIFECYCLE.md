@@ -56,6 +56,20 @@ nor changes DNS, trust or shared services. The existing supplier/front door must
 `.localhost` name; startup still requires verified HTTPS root/CSRF readiness. Prepare browser smoke normally
 with the existing public CA. Teardown uses the same scoped `bin/down --worktree` command.
 
+## Host PHP bootstrap
+
+`bin/runtime`, `bin/up` and `bin/down` run the host-side PHP lifecycle in `scripts/Runtime/`.
+They do not need system PHP, Python, Composer dependencies or a running application container.
+The first invocation on macOS or Linux (arm64 or x86-64) uses Git, curl, tar and a SHA-256 tool
+(`sha256sum` or `shasum`) to download and verify the pinned StaticPHP CLI archive. It caches the executable
+under the repository's Git common directory (`fight-runtime-php/`), shared by its registered checkouts.
+Later invocations use the cached executable without downloading it. Docker, Git, Worktrunk and other native
+tools remain prerequisites of the operations that call them. The CLI runs on the host so it sees native
+Git registration, filesystem ownership, ACLs and active source consumers.
+
+The separate `bin/https`, `bin/local-domain`, `bin/local-dns`, `bin/ingress` and `bin/qa` tools still use
+Python. Their supplier and QA ports own retirement of their remaining Python imports.
+
 ## Configuration and readiness
 
 Runtime wrappers default the Compose service owner to the invoking user's UID:GID. A nonempty
@@ -169,9 +183,9 @@ an active lifecycle or compatibility system.
 
 `.config/wt.toml` supplies a pre-remove hook that invokes this same command from the canonical main checkout,
 before source/config disappears. Routine owned cleanup includes unattended execution of this exact reviewed
-project hook; do not manufacture a human-approval hold. Land and qualification fixtures share
-`scripts/resource_lifecycle/worktrunk.py`'s guarded `remove` callable. It invokes public `bin/down` FIRST, then
-qualifies source/ref removal. Immediately before native removal it inventories complete effective pre/post-remove
+project hook; do not manufacture a human-approval hold. Land uses [`WorktreeRemoval::remove`](../../scripts/Runtime/WorktreeRemoval.php).
+It runs the same teardown used by `bin/down` before qualifying source/ref removal. The remaining Python QA
+and legacy lifecycle qualification tools still use their existing `resource_lifecycle.worktrunk.remove` callable. Immediately before native removal it inventories complete effective pre/post-remove
 hooks in canonical AND target contexts, including accumulated system/user/project sources. Only absent hooks or
 project `pre-remove.runtime` with the exact template
 `{{ primary_worktree_path }}/bin/down --worktree {{ worktree_path }}` are admitted. User hooks (even identical),
@@ -249,8 +263,8 @@ existing coordinator ledger/handoff carries remaining effects and native locator
 ## Runtime-free qualification fixtures
 
 A generated local Git fixture with no application runtime must not acquire a fake `bin/down` just to retire
-its linked checkout. Its owning caller may explicitly use the SAME guarded
-`scripts/resource_lifecycle/worktrunk.py` `remove` callable with `runtime_free_fixture=True`, its canonical
+its linked checkout. Its owning caller may explicitly use the same guarded remover with
+`runtimeFreeFixture: true` (Python callers use `runtime_free_fixture=True`), its canonical
 fixture primary, exact linked path and expected OID. This is not delivery or QA-purpose removal and is never
 selected automatically because a command is missing. Caller provenance/ownership remains required.
 
@@ -279,9 +293,9 @@ protection remain unchanged. Original task cleanup does not wait for future QA; 
 
 ## Direct qualification
 
-`python3 -B scripts/check_resource_lifecycle.py --evidence .runs/tasks/TASK-00543/runs/NEW_RUN` exercises real
-registered same-task fixture worktrees/branches, Compose, PostgreSQL, isolated output, repeated teardown and the
-SAME guarded native Worktrunk removal used by Land. Fixture tips start at integrated `develop` so native branch
-removal needs no force. It requires the existing declared main web image tag and preserves main/foreign services. It does NOT
-supply full-stack HTTPS/auth/route acceptance before TASK-00553. Record all limits, actual postconditions and
-cleanup failures. Validate infrastructure directly, not with product tests of wrappers, Docker or quality tools.
+Exercise the PHP lifecycle through `bin/runtime`, `bin/up` and `bin/down` on the exact disposable worktree.
+Verify its project, resources and locator before and after teardown; check that held source and foreign consumers
+stay in place. Record exact commands, postconditions and any incomplete effects. The older
+`python3 -B scripts/check_resource_lifecycle.py --evidence .runs/tasks/TASK-00543/runs/NEW_RUN` also covers legacy
+Python fixture preparation/removal still used by human QA; it is not proof of PHP `finish` or full-stack HTTPS.
+Validate infrastructure directly, not with product tests of wrappers, Docker or quality tools.

@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+# Select the pinned native PHP CLI without relying on application containers.
+set -eu
+umask 077
+case "$(uname -s):$(uname -m)" in
+    Darwin:arm64) platform=macos-aarch64; digest=cba9bd8b38b51ef2c7cebf02af689e4481bbd07f65edc0b63d3a43b04e0c9db7 ;;
+    Darwin:x86_64) platform=macos-x86_64; digest=05751000c6643f82e8377ed19d55bc159f84bbed46ace1fcc6f62be9866c787c ;;
+    Linux:aarch64) platform=linux-aarch64; digest=af995ef6b3187b39932a00714dfb97e44bfa40a9243c4c29f61f19d583950753 ;;
+    Linux:x86_64) platform=linux-x86_64; digest=517a18e0f0874de35669fe134eb3c52508e128a6d1da5bf890760cb800ada410 ;;
+    *) echo 'Runtime bootstrap supports macOS and Linux on arm64 and x86_64.' >&2; exit 1 ;;
+esac
+# The Git common directory survives linked checkout retirement. Keep the tool
+# cache out of application data and out of each checkout's removal targets.
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+cache="$common/fight-runtime-php"
+if [ -L "$cache" ]; then echo 'Aliased PHP bootstrap cache refused.' >&2; exit 1; fi
+mkdir -p "$cache"
+if [ ! -O "$cache" ] || [ "$(cd "$cache" && pwd -P)" != "$cache" ]; then
+    echo 'PHP bootstrap requires an owned canonical cache.' >&2; exit 1
+fi
+binary="$cache/$digest"
+if [ -L "$binary" ] || { [ -e "$binary" ] && { [ ! -f "$binary" ] || [ ! -O "$binary" ]; }; }; then
+    echo 'Unqualified PHP bootstrap executable refused.' >&2; exit 1
+fi
+if [ ! -x "$binary" ]; then
+    temporary=$(mktemp -d "$cache/install.XXXXXXXX")
+    trap 'rm -rf -- "$temporary"' EXIT
+    trap 'exit 1' HUP INT TERM
+    artifact="php-8.5.8-cli-$platform.tar.gz"
+    curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+        --connect-timeout 10 --max-time 120 --output "$temporary/archive" \
+        "https://dl.static-php.dev/static-php-cli/common/$artifact"
+    if command -v sha256sum >/dev/null 2>&1; then
+        observed=$(sha256sum < "$temporary/archive")
+    else
+        observed=$(shasum -a 256 < "$temporary/archive")
+    fi
+    if [ "${observed%% *}" != "$digest" ]; then
+        echo 'Pinned PHP bootstrap archive did not match its SHA-256 checksum.' >&2; exit 1
+    fi
+    tar -xOzf "$temporary/archive" php > "$temporary/php"
+    chmod 700 "$temporary/php"
+    "$temporary/php" -n -r 'exit(function_exists("posix_getuid") && function_exists("proc_open") && class_exists(DOMDocument::class) ? 0 : 1);'
+    mv -f -- "$temporary/php" "$binary"
+    rm -rf -- "$temporary"
+    trap - EXIT HUP INT TERM
+fi
+if [ -L "$binary" ] || [ ! -f "$binary" ] || [ ! -O "$binary" ] || [ ! -x "$binary" ]; then
+    echo 'Unqualified PHP bootstrap executable refused.' >&2; exit 1
+fi
+exec "$binary" -n "$@"
