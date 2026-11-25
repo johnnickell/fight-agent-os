@@ -97,9 +97,34 @@ function scopeOwners(string $path): array
 }
 
 /**
- * Reads visible staged, unstaged, and non-ignored untracked changes for local selection
+ * Reads committed paths and whether each may no longer be a file
  *
- * @return list<string>|null
+ * @return array<array-key, boolean>|null
+ */
+function scopeCommittedPaths(string $base, string $head): ?array
+{
+    // Compare deletes and adds independently so both sides of any rename are classified.
+    $records = scopeRecords(scopeGit(['diff', '--name-status', '-z', '--no-renames', '--no-relative',
+        '--no-ext-diff', '--no-textconv', '--ignore-submodules=none', $base, $head, '--']));
+    if ($records === null || count($records) % 2 !== 0) {
+        return null;
+    }
+    $paths = [];
+    foreach (array_chunk($records, 2) as $pair) {
+        [$status, $path] = $pair;
+        if ($path === '' || !in_array($status, ['A', 'D', 'M', 'T'], true)) {
+            return null;
+        }
+        $paths[$path] = $status === 'D' || $status === 'T';
+    }
+
+    return $paths;
+}
+
+/**
+ * Reads visible staged, unstaged, and non-ignored untracked paths and whether each may no longer be a file
+ *
+ * @return array<array-key, boolean>|null
  */
 function scopeWorkingPaths(): ?array
 {
@@ -128,7 +153,8 @@ function scopeWorkingPaths(): ?array
         ) {
             return null;
         }
-        $paths[] = substr($entry, 3);
+        $path = substr($entry, 3);
+        $paths[$path] = ($paths[$path] ?? false) || strpbrk($code, 'DT') !== false;
     }
 
     return $paths;
@@ -181,25 +207,31 @@ function scopeReport(string $baseRef, ?string $headRef): array
             $fallback = 'Git could not establish one comparison base.';
         } else {
             $comparisonBase = $mergeBases[0];
-            // Compare deletes and adds independently so both sides of any rename are classified.
-            $committed = scopeRecords(scopeGit(['diff', '--name-only', '-z', '--no-renames', '--no-relative',
-                '--no-ext-diff', '--no-textconv', '--ignore-submodules=none', $comparisonBase, $head, '--']));
+            $committed = scopeCommittedPaths($comparisonBase, $head);
             $working = $headRef === null ? scopeWorkingPaths() : [];
             if ($committed === null || $working === null) {
                 $fallback = 'Git could not establish the complete changed-path list.';
             } else {
-                $paths = array_unique([...$committed, ...$working]);
-                sort($paths, SORT_STRING);
+                $paths = $committed;
+                foreach ($working as $path => $mayDisappear) {
+                    $paths[$path] = ($paths[$path] ?? false) || $mayDisappear;
+                }
+                ksort($paths, SORT_STRING);
             }
         }
     }
 
     $matched = [];
-    foreach ($paths as $path) {
+    foreach ($paths as $pathKey => $mayDisappear) {
+        $path = (string) $pathKey;
         $owners = scopeOwners($path);
         if ($owners === []) {
             $fallback = 'No verification owner is known for '.$path.'.';
             break;
+        }
+        // Planning validates links to Markdown files even outside the planning directory.
+        if ($mayDisappear && str_ends_with($path, '.md') && !in_array('planning', $owners, true)) {
+            $owners[] = 'planning';
         }
         foreach ($owners as $owner) {
             $matched[$owner][] = $path;

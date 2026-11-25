@@ -17,6 +17,8 @@ The JSON names the requested `base_ref`, resolved `base_tip` and `candidate` com
 `comparison_base` (their unique Git merge base), and the `scope` (`working_tree` or `commit`). Without
 `--head`, the selector takes the union of the committed path changes and the local staged, unstaged,
 and non-ignored untracked paths. With `--head`, it ignores checkout changes. Both paths of a rename count.
+A deleted `.md` path (including the old path of a rename) or a `.md` path whose file type changes also
+selects Planning: a planning record may link to that file. Content-only edits keep their usual owners.
 
 Each key in `passes` (`php`, `frontend`, `pi_harness`, `planning`) has a `selected` boolean and a `reason`.
 `passes.frontend.browser_smoke` is one separate decision in the same format, even if both sides changed.
