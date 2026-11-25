@@ -34,7 +34,7 @@ Identify surviving callers and verify each supported replacement through its own
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00622](../tasks/00622-TASK.md) | Move local runtime and resource lifecycle to PHP | ready-for-agent |
+| [TASK-00622](../tasks/00622-TASK.md) | Move local runtime and resource lifecycle to PHP | done |
 | [TASK-00623](../tasks/00623-TASK.md) | Move local domains DNS ingress and HTTPS to PHP | ready-for-agent |
 | [TASK-00624](../tasks/00624-TASK.md) | Move human QA setup and cleanup to PHP | ready-for-agent |
 | [TASK-00625](../tasks/00625-TASK.md) | Move Land target binding to PHP | ready-for-agent |
