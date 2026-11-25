@@ -58,8 +58,10 @@ with the existing public CA. Teardown uses the same scoped `bin/down --worktree`
 
 ## Host PHP bootstrap
 
-`bin/runtime`, `bin/up` and `bin/down` run the host-side PHP lifecycle in `scripts/Runtime/`.
-They do not need system PHP, Python, Composer dependencies or a running application container.
+`bin/runtime`, `bin/up`, `bin/down` and `bin/env PROJECT_BASE` use the pinned host PHP CLI. They do
+not need system PHP, Python, Composer dependencies or a running application container. `bin/env` reads
+only `PROJECT_BASE` from the invoking checkout or its environment; it does not start Docker. See the
+[host runtime diagram and source trace](resource-lifecycle/README.md) for the settings and lifecycle paths.
 The first invocation on macOS or Linux (arm64 or x86-64) uses Git, curl, tar and a SHA-256 tool
 (`sha256sum` or `shasum`) to download and verify the pinned StaticPHP CLI archive. It caches the executable
 under the repository's Git common directory (`fight-runtime-php/`), shared by its registered checkouts.
@@ -164,6 +166,10 @@ The application command calls Compose
 image tags, plus a dedicated reserved project builder/backing volume if created. Native removal refuses foreign
 volume/network consumers. It never removes a shared immutable image ID to force task-tag cleanup. Real command
 failures and remaining resources produce nonzero/incomplete results; inventory failure is not absence.
+If the saved teardown model is invalid or aliased, task down does not pass it to Compose. It records the
+hold and uses an empty model and native project ownership to continue Docker cleanup. Output, configuration
+and source stay in place while the hold remains. After verifying and restoring trusted metadata, repeat the
+same exact task down.
 
 Ordinary builds use Docker's shared builder/cache; downloaded base images and shared build caches are NOT
 task-exclusive. Separate operator maintenance can inspect `docker system df -v` and `docker buildx du`, then use

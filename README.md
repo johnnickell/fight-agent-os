@@ -191,9 +191,9 @@ for explicit startup and disposable-runtime cleanup.
 
 ## Comparison configuration
 
-[Comparison scope and host settings](docs/engineering/COMPARISON_SCOPE.md) defines the shared starter list,
-complete local replacement and explicit-selection syntax. The host-only `./bin/env PROJECT_BASE`
-returns one supported setting without Docker; configure it explicitly as described there.
+See [Comparison scope and host settings](docs/engineering/COMPARISON_SCOPE.md) for the starter list,
+local replacement, and explicit selection. `./bin/env PROJECT_BASE` reads the one supported setting
+using the pinned PHP CLI without Docker.
 Use the local [compare skill](.pi/skills/compare/SKILL.md) with `/skill:compare` or
 `/skill:compare --projects project-slim,project-yii` for bounded peer analysis and an offline HTML report.
 Request optional PDF export or Desktop copies separately. Reports and project-owned proposals are not approved
