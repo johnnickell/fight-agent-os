@@ -23,6 +23,8 @@ Server authorization remains authoritative; an SPA route response is not an acce
 | `/account`, `/account/password` | Authenticated; Account & Security and Change Password |
 | `/account/sessions` | Authenticated + `READ_OWN_SESSIONS` |
 | `/admin/users` | Authenticated + `READ_USERS` |
+| `/admin/roles` | Authenticated + `READ_ROLES`; changes require their own permissions |
+| `/admin/permissions` | Authenticated + `READ_PERMISSIONS`; read-only |
 | `/admin/invite` | Authenticated + `INVITE_USERS` |
 | `/admin/invite-super-admin` | Authenticated + both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` |
 | `/admin/invitations`, `/admin/invitations/{user_id}` | Authenticated + `READ_USERS`; page changes additionally require `MANAGE_USER_INVITATIONS` |

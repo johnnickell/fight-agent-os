@@ -368,6 +368,8 @@ describe('authoritative frame transitions', () => {
         expect(
           screen.getByText('Installation-wide identities and current role assignments.')
         ).toBeVisible();
+      else if (route.destination === 'roles' || route.destination === 'permissions')
+        expect(await screen.findByText('Access denied')).toBeVisible();
       else expect(screen.getByText(route.availability ?? '')).toBeVisible();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));
@@ -379,6 +381,8 @@ describe('authoritative frame transitions', () => {
     ['/swagger', 'READ_SWAGGER'],
     ['/account/sessions', 'READ_OWN_SESSIONS'],
     ['/admin/users', 'READ_USERS'],
+    ['/admin/roles', 'READ_ROLES'],
+    ['/admin/permissions', 'READ_PERMISSIONS'],
     ['/admin/invite', 'INVITE_USERS'],
     ['/admin/invite-super-admin', 'ASSIGN_SUPER_ADMIN'],
     ['/admin/invitations', 'READ_USERS']
@@ -388,6 +392,8 @@ describe('authoritative frame transitions', () => {
         'VIEW_DASHBOARD',
         'READ_OWN_SESSIONS',
         'READ_USERS',
+        'READ_ROLES',
+        'READ_PERMISSIONS',
         'INVITE_USERS',
         'ASSIGN_SUPER_ADMIN',
         'MANAGE_USER_INVITATIONS'

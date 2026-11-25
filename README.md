@@ -19,8 +19,9 @@ React/TypeScript.
   Individual features have different verification and integration boundaries; this is not a claim
   of complete application readiness. The integrated local security/accessibility baseline and five
   critical browser-platform smoke scenarios have independent acceptance. The shared Users page supports
-  permission-controlled lifecycle, role assignment and other-user session administration. Custom role
-  administration in the browser and production qualification remain separate.
+  permission-controlled lifecycle, role assignment and other-user session administration. The Roles and
+  Permissions pages use the same authority model for custom-role changes and read-only permission browsing.
+  Production qualification remains separate.
 - **Planning:** Markdown records are authoritative, organized as EPIC → TICKET → TASK. Workspace
   bootstrap and Project registration APIs are implemented; browser Planning and database cutover
   remain planned.
