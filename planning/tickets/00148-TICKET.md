@@ -2,7 +2,7 @@
 id: TICKET-00148
 epic: EPIC-00028
 title: Verify the Pi Harness independently
-status: ready-for-agent
+status: done
 ---
 
 # Verify the Pi Harness independently
@@ -36,7 +36,7 @@ Exercise the local pass and native GitHub execution without the application stac
 |---|---|---|
 | [TASK-00615](../tasks/00615-TASK.md) | Run Pi Harness verification as a standalone pass | done |
 | [TASK-00616](../tasks/00616-TASK.md) | Port the Harness session-file birth helper to PHP | done |
-| [TASK-00617](../tasks/00617-TASK.md) | Port the Build stage launcher and monitor to PHP | ready-for-agent |
+| [TASK-00617](../tasks/00617-TASK.md) | Port the Build stage launcher and monitor to PHP | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

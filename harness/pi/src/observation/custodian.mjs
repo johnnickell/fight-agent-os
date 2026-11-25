@@ -11,7 +11,7 @@ import { clean } from '../workspace/presentation.mjs';
 import { stageRole } from '../stage-roles.mjs';
 
 const script = fileURLToPath(import.meta.url);
-const monitor = fileURLToPath(new URL('./run-stage.py', import.meta.url));
+const monitor = fileURLToPath(new URL('./run-stage.php', import.meta.url));
 const identityKeys = ['task', 'role', 'provider', 'model', 'thinking', 'worktree', 'attempt'];
 const terminalStates = new Set(['completed', 'failed']);
 const sdkStatuses = new Set(['running', 'completed', 'steered', 'aborted', 'stopped', 'error']);

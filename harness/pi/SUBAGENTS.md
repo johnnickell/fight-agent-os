@@ -227,8 +227,8 @@ changed final defaults/admission need final-source qualification. Missing eviden
 | `src/build-stages-extension.ts`, `src/build/{stages,authority,history}.mjs` | Manifest and sole fresh Build default; one engine, no scheduling/acceptance replacement |
 | Former Engineer-only extension/module and two native probes | Replaced by qualified copied all-role source/probe; removed, without compatibility wrappers |
 | Bootstrap flag, `stageRoutes`, `selectStageRoute` / `stageRouteSelected`, `selected` dispatch option and opt-in checks/docs | Superseded Build-only selector removed; default/unbound/subordinate/capability checks replace it |
-| Provider `.pi/skills/build/scripts/run-stage.py` and `harness-inventory.ts` | Explicit Sync's actual Engineer/Land launcher and native resource inventory; retained in place, no new wrapper or Build fallback |
-| `src/observation/run-stage.py`, `automatic_observation.py`, `observation.py`, process-birth/custodian/stage-presentation and owning checks | Sync's same live process path plus native qualification; role/alias fixtures retain shared vocabulary contracts |
+| Provider `.pi/skills/build/scripts/run-stage.php` and `harness-inventory.ts` | Explicit Sync's actual Engineer/Land launcher and native resource inventory; retained in place, no new wrapper or Build fallback |
+| `src/observation/run-stage.php`, `stage-observation.php`, `stage-discovery.php`, process-birth/custodian/stage-presentation and owning checks | Sync's same live process path plus native qualification; role/alias fixtures retain shared vocabulary contracts |
 | `session-file-birth.php` and native session custody | Shared native parent/session-file witness, not process-only launch code |
 | Native custody/observer and `workspace/registered-children.mjs`, Herdr activity/logs | Shared passive path for both routes, not replaced launchers |
 

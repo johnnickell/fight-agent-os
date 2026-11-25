@@ -102,7 +102,8 @@ ownership before acquiring/resuming. Keep task execution scratch under `.runs/ta
 ## Process stage protocol
 
 This retained route serves explicit Sync's accepted-work Engineer/Land dispatch, including cleanup-only Land.
-Resolve the absolute provider launcher [Build `scripts/run-stage.py`](../build/scripts/run-stage.py) from this
+Use 64-bit PHP 8.2+ CLI with `pcntl` and `posix`. Resolve the absolute provider launcher
+[Build `scripts/run-stage.php`](../build/scripts/run-stage.php) from this
 skill's location, never from an unrelated target. Its directory name does not make it a current Build caller.
 The launcher uses the running Pi's exported native resource resolver offline to inspect configured packages and
 direct/auto-discovered extensions. One complete Harness selects its canonical package directory; with none
@@ -122,7 +123,7 @@ state. Read the request back under the shared handoff readability rules. No Engi
 
 ```sh
 cd "$task_checkout"
-python3 -u "$provider_stage_launcher" \
+php "$provider_stage_launcher" \
   --attempt "$attempt" --task "$task_id" --role "$role" \
   --provider "$stage_provider" --model "$stage_model" --thinking "$stage_thinking" \
   --timeout "$stage_timeout_seconds"

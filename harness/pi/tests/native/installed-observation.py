@@ -30,12 +30,15 @@ run.mkdir(parents=True, exist_ok=False)
 pi = shutil.which('pi')
 assert pi, 'Installed Pi required'
 # Pack exactly the installable manifest, not a checkout masquerading as an installation.
-packed = subprocess.check_output(['npm', 'pack', '--ignore-scripts', '--json', '--pack-destination', str(run)], cwd=provider / 'harness/pi')
-archive = run / json.loads(packed)[0]['filename']
+subprocess.run(['npm', 'pack', '--ignore-scripts', '--pack-destination', str(run)],
+               cwd=provider / 'harness/pi', check=True, capture_output=True)
+archive, = run.glob('*.tgz')
 with tarfile.open(archive) as bundle:
     assert all(member.name.startswith('package/') and '..' not in Path(member.name).parts and not member.issym() and not member.islnk() for member in bundle.getmembers())
     bundle.extractall(run / 'installed')
 package = run / 'installed/package'
+# Reuse prepared native dependencies without changing Pi or a global installation.
+(package / 'node_modules').symlink_to(provider / 'harness/pi/node_modules', target_is_directory=True)
 root, linked, home = (run / name for name in ('target', 'linked', 'home'))
 root.mkdir(); home.mkdir()
 def git(*args):
@@ -45,13 +48,23 @@ git('worktree', 'add', '-b', 'fixture-linked', str(linked))
 (run / 'git-worktrees.txt').write_bytes(git('worktree', 'list', '--porcelain'))
 bin_dir = run / 'bin'; bin_dir.mkdir()
 child = bin_dir / 'pi'
-child.write_text('#!/usr/bin/env python3\nimport json, time\nprint(json.dumps(dict(type="agent_start")), flush=True)\ntime.sleep(5)\nprint(json.dumps(dict(type="message_end", message=dict(role="assistant", stopReason="stop", content=[dict(type="text", text="OWNED_CHILD_READY")]))), flush=True)\nprint(json.dumps(dict(type="agent_settled", aborted=False)), flush=True)\n')
+child.write_text('#!' + shutil.which('python3') + '\nimport json, subprocess, sys, time\n' +
+                 f'if "--help" in sys.argv:\n result = subprocess.run([{pi!r}, *sys.argv[1:]], stderr=subprocess.PIPE)\n with open({str(run / "preflight.stderr")!r}, "ab") as log: log.write(result.stderr)\n sys.stderr.buffer.write(result.stderr)\n sys.exit(result.returncode)\n' +
+                 'print(json.dumps(dict(type="agent_start")), flush=True)\ntime.sleep(5)\nprint(json.dumps(dict(type="message_end", message=dict(role="assistant", stopReason="stop", content=[dict(type="text", text="OWNED_CHILD_READY")]))), flush=True)\nprint(json.dumps(dict(type="agent_settled", aborted=False)), flush=True)\n')
 child.chmod(0o700)
 master, slave = pty.openpty()
 fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 156, 0, 0))
 env = {k: os.environ[k] for k in ('PATH', 'TMPDIR', 'LANG', 'LC_ALL', 'LC_CTYPE') if k in os.environ}
-env.update(HOME=str(home), PI_CODING_AGENT_DIR=str(home / '.pi/agent'), PI_OFFLINE='1', TERM='xterm-256color')
-command = [pi, '--offline', '--approve', '-e', str(package), '--session-dir', str(run / 'sessions'), '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high']
+agent = home / '.pi/agent'
+agent.mkdir(parents=True)
+# Keep native startup usable without private model settings or credentials. The
+# parent never prompts and the monitor's child only emits scripted JSON events.
+(agent / 'models.json').write_text(json.dumps({'providers': {'fixture': {
+    'baseUrl': 'http://127.0.0.1:1/v1', 'api': 'openai-completions', 'apiKey': 'unused-fixture',
+    'models': [{'id': 'controlled'}],
+}}}))
+env.update(HOME=str(home), PI_CODING_AGENT_DIR=str(agent), PI_OFFLINE='1', TERM='xterm-256color')
+command = [pi, '--offline', '--approve', '-e', str(package), '--session-dir', str(run / 'sessions'), '--provider', 'fixture', '--model', 'controlled', '--thinking', 'off']
 def setup():
     os.setsid(); fcntl.ioctl(0, termios.TIOCSCTTY, 0)
 p = subprocess.Popen(command, cwd=root, env=env, stdin=slave, stdout=slave, stderr=slave, preexec_fn=setup)
@@ -104,7 +117,7 @@ try:
     scenarios = [(root, package, True), (linked, package, True), (root, provider / 'harness/pi', False)]
     for index, (target, selected_package, expected) in enumerate(scenarios):
         attempt = run / f'attempt-{index}'; attempt.mkdir(); (attempt / 'request.md').write_text('Controlled no-provider child fixture.\n')
-        invocation = ['python3', '-u', str(provider / '.pi/skills/build/scripts/run-stage.py'), '--harness-package', str(selected_package), '--attempt', str(attempt), '--task', 'TASK-00538', '--role', 'work', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--heartbeat', '1', '--timeout', '12']
+        invocation = ['php', str(provider / '.pi/skills/build/scripts/run-stage.php'), '--harness-package', str(selected_package), '--attempt', str(attempt), '--task', 'TASK-00538', '--role', 'work', '--provider', 'fixture', '--model', 'controlled', '--thinking', 'off', '--heartbeat', '1', '--timeout', '12']
         shell = f'cd {shlex.quote(str(target))} && PATH={shlex.quote(str(bin_dir))}:$PATH ' + shlex.join(invocation)
         os.write(master, ('!!' + shell + '\r').encode())
         until(lambda: (attempt / 'process.json').exists(), 'ordinary stage launch')
@@ -135,7 +148,7 @@ try:
             results[-1]['completed'] = completed
     # A same-user monitor in the same checkout but outside this native ancestry is not a child.
     attempt = run / 'unrelated-attempt'; attempt.mkdir(); (attempt / 'request.md').write_text('Controlled unrelated monitor.\n')
-    invocation = ['python3', '-u', str(provider / '.pi/skills/build/scripts/run-stage.py'), '--harness-package', str(package), '--attempt', str(attempt), '--task', 'TASK-00538', '--role', 'work', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--heartbeat', '1', '--timeout', '12']
+    invocation = ['php', str(provider / '.pi/skills/build/scripts/run-stage.php'), '--harness-package', str(package), '--attempt', str(attempt), '--task', 'TASK-00538', '--role', 'work', '--provider', 'fixture', '--model', 'controlled', '--thinking', 'off', '--heartbeat', '1', '--timeout', '12']
     unrelated = subprocess.run(invocation, cwd=root, env=dict(env, PATH=str(bin_dir) + os.pathsep + env['PATH']), capture_output=True, timeout=20)
     (run / 'unrelated-monitor.log').write_bytes(unrelated.stdout + unrelated.stderr)
     assert unrelated.returncode == 0

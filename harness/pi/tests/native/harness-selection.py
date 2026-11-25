@@ -8,11 +8,10 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 import tempfile
 
 provider = Path.cwd().resolve()
-launcher = provider / '.pi/skills/build/scripts/run-stage.py'
+launcher = provider / '.pi/skills/build/scripts/run-stage.php'
 assert shutil.which('pi'), 'Installed Pi required'
 scratch = provider / '.runs/harness-selection'
 scratch.mkdir(parents=True, exist_ok=True)
@@ -29,7 +28,7 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
         package = root / name
         (package / 'src/observation').mkdir(parents=True)
         (package / 'package.json').write_text(json.dumps({'name': '@fight/agent-os-pi', 'pi': {'extensions': []}}))
-        (package / 'src/observation/run-stage.py').write_text('print(' + repr(str(package)) + ')\n')
+        (package / 'src/observation/run-stage.php').write_text('<?php echo ' + repr(str(package)) + ';\n')
         packages.append(package)
     alias = root / 'same-package-alias'
     alias.symlink_to(packages[0], target_is_directory=True)
@@ -37,7 +36,7 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
 
     def check(name, configured, expected=None, error=None, explicit=None, extensions=None):
         (agent / 'settings.json').write_text(json.dumps({'packages': configured, 'extensions': extensions or []}))
-        command = [sys.executable, str(launcher), '--help']
+        command = ['php', str(launcher), '--help']
         if explicit is not None:
             command.extend(['--harness-package', str(explicit)])
         result = subprocess.run(command, cwd=target, env=env, capture_output=True, text=True, timeout=25)
@@ -65,12 +64,13 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
     (unrelated / 'package.json').write_text(json.dumps({'name': 'unrelated', 'pi': {'extensions': []}}))
     check('unrelated package', [str(unrelated)], expected='Run one Pi role')
     check('wrong explicit package', [], explicit=unrelated, error='Selected package is not the Fight Harness')
-    (first / 'src/observation/run-stage.py').unlink()
+    (first / 'src/observation/run-stage.php').unlink()
     check('configured monitor missing does not fall back', [str(first)], error='No child started')
     # Native resources can load a complete Harness without any packages inventory entry.
     installed = root / 'direct harness'
     shutil.copytree(provider / 'harness/pi', installed, ignore=shutil.ignore_patterns('node_modules', 'tests'))
-    (installed / 'src/observation/run-stage.py').write_text('print(' + repr(str(installed)) + ')\n')
+    (installed / 'node_modules').symlink_to(provider / 'harness/pi/node_modules', target_is_directory=True)
+    (installed / 'src/observation/run-stage.php').write_text('<?php echo ' + repr(str(installed)) + ';\n')
     resources = json.loads((installed / 'package.json').read_text())['pi']['extensions']
     check('complete direct Harness is selected automatically', [],
           extensions=[str(installed / resource) for resource in resources], expected=str(installed))
@@ -95,7 +95,7 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
         'name': '@fight/agent-os-pi', 'pi': {'extensions': ['./index.ts']}}))
     (untrusted / 'index.ts').write_text("import { writeFileSync } from 'node:fs';\n" +
                                       'export default function () { writeFileSync(' + json.dumps(str(marker)) + ', "executed"); }\n')
-    (untrusted / 'src/observation/run-stage.py').write_text('print("UNTRUSTED_MONITOR_DISPATCHED")\n')
+    (untrusted / 'src/observation/run-stage.php').write_text('<?php echo "UNTRUSTED_MONITOR_DISPATCHED";\n')
     (target / '.pi').mkdir()
     project_settings = target / '.pi/settings.json'
     project_settings.write_text(json.dumps({'packages': [os.path.relpath(untrusted, project_settings.parent)]}))

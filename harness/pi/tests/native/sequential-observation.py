@@ -110,7 +110,7 @@ try:
     time.sleep(.1)  # Separate actual context/executor births beyond the safety band
     for index in range(12):
         attempt = run / f'attempt-{index}'; attempt.mkdir(); (attempt / 'request.md').write_text('Controlled no-provider child, not an independent role.\n')
-        invocation = ['python3', '-u', '-B', str(package / 'src/observation/run-stage.py'), '--harness-package', str(package), '--attempt', str(attempt), '--task', 'TASK-00544', '--role', 'work', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--heartbeat', '1', '--timeout', '10']
+        invocation = ['php', str(package / 'src/observation/run-stage.php'), '--harness-package', str(package), '--attempt', str(attempt), '--task', 'TASK-00544', '--role', 'work', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--heartbeat', '1', '--timeout', '10']
         os.write(master, ('!!PATH=' + shlex.quote(str(bin_dir)) + ':$PATH ' + shlex.join(invocation) + '\r').encode())
         until(lambda: (attempt / 'process.json').exists(), 'fixed monitor launch')
         deadline, observed = time.monotonic() + 4, None

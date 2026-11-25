@@ -65,8 +65,9 @@ The companion reuses the existing passive native-session custody reader. Fresh B
 without per-child socket flags. Neither route needs per-stage pane opening. It never launches, cancels or retries a child, changes the
 executor/tool/shell settings, reads transcripts, or sends progress to Pi, provider context or Herdr agent metadata.
 Missing association leaves execution unchanged and visibly unavailable. Sync's retained provider monitor entry
-delegates to `src/observation/run-stage.py` inside the selected trusted Harness package. Its observer and the
-custodian qualify each other's fixed package-owned paths, not source-provider or target-checkout siblings.
+delegates to `src/observation/run-stage.php` inside the selected trusted Harness package. Its passive discovery
+process and the custodian qualify each other's fixed package-owned paths, not source-provider or target-checkout
+siblings. Discovery sends bounded progress only and cannot start or control the stage.
 The provider entry uses the running Pi's native resource resolver offline to select one complete Harness from
 package settings or direct/auto-discovered extensions, or its own checkout package when none is configured.
 An explicit `--harness-package` must match any configured Harness. Multiple owners, filtered/disabled/incomplete
@@ -442,7 +443,7 @@ across redraw/resize; the next edit reveals the edit point again. Paste is ignor
 
 This is the explicit **legacy** path, not default authenticated discovery. Observation is opt-in on the **existing** stage-monitor invocation. Before launching an authorized stage, prepare
 an unused owner-only runtime directory under that stage checkout's `var/` and add
-`--observe-socket /absolute/checkout/var/o/a.sock` to its existing `run-stage.py` command. The directory must already
+`--observe-socket /absolute/checkout/var/o/a.sock` to its existing `run-stage.php` command. The directory must already
 exist with mode `0700`; the monitor exclusively binds a `0600` Unix socket and never replaces an existing path.
 Keep the path short: Unix socket pathname limits are platform-specific (about 104 bytes on macOS). The option
 does not change stage model, authority, request or settlement requirements. An already-running monitor without
@@ -580,15 +581,18 @@ transcripts; sanitize explicitly authorized evidence.
 
 <a id="existing-worktree-test-bindings-partial-task-00502-implementation"></a>
 
-## Automatic session following and worktree test bindings (TASK-00502 candidate)
+## Automatic session following and worktree test bindings (TASK-00502 history)
 
-Automatic following is the default when no legacy socket flags are supplied. **Keep launching the ordinary
-provider `.pi/skills/build/scripts/run-stage.py` monitor through Pi's independently selected executor.**
-[Build](../../.pi/skills/build/SKILL.md) owns dispatch authority, stage identity and model pins. The unshipped
-`fight-stage JSON` bash replacement and human `/fight-stage` command were rejected and removed. Fully restart
-Pi to unload the old runtime; resume the same actual session and ledger, not another attempt. `native-launch.mjs`
-was replaced by the observation-only `native-observation.mjs`; it has no execution API. Historical receipts still
-name the rejected integration and remain history, not current instructions.
+Automatic following is the default when no legacy socket flags are supplied. For current process-stage
+instructions, follow the [explicit Sync protocol](../../.pi/skills/sync/SKILL.md#delegate-integration-then-delivery).
+Sync uses the provider process launcher after admitting an accepted TASK with an existing open PR. Fresh
+[Build](../../.pi/skills/build/SKILL.md) uses only `fight_build_stage` through the SDK; the PHP process launcher
+is not a Build route or fallback. See the [current Sync process flow](../../docs/engineering/sync/README.md#current-php-process-flow).
+
+During TASK-00502, Build still used a process launcher. The unshipped `fight-stage JSON` bash replacement and
+human `/fight-stage` command were rejected and removed. `native-launch.mjs` was replaced by the observation-only
+`native-observation.mjs`, which has no execution API. Historical receipts still name the rejected integration;
+they are not current dispatch or restart instructions.
 
 The passive extension registers no tools/commands, BashOperations, user_bash handlers, shell hooks or activation
 changes. It reads supported actual session lifecycle/notification context without modifying events. Pi's selected
@@ -724,7 +728,7 @@ without that field says unknown rather than inventing zero loss.
 
 The owning [`sequential-observation.py`](tests/native/sequential-observation.py) check runs twelve fixed monitors
 through genuine offline native Pi `!!` execution against an explicitly selected installed-layout package, including
-one nonzero child. It invokes that package's fixed `src/observation/run-stage.py` directly; only its JSON child
+one nonzero child. It invokes that package's fixed `src/observation/run-stage.php` directly; only its JSON child
 is controlled. This monitor EOF/history fixture does not exercise independent role dispatch or the provider's
 real native inventory/registration preflights. Do not route the controlled `pi` through those preflights or make
 it impersonate inventory. Real stages still use the provider dispatcher above, with all safeguards intact.

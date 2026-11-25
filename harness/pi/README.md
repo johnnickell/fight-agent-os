@@ -36,6 +36,7 @@ Install only what the selected path needs. Nothing here installs tools or change
 | Native workspace | Herdr interactive pane/CLI context and Node `process.execve`; see [workspace capabilities](WORKSPACE.md#native-pi-in-herdr) |
 | Application checks/logs | Docker Compose and the target's prepared stack; logs inspect existing verified sources, never provision them |
 | Compact shell output | Optional RTK on PATH with a working `rtk rewrite` command |
+| Sync process stages | 64-bit PHP 8.2+ CLI with `pcntl` and `posix`, and native Pi on PATH; Python 3 is still used by native process-birth custody |
 
 ## RTK and graph navigation
 
@@ -179,9 +180,9 @@ Run the standalone pass from the checkout you want to verify:
 
 This does not need `./bin/runtime setup`, `./bin/up`, an application image, or any application service.
 The check mounts the Harness and its dependencies read-only in a temporary network-none container. Its
-private scratch holds test fixtures, Git state, npm cache, and a disposable package archive. Linux session-file
-custody needs a 64-bit PHP CLI with FFI and libc `statx`; Git and Python are still needed for other custody
-and Build/Sync process checks. The Docker check and dependency commands share
+private scratch holds test fixtures, Git state, npm cache, and a disposable package archive. The packaged
+process monitor uses the PHP CLI described above. Linux session-file custody also needs FFI and libc `statx`.
+Git and Python are still needed for custody and native process probes. The Docker check and dependency commands share
 one container name per checkout, so a concurrent command in that checkout is rejected until the container
 is removed. Other checkouts can run independently. Dependency setup reuses valid installations; finish
 one-off tooling and stop this checkout's web service before replacing stale dependencies. The existing

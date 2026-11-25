@@ -82,7 +82,7 @@ export default function(pi) {
   const parentRegistration = JSON.parse(readFileSync(join(base, 'registration.json')));
   const attempt = join(base, 'attempt'); mkdirSync(attempt);
   put(join(attempt, 'request.md'), 'Synthetic native process-stage probe only. No real target Work or acceptance.');
-  const child = spawnSync('python3', ['-B', join(provider, '.pi/skills/build/scripts/run-stage.py'), '--harness-package', harness,
+  const child = spawnSync('php', [join(provider, '.pi/skills/build/scripts/run-stage.php'), '--harness-package', harness,
     '--attempt', attempt, '--task', 'TASK-00586', '--role', 'engineer', '--provider', 'retirement-fixture', '--model', 'local', '--thinking', 'high', '--timeout', '60', '--heartbeat', '5'],
     { cwd: root, env, encoding: 'utf8', timeout: 90000, maxBuffer: 8 * 1024 * 1024 });
   put(join(base, 'child.stdout'), child.stdout); put(join(base, 'child.stderr'), child.stderr);
