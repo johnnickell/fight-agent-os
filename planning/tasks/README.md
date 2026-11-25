@@ -632,4 +632,5 @@
 | [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00628](00628-TASK.md) | Retire the remaining Python prerequisites outside diagram authoring | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | done | — |
+| [TASK-00630](00630-TASK.md) | Recognize masked cleanup routes and retire TASK-00622's retained worktree | ready-for-agent | — |
 <!-- /planning:records -->

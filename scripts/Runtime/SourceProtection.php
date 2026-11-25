@@ -116,6 +116,17 @@ final class SourceProtection
             $container['State']['Running'] === true,
             'Parent mount requires live consumer qualification'
         );
+        // Only Docker-declared read-only tmpfs mounts can qualify for the fallback.
+        $cover = '';
+        foreach (($container['HostConfig']['Tmpfs'] ?? []) as $path => $options) {
+            if (
+                is_string($path) && is_string($options) && preg_match('~^(?:/[A-Za-z0-9_.-]+)+$~D', $path) === 1
+                && in_array('ro', explode(',', $options), true) && !in_array('rw', explode(',', $options), true)
+                && str_starts_with($target, $path.'/') && strlen($path) > strlen($cover)
+            ) {
+                $cover = $path;
+            }
+        }
         $configuration = [];
         foreach (['WorkingDir', 'Entrypoint', 'Cmd'] as $key) {
             foreach ((array) ($container['Config'][$key] ?? null) as $value) {
@@ -126,7 +137,34 @@ final class SourceProtection
         }
         $script = <<<'SH'
             export LC_ALL=C
-            target=$(realpath "$1") || exit 2
+            cover=$2
+            verify_mask() {
+                [ -n "$cover" ] && [ "$(realpath -e "$cover")" = "$cover" ] || return 1
+                device=$(stat -c '%Hd:%Ld' -- "$cover") || return 1
+                # Read the probe's mount namespace, not the Docker configuration alone.
+                # Reject stacked mounts, aliases of the tmpfs and any deeper mount in its subtree.
+                awk -v cover="$cover" -v device="$device" '
+                    $5 == cover {
+                        at_cover++
+                        for (i = 7; i <= NF && $i != "-"; i++) {}
+                        if ($3 == device && $4 == "/" && $6 ~ /(^|,)ro(,|$)/ &&
+                            NF == i + 3 && $(i+1) == "tmpfs" && $(i+2) == "tmpfs") id = $1
+                    }
+                    $3 == device { on_device++ }
+                    index($5, cover "/") == 1 { deeper++ }
+                    END {
+                        if (!id || at_cover != 1 || on_device != 1 || deeper) exit 1
+                        print id ":" device
+                    }
+                ' "/proc/$$/mountinfo"
+            }
+            mask=
+            if ! target=$(realpath -- "$1" 2>/dev/null); then
+                case "$1/" in *'/../'*|*'/./'*|*'//'*) exit 2 ;; esac
+                mask=$(verify_mask) || exit 2
+                # A process may still have a kernel reference below the mask from an older view.
+                target=$cover
+            fi
             within_target() {
                 case "$1" in "$target"|"$target"/*) exit 3 ;; esac
             }
@@ -207,11 +245,13 @@ final class SourceProtection
             EOF
                 done
             }
-            working=$(pwd -P) || exit 2
-            arguments=$(arguments_as_lines) || exit 2
-            check_text "$working" <<EOF
+            if [ -z "$mask" ]; then
+                working=$(pwd -P) || exit 2
+                arguments=$(arguments_as_lines) || exit 2
+                check_text "$working" <<EOF
             $arguments
             EOF
+            fi
             for process in /proc/[0-9]*; do
                 [ "$process" = "/proc/$$" ] && continue
                 [ -d "$process" ] || continue
@@ -219,10 +259,12 @@ final class SourceProtection
                 [ "$process/root" -ef "/proc/$$/root" ] && [ "$process/ns/mnt" -ef "/proc/$$/ns/mnt" ] || exit 2
                 working=$(readlink "$process/cwd") || exit 2
                 case "$working" in /*' (deleted)') exit 2 ;; /*) ;; *) exit 2 ;; esac
-                arguments=$(arguments_as_lines < "$process/cmdline") || exit 2
-                check_text "$working" <<EOF
+                if [ -z "$mask" ]; then
+                    arguments=$(arguments_as_lines < "$process/cmdline") || exit 2
+                    check_text "$working" <<EOF
             $arguments
             EOF
+                fi
                 # The kernel already reports resolved paths for mappings and handles.
                 mappings=$(cat "$process/maps") || exit 2
                 while read -r range perms offset device inode mapped; do
@@ -236,6 +278,9 @@ final class SourceProtection
                     within_target "${value% (deleted)}"
                 done
             done
+            if [ -n "$mask" ]; then
+                [ "$(verify_mask)" = "$mask" ] || exit 2
+            fi
             exit 0
             SH;
         [$status] = Native::process([
@@ -247,7 +292,8 @@ final class SourceProtection
             '-c',
             $script,
             'parent-bind-consumer-check',
-            $target
+            $target,
+            $cover
         ], $main, capture: true, input: implode("\0", $configuration)."\0", timeout: 60);
         $id = substr($container['Id'], 0, 12);
         Native::require($status !== 3, 'Parent-mounted container consumes candidate directory: '.$id);
