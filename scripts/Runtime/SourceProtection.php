@@ -137,14 +137,24 @@ final class SourceProtection
                 esac
                 # Some realpath implementations preserve a leading double slash.
                 while [ "${path#//}" != "$path" ]; do path=${path#/}; done
-                # For a not-yet-created descendant, check its nearest existing parent.
-                # Resolve inside the container, where bind paths and symlinks have meaning.
-                while [ ! -e "$path" ]; do
-                    [ ! -L "$path" ] || exit 2
-                    path=${path%/*}
-                    [ -n "$path" ] || path=/
+                # Walking out via .. still depends on the directory the path enters.
+                prefix=$path/
+                while [ "${prefix#*/../}" != "$prefix" ]; do
+                    prefix=${prefix%/../*}
+                    check_resolved "${prefix:-/}"
+                    prefix=$prefix/
                 done
-                resolved=$(realpath "$path") || exit 2
+                check_resolved "$path"
+            }
+            check_resolved() {
+                # For a not-yet-created descendant, check its nearest existing parent.
+                entry=$1
+                while [ ! -e "$entry" ]; do
+                    [ ! -L "$entry" ] || exit 2
+                    entry=${entry%/*}
+                    [ -n "$entry" ] || entry=/
+                done
+                resolved=$(realpath "$entry") || exit 2
                 if [ -d "$resolved" ]; then [ -x "$resolved" ] || exit 2; fi
                 within_target "$resolved"
             }
