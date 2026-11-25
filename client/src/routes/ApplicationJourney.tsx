@@ -3,6 +3,7 @@ import {
   Suspense,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore
@@ -114,10 +115,23 @@ export function ApplicationView({
     session.coordinator.getSnapshot
   );
   const route = matchApplicationRoute(pathname);
+  // A visit outlives authority refreshes, but not navigation away from Roles.
+  const roleVisit = useMemo(
+    () => (route?.destination === 'roles' ? { pathname, session } : null),
+    [pathname, route?.destination, session]
+  );
+  const currentRoleVisit = useRef<typeof roleVisit>(null);
+  useLayoutEffect(() => {
+    currentRoleVisit.current = roleVisit;
+    return () => {
+      currentRoleVisit.current = null;
+    };
+  }, [roleVisit]);
   const [adminOutcome, setAdminOutcome] = useState<{
     pathname: string;
     actorId: string;
     notice: AdministrationNotice;
+    roleVisit?: NonNullable<typeof roleVisit>;
   }>();
   useEffect(() => {
     if (
@@ -357,14 +371,19 @@ export function ApplicationView({
                 cache={session.authority}
                 locationRestoration={tableRestoration}
                 notice={
-                  adminOutcome?.pathname === pathname &&
+                  adminOutcome?.roleVisit === roleVisit &&
                   adminOutcome.actorId === authority.principal.userId
                     ? adminOutcome.notice
                     : undefined
                 }
                 onOutcome={(notice) => {
-                  if (window.location.pathname === pathname)
-                    setAdminOutcome({ pathname, actorId: authority.principal.userId, notice });
+                  if (roleVisit && currentRoleVisit.current === roleVisit)
+                    setAdminOutcome({
+                      pathname,
+                      actorId: authority.principal.userId,
+                      notice,
+                      roleVisit
+                    });
                 }}
               />
             ) : route.destination === 'permissions' ? (

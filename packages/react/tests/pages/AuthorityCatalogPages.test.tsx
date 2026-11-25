@@ -212,8 +212,94 @@ describe('authority catalog pages', () => {
     expect(getPrincipal).toHaveBeenCalledOnce();
   });
 
+  it('corrects a shrunken catalog, stops after a second shrink, and reloads on request', async () => {
+    window.history.replaceState(null, '', '/admin/permissions?page=3&per_page=1');
+    const services = await setup(['READ_PERMISSIONS'], (url) => {
+      const requested = Number(new URL(url, window.location.origin).searchParams.get('page'));
+      return page(requested === 1 ? [safe] : [], {
+        page: requested,
+        perPage: 1,
+        total: requested === 3 ? 2 : requested === 2 ? 1 : 2
+      });
+    });
+    render(<PermissionsPage {...services} />);
+    expect(await screen.findByText('The catalog changed again')).toBeVisible();
+    expect(services.fetch).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Reload catalog' }));
+    expect(await screen.findByText(safe.name)).toBeVisible();
+    expect(new URLSearchParams(window.location.search).get('page')).toBe('1');
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+    await waitFor(() => expect(services.fetch).toHaveBeenCalledTimes(6));
+    expect(await screen.findByText(safe.name)).toBeVisible();
+    expect(new URLSearchParams(window.location.search).get('page')).toBe('1');
+  });
+
+  it.each([
+    ['Create role', 'POST', 200, null, 'The server confirmed the operation.'],
+    [
+      'Rename role',
+      'PATCH',
+      403,
+      { message: 'Permission denied.' },
+      'The server denied the operation.'
+    ],
+    [
+      'Rename role',
+      'PATCH',
+      400,
+      { fields: { name: ['Invalid name.'] } },
+      'The server did not accept the submitted values.'
+    ]
+  ] as const)(
+    'reports the server result for %s (%s %s)',
+    async (action, method, status, data, notice) => {
+      const services = await setup(all, (_url, init) => {
+        if (init.method !== method) return page([custom]);
+        return method === 'POST'
+          ? new Response(JSON.stringify({ status: 'success', data: { role_id: custom.role_id } }), {
+              status: 201,
+              headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+            })
+          : response(data, status);
+      });
+      render(<RolesPage {...services} />);
+      const trigger = await screen.findByRole('button', {
+        name: method === 'POST' ? action : `${action} for ${custom.name}`
+      });
+      fireEvent.click(trigger);
+      let dialog = within(await screen.findByRole('dialog'));
+      fireEvent.keyDown(dialog.getByRole('button', { name: 'Cancel' }), {
+        key: 'Escape',
+        code: 'Escape',
+        keyCode: 27
+      });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(services.fetch.mock.calls.some(([, init]) => init.method === method)).toBe(false);
+      fireEvent.click(trigger);
+      dialog = within(await screen.findByRole('dialog'));
+      expect(dialog.getByRole('button', { name: action })).toBeDisabled();
+      fireEvent.change(dialog.getByRole('textbox'), { target: { value: 'ROLE_NEW' } });
+      fireEvent.click(dialog.getByRole('button', { name: action }));
+      expect(await screen.findByText(notice)).toBeVisible();
+      const write = services.fetch.mock.calls.find(([, init]) => init.method === method);
+      expect(write?.[1].body).toBe(
+        JSON.stringify(
+          method === 'POST'
+            ? { name: 'ROLE_NEW' }
+            : { name: 'ROLE_NEW', expected_revision: custom.revision }
+        )
+      );
+    }
+  );
+
   it('only lets the picker select an eligible permission and never assumes membership', async () => {
-    const services = await setup(all);
+    const services = await setup(all, (url, init) => {
+      if (init.method === 'PUT') return response(null);
+      if (!url.startsWith('/api/v1/permissions?')) return page([custom]);
+      return url.includes('page=2&')
+        ? page([], { page: 2, total: 26 })
+        : page([safe, protectedPermission, future], { total: 26 });
+    });
     render(<RolesPage {...services} />);
     fireEvent.click(
       await screen.findByRole('button', { name: 'Grant permission for ROLE_CUSTOM' })
@@ -225,5 +311,17 @@ describe('authority catalog pages', () => {
     expect(dialog.getByText(/does not list current associations/)).toBeVisible();
     fireEvent.change(dialog.getByRole('combobox'), { target: { value: safe.permission_id } });
     expect(dialog.getByRole('button', { name: 'Grant permission' })).toBeEnabled();
+    fireEvent.click(dialog.getByRole('button', { name: 'Next permissions' }));
+    expect(await dialog.findByText('There are no permissions on this page.')).toBeVisible();
+    fireEvent.click(dialog.getByRole('button', { name: 'Previous permissions' }));
+    const picker = await dialog.findByRole('combobox');
+    expect(picker).toHaveValue('');
+    expect(dialog.getByRole('button', { name: 'Grant permission' })).toBeDisabled();
+    fireEvent.change(picker, { target: { value: safe.permission_id } });
+    fireEvent.click(dialog.getByRole('button', { name: 'Grant permission' }));
+    expect(await screen.findByText('The server confirmed the operation.')).toBeVisible();
+    const write = services.fetch.mock.calls.find(([, init]) => init.method === 'PUT');
+    expect(write?.[0]).toBe(`/api/v1/roles/${custom.role_id}/permissions/${safe.permission_id}`);
+    expect(write?.[1].body).toBe(JSON.stringify({ confirm: true }));
   });
 });

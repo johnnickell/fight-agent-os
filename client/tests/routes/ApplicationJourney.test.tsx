@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
 import { apiFailure } from '@fight/react/account';
-import { OwnedSessionsService } from '@fight/react/account';
+import { CatalogService, CustomRoleService, OwnedSessionsService } from '@fight/react/account';
 import { UserDirectoryService } from '@fight/react/account';
 import { ApiClient } from '@fixtures/transport';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApplicationView } from '@/routes/ApplicationJourney';
@@ -198,6 +198,63 @@ describe('authoritative frame transitions', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(owner.load).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('list', { name: 'Owned active sessions' })).not.toBeInTheDocument();
+  });
+  it('keeps the current Roles visit outcome when an earlier visit finishes later', async () => {
+    window.history.replaceState(null, '', '/admin/roles');
+    const owner = session(['VIEW_DASHBOARD', 'READ_ROLES', 'DELETE_ROLES']);
+    const first = deferred<Response>();
+    const role = {
+      role_id: crypto.randomUUID(),
+      name: 'ROLE_CUSTOM',
+      managed: false,
+      revision: `${crypto.randomUUID()}:1`
+    };
+    const respond = (status: number, body: unknown) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      });
+    const remove = vi.fn(() => Promise.resolve(respond(200, { status: 'success', data: null })));
+    remove.mockImplementationOnce(() => first.promise);
+    const reads = vi.fn(() =>
+      respond(200, {
+        status: 'success',
+        data: { records: [role], page: 1, per_page: 25, total_pages: 1, total_records: 1 }
+      })
+    );
+    const api = new ApiClient(
+      { schemaVersion: 2, apiBasePath: '/api/v1' },
+      {
+        fetch: async (_url, init) => (init?.method === 'DELETE' ? remove() : reads()),
+        accessTokens: { getAccessToken: () => 'synthetic.memory.only' }
+      }
+    );
+    owner.authorityCatalog = new CatalogService(api);
+    owner.customRoles = new CustomRoleService(api, owner.authority);
+    render(<Navigable owner={owner} />);
+    await act(() => owner.coordinator.restore());
+    const confirm = async () => {
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove role for ROLE_CUSTOM' }));
+      fireEvent.click(
+        within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove role' })
+      );
+    };
+    await confirm();
+    await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole('link', { name: 'Dashboard' }));
+    expect(await screen.findByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
+    fireEvent.click(screen.getByRole('link', { name: 'Roles' }));
+    await confirm();
+    expect(await screen.findByText('The server confirmed the operation.')).toBeVisible();
+    await waitFor(() => expect(reads).toHaveBeenCalledTimes(3));
+    await act(() => {
+      first.resolve(respond(409, { status: 'fail', data: { message: 'State conflict.' } }));
+      return first.promise;
+    });
+    await waitFor(() => expect(reads).toHaveBeenCalledTimes(4));
+    expect(owner.load).toHaveBeenCalledTimes(3);
+    expect(screen.getByText('The server confirmed the operation.')).toBeVisible();
+    expect(screen.queryByText(/operation conflicts/)).not.toBeInTheDocument();
   });
   it('preserves Users query options through application session restoration', async () => {
     window.history.replaceState(
