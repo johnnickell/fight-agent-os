@@ -176,7 +176,11 @@ task-exclusive. Separate operator maintenance can inspect `docker system df -v` 
 an explicitly selected builder's `docker buildx prune --builder NAME` after reviewing shared consumers and cache
 policy. This is never invoked by task down/Land. Do not run machine-wide prune/reset or prune foreign projects.
 
-Task down removes reserved disposable runtime output. Keep active role evidence only while consumed, then retire
+After the Docker sweep, task down removes reserved disposable output only when no remaining bind consumes it.
+A bind at or below the removal path holds deletion. For a parent bind, the runtime checks the container's
+configuration and live process references to the directory. Observed use or unavailable visibility holds
+deletion; parent visibility alone does not. The same check protects configuration retirement. Keep active
+role evidence only while consumed, then retire
 its exact `.runs/compose/<project>/` evidence/cache after outcomes reach the existing TASK/PR. The small
 `locator.json` and secret-free `down.json` survive outside removable source while source remains registered or
 removal is incomplete. They locate Compose configuration, not resource inventories or admission receipts.

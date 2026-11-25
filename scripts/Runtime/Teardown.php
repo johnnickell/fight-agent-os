@@ -149,15 +149,32 @@ final class Teardown
     }
 
     /**
-     * Finds remaining native bind consumers of selected private state
+     * Finds native bind consumers or parent mounts that cannot be cleared
      */
     public static function hasBindConsumer(string $main, string $directory): bool
     {
         $ids = Native::lines(Native::text(['docker', 'ps', '-aq'], $main));
         foreach ($ids === [] ? [] : Native::query(['docker', 'inspect', ...$ids], $main) as $consumer) {
             foreach ($consumer['Mounts'] as $mount) {
-                if ($mount['Type'] === 'bind' && Native::beneath(Native::canonical($mount['Source']), $directory)) {
+                if ($mount['Type'] !== 'bind') {
+                    continue;
+                }
+                $source = Native::canonical($mount['Source']);
+                if (Native::beneath($source, $directory)) {
                     return true;
+                }
+                if (Native::beneath($directory, $source)) {
+                    try {
+                        SourceProtection::checkParentMount(
+                            $main,
+                            $consumer,
+                            $mount['Destination'],
+                            $source,
+                            $directory
+                        );
+                    } catch (RuntimeException) {
+                        return true;
+                    }
                 }
             }
         }

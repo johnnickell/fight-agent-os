@@ -32,13 +32,7 @@ final class SourceProtection
                     $checkout
                 ), 'Source bind dependency remains; qualify the actual consumer before source removal');
                 if (Native::beneath($checkout, $source)) {
-                    self::checkParentMount($main, $container, rtrim(
-                        $mount['Destination'],
-                        '/'
-                    ).'/'.substr($checkout, strlen(rtrim(
-                        $source,
-                        '/'
-                    )) + 1));
+                    self::checkParentMount($main, $container, $mount['Destination'], $source, $checkout);
                 }
             }
         }
@@ -110,17 +104,23 @@ final class SourceProtection
      *
      * @phpstan-param array<string,mixed> $container
      */
-    private static function checkParentMount(string $main, array $container, string $target): void
-    {
+    public static function checkParentMount(
+        string $main,
+        array $container,
+        string $destination,
+        string $source,
+        string $directory
+    ): void {
+        $target = rtrim($destination, '/').'/'.substr($directory, strlen(rtrim($source, '/')) + 1);
         Native::require(
             $container['State']['Running'] === true,
-            'Parent source mount requires live consumer qualification'
+            'Parent mount requires live consumer qualification'
         );
         $configuration = array_intersect_key($container['Config'], array_flip(['WorkingDir', 'Entrypoint', 'Cmd']));
         Native::require(!str_contains(
             Native::json($configuration),
             $target
-        ), 'Container configuration consumes candidate source');
+        ), 'Container configuration consumes candidate directory');
         $script = <<<'SH'
             for process in /proc/[0-9]*; do
                 [ "$process" = "/proc/$$" ] && continue
@@ -145,11 +145,11 @@ final class SourceProtection
             'sh',
             '-c',
             $script,
-            'source-consumer-check',
+            'parent-bind-consumer-check',
             $target
         ], $main, capture: true, timeout: 60);
         $id = substr($container['Id'], 0, 12);
-        Native::require($status !== 3, 'Parent-mounted container consumes candidate source: '.$id);
+        Native::require($status !== 3, 'Parent-mounted container consumes candidate directory: '.$id);
         Native::require(
             $status === 0,
             'Parent-mounted container process visibility unavailable with configured identity: '.$id
