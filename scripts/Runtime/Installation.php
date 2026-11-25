@@ -14,8 +14,13 @@ final readonly class Installation
      *
      * @phpstan-param array{path: string, branch: string}|null $registration
      */
-    public function __construct(public string $main, public string $checkout, public string $project, public ?array $registration, public bool $isolated)
-    {
+    public function __construct(
+        public string $main,
+        public string $checkout,
+        public string $project,
+        public ?array $registration,
+        public bool $isolated
+    ) {
     }
 
     /**
@@ -29,8 +34,12 @@ final readonly class Installation
     /**
      * Resolves a registered checkout or its exact teardown locator
      */
-    public static function resolve(string $root, ?string $selector = null, bool $implicit = false, bool $removed = false): self
-    {
+    public static function resolve(
+        string $root,
+        ?string $selector = null,
+        bool $implicit = false,
+        bool $removed = false
+    ): self {
         $entries = Native::registrations($root);
         $main = $entries[0]['path'];
         if ($selector === null && $implicit && $main !== $root) {
@@ -39,7 +48,10 @@ final readonly class Installation
         if ($selector === null) {
             return new self($main, $main, 'fight-agent-os', null, false);
         }
-        $matches = array_values(array_filter($entries, static fn (array $entry): bool => self::matches($entry, $selector)));
+        $matches = array_values(array_filter($entries, static fn (array $entry): bool => self::matches(
+            $entry,
+            $selector
+        )));
         Native::require(count($matches) <= 1, 'Ambiguous worktree; use its exact registered path or full branch');
         if ($matches !== []) {
             $checkout = $matches[0]['path'];
@@ -56,7 +68,10 @@ final readonly class Installation
             $entry = json_decode(Native::read($path), true, flags: JSON_THROW_ON_ERROR);
             if (self::matches($entry, $selector)) {
                 $project = self::project($main, $entry['path']);
-                Native::require($entry['path'] !== $main && $entry['project'] === $project && basename(dirname($path)) === $project, 'Invalid teardown locator');
+                Native::require(
+                    $entry['path'] !== $main && $entry['project'] === $project && basename(dirname($path)) === $project,
+                    'Invalid teardown locator'
+                );
                 $locators[] = new self($main, $entry['path'], $project, $entry, true);
             }
         }
@@ -64,7 +79,10 @@ final readonly class Installation
         if ($locators !== []) {
             return $locators[0];
         }
-        Native::require(str_starts_with($selector, '/'), 'No registered worktree/locator; use the exact original absolute path');
+        Native::require(str_starts_with(
+            $selector,
+            '/'
+        ), 'No registered worktree/locator; use the exact original absolute path');
 
         return new self($main, $selector, self::project($main, $selector), null, true);
     }
@@ -79,7 +97,11 @@ final readonly class Installation
         $env = getenv();
         $env['FIGHT_AGENT_OS_DEFAULT_USER'] = posix_getuid().':'.posix_getgid();
         foreach (array_keys($env) as $key) {
-            if (str_starts_with($key, 'COMPOSE_') || ($isolated && ($key === 'FIGHT_RUNTIME_SECRETS_DIR' || preg_match('/^(APP_|POSTGRES_|FIGHT_TASK_)/', $key)))) {
+            if (
+                str_starts_with($key, 'COMPOSE_')
+                || ($isolated && ($key === 'FIGHT_RUNTIME_SECRETS_DIR'
+                    || preg_match('/^(APP_|POSTGRES_|FIGHT_TASK_)/', $key)))
+            ) {
                 unset($env[$key]);
             }
         }
@@ -98,7 +120,10 @@ final readonly class Installation
         foreach ($services as $name => $settings) {
             array_push($lines, '  '.$name.':', '    ports: !reset []');
             foreach ($settings as $key => $value) {
-                $lines[] = '    '.$key.': '.($replaceVolumes && $key === 'volumes' ? '!override ' : '').Native::json($value, JSON_UNESCAPED_UNICODE);
+                $lines[] = '    '.$key.': '.($replaceVolumes && $key === 'volumes' ? '!override ' : '').Native::json(
+                    $value,
+                    JSON_UNESCAPED_UNICODE
+                );
             }
         }
 
@@ -144,7 +169,10 @@ final readonly class Installation
             $limits[] = $limit;
         }
         $free = @disk_free_space($this->checkout);
-        Native::require($free !== false && $free >= array_sum($limits), 'Insufficient host space; use explicit owned cleanup, never global prune');
+        Native::require(
+            $free !== false && $free >= array_sum($limits),
+            'Insufficient host space; use explicit owned cleanup, never global prune'
+        );
         Native::text(['docker', 'info', '--format', '{{.ID}}'], $this->checkout);
     }
 
@@ -155,8 +183,16 @@ final readonly class Installation
      */
     public function compose(bool $shared = false): array
     {
-        $args = ['docker', 'compose', '--project-directory', $this->checkout, '--project-name', $this->project,
-            '--file', $this->checkout.'/compose.yaml'];
+        $args = [
+            'docker',
+            'compose',
+            '--project-directory',
+            $this->checkout,
+            '--project-name',
+            $this->project,
+            '--file',
+            $this->checkout.'/compose.yaml'
+        ];
         if ($this->isolated) {
             $state = $this->state();
             foreach (['task.env', 'override.yaml', 'ingress.yaml'] as $name) {
@@ -185,7 +221,12 @@ final readonly class Installation
         if (!$this->isolated) {
             return $path;
         }
-        foreach (['/var' => '/var/worktrees/'.$this->project.'/output', '/.runs' => '/.runs/compose/'.$this->project] as $location => $target) {
+        foreach (
+            [
+            '/var'   => '/var/worktrees/'.$this->project.'/output',
+            '/.runs' => '/.runs/compose/'.$this->project
+            ] as $location => $target
+        ) {
             $original = $this->checkout.$location;
             if (Native::beneath($path, $original)) {
                 return $this->main.$target.substr($path, strlen($original));
@@ -196,7 +237,7 @@ final readonly class Installation
     }
 
     /**
-     * Prepares isolated settings, mount targets and the teardown model
+     * Initializes isolated settings, mount targets and the teardown model
      */
     public function prepare(string $host, bool $initialize = false): void
     {
@@ -210,25 +251,49 @@ final readonly class Installation
         }
         foreach (['.runs', 'var', 'packages/react/dist'] as $relative) {
             $mount = $this->checkout.'/'.$relative;
-            Native::require(Native::canonical($mount) === $mount && !is_link($mount), 'Worktree mount target alias refused');
+            Native::require(
+                Native::canonical($mount) === $mount && !is_link($mount),
+                'Worktree mount target alias refused'
+            );
             Native::mkdir($mount);
         }
         $output = $state.'/output';
         $evidence = $this->main.'/.runs/compose/'.$this->project;
-        foreach ([$output, $output.'/client/build', $output.'/client/shared-react', $output.'/openapi', $output.'/validations', $evidence] as $path) {
+        foreach (
+            [
+            $output,
+            $output.'/client/build',
+            $output.'/client/shared-react',
+            $output.'/openapi',
+            $output.'/validations',
+            $evidence
+            ] as $path
+        ) {
             Native::require(Native::canonical($path) === $path, 'Runtime output alias refused');
             Native::mkdir($path);
         }
         $common = Native::text(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], $this->checkout);
-        $mounts = [self::bind($output, '/app/var'), self::bind($evidence, '/app/.runs'),
-            self::bind($common, $common, true) + ['bind' => ['create_host_path' => false]]];
+        $mounts = [
+            self::bind($output, '/app/var'),
+            self::bind($evidence, '/app/.runs'),
+            self::bind($common, $common, true) + ['bind' => ['create_host_path' => false]]
+        ];
         $services = [
-            'web'         => ['image' => $this->project.'-web', 'volumes' => [...$mounts, self::bind($output.'/client/shared-react', '/app/packages/react/dist')]],
+            'web'         => [
+                'image'   => $this->project.'-web',
+                'volumes' => [
+                    ...$mounts,
+                    self::bind($output.'/client/shared-react', '/app/packages/react/dist')
+                ]
+            ],
             'composer'    => ['image' => $this->project.'-web', 'volumes' => $mounts],
-            'https_php'   => ['image' => $this->project.'-https_php', 'volumes' => array_map(
-                static fn (string $path): array => self::bind($output.'/'.$path, '/app/var/'.$path, true),
-                ['client/build', 'openapi', 'validations']
-            )],
+            'https_php'   => [
+                'image'   => $this->project.'-https_php',
+                'volumes' => array_map(
+                    static fn (string $path): array => self::bind($output.'/'.$path, '/app/var/'.$path, true),
+                    ['client/build', 'openapi', 'validations']
+                )
+            ],
             'https'       => ['volumes' => [self::bind($output.'/client/build', '/app/var/client/build', true)]],
             'mailcatcher' => []
         ];
@@ -238,9 +303,18 @@ final readonly class Installation
         unset($settings);
         Native::writePrivate($state.'/override.yaml', self::override($services));
         $this->writeLocator();
-        $model = Native::query([...$this->compose(), '--profile', '*', 'config', '--format', 'json'], $this->checkout, self::environment(true));
+        $model = Native::query([
+            ...$this->compose(),
+            '--profile',
+            '*',
+            'config',
+            '--format',
+            'json'
+        ], $this->checkout, self::environment(true));
         Native::writePrivate($state.'/down.json', Native::json([
-            'services' => (object) [], 'volumes' => (object) ($model['volumes'] ?? []), 'networks' => (object) ($model['networks'] ?? [])
+            'services' => (object) [],
+            'volumes'  => (object) ($model['volumes'] ?? []),
+            'networks' => (object) ($model['networks'] ?? [])
         ])."\n");
     }
 
@@ -251,7 +325,9 @@ final readonly class Installation
     {
         Native::require($this->registration !== null, 'Runtime locator requires an exact registered checkout');
         Native::writePrivate($this->state().'/locator.json', Native::json([
-            'path' => $this->checkout, 'branch' => $this->registration['branch'], 'project' => $this->project
+            'path'    => $this->checkout,
+            'branch'  => $this->registration['branch'],
+            'project' => $this->project
         ], JSON_PRETTY_PRINT)."\n");
     }
 
@@ -264,6 +340,9 @@ final readonly class Installation
     {
         return in_array($selector, [$entry['path'], $entry['branch'], basename($entry['path'])], true)
             || (preg_match('/^task-\d{5}$/D', $selector) === 1
-                && ($entry['branch'] === 'feature/'.$selector || str_starts_with($entry['branch'], 'feature/'.$selector.'-')));
+                && ($entry['branch'] === 'feature/'.$selector || str_starts_with(
+                    $entry['branch'],
+                    'feature/'.$selector.'-'
+                )));
     }
 }

@@ -14,7 +14,7 @@ final class Teardown
     private const EMPTY_MODEL = '{"services":{}}';
 
     /**
-     * Retires only the selected native runtime and reports remaining holds
+     * Removes only the selected native runtime and reports remaining holds
      */
     public static function down(Installation $installation): int
     {
@@ -23,11 +23,17 @@ final class Teardown
         $project = $installation->project;
         $env = Installation::environment();
         if (!$installation->isolated) {
-            return Native::process([...$installation->compose(), '--profile', '*', 'down', '--remove-orphans'], $main, $env)[0];
+            return Native::process([
+                ...$installation->compose(),
+                '--profile',
+                '*',
+                'down',
+                '--remove-orphans'
+            ], $main, $env)[0];
         }
         $state = $installation->state();
-        $locator = $state . '/locator.json';
-        $cleanup = $state . '/down.json';
+        $locator = $state.'/locator.json';
+        $cleanup = $state.'/down.json';
         $model = self::EMPTY_MODEL;
         if ($installation->registration !== null) {
             if (!Native::exists($locator)) {
@@ -57,15 +63,30 @@ final class Teardown
         foreach ($kinds as $kind => $noun) {
             $before[$kind] = Native::ids($main, $kind, $project);
         }
-        $effect(['docker', 'compose', '--project-name', $project, '--project-directory', $main, '--env-file', '/dev/null',
-            '--file', '-', 'down', '--volumes', '--remove-orphans'], $model);
+        $effect([
+            'docker',
+            'compose',
+            '--project-name',
+            $project,
+            '--project-directory',
+            $main,
+            '--env-file',
+            '/dev/null',
+            '--file',
+            '-',
+            'down',
+            '--volumes',
+            '--remove-orphans'
+        ], $model);
         $builders = Native::lines(Native::text(['docker', 'buildx', 'ls', '--format', '{{.Name}}'], $main));
         if (in_array($project, $builders, true) && $effect(['docker', 'buildx', 'rm', $project])) {
             ++$removed['builders'];
         }
-        $cache = 'buildx_buildkit_' . $project . '0_state';
-        if (Native::text(['docker', 'volume', 'ls', '-q', '--filter', 'name=^' . $cache . '$'], $main) !== ''
-            && $effect(['docker', 'volume', 'rm', $cache])) {
+        $cache = 'buildx_buildkit_'.$project.'0_state';
+        if (
+            Native::text(['docker', 'volume', 'ls', '-q', '--filter', 'name=^'.$cache.'$'], $main) !== ''
+            && $effect(['docker', 'volume', 'rm', $cache])
+        ) {
             ++$removed['volumes'];
         }
         foreach ($kinds as $kind => $noun) {
@@ -81,7 +102,7 @@ final class Teardown
             $after = Native::ids($main, $kind, $project);
             $removed[$kind] += count(array_diff($before[$kind], $after));
             if ($after !== []) {
-                $failures[] = 'Remaining project ' . $kind . ': ' . implode(', ', $after);
+                $failures[] = 'Remaining project '.$kind.': '.implode(', ', $after);
             }
         }
         foreach (self::tags($installation) as $tag) {
@@ -91,9 +112,9 @@ final class Teardown
         }
         $tags = self::tags($installation);
         if ($tags !== []) {
-            $failures[] = 'Remaining task image tags: ' . implode(', ', $tags);
+            $failures[] = 'Remaining task image tags: '.implode(', ', $tags);
         }
-        $output = $state . '/output';
+        $output = $state.'/output';
         if ($failures === [] && Native::exists($output)) {
             if (self::hasBindConsumer($main, $output)) {
                 $failures[] = 'Task output still has a native bind consumer; output retained';
@@ -101,11 +122,19 @@ final class Teardown
                 Native::removeDirectory($output);
             }
         }
-        if ($installation->registration === null && (Native::exists($checkout) || Native::canonical($checkout) !== $checkout)) {
+        if (
+            $installation->registration === null
+            && (Native::exists($checkout) || Native::canonical($checkout) !== $checkout)
+        ) {
             $failures[] = 'Unregistered/recreated/aliased original source path retained; Docker teardown attempted';
         }
-        echo Native::json(['project' => $project, 'complete' => $failures === [], 'removed' => $removed, 'failures' => $failures,
-            'locator' => $installation->registration !== null ? $locator : null]) . "\n";
+        echo Native::json([
+            'project'  => $project,
+            'complete' => $failures === [],
+            'removed'  => $removed,
+            'failures' => $failures,
+            'locator'  => $installation->registration !== null ? $locator : null
+        ])."\n";
 
         return $failures === [] ? 0 : 1;
     }
@@ -134,32 +163,51 @@ final class Teardown
      */
     public static function tags(Installation $installation): array
     {
-        $tags = Native::lines(Native::text(['docker', 'image', 'ls', '--format', '{{.Repository}}:{{.Tag}}'], $installation->main));
-        $matches = array_values(array_unique(array_filter($tags, static fn (string $tag): bool => str_starts_with($tag, $installation->project . '-'))));
+        $tags = Native::lines(Native::text([
+            'docker',
+            'image',
+            'ls',
+            '--format',
+            '{{.Repository}}:{{.Tag}}'
+        ], $installation->main));
+        $matches = array_values(array_unique(array_filter($tags, static fn (string $tag): bool => str_starts_with(
+            $tag,
+            $installation->project.'-'
+        ))));
         sort($matches);
 
         return $matches;
     }
 
     /**
-     * Constrains the saved teardown model to owned resources only
+     * Validates the saved teardown model to owned resources only
      */
     private static function validatedModel(string $file, string $project): string
     {
         // The saved model is only metadata. Never give Compose arbitrary services,
         // includes, foreign volume names or networks on a destructive path.
         $data = json_decode(Native::read($file), flags: JSON_THROW_ON_ERROR);
-        Native::require($data instanceof \stdClass && ($data->services ?? null) instanceof \stdClass && get_object_vars($data->services) === []
-            && array_diff(array_keys(get_object_vars($data)), ['services', 'volumes', 'networks']) === [], 'Invalid runtime teardown model');
+        Native::require(
+            $data instanceof \stdClass && ($data->services ?? null) instanceof \stdClass
+            && get_object_vars($data->services) === []
+            && array_diff(array_keys(get_object_vars($data)), ['services', 'volumes', 'networks']) === [],
+            'Invalid runtime teardown model'
+        );
         foreach (['volumes', 'networks'] as $kind) {
             $definitions = $data->{$kind} ?? (object) [];
             Native::require($definitions instanceof \stdClass, 'Invalid runtime teardown resource definitions');
             foreach (get_object_vars($definitions) as $key => $definition) {
-                Native::require($definition instanceof \stdClass && is_string($definition->name ?? null), 'Invalid runtime teardown resource name');
+                Native::require(
+                    $definition instanceof \stdClass && is_string($definition->name ?? null),
+                    'Invalid runtime teardown resource name'
+                );
                 if (($definition->external ?? false) === true) {
                     $definitions->{$key} = (object) ['name' => $definition->name, 'external' => true];
                 } else {
-                    Native::require($definition->name === $project . '_' . $key, 'Foreign runtime teardown resource refused');
+                    Native::require(
+                        $definition->name === $project.'_'.$key,
+                        'Foreign runtime teardown resource refused'
+                    );
                     $definitions->{$key} = (object) ['name' => $definition->name];
                 }
             }

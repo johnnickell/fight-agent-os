@@ -32,30 +32,42 @@ final class Native
      * @phpstan-param array<string,string>|null $env
      * @return array{int, string, string}
      */
-    public static function process(array $args, string $cwd, ?array $env = null, bool $capture = false, ?string $input = null, int $timeout = 1800): array
-    {
+    public static function process(
+        array $args,
+        string $cwd,
+        ?array $env = null,
+        bool $capture = false,
+        ?string $input = null,
+        ?int $timeout = 1800
+    ): array {
         $descriptors = [STDIN, STDOUT, STDERR];
         if ($input !== null) {
             $descriptors[0] = tmpfile();
-            self::require(is_resource($descriptors[0]) && fwrite($descriptors[0], $input) === strlen($input), 'Cannot stage command input');
+            self::require(is_resource($descriptors[0]) && fwrite(
+                $descriptors[0],
+                $input
+            ) === strlen($input), 'Cannot stage command input');
             rewind($descriptors[0]);
         }
         if ($capture) {
             // Files avoid pipe backpressure when a child writes both streams.
             $descriptors[1] = tmpfile();
             $descriptors[2] = tmpfile();
-            self::require(is_resource($descriptors[1]) && is_resource($descriptors[2]), 'Cannot capture native command output');
+            self::require(
+                is_resource($descriptors[1]) && is_resource($descriptors[2]),
+                'Cannot capture native command output'
+            );
         }
         try {
             $process = @proc_open($args, $descriptors, $pipes, $cwd, $env);
             self::require(is_resource($process), 'Cannot start native command: '.$args[0]);
-            $deadline = hrtime(true) + $timeout * 1_000_000_000;
+            $deadline = $timeout === null ? null : hrtime(true) + $timeout * 1_000_000_000;
             do {
                 $status = proc_get_status($process);
                 if (!$status['running']) {
                     break;
                 }
-                if (hrtime(true) >= $deadline) {
+                if ($deadline !== null && hrtime(true) >= $deadline) {
                     proc_terminate($process, 9);
                     proc_close($process);
                     throw new RuntimeException('Native command timed out: '.implode(' ', array_slice($args, 0, 3)));
@@ -94,8 +106,14 @@ final class Native
      * @phpstan-param list<string> $args
      * @phpstan-param array<string,string>|null $env
      */
-    public static function run(array $args, string $cwd, ?array $env = null, bool $capture = false, ?string $input = null, int $timeout = 1800): string
-    {
+    public static function run(
+        array $args,
+        string $cwd,
+        ?array $env = null,
+        bool $capture = false,
+        ?string $input = null,
+        int $timeout = 1800
+    ): string {
         [$exit, $stdout] = self::process($args, $cwd, $env, $capture, $input, $timeout);
         self::require($exit === 0, 'Command failed (exit '.$exit.'): '.implode(' ', array_slice($args, 0, 3)));
 
@@ -128,7 +146,7 @@ final class Native
     }
 
     /**
-     * Splits captured output without producing a row for empty output
+     * Parses captured output without producing a row for empty output
      *
      * @return list<string>
      */
@@ -185,7 +203,13 @@ final class Native
         $stream = @fopen($tmp, 'xb');
         self::require(is_resource($stream), 'Cannot exclusively create runtime configuration: '.$tmp);
         try {
-            self::require(chmod($tmp, 0600) && fwrite($stream, $content) === strlen($content) && fflush($stream), 'Cannot write runtime configuration: '.$path);
+            self::require(chmod(
+                $tmp,
+                0600
+            ) && fwrite(
+                $stream,
+                $content
+            ) === strlen($content) && fflush($stream), 'Cannot write runtime configuration: '.$path);
             self::require(!is_link($path) && rename($tmp, $path), 'Cannot install runtime configuration: '.$path);
         } finally {
             fclose($stream);
@@ -285,6 +309,11 @@ final class Native
             'volumes' => ['volume', 'ls', '-q'],
         };
 
-        return self::lines(self::text(['docker', ...$args, '--filter', 'label=com.docker.compose.project='.$project], $root));
+        return self::lines(self::text([
+            'docker',
+            ...$args,
+            '--filter',
+            'label=com.docker.compose.project='.$project
+        ], $root));
     }
 }

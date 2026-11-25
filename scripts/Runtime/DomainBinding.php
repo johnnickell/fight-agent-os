@@ -73,7 +73,10 @@ final class DomainBinding
                 Native::require(!is_link($env), 'Private environment alias refused');
                 $lines = Native::lines(trim(Native::read($env)));
                 foreach (['APP_BROWSER_ORIGIN', 'APP_ACTIVATION_ORIGIN', 'APP_PASSWORD_RESET_ORIGIN'] as $key) {
-                    $matching = array_filter($lines, static fn (string $line): bool => str_starts_with($line, $key.'='));
+                    $matching = array_filter($lines, static fn (string $line): bool => str_starts_with(
+                        $line,
+                        $key.'='
+                    ));
                     $current = array_values($matching);
                     Native::require(
                         $current === [$key."='https://".$installation->project.".localhost'"],
@@ -125,10 +128,10 @@ final class DomainBinding
                 is_file($record) && preg_match('/^id: '.$task.'$/m', Native::read($record)) === 1,
                 'Actual TASK record missing in selected checkout'
             );
-            $id ??= strtolower(
-                PHP_OS_FAMILY === 'Darwin' ? Native::text(['/usr/bin/uuidgen'], $installation->checkout)
-                    : trim(Native::read('/proc/sys/kernel/random/uuid'))
-            );
+            $id ??= strtolower(match (PHP_OS_FAMILY) {
+                'Darwin' => Native::text(['/usr/bin/uuidgen'], $installation->checkout),
+                default  => trim(Native::read('/proc/sys/kernel/random/uuid'))
+            });
             Native::require(self::uuid($id), 'Native Checkout UUID generation unavailable');
             $next = ['id' => $id, 'task' => $task, 'host' => self::host($project['namespace'], $task, $id)];
             foreach ($data['projects'] as $peer) {
@@ -212,8 +215,10 @@ final class DomainBinding
      */
     private static function read(string $path): array
     {
-        $data = file_exists($path) ? json_decode(Native::read($path), true, flags: JSON_THROW_ON_ERROR)
-            : ['version' => 1, 'projects' => []];
+        $data = ['version' => 1, 'projects' => []];
+        if (file_exists($path)) {
+            $data = json_decode(Native::read($path), true, flags: JSON_THROW_ON_ERROR);
+        }
         Native::require(
             ($data['version'] ?? null) === 1 && is_array($data['projects'] ?? null),
             'Unknown host registry; inspect before mutation'

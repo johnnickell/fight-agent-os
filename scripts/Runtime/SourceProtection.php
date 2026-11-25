@@ -27,14 +27,36 @@ final class SourceProtection
                     continue;
                 }
                 $source = Native::canonical($mount['Source']);
-                Native::require(!Native::beneath($source, $checkout), 'Source bind dependency remains; qualify the actual consumer before source removal');
+                Native::require(!Native::beneath(
+                    $source,
+                    $checkout
+                ), 'Source bind dependency remains; qualify the actual consumer before source removal');
                 if (Native::beneath($checkout, $source)) {
-                    self::checkParentMount($main, $container, rtrim($mount['Destination'], '/').'/'.substr($checkout, strlen(rtrim($source, '/')) + 1));
+                    self::checkParentMount($main, $container, rtrim(
+                        $mount['Destination'],
+                        '/'
+                    ).'/'.substr($checkout, strlen(rtrim(
+                        $source,
+                        '/'
+                    )) + 1));
                 }
             }
         }
-        [$status, $output, $error] = Native::process(['lsof', '-nP', '-Fpuaftn', '+D', $checkout], $main, capture: true, timeout: 60);
-        Native::require(in_array($status, [0, 1], true) && trim($error) === '', 'Source consumer visibility unavailable');
+        [
+            $status,
+            $output,
+            $error
+        ] = Native::process([
+            'lsof',
+            '-nP',
+            '-Fpuaftn',
+            '+D',
+            $checkout
+        ], $main, capture: true, timeout: 60);
+        Native::require(in_array($status, [
+            0,
+            1
+        ], true) && trim($error) === '', 'Source consumer visibility unavailable');
         if (trim($output) !== '') {
             self::checkReaders($main, $output);
         }
@@ -56,7 +78,7 @@ final class SourceProtection
     }
 
     /**
-     * Rechecks all targets before releasing only the verified delete rules
+     * Checks all targets before releasing only the verified delete rules
      *
      * @phpstan-param array<string,MountTarget> $targets
      */
@@ -75,7 +97,10 @@ final class SourceProtection
         foreach ($targets as $path => [$identity, $acl]) {
             $verify($path, $identity, $acl);
             Native::run(['/bin/chmod', '-a#', '0', $path], $installation->main);
-            Native::require(self::acl($installation->main, $path) === [], 'Runtime mount target ACL retirement incomplete: '.$path);
+            Native::require(self::acl(
+                $installation->main,
+                $path
+            ) === [], 'Runtime mount target ACL retirement incomplete: '.$path);
             echo 'Released owner delete rule on retired runtime mount target: '.$path."\n";
         }
     }
@@ -87,9 +112,15 @@ final class SourceProtection
      */
     private static function checkParentMount(string $main, array $container, string $target): void
     {
-        Native::require($container['State']['Running'] === true, 'Parent source mount requires live consumer qualification');
+        Native::require(
+            $container['State']['Running'] === true,
+            'Parent source mount requires live consumer qualification'
+        );
         $configuration = array_intersect_key($container['Config'], array_flip(['WorkingDir', 'Entrypoint', 'Cmd']));
-        Native::require(!str_contains(Native::json($configuration), $target), 'Container configuration consumes candidate source');
+        Native::require(!str_contains(
+            Native::json($configuration),
+            $target
+        ), 'Container configuration consumes candidate source');
         $script = <<<'SH'
             for process in /proc/[0-9]*; do
                 [ "$process" = "/proc/$$" ] && continue
@@ -107,10 +138,22 @@ final class SourceProtection
             done
             exit 0
             SH;
-        [$status] = Native::process(['docker', 'exec', $container['Id'], 'sh', '-c', $script, 'source-consumer-check', $target], $main, capture: true, timeout: 60);
+        [$status] = Native::process([
+            'docker',
+            'exec',
+            $container['Id'],
+            'sh',
+            '-c',
+            $script,
+            'source-consumer-check',
+            $target
+        ], $main, capture: true, timeout: 60);
         $id = substr($container['Id'], 0, 12);
         Native::require($status !== 3, 'Parent-mounted container consumes candidate source: '.$id);
-        Native::require($status === 0, 'Parent-mounted container process visibility unavailable with configured identity: '.$id);
+        Native::require(
+            $status === 0,
+            'Parent-mounted container process visibility unavailable with configured identity: '.$id
+        );
     }
 
     /**
@@ -118,7 +161,10 @@ final class SourceProtection
      */
     private static function checkReaders(string $main, string $output): void
     {
-        Native::require(PHP_OS_FAMILY === 'Darwin', 'Source has an active/unknown reader, writer or cwd; retain source');
+        Native::require(
+            PHP_OS_FAMILY === 'Darwin',
+            'Source has an active/unknown reader, writer or cwd; retain source'
+        );
         $records = $users = [];
         $pid = null;
         $index = null;
@@ -150,19 +196,38 @@ final class SourceProtection
             $pid = $record['pid'];
             Native::require(is_string($pid) && ctype_digit($pid) && ($users[$pid] ?? null) === (string) posix_getuid()
                 && ($record['a'] ?? null) === 'r' && in_array($record['t'] ?? null, ['REG', 'DIR'], true)
-                && preg_match('/^\*?[0-9]+$/D', $record['fd']) === 1, 'Source has active/unknown cwd, writer or reader; retain source');
+                && preg_match(
+                    '/^\*?[0-9]+$/D',
+                    $record['fd']
+                ) === 1, 'Source has active/unknown cwd, writer or reader; retain source');
             if (isset($qualified[$pid])) {
                 continue;
             }
             Native::require(
-                Native::text(['ps', '-p', $pid, '-o', 'comm='], $main) === '/System/Library/Frameworks/Virtualization.framework/Versions/A/'.'XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine',
+                Native::text([
+                    'ps',
+                    '-p',
+                    $pid,
+                    '-o',
+                    'comm='
+                ], $main) === implode('/', [
+                    '/System/Library/Frameworks/Virtualization.framework/Versions/A',
+                    'XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS',
+                    'com.apple.Virtualization.VirtualMachine'
+                ]),
                 'Source reader is not qualified Docker file sharing'
             );
             $account = posix_getpwuid(posix_getuid());
             Native::require(is_array($account), 'Native account visibility unavailable');
             $disk = $account['dir'].'/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw';
             Native::require(
-                is_file($disk) && in_array('n'.$disk, Native::lines(Native::text(['lsof', '-nP', '-p', $pid, '-Fn'], $main)), true),
+                is_file($disk) && in_array('n'.$disk, Native::lines(Native::text([
+                    'lsof',
+                    '-nP',
+                    '-p',
+                    $pid,
+                    '-Fn'
+                ], $main)), true),
                 'Virtualization reader lacks actual Docker runtime backing evidence'
             );
             $qualified[$pid] = true;
@@ -178,9 +243,17 @@ final class SourceProtection
     {
         clearstatcache(true, $path);
         $info = @lstat($path);
-        Native::require(is_array($info) && $info['uid'] === posix_getuid(), 'Source filesystem protection/foreign owner');
+        Native::require(
+            is_array($info) && $info['uid'] === posix_getuid(),
+            'Source filesystem protection/foreign owner'
+        );
         if (PHP_OS_FAMILY === 'Darwin') {
-            Native::require(Native::text(['/usr/bin/stat', '-f', '%f', $path], $main) === '0', 'Source filesystem protection/foreign owner');
+            Native::require(Native::text([
+                '/usr/bin/stat',
+                '-f',
+                '%f',
+                $path
+            ], $main) === '0', 'Source filesystem protection/foreign owner');
         }
 
         return $info;
@@ -223,13 +296,20 @@ final class SourceProtection
         $main = $installation->main;
         $checkout = $installation->checkout;
         Native::require(
-            in_array($path, [$checkout.'/.runs', $checkout.'/var', $checkout.'/packages/react/dist'], true) && !is_link($path),
+            in_array($path, [
+                $checkout.'/.runs',
+                $checkout.'/var',
+                $checkout.'/packages/react/dist'
+            ], true) && !is_link($path),
             'Source ACL protection outside reserved runtime mount targets: '.$path
         );
         $identity = null;
         foreach (self::tree($path) as $node) {
             $info = self::fileInfo($node, $main);
-            Native::require(($info['mode'] & 0170000) === 0040000, 'Runtime mount target still contains data, aliases or protections: '.$path);
+            Native::require(
+                ($info['mode'] & 0170000) === 0040000,
+                'Runtime mount target still contains data, aliases or protections: '.$path
+            );
             if ($node === $path) {
                 $identity = [$info['dev'], $info['ino']];
             } else {
@@ -237,18 +317,36 @@ final class SourceProtection
             }
         }
         Native::run(['git', 'check-ignore', '--quiet', '--', $path], $checkout);
-        $message = 'Native macOS account lookup unavailable or unverifiable; retain source and rerun the same guarded bin/runtime finish '.'from the canonical checkout with native macOS account access. Do not strip ACLs manually or substitute a guessed owner UUID.';
+        $message = implode(' ', [
+            'Native macOS account lookup unavailable or unverifiable; retain source and rerun the same',
+            'guarded bin/runtime finish from the canonical checkout with native macOS account access.',
+            'Do not strip ACLs manually or substitute a guessed owner UUID.'
+        ]);
         try {
             $account = posix_getpwuid(posix_getuid());
             Native::require(is_array($account), $message);
-            $record = HostRoots::plist(['/usr/bin/dscl', '-plist', '/Search', '-read', '/Users/'.$account['name'], 'GeneratedUID', 'UniqueID'], $main);
+            $record = HostRoots::plist([
+                '/usr/bin/dscl',
+                '-plist',
+                '/Search',
+                '-read',
+                '/Users/'.$account['name'],
+                'GeneratedUID',
+                'UniqueID'
+            ], $main);
             $ids = $record['dsAttrTypeStandard:GeneratedUID'] ?? null;
             Native::require(($record['dsAttrTypeStandard:UniqueID'] ?? null) === [(string) posix_getuid()]
-                && is_array($ids) && count($ids) === 1 && preg_match('/^[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}$/D', $ids[0]) === 1, $message);
+                && is_array($ids) && count($ids) === 1 && preg_match(
+                    '/^[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}$/D',
+                    $ids[0]
+                ) === 1, $message);
         } catch (\RuntimeException | \JsonException | \TypeError $error) {
             throw new \RuntimeException($message, previous: $error);
         }
-        Native::require($acl === ['0: '.strtoupper($ids[0]).' deny delete'], 'Source ACL protection is not the sole owner delete rule: '.$path);
+        Native::require(
+            $acl === ['0: '.strtoupper($ids[0]).' deny delete'],
+            'Source ACL protection is not the sole owner delete rule: '.$path
+        );
 
         Native::require($identity !== null, 'Runtime mount identity unavailable');
 

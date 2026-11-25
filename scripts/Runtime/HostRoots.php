@@ -90,7 +90,10 @@ final class HostRoots
         );
         Native::require($access !== 'rw' || is_writable($path), 'Root does not permit the requested write access');
         $handle = @fopen($path, 'rb');
-        Native::require(is_resource($handle), 'Root or host filesystem is missing, inaccessible or cannot be qualified');
+        Native::require(
+            is_resource($handle),
+            'Root or host filesystem is missing, inaccessible or cannot be qualified'
+        );
         try {
             $before = fstat($handle);
             Native::require(is_array($before) && ($before['mode'] & 0170000) === 0040000, 'Root is not a directory');
@@ -106,8 +109,8 @@ final class HostRoots
                     [...getenv(), 'LC_ALL' => 'C', 'TZ' => 'UTC0'],
                     capture: true
                 );
-                $birth = preg_match('/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{9} \+0000$/D', $stamp) === 1
-                    ? (int) substr((string) preg_replace('/\D/', '', $stamp), 0, -4) : null;
+                $validStamp = preg_match('/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{9} \+0000$/D', $stamp) === 1;
+                $birth = $validStamp ? (int) substr((string) preg_replace('/\D/', '', $stamp), 0, -4) : null;
             } else {
                 throw new \RuntimeException('Host platform is not supported for approved roots');
             }
@@ -213,7 +216,10 @@ final class HostRoots
         );
         // BSD ls reports the directory's native path; resolve physical cwd as well
         // so case-insensitive aliases do not gain a second spelling.
-        Native::require(Native::text(['/bin/pwd', '-P'], $path) === $path, 'Use the canonical spelling of the directory');
+        Native::require(Native::text([
+            '/bin/pwd',
+            '-P'
+        ], $path) === $path, 'Use the canonical spelling of the directory');
     }
 
     /**
@@ -226,13 +232,19 @@ final class HostRoots
         foreach (Native::lines(trim(Native::read('/proc/self/mountinfo'))) as $line) {
             [$before, $after] = array_pad(explode(' - ', $line, 2), 2, '');
             $fields = explode(' ', $before);
-            Native::require(count($fields) >= 6 && count(explode(' ', $after)) >= 3, 'Cannot qualify the host mount table');
+            Native::require(count($fields) >= 6 && count(explode(
+                ' ',
+                $after
+            )) >= 3, 'Cannot qualify the host mount table');
             $point = (string) preg_replace_callback(
                 '/\\\\([0-7]{3})/',
                 static fn (array $part): string => chr((int) octdec($part[1]) & 255),
                 $fields[4]
             );
-            Native::require($point === $path || !Native::beneath($point, $path), 'Root contains another filesystem mount');
+            Native::require($point === $path || !Native::beneath(
+                $point,
+                $path
+            ), 'Root contains another filesystem mount');
             $device = $fields[2];
             $devices[$device] = ($devices[$device] ?? 0) + 1;
             if (Native::beneath($path, $point)) {
