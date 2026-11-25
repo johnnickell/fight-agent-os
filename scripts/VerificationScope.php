@@ -83,10 +83,12 @@ function scopeOwners(string $path): array
             'scripts/VerificationScope.php', 'scripts/build.php', 'scripts/BuildCache.php',
             'scripts/VerificationWorkspace.php', '.github/workflows/build.yml', 'docs/engineering/BUILD.md']]
     ];
+    // PHP syntax and style scan scripts/ recursively, even for tools owned by another pass.
+    $checkedByPhp = str_starts_with($path, 'scripts/') && str_ends_with($path, '.php');
     foreach ($rules as [$owners, $patterns]) {
         foreach ($patterns as $pattern) {
             if (fnmatch($pattern, $path)) {
-                return $owners;
+                return $checkedByPhp && !in_array('php', $owners, true) ? ['php', ...$owners] : $owners;
             }
         }
     }
