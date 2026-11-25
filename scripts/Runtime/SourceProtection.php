@@ -116,20 +116,28 @@ final class SourceProtection
             $container['State']['Running'] === true,
             'Parent mount requires live consumer qualification'
         );
-        $configuration = array_intersect_key($container['Config'], array_flip(['WorkingDir', 'Entrypoint', 'Cmd']));
-        Native::require(!str_contains(
-            Native::json($configuration),
-            $target
-        ), 'Container configuration consumes candidate directory');
+        // Match a complete path or a descendant, including paths embedded in shell text or options.
+        $reference = addcslashes($target, '\\.^$|()[]*+?{}')."($|/|[[:space:]\"'`:;|&<>()])";
+        $pattern = '~'.str_replace('~', '\\~', $reference).'~';
+        foreach (['WorkingDir', 'Entrypoint', 'Cmd'] as $key) {
+            foreach ((array) ($container['Config'][$key] ?? null) as $value) {
+                Native::require(
+                    is_string($value) && preg_match($pattern, $value) === 0,
+                    'Container configuration consumes candidate directory or cannot be qualified'
+                );
+            }
+        }
         $script = <<<'SH'
+            export LC_ALL=C
             for process in /proc/[0-9]*; do
                 [ "$process" = "/proc/$$" ] && continue
                 [ -d "$process" ] || continue
                 [ -r "$process/cmdline" ] && [ -r "$process/maps" ] && [ -r "$process/fd" ] || exit 2
-                grep -F -q -- "$1" "$process/cmdline" "$process/maps"
-                status=$?
-                [ "$status" -eq 0 ] && exit 3
-                [ "$status" -eq 1 ] || exit 2
+                arguments=$(tr '\000' '\n' < "$process/cmdline") || exit 2
+                printf '%s\n' "$arguments" | grep -Eq -- "$2"
+                case $? in 0) exit 3 ;; 1) ;; *) exit 2 ;; esac
+                grep -Eq -- "$2" "$process/maps"
+                case $? in 0) exit 3 ;; 1) ;; *) exit 2 ;; esac
                 for descriptor in "$process/cwd" "$process/exe" "$process"/fd/*; do
                     [ -L "$descriptor" ] || continue
                     value=$(readlink "$descriptor") || { [ ! -L "$descriptor" ] && continue; exit 2; }
@@ -146,7 +154,8 @@ final class SourceProtection
             '-c',
             $script,
             'parent-bind-consumer-check',
-            $target
+            $target,
+            $reference
         ], $main, capture: true, timeout: 60);
         $id = substr($container['Id'], 0, 12);
         Native::require($status !== 3, 'Parent-mounted container consumes candidate directory: '.$id);
