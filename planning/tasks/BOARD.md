@@ -51,7 +51,6 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00625](00625-TASK.md) | Move Land target binding to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00626](00626-TASK.md) | Move Planning archive maintenance to PHP | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | [TICKET-00150 — Remove the remaining repository-owned Python tooling](../tickets/00150-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00630](00630-TASK.md) | Recognize masked cleanup routes and retire TASK-00622's retained worktree | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -436,6 +435,7 @@ any additional holds. See the [foundation planning brief](../FOUNDATION.md) for 
 | — | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | needs-info | [TASK-00139](00139-TASK.md), [TASK-00203](00203-TASK.md), [TASK-00390](00390-TASK.md), [TASK-00496](00496-TASK.md) | Qualify actual protected host-MCP-Team and contribution-independence suppliers before exposing truthful enforced policy editing | — |
 | — | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | needs-info | — | Qualify enabled protected host-MCP-Team and fresh-review runtime suppliers without reopening settled policy decisions or adding approval phases | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | needs-info | — | Qualify the existing real mail provider and production-safe startup composition before proving the checkout-free production artifact | — |
+| — | [TASK-00630](00630-TASK.md) | Recognize masked cleanup routes and retire TASK-00622's retained worktree | — (standalone bug) | needs-info | — | The retained checkout still contains ignored files that need a supported retirement path. | — |
 
 ## Human Action
 
