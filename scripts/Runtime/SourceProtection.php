@@ -135,15 +135,16 @@ final class SourceProtection
                 $configuration[] = $value;
             }
         }
-        $script = <<<'SH'
+        $mountCheck = <<<'SH'
             export LC_ALL=C
             cover=$2
             verify_mask() {
                 [ -n "$cover" ] && [ "$(realpath -e "$cover")" = "$cover" ] || return 1
                 device=$(stat -c '%Hd:%Ld' -- "$cover") || return 1
+                namespace=$(readlink "/proc/$$/ns/mnt") || return 1
                 # Read the probe's mount namespace, not the Docker configuration alone.
                 # Reject stacked mounts, aliases of the tmpfs and any deeper mount in its subtree.
-                awk -v cover="$cover" -v device="$device" '
+                awk -v cover="$cover" -v device="$device" -v namespace="$namespace" '
                     $5 == cover {
                         at_cover++
                         for (i = 7; i <= NF && $i != "-"; i++) {}
@@ -154,10 +155,12 @@ final class SourceProtection
                     index($5, cover "/") == 1 { deeper++ }
                     END {
                         if (!id || at_cover != 1 || on_device != 1 || deeper) exit 1
-                        print id ":" device
+                        print namespace ":" id ":" device
                     }
                 ' "/proc/$$/mountinfo"
             }
+            SH;
+        $script = <<<'SH'
             mask=
             if ! target=$(realpath -- "$1" 2>/dev/null); then
                 case "$1/" in *'/../'*|*'/./'*|*'//'*) exit 2 ;; esac
@@ -280,23 +283,51 @@ final class SourceProtection
             done
             if [ -n "$mask" ]; then
                 [ "$(verify_mask)" = "$mask" ] || exit 2
+                printf '%s\n' "$mask"
             fi
             exit 0
             SH;
-        [$status] = Native::process([
+        [$status, $mask] = Native::process([
             'docker',
             'exec',
             '-i',
             $container['Id'],
             'sh',
             '-c',
-            $script,
+            $mountCheck."\n".$script,
             'parent-bind-consumer-check',
             $target,
             $cover
         ], $main, capture: true, input: implode("\0", $configuration)."\0", timeout: 60);
         $id = substr($container['Id'], 0, 12);
         Native::require($status !== 3, 'Parent-mounted container consumes candidate directory: '.$id);
+        if ($status === 0 && $mask !== '') {
+            // Docker's tmpfs may be root-only. Keep the consumer scan under the configured identity;
+            // use root only to prove the matched cover has no entries through which lookup can continue.
+            $emptyCover = <<<'SH'
+                mask=$(verify_mask) || exit 2
+                entries=$(find "$cover" -mindepth 1 -maxdepth 1 -print -quit) || exit 2
+                [ -z "$entries" ] && [ "$(verify_mask)" = "$mask" ] || exit 2
+                printf '%s\n' "$mask"
+                SH;
+            [$status, $verified, $error] = Native::process([
+                'docker',
+                'exec',
+                '--user',
+                '0:0',
+                $container['Id'],
+                'sh',
+                '-c',
+                $mountCheck."\n".$emptyCover,
+                'parent-bind-empty-cover-check',
+                $target,
+                $cover
+            ], $main, capture: true, timeout: 60);
+            Native::require(
+                $status === 0 && $error === '' && $verified === $mask,
+                'Parent-mounted container mask emptiness unavailable: '.$id
+            );
+        }
         Native::require(
             $status === 0,
             'Parent-mounted container process visibility unavailable with configured identity: '.$id

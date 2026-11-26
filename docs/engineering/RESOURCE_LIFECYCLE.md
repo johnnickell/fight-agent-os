@@ -183,7 +183,10 @@ inside the container, including relative paths from the relevant working directo
 A reference that walks into the removal path and back out via `..` still uses that directory.
 If the projected path cannot be resolved, a Docker-declared read-only tmpfs can clear that route only when
 live mount evidence confirms the covering filesystem, without stacked mounts, aliases or deeper mounts.
-The probe still checks process roots, mount namespaces and live kernel references. It checks every other
+A separate read-only check as container root must confirm that the same mount in the same namespace is
+empty. A failed listing or any entry in the cover holds the route; the mount flag alone proves neither.
+The process check still runs as the configured user and checks roots, mount namespaces and live kernel references.
+It checks every other
 bind separately. Observed use or unavailable visibility holds deletion; parent visibility and references to
 an unrelated sibling that only shares the name prefix do not. This check does not execute shell text to infer
 paths built at runtime. The same check protects configuration retirement. Keep active
