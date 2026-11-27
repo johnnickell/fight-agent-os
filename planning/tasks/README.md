@@ -620,7 +620,7 @@
 | [TASK-00615](00615-TASK.md) | Run Pi Harness verification as a standalone pass | done | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00616](00616-TASK.md) | Port the Harness session-file birth helper to PHP | done | [TICKET-00148](../tickets/00148-TICKET.md) |
 | [TASK-00617](00617-TASK.md) | Port the Build stage launcher and monitor to PHP | done | [TICKET-00148](../tickets/00148-TICKET.md) |
-| [TASK-00618](00618-TASK.md) | Report which verification passes a change affects | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
+| [TASK-00618](00618-TASK.md) | Report which verification passes a change affects | done | [TICKET-00149](../tickets/00149-TICKET.md) |
 | [TASK-00619](00619-TASK.md) | Run and reuse selected verification passes locally | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
 | [TASK-00620](00620-TASK.md) | Pilot four parallel GitHub verification workflows | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
 | [TASK-00621](00621-TASK.md) | Require the four checks and retire the old hosted gate | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
