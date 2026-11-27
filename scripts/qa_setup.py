@@ -14,9 +14,9 @@ from resource_lifecycle.resources import require, run, write_private
 # boundary needs deliberate qualification, never implicit approval from --ref.
 SETUP_PATHS = (
     'compose.yaml', 'bin/composer', 'bin/client', 'bin/pi-dependencies', 'bin/runtime', 'bin/database',
-    'bin/console', 'bin/validations', 'scripts/runtime.py', 'scripts/resource_lifecycle/cli.py',
-    'scripts/resource_lifecycle/runtime.py', 'scripts/resource_lifecycle/resources.py',
-    'scripts/resource_lifecycle/preparation.py', 'scripts/local_domain.py', 'etc/docker',
+    'bin/console', 'bin/validations', 'scripts/runtime-php', 'scripts/runtime.php', 'scripts/Runtime',
+    'scripts/resource_lifecycle/resources.py', 'scripts/resource_lifecycle/preparation.py',
+    'scripts/local_domain.py', 'etc/docker',
 )
 
 
@@ -49,8 +49,10 @@ def supported(root, oid):
                 bool(local.stat().st_mode & 0o111) == (mode == '100755'),
                 'Unsupported revision: changed host setup boundary ' + path)
         paths.add(path)
-    required = {path for path in SETUP_PATHS if path != 'etc/docker'}
-    required.update(str(path.relative_to(root)) for path in (root / 'etc/docker').rglob('*') if path.is_file())
+    directories = ('etc/docker', 'scripts/Runtime')
+    required = set(SETUP_PATHS) - set(directories)
+    for directory in directories:
+        required.update(str(path.relative_to(root)) for path in (root / directory).rglob('*') if path.is_file())
     require(paths == required, 'Unsupported revision: incomplete documented setup boundary')
     # No lockfile rewriting or arbitrary Composer plugins/lifecycle scripts.
     for path in ('composer.lock', 'client/package-lock.json', 'docs/engineering/SUPER_ADMIN_BOOTSTRAP.md',

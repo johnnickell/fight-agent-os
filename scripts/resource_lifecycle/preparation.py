@@ -61,7 +61,8 @@ def environment(isolated=False):
     env['FIGHT_AGENT_OS_DEFAULT_USER'] = f'{os.getuid()}:{os.getgid()}'
     # Explicit file/project/env selection must not inherit ambient Compose modes.
     for key in list(env):
-        if key.startswith('COMPOSE_') or (isolated and key.startswith(('APP_', 'POSTGRES_', 'FIGHT_TASK_'))):
+        if key.startswith('COMPOSE_') or (isolated and (key == 'FIGHT_RUNTIME_SECRETS_DIR' or
+                              key.startswith(('APP_', 'POSTGRES_', 'FIGHT_TASK_')))):
             env.pop(key)
     return env
 
@@ -81,28 +82,12 @@ def compose(safe, checkout, project, isolated=False, shared=False):
     return args
 
 
-def gateway(root, host):
-    template = (root / 'etc/docker/https/default.conf').read_text()
-    return template.replace('localhost:18443', host).replace('SERVER_PORT 18443', 'SERVER_PORT 443').replace(
-        'SERVER_NAME localhost', 'SERVER_NAME ' + host).replace('server_name localhost', 'server_name ' + host)
-
-
-def override(services, replace_volumes=False):
+def override(services):
     lines = ['services:']
     for name, settings in services.items():
         lines += ['  ' + name + ':', '    ports: !reset []']
-        lines += ['    ' + key + ': ' + ('!override ' if key == 'volumes' and replace_volumes else '') +
-                  json.dumps(value) for key, value in settings.items()]
+        lines += ['    ' + key + ': ' + json.dumps(value) for key, value in settings.items()]
     return '\n'.join(lines) + '\n'
-
-
-def output_path(safe, checkout, project, value):
-    candidate = Path(value)
-    for original, target in ((checkout / 'var', safe / 'var/worktrees' / project / 'output'),
-                             (checkout / '.runs', safe / '.runs/compose' / project)):
-        if candidate == original or original in candidate.parents:
-            return target / candidate.relative_to(original)
-    return candidate
 
 
 def prepare(safe, checkout, project, entry, initialize=False):
@@ -172,45 +157,3 @@ def prepare(safe, checkout, project, entry, initialize=False):
     cleanup = {'services': {}, 'volumes': model.get('volumes', {}), 'networks': model.get('networks', {})}
     write_private(state / 'down.json', json.dumps(cleanup) + '\n')
     return args
-
-
-def ingress(safe, checkout, project, isolated=True):
-    """Consume the explicit supplier; never provision ingress, certificates or trust"""
-    from local_ingress import check_leaf, ready
-    ready(safe)
-    from local_domain import selected_host
-    host = selected_host(safe, checkout, project + '.localhost' if isolated else 'fight-agent-os.localhost')
-    state = safe / ('var/worktrees/' + project if isolated else 'var/local-ingress/main')
-    certs = check_leaf(safe, host)
-    # Mount the dedicated config directory, not a file inode replaced atomically
-    # on refresh. Never expose the parent state directory (it contains task.env).
-    gateway_config = state / 'gateway/default.conf'
-    write_private(gateway_config, gateway(checkout, host))
-    check_assets = checkout / 'var/client/check'
-    if isolated:
-        check_assets = output_path(safe, checkout, project, check_assets)
-    check_assets.mkdir(parents=True, exist_ok=True)
-    settings = {'https': {'environment': {'FIGHT_LOCAL_INGRESS': '1', 'VIRTUAL_HOST': host,
-                                         'VIRTUAL_PORT': '8443', 'VIRTUAL_PROTO': 'https'},
-                  'networks': ['default', 'ingress'], 'volumes': [
-                      {'type': 'bind', 'source': str(gateway_config.parent), 'target': '/etc/nginx/conf.d',
-                       'read_only': True, 'bind': {'create_host_path': False}},
-                      {'type': 'bind', 'source': str(certs), 'target': '/etc/nginx/certs',
-                       'read_only': True, 'bind': {'create_host_path': False}},
-                      {'type': 'bind', 'source': str(output_path(safe, checkout, project, checkout / 'var/client/build')
-                                                   if isolated else checkout / 'var/client/build'),
-                       'target': '/app/var/client/build', 'read_only': True,
-                       'bind': {'create_host_path': False}},
-                      {'type': 'bind', 'source': str(check_assets), 'target': '/app/var/client/check',
-                       'read_only': True, 'bind': {'create_host_path': False}}]}, 'web': {}, 'mailcatcher': {}}
-    origin = {'APP_BROWSER_ORIGIN': 'https://' + host, 'APP_ACTIVATION_ORIGIN': 'https://' + host,
-              'APP_PASSWORD_RESET_ORIGIN': 'https://' + host, 'APP_AUTH_TRANSPORT': 'direct',
-              'APP_AUTH_TRUSTED_PROXIES': '[]'}
-    settings['web']['environment'] = origin
-    settings['https_php'] = {'environment': origin}
-    # Replace inherited file mounts too: a nested default.conf bind would mask
-    # the refreshed directory on main. Retain only gateway-owned mounts.
-    config = override(settings, replace_volumes=True) + 'networks:\n  ingress: {external: true, name: fight-local-ingress}\n'
-    target = state / 'ingress.yaml'
-    write_private(target, config)
-    return target, 'https://' + host

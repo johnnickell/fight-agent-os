@@ -130,7 +130,7 @@
 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | done | [TICKET-00031](../tickets/00031-TICKET.md) |
-| [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | done | — |
 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | done | — |
@@ -624,7 +624,7 @@
 | [TASK-00619](00619-TASK.md) | Run and reuse selected verification passes locally | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
 | [TASK-00620](00620-TASK.md) | Pilot four parallel GitHub verification workflows | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
 | [TASK-00621](00621-TASK.md) | Require the four checks and retire the old hosted gate | ready-for-agent | [TICKET-00149](../tickets/00149-TICKET.md) |
-| [TASK-00622](00622-TASK.md) | Move local runtime and resource lifecycle to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
+| [TASK-00622](00622-TASK.md) | Move local runtime and resource lifecycle to PHP | done | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00623](00623-TASK.md) | Move local domains DNS ingress and HTTPS to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00624](00624-TASK.md) | Move human QA setup and cleanup to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00625](00625-TASK.md) | Move Land target binding to PHP | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
@@ -632,4 +632,5 @@
 | [TASK-00627](00627-TASK.md) | Remove Python from the remaining Harness custody helper | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00628](00628-TASK.md) | Retire the remaining Python prerequisites outside diagram authoring | ready-for-agent | [TICKET-00150](../tickets/00150-TICKET.md) |
 | [TASK-00629](00629-TASK.md) | Restore native PHP provisioning for the hosted Build | done | — |
+| [TASK-00630](00630-TASK.md) | Recognize masked cleanup routes and retire TASK-00622's retained worktree | needs-info | — |
 <!-- /planning:records -->

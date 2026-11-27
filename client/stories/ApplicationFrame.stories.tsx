@@ -5,6 +5,7 @@ import { MemoryAccessToken } from '@fight/react/account';
 import { PasswordChangeService } from '@fight/react/account';
 import { SessionCoordinator } from '@fight/react/account';
 import { AuthorityCache } from '@fight/react/account';
+import { CatalogService, CustomRoleService } from '@fight/react/account';
 import { InvitationIssuanceService } from '@fight/react/account';
 import { InvitationService } from '@fight/react/account';
 import { OwnedSessionsService } from '@fight/react/account';
@@ -97,7 +98,10 @@ function FrameExample({
         dispose: () => tokens.clear()
       }
     });
+    const catalogApi = new ApiClient({ schemaVersion: 2, apiBasePath: '/api/v1' });
     return {
+      authorityCatalog: new CatalogService(catalogApi),
+      customRoles: new CustomRoleService(catalogApi, authority),
       authority,
       intent,
       coordinator,

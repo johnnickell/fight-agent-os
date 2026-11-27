@@ -1,8 +1,7 @@
 # Custom Role definitions and Access Control adoption
 
-Custom Role definition mutations and permission delegation use package-owned commands. TASK-00127 adds
-confirmed delegation entries; its qualification is still in progress. No Role UI, registration or managed-policy
-editing is added by that change.
+Custom role mutations and permission delegation use package-owned commands. The browser uses those same
+registered Actions; there is no browser editor for managed roles or permission definitions.
 
 ## API and Application authority
 
@@ -45,7 +44,7 @@ including conflict/uncertainty, and preserves the caller's displayed token witho
 the returned generated UUID and expects no other data. Rename reads current Role state after dispatch, not an
 immutable record of the mutation.
 A lost creation response may leave a Role whose ID the caller has not received; reconcile the authorized catalog instead
-of retrying creation. The service is not mounted as new UI.
+of retrying creation.
 
 See the [Role mutation ownership diagram](custom-roles/README.md) for the protected entry, configured bus
 and handler-owned transaction.
@@ -65,6 +64,21 @@ Repeated current intent can be a no-op without a second audit record. Missing ta
 ineligible or concurrently changed targets return safe 409. There is no Console or Agent delegation entry;
 future entries must authenticate and admit their own caller/operation/installation scope before bus dispatch.
 The raw bus remains trusted internal composition, not an exposed authenticated API.
+
+## Browser operation
+
+Open **Roles** (`/admin/roles`) or **Permissions** (`/admin/permissions`) in Administration. Each route
+requires its own read permission. The shared table sends ID or creation ordering to the server before
+pagination. Free-text search and catalog filters are not supported by these APIs. Browser history stores
+only table options, not form values or authority.
+
+Roles offers create, rename and remove separately under the matching permissions. Grant and revoke require
+both delegation and permission catalog access so the operator can choose a current eligible target. Managed
+roles are read-only. The picker excludes protected, unmanaged and unknown-tier permissions from selection.
+The APIs do not return existing associations, so the picker confirms the requested operation without
+claiming that a permission is presently assigned. A success message confirms the request, not that a new
+audit event exists. A conflict or lost response does not cause replay. The browser refreshes current authority
+and refetches the selected authorized catalog rather than changing rows optimistically.
 
 ## v0.11.0 source cutover
 

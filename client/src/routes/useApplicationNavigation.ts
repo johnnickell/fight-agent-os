@@ -21,7 +21,7 @@ export function useApplicationNavigation(initialPathname: string) {
       const route = matchApplicationRoute(path);
       if (!route || target.includes('#')) return;
       const samePath = window.location.pathname === path;
-      if (route.destination === 'users' && samePath && separator < 0) return;
+      if (route.normalizeSearch && samePath && separator < 0) return;
       let address = path;
       if (separator >= 0) {
         if (!route.normalizeSearch) return;

@@ -13,7 +13,7 @@ export type CatalogRole = Readonly<{
 export type CatalogPermission = Readonly<{
   permissionId: string;
   name: string;
-  tier: 'ADMIN_SAFE' | 'SUPER_ADMIN_ONLY';
+  tier: 'ADMIN_SAFE' | 'SUPER_ADMIN_ONLY' | 'UNKNOWN';
   managed: boolean;
 }>;
 export type CatalogPage<T> = Readonly<{
@@ -58,14 +58,15 @@ const permission: ResponseDecoder<CatalogPermission> = (value) => {
     typeof value.name !== 'string' ||
     value.name.length > 255 ||
     !/^[A-Z]+(?:_[A-Z]+)*(?![\s\S])/.test(value.name) ||
-    (value.tier !== 'ADMIN_SAFE' && value.tier !== 'SUPER_ADMIN_ONLY') ||
+    typeof value.tier !== 'string' ||
+    !/^[A-Z][A-Z_]{0,63}(?![\s\S])/.test(value.tier) ||
     typeof value.managed !== 'boolean'
   )
     return null;
   return Object.freeze({
     permissionId: value.permission_id,
     name: value.name,
-    tier: value.tier,
+    tier: value.tier === 'ADMIN_SAFE' || value.tier === 'SUPER_ADMIN_ONLY' ? value.tier : 'UNKNOWN',
     managed: value.managed
   });
 };

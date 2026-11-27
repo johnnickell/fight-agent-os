@@ -4,13 +4,18 @@ import { decodeCatalogRole } from './CatalogService.js';
 import type { ApiClient } from '../../api/ApiClient.js';
 import type { ResponseDecoder } from '../../api/decodeResponse.js';
 import type { AuthorityCache } from './AuthorityCache.js';
-import type { CatalogRole } from './CatalogService.js';
+import type { CatalogPermission, CatalogRole } from './CatalogService.js';
 
-/** Owns explicit revision intent and authority refetch; no Role UI or grant delegation. */
+export function eligibleRolePermission(permission: CatalogPermission): boolean {
+  return permission.managed && permission.tier === 'ADMIN_SAFE';
+}
+
+/** Sends explicit role intent to the registered Actions and refreshes authority after each attempt. */
 export class CustomRoleService {
   constructor(
-    private readonly api: ApiClient,
-    private readonly authority: AuthorityCache
+    private readonly api: Pick<ApiClient, 'mutate'>,
+    private readonly authority: AuthorityCache,
+    private readonly refresh?: (result: ApiResult<unknown>) => void
   ) {}
 
   create(name: string): Promise<ApiResult<{ roleId: string }>> {
@@ -31,7 +36,8 @@ export class CustomRoleService {
   }
 
   rename(displayed: CatalogRole, name: string): Promise<ApiResult<CatalogRole>> {
-    if (!this.validId(displayed.roleId)) return Promise.resolve(apiFailure('protocol'));
+    if (displayed.managed || !this.validId(displayed.roleId))
+      return Promise.resolve(apiFailure('protocol'));
     return this.refreshAfter(
       this.api.mutate(
         'PATCH',
@@ -43,13 +49,37 @@ export class CustomRoleService {
   }
 
   remove(displayed: CatalogRole, confirmed: boolean): Promise<ApiResult<true>> {
-    if (!confirmed || !this.validId(displayed.roleId))
+    if (!confirmed || displayed.managed || !this.validId(displayed.roleId))
       return Promise.resolve(apiFailure('protocol'));
     return this.refreshAfter(
       this.api.mutate(
         'DELETE',
         `/roles/${displayed.roleId}`,
         { expected_revision: displayed.revision, confirm: true },
+        (value) => (value === null ? true : null)
+      )
+    );
+  }
+
+  changePermission(
+    role: CatalogRole,
+    permission: CatalogPermission,
+    action: 'grant' | 'revoke',
+    confirmed: boolean
+  ): Promise<ApiResult<true>> {
+    if (
+      !confirmed ||
+      role.managed ||
+      !eligibleRolePermission(permission) ||
+      !this.validId(role.roleId) ||
+      !this.validId(permission.permissionId)
+    )
+      return Promise.resolve(apiFailure('protocol'));
+    return this.refreshAfter(
+      this.api.mutate(
+        action === 'grant' ? 'PUT' : 'DELETE',
+        `/roles/${role.roleId}/permissions/${permission.permissionId}`,
+        { confirm: true },
         (value) => (value === null ? true : null)
       )
     );
@@ -67,11 +97,13 @@ export class CustomRoleService {
   }
 
   private async refreshAfter<T>(request: Promise<ApiResult<T>>): Promise<ApiResult<T>> {
-    try {
-      return await request;
-    } finally {
-      // A lost response/publication failure may still have committed. Never replay stale intent.
-      await this.authority.signal('authority-changed');
+    const current = this.authority.captureAuthenticationContext();
+    const result = await request;
+    // A lost response/publication failure may still have committed. Never replay stale intent.
+    if (current()) {
+      if (this.refresh) this.refresh(result);
+      else await this.authority.signal('authority-changed');
     }
+    return result;
   }
 }

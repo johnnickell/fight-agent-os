@@ -3,7 +3,9 @@ import { flushSync } from 'react-dom';
 
 import { ApiClient } from '../../api/ApiClient.js';
 import { AuthorityCache } from '../authority/AuthorityCache.js';
+import { CatalogService } from '../authority/CatalogService.js';
 import { CurrentPrincipalService } from '../authority/CurrentPrincipalService.js';
+import { CustomRoleService } from '../authority/CustomRoleService.js';
 import { InvitationIssuanceService } from '../invitations/InvitationIssuanceService.js';
 import { InvitationService } from '../invitations/InvitationService.js';
 import { OwnedSessionsService } from '../sessions/OwnedSessionsService.js';
@@ -97,6 +99,13 @@ export function createAccountSession<T extends { clear(): void; dispose(): void 
       getProtectedJson: api.getProtectedJson.bind(api)
     },
     users,
+    authorityCatalog: new CatalogService(api),
+    customRoles: new CustomRoleService(api, authority, (result) => {
+      users.invalidate();
+      if (!result.ok && result.error.kind === 'authentication') void coordinator.restore();
+      else if (result.ok || result.error.kind === 'authorization') coordinator.authorityChanged();
+      else void authority.signal('authority-changed');
+    }),
     userAdministration: new UserAdministrationService(api, authority, (userId, outcome) => {
       users.invalidate();
       if (userId) invitations.invalidate(userId);
