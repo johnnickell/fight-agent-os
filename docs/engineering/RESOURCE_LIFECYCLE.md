@@ -181,9 +181,15 @@ A bind at or below the removal path holds deletion. For a parent bind, the runti
 configuration and live process references to the directory or its descendants. It resolves observable paths
 inside the container, including relative paths from the relevant working directory and paths through symlinks.
 A reference that walks into the removal path and back out via `..` still uses that directory.
-Observed use or unavailable visibility holds deletion; parent visibility and references to an unrelated sibling
-that only shares the name prefix do not. This check does not execute shell text to infer paths built at runtime.
-The same check protects configuration retirement. Keep active
+If the projected path cannot be resolved, a Docker-declared read-only tmpfs can clear that route only when
+live mount evidence confirms the covering filesystem, without stacked mounts, aliases or deeper mounts.
+A separate read-only check as container root must confirm that the same mount in the same namespace is
+empty. A failed listing or any entry in the cover holds the route; the mount flag alone proves neither.
+The process check still runs as the configured user and checks roots, mount namespaces and live kernel references.
+It checks every other
+bind separately. Observed use or unavailable visibility holds deletion; parent visibility and references to
+an unrelated sibling that only shares the name prefix do not. This check does not execute shell text to infer
+paths built at runtime. The same check protects configuration retirement. Keep active
 role evidence only while consumed, then retire
 its exact `.runs/compose/<project>/` evidence/cache after outcomes reach the existing TASK/PR. The small
 `locator.json` and secret-free `down.json` survive outside removable source while source remains registered or
