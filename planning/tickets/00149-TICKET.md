@@ -37,7 +37,7 @@ Pilot PHP-only, frontend-only, Pi-only, planning-only, and shared-input changes,
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00618](../tasks/00618-TASK.md) | Report which verification passes a change affects | ready-for-agent |
+| [TASK-00618](../tasks/00618-TASK.md) | Report which verification passes a change affects | done |
 | [TASK-00619](../tasks/00619-TASK.md) | Run and reuse selected verification passes locally | ready-for-agent |
 | [TASK-00620](../tasks/00620-TASK.md) | Pilot four parallel GitHub verification workflows | ready-for-agent |
 | [TASK-00621](../tasks/00621-TASK.md) | Require the four checks and retire the old hosted gate | ready-for-agent |

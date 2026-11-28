@@ -6,6 +6,32 @@ reuses a qualifying success. Use `./bin/build --force` for deliberate fresh exec
 [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) for reporting and administrative-only changes.
 A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
 
+## Select affected verification passes
+
+Run `./bin/verification-scope --base refs/heads/develop` from the local checkout. It uses the
+prepared Planning tooling image (`./bin/planning-check --setup` if absent), not the application stack.
+For a committed candidate on a native runner, run `php scripts/verification_scope.php --base BASE --head CANDIDATE`
+from the repository. Use full commit IDs or fully qualified refs. There is no default base and no fetch.
+
+The JSON names the requested `base_ref`, resolved `base_tip` and `candidate` commits, the actual
+`comparison_base` (their unique Git merge base), and the `scope` (`working_tree` or `commit`). Without
+`--head`, the selector takes the union of the committed path changes and the local staged, unstaged,
+and non-ignored untracked paths. With `--head`, it ignores checkout changes. Both paths of a rename count.
+A deleted `.md` path (including the old path of a rename) or a `.md` path whose file type changes also
+selects Planning: a planning record may link to that file. Content-only edits keep their usual owners.
+
+Each key in `passes` (`php`, `frontend`, `pi_harness`, `planning`) has a `selected` boolean and a `reason`.
+`passes.frontend.browser_smoke` is one separate decision in the same format, even if both sides changed.
+PHP application inputs select PHP and Frontend with browser smoke; PHP test-only inputs select PHP alone.
+Frontend inputs that can affect the journeys select Frontend with browser smoke. Test/catalog-only changes
+select Frontend without smoke. Shared verification inputs may select all passes.
+
+Invalid invocation exits 2. A valid selection exits 0; this only means a decision was returned, not that
+any check passed. Missing or ambiguous history, an untrustworthy path list, or an unknown path yields a
+non-null `fallback` reason and selects all passes, including smoke. A consumer must not treat a command or
+JSON parsing failure as permission to skip. The selector runs no checks and writes no receipts; existing
+local and GitHub verification entry points are unchanged.
+
 ## Standalone PHP verification
 
 `./bin/php-pass` runs the same PHP checks as the full build without installing client dependencies, starting

@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+set -eu
+
+cd "$(dirname "$0")/.."
+image=fight-agent-os-planning:8.5.12
+if ! docker image inspect "$image" >/dev/null; then
+    echo 'Verification tooling image unavailable; run ./bin/planning-check --setup first.' >&2
+    exit 1
+fi
+
+root=$(pwd -P)
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+set -- "$image" -n scripts/verification_scope.php "$@"
+case "$common" in
+    "$root"/*) ;;
+    *) set -- --mount "type=bind,source=$common,target=$common,readonly" "$@" ;;
+esac
+exec docker run --rm --pull=never --network=none --read-only \
+    --user "$(id -u):$(id -g)" --workdir "$root" --env HOME=/tmp \
+    --env GIT_CONFIG_COUNT=1 --env GIT_CONFIG_KEY_0=safe.directory --env "GIT_CONFIG_VALUE_0=$root" \
+    --mount "type=bind,source=$root,target=$root,readonly" --entrypoint php "$@"
